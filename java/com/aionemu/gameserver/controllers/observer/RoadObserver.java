@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.controllers.observer;
 
@@ -27,6 +27,8 @@ import com.aionemu.gameserver.utils.MathUtil;
 import com.aionemu.gameserver.world.WorldType;
 
 /**
+ * This class handles the logic for observing and interacting with {@link Road} objects.<br>
+ * It manages how players interact with road features like exits and teleportation points.
  * @author SheppeR
  */
 public class RoadObserver extends ActionObserver
@@ -35,6 +37,11 @@ public class RoadObserver extends ActionObserver
 	private final Road road;
 	private Point3D oldPosition;
 	
+	/**
+	 * Creates a new instance of the {@link RoadObserver}.<br>
+	 * This constructor initializes the observer with default values.<br>
+	 * All internal fields are set to {@code null}.
+	 */
 	public RoadObserver()
 	{
 		super(ObserverType.MOVE);
@@ -43,6 +50,12 @@ public class RoadObserver extends ActionObserver
 		oldPosition = null;
 	}
 	
+	/**
+	 * Creates a new {@link RoadObserver} for a specific player and road.<br>
+	 * This constructor initializes the observer with the current position of the {@code player}.
+	 * @param road The {@code Road} object being observed.
+	 * @param player The {@code Player} who is moving on the road.
+	 */
 	public RoadObserver(Road road, Player player)
 	{
 		super(ObserverType.MOVE);
@@ -51,6 +64,9 @@ public class RoadObserver extends ActionObserver
 		oldPosition = new Point3D(player.getX(), player.getY(), player.getZ());
 	}
 	
+	/**
+	 * This method handles the movement logic for a Creature.
+	 */
 	@Override
 	public void moved()
 	{
@@ -102,6 +118,7 @@ public class RoadObserver extends ActionObserver
 				TeleportService2.teleportTo(player, exit.getMap(), exit.getX(), exit.getY(), exit.getZ(), (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 			}
 		}
+		
 		oldPosition = newPosition;
 	}
 }

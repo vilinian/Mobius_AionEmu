@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.npcshout;
 
@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlType;
 
 /**
+ * Defines the different types of events that can trigger an NPC shout.<br>
+ * This enum is used to categorize how a {@code ShoutTemplate} is activated.
  * @author Rolandas
  */
 @XmlType(name = "ShoutEventType")
@@ -27,27 +29,27 @@ import javax.xml.bind.annotation.XmlType;
 public enum ShoutEventType
 {
 	IDLE,
-	ATTACKED,
-	ATTACK_BEGIN,
-	ATTACK_END,
-	ATTACK_K,
-	SUMMON_ATTACK,
+	ATTACKED, // NPC was being attacked (the same as aggro)
+	ATTACK_BEGIN, // NPC starts an attack (the same as aggro)
+	ATTACK_END, // NPC leaves FIGHT state
+	ATTACK_K, // Numeric hit shouts
+	SUMMON_ATTACK, // Summon attack
 	CASTING,
-	CAST_K,
-	DIED,
-	HELP,
-	HELPCALL,
-	WALK_WAYPOINT,
+	CAST_K, // Numeric cast shouts
+	DIED, // Npc died
+	HELP, // Calls help without running away
+	HELPCALL, // Calls help and runs away
+	WALK_WAYPOINT, // Reached the walk point
 	START,
 	WAKEUP,
 	SLEEP,
 	RESET_HATE,
-	UNK_ACC,
-	WALK_DIRECTION,
-	STATUP,
-	SWITCH_TARGET,
-	SEE,
-	PLAYER_MAGIC,
+	UNK_ACC, // Not clear but seems the same as ATTACKED
+	WALK_DIRECTION, // NPC reached the 0 walk point
+	STATUP, // Skill statup shouts
+	SWITCH_TARGET, // NPC switched the target
+	SEE, // NPC sees a player from aggro range
+	PLAYER_MAGIC, // Player uses magic attack (merge with attacked?)
 	PLAYER_SNARE,
 	PLAYER_DEBUFF,
 	PLAYER_SKILL,
@@ -57,21 +59,28 @@ public enum ShoutEventType
 	PLAYER_PROVOKE,
 	PLAYER_CAST,
 	GOD_HELP,
-	LEAVE,
-	BEFORE_DESPAWN,
+	LEAVE, // when player leaves an attack
+	BEFORE_DESPAWN, // NPC despawns
 	ATTACK_DEADLY,
 	WIN,
-	ENEMY_DIED,
-	ENTER_BATTLE,
-	LEAVE_BATTLE,
-	DEFORM_SKILL,
-	ATTACK_HITPOINT;
+	ENEMY_DIED; // NPC's enemy died
 	
+	/**
+	 * Returns the name of this {@code ChallengeType}.<br>
+	 * This is useful for getting a human-readable string representation.
+	 * @return The name of the enum constant as a {@code String}.
+	 */
 	public String value()
 	{
 		return name();
 	}
 	
+	/**
+	 * Converts a string into its corresponding {@link ShoutEventType}.<br>
+	 * This method is useful for parsing data from external sources.
+	 * @param v The string representation of the shout type.
+	 * @return The matching {@code ShoutEventType} enum constant.
+	 */
 	public static ShoutEventType fromValue(String v)
 	{
 		return valueOf(v);

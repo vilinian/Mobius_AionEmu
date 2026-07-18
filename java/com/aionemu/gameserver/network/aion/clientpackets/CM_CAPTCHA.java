@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -30,6 +30,8 @@ import com.aionemu.gameserver.services.PunishmentService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles the client request to submit a CAPTCHA verification.<br>
+ * This packet is used by the server to validate human interaction during login or security checks. It processes the input provided by the user and triggers the appropriate response via {@link SM_CAPTCHA}.
  * @author Cura
  */
 public class CM_CAPTCHA extends AionClientPacket
@@ -38,15 +40,16 @@ public class CM_CAPTCHA extends AionClientPacket
 	 * Logger
 	 */
 	private static final Logger log = LoggerFactory.getLogger(CM_CAPTCHA.class);
-	
 	private int type;
 	private int count;
 	private String word;
 	
 	/**
-	 * @param opcode
-	 * @param state
-	 * @param restStates
+	 * This constructor initializes a new {@code CM_CAPTCHA} packet.<br>
+	 * It passes the required network data to the parent class.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state of the client.
+	 * @param restStates Additional states associated with the packet.
 	 */
 	public CM_CAPTCHA(int opcode, State state, State... restStates)
 	{
@@ -60,17 +63,21 @@ public class CM_CAPTCHA extends AionClientPacket
 		
 		switch (type)
 		{
-			case 0x02:
-			{
+			case 0x00:
 				count = readC();
 				word = readS();
 				break;
-			}
+			case 0x01:
+				count = readC();
+				word = readS();
+				break;
+			case 0x02:
+				count = readC();
+				word = readS();
+				break;
 			default:
-			{
 				log.warn("Unknown CAPTCHA packet type? 0x" + Integer.toHexString(type).toUpperCase());
 				break;
-			}
 		}
 	}
 	
@@ -82,18 +89,20 @@ public class CM_CAPTCHA extends AionClientPacket
 		switch (type)
 		{
 			case 0x02:
-			{
 				if (player.getCaptchaWord().equalsIgnoreCase(word))
 				{
 					PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400270));
 					PacketSendUtility.sendPacket(player, new SM_CAPTCHA(true, 0));
+					
 					PunishmentService.setIsNotGatherable(player, 0, false, 0);
+					
 					// fp bonus (like retail)
 					player.getLifeStats().increaseFp(TYPE.FP, SecurityConfig.CAPTCHA_BONUS_FP_TIME);
 				}
 				else
 				{
 					final int banTime = SecurityConfig.CAPTCHA_EXTRACTION_BAN_TIME + (SecurityConfig.CAPTCHA_EXTRACTION_BAN_ADD_TIME * count);
+					
 					if (count < 3)
 					{
 						PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400271, 3 - count));
@@ -107,7 +116,6 @@ public class CM_CAPTCHA extends AionClientPacket
 					}
 				}
 				break;
-			}
 		}
 	}
 }

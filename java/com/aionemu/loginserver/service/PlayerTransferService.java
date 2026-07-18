@@ -1,45 +1,47 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.service;
 
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.database.dao.DAOManager;
+import com.aionemu.gameserver.configs.main.PlayerTransferConfig;
 import com.aionemu.loginserver.GameServerInfo;
 import com.aionemu.loginserver.GameServerTable;
 import com.aionemu.loginserver.controller.AccountController;
 import com.aionemu.loginserver.dao.AccountDAO;
 import com.aionemu.loginserver.dao.PlayerTransferDAO;
 import com.aionemu.loginserver.model.Account;
-import com.aionemu.loginserver.network.gs.serverpackets.SM_PTRANSFER_RESPONSE;
+import com.aionemu.loginserver.network.gameserver.serverpackets.SM_PTRANSFER_RESPONSE;
 import com.aionemu.loginserver.service.ptransfer.PlayerTransferRequest;
 import com.aionemu.loginserver.service.ptransfer.PlayerTransferResultStatus;
 import com.aionemu.loginserver.service.ptransfer.PlayerTransferStatus;
 import com.aionemu.loginserver.service.ptransfer.PlayerTransferTask;
 import com.aionemu.loginserver.utils.ThreadPoolManager;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
-
 /**
+ * This service handles the logic for transferring players between different game servers.<br>
+ * It manages {@link PlayerTransferTask} execution and updates player records via {@link PlayerTransferDAO}.
  * @author KID
  */
 public class PlayerTransferService
@@ -47,16 +49,26 @@ public class PlayerTransferService
 	private static PlayerTransferService instance = new PlayerTransferService();
 	private final Logger log = LoggerFactory.getLogger(PlayerTransferService.class);
 	
+	/**
+	 * Gets the singleton instance of the {@link PlayerTransferService}.<br>
+	 * This method provides a global access point to the service.
+	 * @return The single shared instance of {@code PlayerTransferService}.
+	 */
 	public static PlayerTransferService getInstance()
 	{
 		return instance;
 	}
 	
-	private final Map<Integer, PlayerTransferRequest> transfers = FastMap.newInstance();
-	private final Map<Integer, PlayerTransferTask> tasks = FastMap.newInstance();
+	private final Map<Integer, PlayerTransferRequest> transfers = new ConcurrentHashMap<>();
+	private final Map<Integer, PlayerTransferTask> tasks = new ConcurrentHashMap<>();
 	private final Future<?> veryfyTask;
 	private final PlayerTransferDAO dao;
 	
+	/**
+	 * Initializes the {@code PlayerTransferService}.<br>
+	 * This constructor sets up the required database DAOs.<br>
+	 * It also parses the skill restrictions from {@link PlayerTransferConfig}.
+	 */
 	public PlayerTransferService()
 	{
 		veryfyTask = ThreadPoolManager.getInstance().scheduleAtFixedRate(() -> verifyNewTasks(), 10000, 7 * 60000);
@@ -65,11 +77,14 @@ public class PlayerTransferService
 	}
 	
 	/**
-	 * first init. getting values from sql
+	 * Checks and initializes new player transfer tasks from the database.<br>
+	 * It validates that both source and target servers are online.<br>
+	 * It also ensures that neither account is currently logged into a game server.<br>
+	 * Valid tasks are updated to {@code STATUS_ACTIVE} and sent to the source server.
 	 */
 	protected void verifyNewTasks()
 	{
-		final FastList<PlayerTransferTask> tasksNew = dao.getNew();
+		final List<PlayerTransferTask> tasksNew = dao.getNew();
 		log.info("PlayerTransfer perform task init. " + tasks.size() + " new tasks.");
 		for (PlayerTransferTask task : tasksNew)
 		{
@@ -107,16 +122,23 @@ public class PlayerTransferService
 		}
 	}
 	
+	/**
+	 * Stops all active player transfer tasks.<br>
+	 * This method cancels any pending {@code PlayerTransferTask} objects.<br>
+	 * It ensures that ongoing transfers are interrupted immediately.
+	 */
 	public void shutdown()
 	{
 		veryfyTask.cancel(true);
 	}
 	
 	/**
-	 * sended from source server to login with character information
-	 * @param taskId
-	 * @param name
-	 * @param db
+	 * Initiates a player transfer process for a specific task.<br>
+	 * This method validates server connections and account statuses before starting the transfer.<br>
+	 * It updates the account activation status in the database and notifies the target server.
+	 * @param taskId The unique identifier for the transfer task.
+	 * @param name The name associated with the transfer request.
+	 * @param db The raw database data required for the transfer.
 	 */
 	public void requestTransfer(int taskId, String name, byte[] db)
 	{
@@ -175,9 +197,11 @@ public class PlayerTransferService
 	}
 	
 	/**
-	 * When source server refuse to do transfer with reason
-	 * @param taskId
-	 * @param reason
+	 * Handles the completion of a player transfer task.<br>
+	 * This method updates the task status to {@code STATUS_ERROR}.<br>
+	 * It removes the task from the active list and saves the result to the database.
+	 * @param taskId The unique identifier for the task.
+	 * @param reason The description of why the task stopped.
 	 */
 	public void onTaskStop(int taskId, String reason)
 	{
@@ -188,9 +212,11 @@ public class PlayerTransferService
 	}
 	
 	/**
-	 * response from target server after cloning character
-	 * @param taskId
-	 * @param reason
+	 * Handles an error that occurs during a player transfer.<br>
+	 * This method removes the task from the active list.<br>
+	 * It also logs the failure details to the text log.
+	 * @param taskId The unique identifier for the current transfer task.
+	 * @param reason A description of why the transfer failed.
 	 */
 	public void onError(int taskId, String reason)
 	{
@@ -215,9 +241,11 @@ public class PlayerTransferService
 	}
 	
 	/**
-	 * response from target server after cloning character
-	 * @param taskId
-	 * @param playerId
+	 * Handles the successful completion of a player transfer task.<br>
+	 * This method updates the task status and activates the accounts.<br>
+	 * It also sends a success packet to the source server.
+	 * @param taskId The unique identifier for the transfer task.
+	 * @param playerId The unique identifier for the player being transferred.
 	 */
 	public void onOk(int taskId, int playerId)
 	{

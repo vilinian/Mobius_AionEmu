@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.models;
 
@@ -25,6 +25,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.aionemu.gameserver.questEngine.QuestEngine;
 
 /**
+ * Represents the data model for a quest defined in an {@code XML} file.<br>
+ * This class is used by the {@link QuestEngine} to load and parse quest scripts.
  * @author MrPoke, Hilgert
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -39,37 +41,56 @@ import com.aionemu.gameserver.questEngine.QuestEngine;
 	ItemCollectingData.class,
 	WorkOrdersData.class,
 	XmlQuestData.class,
-	MentorMonsterHuntData.class,
+	
+	// MentorMonsterHuntData.class,
 	ItemOrdersData.class,
 	FountainRewardsData.class,
 	SkillUseData.class
 })
+
 public abstract class XMLQuest
 {
 	@XmlAttribute(name = "id", required = true)
 	protected int id;
-	
 	@XmlAttribute(name = "movie", required = false)
 	protected int questMovie;
-	
 	@XmlAttribute(name = "mission", required = false)
 	protected boolean mission;
 	
+	/**
+	 * Returns the unique identifier of this object.
+	 * @return The integer ID.
+	 */
 	public int getId()
 	{
 		return id;
 	}
 	
+	/**
+	 * Retrieves the movie ID associated with this quest.<br>
+	 * This value is used to identify which cinematic plays during the quest.
+	 * @return The {@code int} value of the quest movie.
+	 */
 	public int getQuestMovie()
 	{
 		return questMovie;
 	}
 	
+	/**
+	 * Checks if the quest is classified as a mission.<br>
+	 * This method returns the value of the {@code mission} attribute.
+	 * @return {@code true} if it is a mission, {@code false} otherwise.
+	 */
 	public boolean isMission()
 	{
 		return mission;
 	}
 	
+	/**
+	 * Sets whether this quest is considered a mission.<br>
+	 * This updates the {@code mission} field of the {@link XMLQuest} object.
+	 * @param mission The boolean value to set for the mission status.
+	 */
 	public void setMission(boolean mission)
 	{
 		this.mission = mission;

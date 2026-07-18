@@ -1,42 +1,50 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.ai.instance.tallocsHollow;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.aionemu.commons.network.util.ThreadPoolManager;
 import com.aionemu.commons.utils.Rnd;
 import com.aionemu.gameserver.ai2.AIName;
 import com.aionemu.gameserver.model.gameobjects.Creature;
 import com.aionemu.gameserver.model.gameobjects.Npc;
 import com.aionemu.gameserver.skillengine.SkillEngine;
+import com.aionemu.gameserver.utils.ThreadPoolManager;
 
 import system.handlers.ai.AggressiveNpcAI2;
 
 /**
+ * Handles the artificial intelligence behavior for the {@code kinquid} NPC.<br>
+ * This class extends {@link AggressiveNpcAI2} to provide specific combat logic for this entity.
  * @author xTz
  */
 @AIName("kinquid")
 public class KinquidAI2 extends AggressiveNpcAI2
 {
-	private Future<?> skillTask;
 	private final AtomicBoolean isHome = new AtomicBoolean(true);
+	private Future<?> skillTask;
 	
+	/**
+	 * This method manages the behavior when a {@code Creature} becomes aggressive.<br>
+	 * It checks if the AI is currently able to think.<br>
+	 * If so, it triggers the {@code onAggro} logic.
+	 * @param creature The {@code Creature} that has triggered the aggro state.
+	 */
 	@Override
 	protected void handleCreatureAggro(Creature creature)
 	{
@@ -50,6 +58,11 @@ public class KinquidAI2 extends AggressiveNpcAI2
 		}
 	}
 	
+	/**
+	 * This method handles the logic when an NPC returns home.<br>
+	 * It calls {@code handleBackHome} from the parent class.<br>
+	 * It also updates the skill status using {@code setUseInSpawnedSkill()}.
+	 */
 	@Override
 	protected void handleBackHome()
 	{
@@ -60,6 +73,11 @@ public class KinquidAI2 extends AggressiveNpcAI2
 		despawnDestroyer();
 	}
 	
+	/**
+	 * Handles the logic when an NPC is despawned.<br>
+	 * It cancels any active skill tasks.<br>
+	 * This method then calls the superclass implementation of {@code handleDespawned}.
+	 */
 	@Override
 	protected void handleDespawned()
 	{
@@ -67,15 +85,24 @@ public class KinquidAI2 extends AggressiveNpcAI2
 		super.handleDespawned();
 	}
 	
+	/**
+	 * This method is called when the NPC dies.<br>
+	 * It triggers the {@code onDie} logic.<br>
+	 * This ensures all death-related actions are processed correctly.
+	 */
 	@Override
 	protected void handleDied()
 	{
-		super.handleDied();
-		getPosition().getWorldMapInstance().getDoors().get(48).setOpen(true);
 		cancelSkillTask();
+		super.handleDied();
 	}
 	
-	void cancelSkillTask()
+	/**
+	 * Stops the current skill task if it is still running.<br>
+	 * This method checks if {@code skillTask} is not {@code null}.<br>
+	 * It then calls {@code cancel} with {@code true}.
+	 */
+	private void cancelSkillTask()
 	{
 		if ((skillTask != null) && !skillTask.isDone())
 		{
@@ -83,9 +110,14 @@ public class KinquidAI2 extends AggressiveNpcAI2
 		}
 	}
 	
+	/**
+	 * Starts a recurring task to execute skills.<br>
+	 * This method uses {@link ThreadPoolManager} to schedule skill actions.<br>
+	 * It checks if the owner is alive before using skills from {@link SkillEngine}.
+	 */
 	private void startSkillTask()
 	{
-		skillTask = ThreadPoolManager.getInstance().scheduleAtFixedRate((Runnable) () ->
+		skillTask = ThreadPoolManager.getInstance().scheduleAtFixedRate(() ->
 		{
 			if (isAlreadyDead())
 			{
@@ -94,7 +126,7 @@ public class KinquidAI2 extends AggressiveNpcAI2
 			else
 			{
 				SkillEngine.getInstance().getSkill(getOwner(), 19233, 60, getOwner()).useNoAnimationSkill();
-				ThreadPoolManager.getInstance().schedule((Runnable) () ->
+				ThreadPoolManager.getInstance().schedule(() ->
 				{
 					if (!isAlreadyDead() && getPosition().isSpawned())
 					{
@@ -105,11 +137,22 @@ public class KinquidAI2 extends AggressiveNpcAI2
 		}, 35000, 35000);
 	}
 	
+	/**
+	 * Schedules a recurring task to run the {@code check} method.<br>
+	 * The task is executed every 25000 milliseconds.<br>
+	 * It uses the {@code ThreadPoolManager} to handle the execution.
+	 */
 	private void doSchedule()
 	{
-		ThreadPoolManager.getInstance().schedule((Runnable) () -> check(), 2500);
+		ThreadPoolManager.getInstance().schedule(() -> check(), 25000);
 	}
 	
+	/**
+	 * Removes specific NPCs from the world map.<br>
+	 * This method handles the destruction of armor and accessory objects.<br>
+	 * It checks for {@code Npc} IDs {@code 282008} and {@code 282009}.<br>
+	 * If found, it calls {@code getController} to trigger {@code onDelete()}.
+	 */
 	private void despawnDestroyer()
 	{
 		final Npc cleaveArmor = getPosition().getWorldMapInstance().getNpc(282008);
@@ -117,6 +160,7 @@ public class KinquidAI2 extends AggressiveNpcAI2
 		{
 			cleaveArmor.getController().onDelete();
 		}
+		
 		final Npc accessoryDestruction = getPosition().getWorldMapInstance().getNpc(282009);
 		if (accessoryDestruction != null)
 		{
@@ -124,6 +168,11 @@ public class KinquidAI2 extends AggressiveNpcAI2
 		}
 	}
 	
+	/**
+	 * Performs periodic checks for the NPC state.<br>
+	 * It removes destroyed objects and handles spawning logic.<br>
+	 * This method is called to update the current behavior cycle.
+	 */
 	private void check()
 	{
 		despawnDestroyer();
@@ -133,75 +182,27 @@ public class KinquidAI2 extends AggressiveNpcAI2
 			switch (Rnd.get(1, 2))
 			{
 				case 1:
-				{
 					spawnId = 282008;
 					break;
-				}
 				case 2:
-				{
 					spawnId = 282009;
 					break;
-				}
 			}
-			switch (Rnd.get(1, 11))
+			
+			switch (Rnd.get(1, 3))
 			{
 				case 1:
-				{
-					spawn(spawnId, 266.706848f, 680.673279f, 1174.000000f, (byte) 0);
+					spawn(spawnId, 266.70685f, 680.6733f, 1167.2369f, (byte) 0);
 					break;
-				}
 				case 2:
-				{
-					spawn(spawnId, 292.024658f, 719.713196f, 1174.000000f, (byte) 0);
-					break;
-				}
-				case 3:
-				{
-					spawn(spawnId, 263.433411f, 716.730042f, 1174.000000f, (byte) 0);
-					break;
-				}
-				case 4:
-				{
 					spawn(spawnId, 292.02466f, 719.7132f, 1169.3982f, (byte) 0);
 					break;
-				}
-				case 5:
-				{
+				case 3:
 					spawn(spawnId, 263.4334f, 716.73004f, 1170.3693f, (byte) 0);
 					break;
-				}
-				case 6:
-				{
-					spawn(spawnId, 267.04f, 680.795f, 1167.27f, (byte) 119);
-					break;
-				}
-				case 7:
-				{
-					spawn(spawnId, 263.738f, 716.57f, 1170.34f, (byte) 33);
-					break;
-				}
-				case 8:
-				{
-					spawn(spawnId, 292.688f, 719.164f, 1169.33f, (byte) 22);
-					break;
-				}
-				case 9:
-				{
-					spawn(spawnId, 235.886f, 708.13f, 1170.82f, (byte) 48);
-					break;
-				}
-				case 10:
-				{
-					spawn(spawnId, 262.973f, 716.379f, 1170.29f, (byte) 7);
-					break;
-				}
-				case 11:
-				{
-					spawn(spawnId, 267.04f, 680.795f, 1167.27f, (byte) 119);
-					break;
-				}
 			}
 		}
+		
 		doSchedule();
 	}
 }

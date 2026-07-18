@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.team2.group.events;
 
@@ -26,6 +26,9 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Represents a request for a {@link Player} to join a {@link PlayerGroup}.<br>
+ * This class handles the logic for sending and receiving group invitations.<br>
+ * It manages the communication between players during the invitation process.
  * @author ATracer
  */
 public class PlayerGroupInvite extends RequestResponseHandler
@@ -33,6 +36,12 @@ public class PlayerGroupInvite extends RequestResponseHandler
 	private final Player inviter;
 	private final Player invited;
 	
+	/**
+	 * Creates a new invitation for a player to join a group.<br>
+	 * This object handles the request between two {@link Player} instances.
+	 * @param inviter The player who is sending the invitation.
+	 * @param invited The player who is receiving the invitation.
+	 */
 	public PlayerGroupInvite(Player inviter, Player invited)
 	{
 		super(inviter);
@@ -40,12 +49,18 @@ public class PlayerGroupInvite extends RequestResponseHandler
 		this.invited = invited;
 	}
 	
+	/**
+	 * Processes the request to join an alliance.<br>
+	 * This method checks if the {@code invited} player can join and adds them along with their group members.<br>
+	 * It also handles cases where the alliance is already full.
+	 * @param requester The {@code Creature} who sent the request.
+	 * @param responder The {@link Player} who is responding to the request.
+	 */
 	@Override
 	public void acceptRequest(Creature requester, Player responder)
 	{
 		if (PlayerGroupService.canInvite(inviter, invited))
 		{
-			// You have invited %0 to join your group.
 			PacketSendUtility.sendPacket(inviter, SM_SYSTEM_MESSAGE.STR_PARTY_INVITED_HIM(invited.getName()));
 			final PlayerGroup group = inviter.getPlayerGroup2();
 			if (group != null)
@@ -59,10 +74,15 @@ public class PlayerGroupInvite extends RequestResponseHandler
 		}
 	}
 	
+	/**
+	 * This method handles the rejection of a request.<br>
+	 * It notifies the {@code requester} that their action was declined by the {@link Player}.
+	 * @param requester The {@code Creature} who sent the initial request.
+	 * @param responder The {@code Player} who is declining the request.
+	 */
 	@Override
 	public void denyRequest(Creature requester, Player responder)
 	{
-		// %0 has declined your invitation.
 		PacketSendUtility.sendPacket(inviter, SM_SYSTEM_MESSAGE.STR_PARTY_HE_REJECT_INVITATION(responder.getName()));
 	}
 }

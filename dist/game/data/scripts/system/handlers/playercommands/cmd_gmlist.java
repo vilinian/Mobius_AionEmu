@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.playercommands;
 
@@ -24,134 +24,100 @@ import com.aionemu.gameserver.model.gameobjects.player.FriendList;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.PlayerCommand;
+import com.aionemu.gameserver.utils.i18n.CustomMessageId;
+import com.aionemu.gameserver.utils.i18n.LanguageHandler;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * Handles the {@code /gmlist} player command.<br>
+ * This class retrieves and displays a list of friends for the executing {@link Player}.<br>
+ * It interacts with the {@link FriendList} to fetch relevant data.
  * @author Eloann
- * @reworked Kill3r
  */
 public class cmd_gmlist extends PlayerCommand
 {
+	/**
+	 * Registers the {@code gmlist} command.<br>
+	 * This method initializes the command handler for listing guild members.
+	 */
 	public cmd_gmlist()
 	{
 		super("gmlist");
 	}
 	
+	/**
+	 * Lists all online administrators and their names.<br>
+	 * It checks the current world for players with an access level greater than 0.<br>
+	 * The method also displays custom tags if they are enabled in the configuration.
+	 * @param player The {@code Player} executing the command.
+	 * @param params Variable arguments used for additional command parameters.
+	 */
 	@Override
 	public void execute(Player player, String... params)
 	{
 		final List<Player> admins = new ArrayList<>();
-		final List<Player> helpers = new ArrayList<>();
 		World.getInstance().doOnAllPlayers(object ->
 		{
-			if ((object.getAccessLevel() >= 2) && (object.getFriendList().getStatus() != FriendList.Status.OFFLINE))
+			if ((object.getAccessLevel() > 0) && (object.getFriendList().getStatus() != FriendList.Status.OFFLINE))
 			{
 				admins.add(object);
 			}
 		});
-		World.getInstance().doOnAllPlayers(player1 ->
-		{
-			if (player1.getAccessLevel() == 1)
-			{
-				helpers.add(player1);
-			}
-		});
-		
-		if (helpers.size() > 0)
-		{
-			PacketSendUtility.sendMessage(player, "===== Helpers =====");
-			if (helpers.size() == 1)
-			{
-				PacketSendUtility.sendMessage(player, "There is only 1 Helper Online!");
-			}
-			else
-			{
-				PacketSendUtility.sendMessage(player, "There are some Helper's Online!");
-			}
-			
-			for (Player helper : helpers)
-			{
-				String tag = "";
-				if (helper.getAccessLevel() == 1)
-				{
-					tag = AdminConfig.ADMIN_TAG_1;
-				}
-				tag = tag.substring(0, tag.length() - 2);
-				PacketSendUtility.sendMessage(player, tag + helper.getName());
-			}
-			PacketSendUtility.sendMessage(player, "===================");
-		}
-		else
-		{
-			PacketSendUtility.sendMessage(player, "====== Helpers =====");
-			PacketSendUtility.sendMessage(player, "There are no Helpers Online!");
-			PacketSendUtility.sendMessage(player, "====================");
-		}
 		
 		if (admins.size() > 0)
 		{
-			PacketSendUtility.sendMessage(player, "==== GameMasters ===");
+			PacketSendUtility.sendMessage(player, "====================");
 			if (admins.size() == 1)
 			{
-				PacketSendUtility.sendMessage(player, "There is only 1 GM Online!");
+				PacketSendUtility.sendMessage(player, LanguageHandler.translate(CustomMessageId.ONE_GM_ONLINE));
 			}
 			else
 			{
-				PacketSendUtility.sendMessage(player, "There are some GM's Online!");
+				PacketSendUtility.sendMessage(player, LanguageHandler.translate(CustomMessageId.MORE_GMS_ONLINE));
 			}
 			
 			for (Player admin : admins)
 			{
-				String tag = "";
-				String tagEnd = "";
-				if (admin.getAccessLevel() == 2) // trialGM
+				if (AdminConfig.CUSTOMTAG_ENABLE)
 				{
-					tag = AdminConfig.ADMIN_TAG_2;
+					String adminTag = "%s";
+					final StringBuilder sb = new StringBuilder(adminTag);
+					if (player.getAccessLevel() == 1)
+					{
+						adminTag = sb.insert(0, AdminConfig.CUSTOMTAG_ACCESS1.substring(0, AdminConfig.CUSTOMTAG_ACCESS1.length() - 3)).toString();
+					}
+					else if (player.getAccessLevel() == 2)
+					{
+						adminTag = sb.insert(0, AdminConfig.CUSTOMTAG_ACCESS2.substring(0, AdminConfig.CUSTOMTAG_ACCESS2.length() - 3)).toString();
+					}
+					else if (player.getAccessLevel() == 3)
+					{
+						adminTag = sb.insert(0, AdminConfig.CUSTOMTAG_ACCESS3.substring(0, AdminConfig.CUSTOMTAG_ACCESS3.length() - 3)).toString();
+					}
+					else if (player.getAccessLevel() == 4)
+					{
+						adminTag = sb.insert(0, AdminConfig.CUSTOMTAG_ACCESS4.substring(0, AdminConfig.CUSTOMTAG_ACCESS4.length() - 3)).toString();
+					}
+					else if (player.getAccessLevel() == 5)
+					{
+						adminTag = sb.insert(0, AdminConfig.CUSTOMTAG_ACCESS5.substring(0, AdminConfig.CUSTOMTAG_ACCESS5.length() - 3)).toString();
+					}
+					else if (player.getAccessLevel() == 6)
+					{
+						adminTag = sb.insert(0, AdminConfig.CUSTOMTAG_ACCESS6.substring(0, AdminConfig.CUSTOMTAG_ACCESS6.length() - 3)).toString();
+					}
+					
+					PacketSendUtility.sendMessage(player, String.format(adminTag, admin.getName()));
 				}
-				else if (admin.getAccessLevel() == 3) // GM
-				{
-					tag = AdminConfig.ADMIN_TAG_3;
-				}
-				else if (admin.getAccessLevel() == 4) // HGM
-				{
-					tag = AdminConfig.ADMIN_TAG_4;
-				}
-				else if (admin.getAccessLevel() == 5) // Dev
-				{
-					tag = AdminConfig.ADMIN_TAG_5;
-				}
-				else if (admin.getAccessLevel() == 6) // Custom
-				{
-					tag = AdminConfig.ADMIN_TAG_6;
-				}
-				else if (admin.getAccessLevel() == 7) // Custom
-				{
-					tag = AdminConfig.ADMIN_TAG_7;
-				}
-				else if (admin.getAccessLevel() == 8) // Custom
-				{
-					tag = AdminConfig.ADMIN_TAG_8;
-				}
-				else if (admin.getAccessLevel() == 9) // Custom
-				{
-					tag = AdminConfig.ADMIN_TAG_9;
-				}
-				else if (admin.getAccessLevel() == 10) // Custom
-				{
-					tag = AdminConfig.ADMIN_TAG_10;
-				} // "\uE050 \uE042 Senior-GM \uE043 %s \uE050")
-				tagEnd = tag.substring(tag.length() - 2);
-				tag = tag.substring(0, tag.length() - 4);
-				PacketSendUtility.sendMessage(player, tag + admin.getName() + tagEnd);
 			}
+			
 			PacketSendUtility.sendMessage(player, "====================");
 			
 		}
 		else
 		{
-			PacketSendUtility.sendMessage(player, "==== GameMasters ===");
-			PacketSendUtility.sendMessage(player, "There are no GM Online!");
-			PacketSendUtility.sendMessage(player, "====================");
+			PacketSendUtility.sendMessage(player, LanguageHandler.translate(CustomMessageId.NO_GM_ONLINE));
 		}
+		
 	}
 }

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.item.actions;
 
@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
 import com.aionemu.commons.network.util.ThreadPoolManager;
+import com.aionemu.commons.utils.Rnd;
 import com.aionemu.gameserver.controllers.observer.ItemUseObserver;
 import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.DescriptionId;
@@ -35,6 +36,9 @@ import com.aionemu.gameserver.services.item.ItemService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles the logic for assembling items using an {@link AssemblyItem}.<br>
+ * This action processes the requirements and results of combining materials.<br>
+ * It manages the creation of new items and updates the player's inventory.
  * @author xTz
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -44,6 +48,15 @@ public class AssemblyItemAction extends AbstractItemAction
 	@XmlAttribute
 	private int item;
 	
+	/**
+	 * Checks if a {@link Player} can perform this action.<br>
+	 * This method validates the requirements for interacting with items.<br>
+	 * It ensures the player has all necessary parts in their inventory.
+	 * @param player The {@link Player} attempting the action.
+	 * @param parentItem The item that triggers the action.
+	 * @param targetItem The item being acted upon.
+	 * @return {@code true} if the action is allowed, otherwise {@code false}.
+	 */
 	@Override
 	public boolean canAct(Player player, Item parentItem, Item targetItem)
 	{
@@ -52,6 +65,7 @@ public class AssemblyItemAction extends AbstractItemAction
 		{
 			return false;
 		}
+		
 		for (Integer itemId : assemblyItem.getParts())
 		{
 			if (player.getInventory().getFirstItemByItemId(itemId) == null)
@@ -59,9 +73,17 @@ public class AssemblyItemAction extends AbstractItemAction
 				return false;
 			}
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Removes a specific amount of an item from a player's inventory.<br>
+	 * This method checks if the {@code Player} has enough items before removal.
+	 * @param player The {@link Player} who will lose the items.
+	 * @param itemId The unique ID of the item to remove.
+	 * @param itemCount The number of items to take from the inventory.
+	 */
 	public static void removeItems(Player player, int itemId, long itemCount)
 	{
 		if (!player.getInventory().decreaseByItemId(itemId, itemCount))
@@ -69,10 +91,17 @@ public class AssemblyItemAction extends AbstractItemAction
 		}
 	}
 	
+	/**
+	 * Executes the assembly action for combining items.<br>
+	 * This method handles the logic when a {@link Player} uses an item to craft or assemble another object.
+	 * @param player The {@code Player} who is performing the action.
+	 * @param parentItem The {@code Item} that triggers this action.
+	 * @param targetItem The {@code Item} being acted upon.
+	 */
 	@Override
 	public void act(Player player, Item parentItem, Item targetItem)
 	{
-		PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), parentItem.getObjectId(), parentItem.getItemId(), 1000, 0, 0), true);
+		PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), 0, parentItem.getObjectId(), parentItem.getItemId(), 1000, 0), true);
 		final ItemUseObserver observer = new ItemUseObserver()
 		{
 			@Override
@@ -81,10 +110,11 @@ public class AssemblyItemAction extends AbstractItemAction
 				player.getController().cancelTask(TaskId.ITEM_USE);
 				player.removeItemCoolDown(parentItem.getItemTemplate().getUseLimits().getDelayId());
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_ITEM_CANCELED(new DescriptionId(parentItem.getItemTemplate().getNameId())));
-				PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), parentItem.getObjectId(), parentItem.getItemTemplate().getTemplateId(), 0, 2, 0), true);
+				PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), 0, parentItem.getObjectId(), parentItem.getItemTemplate().getTemplateId(), 0, 2), true);
 				player.getObserveController().removeObserver(this);
 			}
 		};
+		
 		player.getObserveController().attach(observer);
 		player.getController().addTask(TaskId.ITEM_USE, ThreadPoolManager.getInstance().schedule(new Runnable()
 		{
@@ -100,15 +130,36 @@ public class AssemblyItemAction extends AbstractItemAction
 					{
 						return;
 					}
+					
 					player.getInventory().decreaseByItemId(itemId, 1);
 				}
-				PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), parentItem.getObjectId(), parentItem.getItemTemplate().getTemplateId(), 0, 1, 0), true);
+				
+				PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), 0, parentItem.getObjectId(), parentItem.getItemTemplate().getTemplateId(), 0, 1), true);
 				PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1401122));
-				ItemService.addItem(player, assemblyItem.getId(), 1);
+				if (assemblyItem.getProcAssembly() != 0)
+				{
+					if (Rnd.get(1, 100) < 20)
+					{
+						ItemService.addItem(player, assemblyItem.getProcAssembly(), 1);
+					}
+					else
+					{
+						ItemService.addItem(player, assemblyItem.getId(), 1);
+					}
+				}
+				else
+				{
+					ItemService.addItem(player, assemblyItem.getId(), 1);
+				}
 			}
 		}, 1000));
 	}
 	
+	/**
+	 * Retrieves the {@link AssemblyItem} data for this action.<br>
+	 * It uses the internal item ID to fetch the correct template.
+	 * @return the {@code AssemblyItem} associated with this action.
+	 */
 	public AssemblyItem getAssemblyItem()
 	{
 		return DataManager.ASSEMBLY_ITEM_DATA.getAssemblyItem(item);

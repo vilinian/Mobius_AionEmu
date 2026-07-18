@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.ai;
 
@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.aionemu.commons.network.util.ThreadPoolManager;
 import com.aionemu.commons.utils.Rnd;
 import com.aionemu.gameserver.ai2.AI2Actions;
 import com.aionemu.gameserver.ai2.AIName;
@@ -29,18 +28,14 @@ import com.aionemu.gameserver.model.ai.Percentage;
 import com.aionemu.gameserver.model.ai.SummonGroup;
 import com.aionemu.gameserver.model.gameobjects.Creature;
 import com.aionemu.gameserver.model.gameobjects.VisibleObject;
-import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.templates.spawns.SpawnTemplate;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
-import com.aionemu.gameserver.services.abyss.AbyssPointsService;
-import com.aionemu.gameserver.skillengine.SkillEngine;
 import com.aionemu.gameserver.spawnengine.SpawnEngine;
-import com.aionemu.gameserver.utils.MathUtil;
-import com.aionemu.gameserver.utils.PacketSendUtility;
+import com.aionemu.gameserver.utils.ThreadPoolManager;
 import com.aionemu.gameserver.world.World;
-import com.aionemu.gameserver.world.knownlist.Visitor;
 
 /**
+ * Handles the artificial intelligence logic for {@link Creature} types identified as summoners.<br>
+ * This class extends {@link AggressiveNpcAI2} to provide specific behaviors for summoning and managing minions.
  * @author xTz
  */
 @AIName("summoner")
@@ -50,6 +45,13 @@ public class SummonerAI2 extends AggressiveNpcAI2
 	private List<Percentage> percentage = Collections.emptyList();
 	private int spawnedPercent = 0;
 	
+	/**
+	 * Processes the logic for when this AI is attacked by a {@code Creature}.<br>
+	 * It checks if the attacker is within 40 units of the owner.<br>
+	 * If close enough, it calculates a path to move away from the attacker.<br>
+	 * The owner will then move toward the nearest valid collision point.
+	 * @param creature The {@code Creature} that initiated the attack.
+	 */
 	@Override
 	protected void handleAttack(Creature creature)
 	{
@@ -57,143 +59,75 @@ public class SummonerAI2 extends AggressiveNpcAI2
 		checkPercentage(getLifeStats().getHpPercentage());
 	}
 	
+	/**
+	 * Handles the logic when an NPC is despawned.<br>
+	 * It clears the list of spawned NPCs and their percentages.<br>
+	 * This method then calls the superclass implementation of {@code handleDespawned}.
+	 */
 	@Override
 	protected void handleDespawned()
 	{
 		super.handleDespawned();
+		
 		synchronized (spawnedNpc)
 		{
 			removeHelpersSpawn();
 			spawnedNpc.clear();
 		}
+		
 		percentage.clear();
 	}
 	
+	/**
+	 * This method handles the logic when an NPC returns home.<br>
+	 * It calls {@code handleBackHome} from the parent class.<br>
+	 * It also updates the skill status using {@code setUseInSpawnedSkill()}.
+	 */
 	@Override
 	protected void handleBackHome()
 	{
 		super.handleBackHome();
+		
 		synchronized (spawnedNpc)
 		{
 			removeHelpersSpawn();
 			spawnedNpc.clear();
 		}
+		
 		spawnedPercent = 0;
 	}
 	
+	/**
+	 * Handles the logic when an NPC is first spawned.<br>
+	 * It calls {@code handleSpawned} from the parent class.<br>
+	 * It also triggers the {@code setUseInSpawnedSkill()} method.
+	 */
 	@Override
 	protected void handleSpawned()
 	{
 		super.handleSpawned();
-		switch (getNpcId())
-		{
-			case 215240:
-			case 215241:
-			{
-				anuhartBravery();
-				break;
-			}
-		}
-		switch (getNpcId())
-		{
-			case 235975:
-			{
-				bellowingRoar();
-				break;
-			}
-		}
-		switch (getNpcId())
-		{
-			case 237111:
-			case 237112:
-			case 237113:
-			case 237114:
-			case 237246:
-			case 237247:
-			case 237250:
-			{
-				// 5.0
-			}
-			case 220425:
-			{
-				elementalLordship();
-				break;
-			}
-		}
 		percentage = DataManager.AI_DATA.getAiTemplate().get(getNpcId()).getSummons().getPercentage();
 	}
 	
-	private void anuhartBravery()
-	{
-		SkillEngine.getInstance().getSkill(getOwner(), 18168, 1, getOwner()).useNoAnimationSkill(); // Anuhart's Bravery.
-	}
-	
-	private void bellowingRoar()
-	{
-		SkillEngine.getInstance().getSkill(getOwner(), 22659, 1, getOwner()).useNoAnimationSkill(); // Bellowing Roar.
-	}
-	
-	private void elementalLordship()
-	{
-		SkillEngine.getInstance().getSkill(getOwner(), 22744, 1, getOwner()).useNoAnimationSkill(); // Elemental Lordship.
-	}
-	
+	/**
+	 * This method is called when the NPC dies.<br>
+	 * It triggers the {@code onDie} logic.<br>
+	 * This ensures all death-related actions are processed correctly.
+	 */
 	@Override
 	protected void handleDied()
 	{
 		super.handleDied();
-		switch (getNpcId())
-		{
-			// Tarmat & Prime Tarmat.
-			case 234610:
-			{
-				addGpPlayer();
-				announceTarmatDie();
-				break;
-			}
-			case 219998:
-			case 220001:
-			case 236727:
-			case 236728:
-			case 236732:
-			{
-				announceTarmatDie();
-				break;
-			}
-		}
 		removeHelpersSpawn();
 		spawnedNpc.clear();
 		percentage.clear();
 	}
 	
-	private void addGpPlayer()
-	{
-		World.getInstance().doOnAllPlayers(new Visitor<Player>()
-		{
-			@Override
-			public void visit(Player player)
-			{
-				if (MathUtil.isIn3dRange(player, getOwner(), 15))
-				{
-					AbyssPointsService.addGp(player, 500);
-				}
-			}
-		});
-	}
-	
-	private void announceTarmatDie()
-	{
-		World.getInstance().doOnAllPlayers(new Visitor<Player>()
-		{
-			@Override
-			public void visit(Player player)
-			{
-				// The Devil Unit's Tarmat Beta has been destroyed.
-				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_WORLDRAID_MESSAGE_DIE_02);
-			}
-		});
-	}
-	
+	/**
+	 * This method removes helper NPCs from the game world.<br>
+	 * It iterates through all IDs in the {@code spawnedNpc} list.<br>
+	 * If a {@link VisibleObject} is found and is currently active, its controller is deleted.
+	 */
 	private void removeHelpersSpawn()
 	{
 		for (Integer object : spawnedNpc)
@@ -206,6 +140,11 @@ public class SummonerAI2 extends AggressiveNpcAI2
 		}
 	}
 	
+	/**
+	 * Adds a new helper object to the list of spawned NPCs.<br>
+	 * This method ensures thread safety by synchronizing on the {@code spawnedNpc} list.
+	 * @param objId The unique identifier of the object to add.
+	 */
 	protected void addHelpersSpawn(int objId)
 	{
 		synchronized (spawnedNpc)
@@ -214,6 +153,12 @@ public class SummonerAI2 extends AggressiveNpcAI2
 		}
 	}
 	
+	/**
+	 * Checks the current health percentage to trigger specific AI actions.<br>
+	 * It evaluates whether a skill should be used or summons should be spawned.<br>
+	 * This method updates the {@code spawnedPercent} tracker based on the results.
+	 * @param hpPercentage The current health of the creature as an integer.
+	 */
 	private void checkPercentage(int hpPercentage)
 	{
 		for (Percentage percent : percentage)
@@ -222,6 +167,7 @@ public class SummonerAI2 extends AggressiveNpcAI2
 			{
 				continue;
 			}
+			
 			if (hpPercentage <= percent.getPercent())
 			{
 				final int skill = percent.getSkillId();
@@ -229,6 +175,7 @@ public class SummonerAI2 extends AggressiveNpcAI2
 				{
 					AI2Actions.useSkill(this, skill);
 				}
+				
 				if (percent.isIndividual())
 				{
 					handleIndividualSpawnedSummons(percent);
@@ -239,21 +186,23 @@ public class SummonerAI2 extends AggressiveNpcAI2
 					for (SummonGroup summonGroup : percent.getSummons())
 					{
 						final SummonGroup sg = summonGroup;
-						ThreadPoolManager.getInstance().schedule(new Runnable()
-						{
-							@Override
-							public void run()
-							{
-								spawnHelpers(sg);
-							}
-						}, summonGroup.getSchedule());
+						ThreadPoolManager.getInstance().schedule(() -> spawnHelpers(sg), summonGroup.getSchedule());
+						
 					}
 				}
+				
 				spawnedPercent = percent.getPercent();
 			}
 		}
 	}
 	
+	/**
+	 * Spawns helper creatures based on the provided {@code SummonGroup}.<br>
+	 * This method checks if spawning is allowed before creating new objects.<br>
+	 * It determines the number of summons and their spawn locations.<br>
+	 * Finally, it calls {@code handleSpawnFinished} to complete the process.
+	 * @param summonGroup The group containing data for the summons to be created.
+	 */
 	protected void spawnHelpers(SummonGroup summonGroup)
 	{
 		if (!isAlreadyDead() && checkBeforeSpawn())
@@ -267,6 +216,7 @@ public class SummonerAI2 extends AggressiveNpcAI2
 			{
 				count = Rnd.get(summonGroup.getMinCount(), summonGroup.getMaxCount());
 			}
+			
 			for (int i = 0; i < count; i++)
 			{
 				SpawnTemplate summon = null;
@@ -278,13 +228,23 @@ public class SummonerAI2 extends AggressiveNpcAI2
 				{
 					summon = SpawnEngine.addNewSingleTimeSpawn(getPosition().getMapId(), summonGroup.getNpcId(), summonGroup.getX(), summonGroup.getY(), summonGroup.getZ(), summonGroup.getH());
 				}
+				
 				final VisibleObject npc = SpawnEngine.spawnObject(summon, getPosition().getInstanceId());
 				addHelpersSpawn(npc.getObjectId());
 			}
+			
 			handleSpawnFinished(summonGroup);
 		}
 	}
 	
+	/**
+	 * Calculates a random spawn location for an NPC.<br>
+	 * It picks a random direction and applies the specified distance.<br>
+	 * The method uses {@code addNewSingleTimeSpawn} to create the spawn.
+	 * @param npcId The unique identifier of the NPC to spawn.
+	 * @param distance The radius from the current position to search for a location.
+	 * @return The resulting {@code SpawnTemplate} object.
+	 */
 	protected SpawnTemplate rndSpawnInRange(int npcId, float distance)
 	{
 		final float direction = Rnd.get(0, 199) / 100f;
@@ -293,19 +253,40 @@ public class SummonerAI2 extends AggressiveNpcAI2
 		return SpawnEngine.addNewSingleTimeSpawn(getPosition().getMapId(), npcId, getPosition().getX() + x, getPosition().getY() + y, getPosition().getZ(), getPosition().getHeading());
 	}
 	
+	/**
+	 * Checks if the conditions are met before spawning a new NPC.<br>
+	 * This method is used to validate spawn requirements.
+	 * @return {@code true} if the spawn can proceed, {@code false} otherwise.
+	 */
 	protected boolean checkBeforeSpawn()
 	{
 		return true;
 	}
 	
+	/**
+	 * Processes the logic required before a new NPC is spawned.<br>
+	 * This method uses the provided {@code percent} to determine actions.<br>
+	 * It is called by the internal spawn sequence.
+	 * @param percent The current health percentage used for spawning logic.
+	 */
 	protected void handleBeforeSpawn(Percentage percent)
 	{
 	}
 	
+	/**
+	 * This method is called when a {@link SummonGroup} has finished spawning.<br>
+	 * It handles the logic required after all summons are created.
+	 * @param summonGroup The group of summons that just finished spawning.
+	 */
 	protected void handleSpawnFinished(SummonGroup summonGroup)
 	{
 	}
 	
+	/**
+	 * This method handles the logic for individual summons after they are spawned.<br>
+	 * It uses the {@code percent} value to determine specific behaviors.
+	 * @param percent The health percentage of the summon.
+	 */
 	protected void handleIndividualSpawnedSummons(Percentage percent)
 	{
 	}

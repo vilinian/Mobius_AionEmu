@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.team2.league.events;
 
@@ -23,9 +23,11 @@ import com.aionemu.gameserver.model.team2.league.LeagueMember;
 import com.aionemu.gameserver.model.team2.league.LeagueService;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_ALLIANCE_INFO;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SHOW_BRAND;
-import com.google.common.base.Predicate;
+import java.util.function.Predicate;
 
 /**
+ * This event is triggered when a player successfully joins a {@link League}.<br>
+ * It provides the necessary context for handling league entry logic within the system.
  * @author ATracer
  */
 public class LeagueEnteredEvent implements Predicate<LeagueMember>, TeamEvent
@@ -33,18 +35,34 @@ public class LeagueEnteredEvent implements Predicate<LeagueMember>, TeamEvent
 	private final League league;
 	private final PlayerAlliance invitedAlliance;
 	
+	/**
+	 * Creates a new {@link LeagueEnteredEvent}.<br>
+	 * This event triggers when an alliance joins a specific league.
+	 * @param league The {@code League} that is being joined.
+	 * @param alliance The {@code PlayerAlliance} that entered the league.
+	 */
 	public LeagueEnteredEvent(League league, PlayerAlliance alliance)
 	{
 		this.league = league;
 		invitedAlliance = alliance;
 	}
 	
+	/**
+	 * Checks if the alliance is not already in the league.<br>
+	 * It verifies that the {@code invitedAlliance} is missing from the {@link League}.
+	 * @return {@code true} if the alliance is not a member, otherwise {@code false}.
+	 */
 	@Override
 	public boolean checkCondition()
 	{
 		return !league.hasMember(invitedAlliance.getObjectId());
 	}
 	
+	/**
+	 * Processes the entry of an alliance into a league.<br>
+	 * This method adds the {@code PlayerAlliance} to the {@code League}.<br>
+	 * It then triggers the logic defined in {@code apply}.
+	 */
 	@Override
 	public void handleEvent()
 	{
@@ -52,8 +70,14 @@ public class LeagueEnteredEvent implements Predicate<LeagueMember>, TeamEvent
 		league.apply(this);
 	}
 	
+	/**
+	 * Processes the entry of a member into a {@link League}.<br>
+	 * This method sends necessary network packets to the alliance.
+	 * @param member The {@code LeagueMember} being processed.
+	 * @return Always returns {@code true} after successfully sending packets.
+	 */
 	@Override
-	public boolean apply(LeagueMember member)
+	public boolean test(LeagueMember member)
 	{
 		final PlayerAlliance alliance = member.getObject();
 		alliance.sendPacket(new SM_ALLIANCE_INFO(alliance, SM_ALLIANCE_INFO.UNION_ENTER, league.getLeaderObject().getLeader().getName()));

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.aion.serverpackets;
 
@@ -22,7 +22,9 @@ import com.aionemu.loginserver.network.aion.AionServerPacket;
 import com.aionemu.loginserver.network.aion.LoginConnection;
 
 /**
- * Format: dd b dddd s d: session id d: protocol revision b: 0x90 bytes : 0x80 bytes for the scrambled RSA public key 0x10 bytes at 0x00 d: unknow d: unknow d: unknow d: unknow s: blowfish key
+ * This packet handles the initial session setup between the client and the server.<br>
+ * It contains the {@code session id}, {@code protocol revision}, and the scrambled RSA public key.<br>
+ * The packet is also used to transmit the {@code blowfish key} for secure communication.
  */
 public final class SM_INIT extends AionServerPacket
 {
@@ -40,9 +42,10 @@ public final class SM_INIT extends AionServerPacket
 	private final byte[] blowfishKey;
 	
 	/**
-	 * Constructor
-	 * @param client
-	 * @param blowfishKey
+	 * Initializes a new {@code SM_INIT} packet for the given connection.<br>
+	 * This method extracts the necessary keys and session data from the provided objects.
+	 * @param client The {@link LoginConnection} used to retrieve the encrypted modulus and session ID.
+	 * @param blowfishKey The {@code SecretKey} used to generate the encryption key for this session.
 	 */
 	public SM_INIT(LoginConnection client, SecretKey blowfishKey)
 	{
@@ -50,10 +53,12 @@ public final class SM_INIT extends AionServerPacket
 	}
 	
 	/**
-	 * Creates new instance of <tt>SM_INIT</tt> packet.
-	 * @param publicRsaKey Public RSA key
-	 * @param blowfishKey Blowfish key
-	 * @param sessionId Session identifier
+	 * Initializes a new {@code SM_INIT} packet.<br>
+	 * This method sets the session ID, RSA key, and Blowfish key.<br>
+	 * It is used to establish secure communication with the client.
+	 * @param publicRsaKey The scrambled RSA public key for encryption.
+	 * @param blowfishKey The secret key used for packet encryption/decryption.
+	 * @param sessionId The unique identifier for the current connection.
 	 */
 	private SM_INIT(byte[] publicRsaKey, byte[] blowfishKey, int sessionId)
 	{
@@ -63,21 +68,15 @@ public final class SM_INIT extends AionServerPacket
 		this.blowfishKey = blowfishKey;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void writeImpl(LoginConnection con)
 	{
 		writeD(sessionId); // session id
 		writeD(0x0000c621); // protocol revision
 		writeB(publicRsaKey); // RSA Public Key
-		// unk
-		writeD(0x00);
-		writeD(0x00);
-		writeD(0x00);
-		writeD(0x00);
 		
+		// unk
+		writeB(new byte[16]);
 		writeB(blowfishKey); // BlowFish key
 		writeD(197635); // unk
 		writeD(2097152); // unk

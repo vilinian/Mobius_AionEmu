@@ -1,24 +1,26 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.utils.stats;
 
 import java.util.NoSuchElementException;
 
 /**
+ * Defines the types of experience point (XP) rewards available in the game.<br>
+ * This enumeration is used to categorize different reward sources for character progression.
  * @author ATracer
  */
 public enum XPRewardEnum
@@ -40,24 +42,37 @@ public enum XPRewardEnum
 	PLUS_3(3, 115),
 	PLUS_4(4, 120);
 	
-	private int xpRewardPercent;
+	private final int xpRewardPercent;
+	private final int levelDifference;
 	
-	private int levelDifference;
-	
+	/**
+	 * Creates a new instance of {@link XPRewardEnum}.<br>
+	 * This constructor initializes the reward values based on level gaps.
+	 * @param levelDifference The difference between levels as an {@code int}.
+	 * @param xpRewardPercent The percentage of experience points to award as an {@code int}.
+	 */
 	private XPRewardEnum(int levelDifference, int xpRewardPercent)
 	{
 		this.levelDifference = levelDifference;
 		this.xpRewardPercent = xpRewardPercent;
 	}
 	
+	/**
+	 * Returns the percentage of the reward.<br>
+	 * This value is used to calculate loot based on the {@code DropRewardEnum}.
+	 * @return The integer value for the reward percent.
+	 */
 	public int rewardPercent()
 	{
 		return xpRewardPercent;
 	}
 	
 	/**
-	 * @param levelDifference between two objects
-	 * @return XP reward percentage
+	 * Calculates the experience point reward based on a level difference.<br>
+	 * This method looks up the correct percentage from {@link XPRewardEnum}.<br>
+	 * It handles values outside the standard range by using the nearest limits.
+	 * @param levelDifference The difference in levels between two characters.
+	 * @return The experience point reward as an integer percentage.
 	 */
 	public static int xpRewardFrom(int levelDifference)
 	{
@@ -65,6 +80,7 @@ public enum XPRewardEnum
 		{
 			return MINUS_11.xpRewardPercent;
 		}
+		
 		if (levelDifference > PLUS_4.levelDifference)
 		{
 			return PLUS_4.xpRewardPercent;

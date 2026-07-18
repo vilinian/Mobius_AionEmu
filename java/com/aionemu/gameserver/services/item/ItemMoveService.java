@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.item;
 
@@ -33,10 +33,22 @@ import com.aionemu.gameserver.services.item.ItemPacketService.ItemAddType;
 import com.aionemu.gameserver.services.item.ItemPacketService.ItemDeleteType;
 
 /**
+ * Handles the logic for moving {@link Item} objects between different locations.<br>
+ * This service manages transfers between player inventories, storage systems, and other players.
  * @author ATracer
  */
 public class ItemMoveService
 {
+	/**
+	 * Moves an item between different storage types or slots for a player.<br>
+	 * This method handles stack merging and restriction checks automatically.<br>
+	 * It updates the player's inventory and sends the necessary network packets.
+	 * @param player The {@link Player} who owns the items.
+	 * @param itemObjId The unique identifier of the item to move.
+	 * @param sourceStorageType The storage type where the item is currently located.
+	 * @param destinationStorageType The storage type where the item should be moved to.
+	 * @param slot The target slot index, or {@code -1} to find the first available slot.
+	 */
 	public static void moveItem(Player player, int itemObjId, byte sourceStorageType, byte destinationStorageType, short slot)
 	{
 		if (ExchangeService.getInstance().isPlayerInExchange(player))
@@ -66,6 +78,7 @@ public class ItemMoveService
 			sendStorageUpdatePacket(player, StorageType.getStorageTypeById(sourceStorageType), item, ItemAddType.ALL_SLOT);
 			return;
 		}
+		
 		final IStorage targetStorage = player.getStorage(destinationStorageType);
 		LegionService.getInstance().addWHItemHistory(player, item.getItemId(), item.getItemCount(), sourceStorage, targetStorage);
 		if (slot == -1)
@@ -80,11 +93,13 @@ public class ItemMoveService
 					{
 						break;
 					}
+					
 					// we can merge same stackable items
 					ItemSplitService.mergeStacks(sourceStorage, targetStorage, item, sameItem, itemCount);
 				}
 			}
 		}
+		
 		if (!targetStorage.isFull() && (item.getItemCount() > 0))
 		{
 			sourceStorage.remove(item);
@@ -95,9 +110,12 @@ public class ItemMoveService
 	}
 	
 	/**
-	 * @param storage
-	 * @param item
-	 * @param slot
+	 * Moves an {@code Item} to a specific slot within the same {@link IStorage}.<br>
+	 * This method updates the equipment slot of the item.<br>
+	 * It also marks both the storage and the item as requiring a persistent state update.
+	 * @param storage The {@link IStorage} where the item is located.
+	 * @param item The {@code Item} to be moved.
+	 * @param slot The target slot index for the move.
 	 */
 	private static void moveInSameStorage(IStorage storage, Item item, short slot)
 	{
@@ -106,6 +124,16 @@ public class ItemMoveService
 		item.setPersistentState(PersistentState.UPDATE_REQUIRED);
 	}
 	
+	/**
+	 * Swaps the positions of two items between different storage types.<br>
+	 * This method checks for item restrictions before performing the swap.<br>
+	 * It updates both the database and sends the necessary packets to the {@link Player}.
+	 * @param player The {@code Player} who owns the storage.
+	 * @param sourceStorageType The ID of the first storage type.
+	 * @param sourceItemObjId The unique ID of the item in the first storage.
+	 * @param replaceStorageType The ID of the second storage type.
+	 * @param replaceItemObjId The unique ID of the item in the second storage.
+	 */
 	public static void switchItemsInStorages(Player player, byte sourceStorageType, int sourceItemObjId, byte replaceStorageType, int replaceItemObjId)
 	{
 		final IStorage sourceStorage = player.getStorage(sourceStorageType);

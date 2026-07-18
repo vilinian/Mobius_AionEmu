@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -22,6 +22,8 @@ import com.aionemu.gameserver.network.aion.AionConnection.State;
 import com.aionemu.gameserver.services.StaticDoorService;
 
 /**
+ * Handles the client request to open a static door.<br>
+ * This packet is processed by the {@link StaticDoorService} to update the door state in the game world.
  * @author rhys2002 & Wakizashi
  */
 public class CM_OPEN_STATICDOOR extends AionClientPacket
@@ -29,9 +31,11 @@ public class CM_OPEN_STATICDOOR extends AionClientPacket
 	private int doorId;
 	
 	/**
-	 * @param opcode
-	 * @param state
-	 * @param restStates
+	 * Handles the request to open a static door.<br>
+	 * This packet is sent by the client to interact with doors.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary {@link State} of the connection.
+	 * @param restStates Additional {@link State} values associated with the request.
 	 */
 	public CM_OPEN_STATICDOOR(int opcode, State state, State... restStates)
 	{
@@ -49,6 +53,6 @@ public class CM_OPEN_STATICDOOR extends AionClientPacket
 	{
 		final Player player = getConnection().getActivePlayer();
 		StaticDoorService.getInstance().openStaticDoor(player, doorId);
+		player.getPosition().getWorldMapInstance().getInstanceHandler().onOpenDoor(doorId);
 	}
-	
 }

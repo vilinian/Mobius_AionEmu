@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
@@ -22,19 +22,24 @@ import java.util.concurrent.Future;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
+import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.TaskId;
 import com.aionemu.gameserver.model.gameobjects.Creature;
 import com.aionemu.gameserver.model.gameobjects.Trap;
 import com.aionemu.gameserver.model.templates.spawns.SpawnTemplate;
 import com.aionemu.gameserver.skillengine.model.Effect;
+import com.aionemu.gameserver.skillengine.model.SkillTemplate;
 import com.aionemu.gameserver.spawnengine.SpawnEngine;
 import com.aionemu.gameserver.spawnengine.VisibleObjectSpawner;
 import com.aionemu.gameserver.utils.MathUtil;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
 
 /**
+ * Handles the logic for spawning a {@link Trap} as part of a skill effect.<br>
+ * It utilizes the {@link SpawnEngine} to create the trap at the specified location.
  * @author ATracer
  * @modified Kill3r
  */
@@ -42,14 +47,26 @@ import com.aionemu.gameserver.utils.ThreadPoolManager;
 @XmlType(name = "SummonTrapEffect")
 public class SummonTrapEffect extends SummonEffect
 {
+	@XmlAttribute(name = "skill_id", required = true)
+	protected int skillId;
+	
+	/**
+	 * Applies a specific {@code Effect} to create a trap.<br>
+	 * This method calculates the spawn coordinates and handles the logic for placing the trap.<br>
+	 * It also schedules the removal of the trap after a set duration.
+	 * @param effect The {@code Effect} object containing the data for the trap creation.
+	 */
 	@Override
 	public void applyEffect(Effect effect)
 	{
 		final Creature effector = effect.getEffector();
+		
+		// should only be set if player has no target to avoid errors
 		if (effect.getEffector().getTarget() == null)
 		{
 			effect.getEffector().setTarget(effect.getEffector());
 		}
+		
 		final double radian = Math.toRadians(MathUtil.convertHeadingToDegree(effect.getEffector().getHeading()));
 		float x = effect.getX();
 		float y = effect.getY();
@@ -61,19 +78,46 @@ public class SummonTrapEffect extends SummonEffect
 			y = effected.getY() + (float) (Math.sin(radian) * 2);
 			z = effected.getZ();
 		}
+		
 		final byte heading = effector.getHeading();
 		final int worldId = effector.getWorldId();
 		final int instanceId = effector.getInstanceId();
-		if ((npcId == 749300) || (npcId == 749301) || // Scrapped Mechanisms.
-			(npcId == 833699) || (npcId == 833700)) // Highdeva_Fire_NPC.
+		
+		if ((npcId == 749300) || (npcId == 749301))
 		{
 			x = effector.getX();
 			y = effector.getY();
 			z = effector.getZ();
 		}
-		maxTraps(effector);
+		
+		if (skillId == 0)
+		{
+			String descSplits[], nameDesc, trapDesc, trapDescFinal;
+			int newSkillid = 0;
+			final List<SkillTemplate> skill = DataManager.SKILL_DATA.getSkillTemplates();
+			
+			nameDesc = effect.getSkillTemplate().getNamedesc(); // Getting RA_Dark_SpikeTrap_G1
+			descSplits = nameDesc.split("_"); // Spliting , RA DARK SpikeTrap G1
+			trapDesc = descSplits[2] + "_" + descSplits[3]; // Combining SpikeTrap + _ + G1
+			trapDescFinal = "RA_N_" + trapDesc; // RA_N_SpikeTrap_G1 Now
+			
+			for (SkillTemplate s : skill)
+			{
+				if (s.getNamedesc().equalsIgnoreCase(trapDescFinal))
+				{
+					newSkillid = s.getSkillId();
+					break;
+				}
+			}
+			
+			skillId = newSkillid;
+		}
+		
+		checkMaxTraps(effector);
+		
 		final SpawnTemplate spawn = SpawnEngine.addNewSingleTimeSpawn(worldId, npcId, x, y, z, heading);
-		final Trap trap = VisibleObjectSpawner.spawnTrap(spawn, instanceId, effector);
+		final Trap trap = VisibleObjectSpawner.spawnTrap(spawn, instanceId, effector, skillId);
+		
 		final Future<?> task = ThreadPoolManager.getInstance().schedule(new Runnable()
 		{
 			@Override
@@ -85,7 +129,13 @@ public class SummonTrapEffect extends SummonEffect
 		trap.getController().addTask(TaskId.DESPAWN, task);
 	}
 	
-	private void maxTraps(Creature effector)
+	/**
+	 * Checks if the {@code effector} has too many traps nearby.<br>
+	 * It removes an old trap if there are 2 or more active traps.<br>
+	 * This ensures that the number of traps does not exceed the limit.
+	 * @param effector The {@link Creature} who is triggering the effect.
+	 */
+	private void checkMaxTraps(Creature effector)
 	{
 		final List<Trap> traps = effector.getPosition().getWorldMapInstance().getTraps(effector);
 		if (traps.size() >= 2)

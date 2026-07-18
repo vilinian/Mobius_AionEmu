@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -24,12 +24,19 @@ import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 
 /**
+ * This packet handles the registration of house-related objects for a player.<br>
+ * It synchronizes {@link HouseDecoration}, {@link HouseObject}, and {@link UseableItemObject} data with the client.
  * @author Rolandas
  */
 public class SM_HOUSE_REGISTRY extends AionServerPacket
 {
 	int action;
 	
+	/**
+	 * Creates a new instance of the {@code SM_HOUSE_REGISTRY} packet.<br>
+	 * This constructor initializes the registry with a specific action type.
+	 * @param action The integer value representing the house registry action.
+	 */
 	public SM_HOUSE_REGISTRY(int action)
 	{
 		this.action = action;
@@ -43,14 +50,17 @@ public class SM_HOUSE_REGISTRY extends AionServerPacket
 		{
 			return;
 		}
+		
 		writeC(action);
 		if (action == 1)
 		{
+			// Display registered objects
 			if (player.getHouseRegistry() == null)
 			{
 				writeH(0);
 				return;
 			}
+			
 			writeH(player.getHouseRegistry().getNotSpawnedObjects().size());
 			for (HouseObject<?> obj : player.getHouseRegistry().getNotSpawnedObjects())
 			{
@@ -66,22 +76,25 @@ public class SM_HOUSE_REGISTRY extends AionServerPacket
 				{
 					writeD(0);
 				}
-				Integer color = obj.getColor();
+				
+				final Integer color = obj.getColor();
 				if ((color != null) && (color > 0))
 				{
-					writeC(1);
+					writeC(1); // Is dyed (True)
 					writeC((color & 0xFF0000) >> 16);
 					writeC((color & 0xFF00) >> 8);
 					writeC((color & 0xFF));
 				}
 				else
 				{
-					writeC(0);
+					writeC(0); // Is dyed (False)
 					writeC(0);
 					writeC(0);
 					writeC(0);
 				}
-				writeD(0);
+				
+				writeD(0); // expiration as for armor ?
+				
 				writeC(obj.getObjectTemplate().getTypeId());
 				if (obj instanceof UseableItemObject)
 				{
@@ -91,12 +104,14 @@ public class SM_HOUSE_REGISTRY extends AionServerPacket
 		}
 		else if (action == 2)
 		{
+			// Display default and registered decoration items
 			writeH(player.getHouseRegistry().getDefaultParts().size() + player.getHouseRegistry().getCustomParts().size());
 			for (HouseDecoration deco : player.getHouseRegistry().getDefaultParts())
 			{
 				writeD(0);
 				writeD(deco.getTemplate().getId());
 			}
+			
 			for (HouseDecoration houseDecor : player.getHouseRegistry().getCustomParts())
 			{
 				writeD(houseDecor.getObjectId());

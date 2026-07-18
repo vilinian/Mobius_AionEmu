@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.bounding;
 
@@ -25,15 +25,15 @@ import com.aionemu.gameserver.geoEngine.math.Ray;
 import com.aionemu.gameserver.geoEngine.math.Vector3f;
 
 /**
- * <code>BoundingVolume</code> defines an interface for dealing with containment of a collection of points.
+ * This class defines an interface for handling the containment of a collection of points.<br>
+ * It serves as a base for various geometric shapes used in collision detection.<br>
+ * Implementations are used to determine if objects occupy the same space.
  * @author Mark Powell
- * @version $Id: BoundingVolume.java,v 1.24 2007/09/21 15:45:32 nca Exp $
  */
 public abstract class BoundingVolume implements Collidable
 {
 	public enum Type
 	{
-		
 		Sphere,
 		AABB,
 		OBB,
@@ -43,18 +43,28 @@ public abstract class BoundingVolume implements Collidable
 	protected int checkPlane = 0;
 	Vector3f center = new Vector3f();
 	
+	/**
+	 * Creates a new instance of a {@link BoundingVolume}.<br>
+	 * This is the default constructor for the class.
+	 */
 	public BoundingVolume()
 	{
 	}
 	
+	/**
+	 * Creates a new {@link BoundingVolume} instance.<br>
+	 * This constructor initializes the volume using a specific center point.
+	 * @param center The {@code Vector3f} position for the center of the volume.
+	 */
 	public BoundingVolume(Vector3f center)
 	{
 		this.center.set(center);
 	}
 	
 	/**
-	 * Grabs the checkplane we should check first.
-	 * @return
+	 * Retrieves the current plane index used for collision checks.<br>
+	 * This value is stored in the {@code checkPlane} field.
+	 * @return The integer value of the checked plane.
 	 */
 	public int getCheckPlane()
 	{
@@ -62,10 +72,11 @@ public abstract class BoundingVolume implements Collidable
 	}
 	
 	/**
-	 * Sets the index of the plane that should be first checked during rendering.
-	 * @param value
+	 * Updates the {@code checkPlane} value for this bounding volume.<br>
+	 * This method sets the internal plane identifier used during collision checks.
+	 * @param value The new integer value to assign to {@code checkPlane}.
 	 */
-	public final void setCheckPlane(int value)
+	public void setCheckPlane(int value)
 	{
 		checkPlane = value;
 	}
@@ -118,38 +129,58 @@ public abstract class BoundingVolume implements Collidable
 	 */
 	public abstract BoundingVolume clone(BoundingVolume store);
 	
-	public final Vector3f getCenter()
+	/**
+	 * Retrieves the center position of this bounding volume.<br>
+	 * This method returns the {@code Vector3f} representing the middle point.
+	 * @return The center of the volume as a {@link Vector3f}.
+	 */
+	public Vector3f getCenter()
 	{
 		return center;
 	}
 	
-	public final Vector3f getCenter(Vector3f store)
+	/**
+	 * Calculates the center of the bounding volume.<br>
+	 * This method copies the internal {@code center} value into a provided object.<br>
+	 * It returns the same object passed as an argument.
+	 * @param store The {@code Vector3f} object where the result will be stored.
+	 * @return The same {@code Vector3f} instance as the {@code store} parameter.
+	 */
+	public Vector3f getCenter(Vector3f store)
 	{
 		store.set(center);
 		return store;
 	}
 	
-	public final void setCenter(Vector3f newCenter)
+	/**
+	 * Updates the center position of this {@link BoundingVolume}.<br>
+	 * This method replaces the current {@code center} with a new value.
+	 * @param newCenter The new {@code Vector3f} to set as the center.
+	 */
+	public void setCenter(Vector3f newCenter)
 	{
 		center = newCenter;
 	}
 	
 	/**
-	 * Find the distance from the center of this Bounding Volume to the given point.
-	 * @param point The point to get the distance to
-	 * @return distance
+	 * Calculates the distance between this volume's center and a given point.<br>
+	 * This method uses the {@code distance} calculation.
+	 * @param point The {@code Vector3f} position to measure from.
+	 * @return The distance as a {@code float}.
 	 */
-	public final float distanceTo(Vector3f point)
+	public float distanceTo(Vector3f point)
 	{
 		return center.distance(point);
 	}
 	
 	/**
-	 * Find the squared distance from the center of this Bounding Volume to the given point.
-	 * @param point The point to get the distance to
-	 * @return distance
+	 * Calculates the squared distance between this volume's center and a given point.<br>
+	 * This method is faster than {@code distanceTo} because it avoids a square root operation.<br>
+	 * It is useful for performance-heavy proximity checks.
+	 * @param point The {@code Vector3f} position to measure from.
+	 * @return The squared distance as a {@code float}.
 	 */
-	public final float distanceSquaredTo(Vector3f point)
+	public float distanceSquaredTo(Vector3f point)
 	{
 		return center.distanceSquared(point);
 	}
@@ -212,6 +243,11 @@ public abstract class BoundingVolume implements Collidable
 	
 	public abstract float getVolume();
 	
+	/**
+	 * Creates a deep copy of this {@link BoundingVolume} object.<br>
+	 * This method copies all fields including the internal {@code center} vector.
+	 * @return A new {@code BoundingVolume} instance with the same properties.
+	 */
 	@Override
 	public BoundingVolume clone()
 	{

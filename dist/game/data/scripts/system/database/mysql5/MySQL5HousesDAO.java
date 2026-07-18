@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.database.mysql5;
 
@@ -44,6 +44,8 @@ import com.aionemu.gameserver.model.templates.housing.HouseAddress;
 import com.aionemu.gameserver.model.templates.housing.HousingLand;
 
 /**
+ * This class provides the database access layer for managing {@link House} objects using a {@code mysql5} backend.<br>
+ * It handles all CRUD operations related to housing data in the game world.
  * @author Rolandas
  */
 public class MySQL5HousesDAO extends HousesDAO
@@ -55,10 +57,17 @@ public class MySQL5HousesDAO extends HousesDAO
 	private static final String UPDATE_HOUSE_QUERY = "UPDATE houses SET building_id=?, player_id=?, acquire_time=?, settings=?, status=?, fee_paid=?, next_pay=?, sell_started=?, sign_notice=? WHERE id=?";
 	private static final String DELETE_HOUSE_QUERY = "DELETE FROM houses WHERE player_id=?";
 	
+	/**
+	 * Retrieves all unique identifiers from the {@code houses} table.<br>
+	 * This method queries the database to collect every {@code id}.<br>
+	 * If an error occurs, it returns an empty array.
+	 * @return An array of integers containing the house IDs.
+	 */
 	@Override
 	public int[] getUsedIDs()
 	{
 		final PreparedStatement statement = DB.prepareStatement("SELECT DISTINCT id FROM houses", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		
 		try
 		{
 			final ResultSet rs = statement.executeQuery();
@@ -71,6 +80,7 @@ public class MySQL5HousesDAO extends HousesDAO
 				rs.next();
 				ids[i] = rs.getInt(1);
 			}
+			
 			return ids;
 		}
 		catch (SQLException e)
@@ -81,15 +91,31 @@ public class MySQL5HousesDAO extends HousesDAO
 		{
 			DB.close(statement);
 		}
+		
 		return new int[0];
 	}
 	
+	/**
+	 * Checks if the current database is compatible with this DAO.<br>
+	 * It uses {@code int, int)} to verify the version.
+	 * @param databaseName The name of the database to check.
+	 * @param majorVersion The major version number of the database.
+	 * @param minorVersion The minor version number of the database.
+	 * @return {@code true} if the database is supported, {@code false} otherwise.
+	 */
 	@Override
 	public boolean supports(String databaseName, int majorVersion, int minorVersion)
 	{
 		return MySQL5DAOUtils.supports(databaseName, majorVersion, minorVersion);
 	}
 	
+	/**
+	 * Checks if a specific house ID exists in the database.<br>
+	 * This method returns {@code true} if the ID is currently in use.<br>
+	 * It also returns {@code true} if a database error occurs.
+	 * @param houseObjectId The unique identifier of the house to check.
+	 * @return {@code true} if the house exists or an error occurred, {@code false} otherwise.
+	 */
 	@Override
 	public boolean isIdUsed(int houseObjectId)
 	{
@@ -112,6 +138,13 @@ public class MySQL5HousesDAO extends HousesDAO
 		}
 	}
 	
+	/**
+	 * Saves a {@code House} object to the database.<br>
+	 * It checks if the house is new or existing.<br>
+	 * It calls {@code insertNewHouse} for new houses.<br>
+	 * It calls {@code updateHouse} for existing houses.
+	 * @param house The {@code House} object to be stored.
+	 */
 	@Override
 	public void storeHouse(House house)
 	{
@@ -125,6 +158,12 @@ public class MySQL5HousesDAO extends HousesDAO
 		}
 	}
 	
+	/**
+	 * Inserts a new house record into the database.<br>
+	 * This method maps the {@code House} object fields to the SQL query.<br>
+	 * It updates the persistent state of the object upon success.
+	 * @param house The {@code House} object to be saved in the database.
+	 */
 	private void insertNewHouse(House house)
 	{
 		Connection con = null;
@@ -132,6 +171,7 @@ public class MySQL5HousesDAO extends HousesDAO
 		{
 			con = DatabaseFactory.getConnection();
 			final PreparedStatement stmt = con.prepareStatement(ADD_HOUSE_QUERY);
+			
 			stmt.setInt(1, house.getObjectId());
 			stmt.setInt(2, house.getAddress().getId());
 			stmt.setInt(3, house.getBuilding().getId());
@@ -144,6 +184,7 @@ public class MySQL5HousesDAO extends HousesDAO
 			{
 				stmt.setTimestamp(5, house.getAcquiredTime());
 			}
+			
 			stmt.setInt(6, house.getPermissions());
 			stmt.setString(7, house.getStatus().toString());
 			stmt.setInt(8, house.isFeePaid() ? 1 : 0);
@@ -156,6 +197,7 @@ public class MySQL5HousesDAO extends HousesDAO
 			{
 				stmt.setTimestamp(9, house.getNextPay());
 			}
+			
 			if (house.getSellStarted() == null)
 			{
 				stmt.setNull(10, Types.TIMESTAMP);
@@ -164,6 +206,7 @@ public class MySQL5HousesDAO extends HousesDAO
 			{
 				stmt.setTimestamp(10, house.getSellStarted());
 			}
+			
 			final byte[] signNotice = house.getSignNotice();
 			if (signNotice.length == 0)
 			{
@@ -173,6 +216,7 @@ public class MySQL5HousesDAO extends HousesDAO
 			{
 				stmt.setBinaryStream(11, new ByteArrayInputStream(signNotice));
 			}
+			
 			stmt.execute();
 			stmt.close();
 			house.setPersistentState(PersistentState.UPDATED);
@@ -189,6 +233,12 @@ public class MySQL5HousesDAO extends HousesDAO
 		return;
 	}
 	
+	/**
+	 * Updates the existing records in the database for a specific house.<br>
+	 * This method maps the properties of the {@code House} object to the SQL query.<br>
+	 * It handles null checks for timestamps and binary data before execution.
+	 * @param house The {@code House} object containing the updated information.
+	 */
 	private void updateHouse(House house)
 	{
 		Connection con = null;
@@ -196,6 +246,7 @@ public class MySQL5HousesDAO extends HousesDAO
 		{
 			con = DatabaseFactory.getConnection();
 			final PreparedStatement stmt = con.prepareStatement(UPDATE_HOUSE_QUERY);
+			
 			stmt.setInt(1, house.getBuilding().getId());
 			stmt.setInt(2, house.getOwnerId());
 			if (house.getAcquiredTime() == null)
@@ -206,9 +257,11 @@ public class MySQL5HousesDAO extends HousesDAO
 			{
 				stmt.setTimestamp(3, house.getAcquiredTime());
 			}
+			
 			stmt.setInt(4, house.getPermissions());
 			stmt.setString(5, house.getStatus().toString());
 			stmt.setInt(6, house.isFeePaid() ? 1 : 0);
+			
 			if (house.getNextPay() == null)
 			{
 				stmt.setNull(7, Types.TIMESTAMP);
@@ -217,6 +270,7 @@ public class MySQL5HousesDAO extends HousesDAO
 			{
 				stmt.setTimestamp(7, house.getNextPay());
 			}
+			
 			if (house.getSellStarted() == null)
 			{
 				stmt.setNull(8, Types.TIMESTAMP);
@@ -225,6 +279,7 @@ public class MySQL5HousesDAO extends HousesDAO
 			{
 				stmt.setTimestamp(8, house.getSellStarted());
 			}
+			
 			final byte[] signNotice = house.getSignNotice();
 			if (signNotice.length == 0)
 			{
@@ -234,6 +289,7 @@ public class MySQL5HousesDAO extends HousesDAO
 			{
 				stmt.setBinaryStream(9, new ByteArrayInputStream(signNotice));
 			}
+			
 			stmt.setInt(10, house.getObjectId());
 			stmt.execute();
 			stmt.close();
@@ -250,6 +306,14 @@ public class MySQL5HousesDAO extends HousesDAO
 		return;
 	}
 	
+	/**
+	 * Loads house data from the database based on provided lands.<br>
+	 * This method maps unique identifiers to {@link House} objects.<br>
+	 * It handles different queries depending on whether studios are requested.
+	 * @param lands The collection of {@link HousingLand} to process.
+	 * @param studios Set to {@code true} to load studio houses, or {@code false} for standard houses.
+	 * @return A map where the key is the house identifier and the value is the {@link House} object.
+	 */
 	@Override
 	public Map<Integer, House> loadHouses(Collection<HousingLand> lands, boolean studios)
 	{
@@ -264,7 +328,9 @@ public class MySQL5HousesDAO extends HousesDAO
 				buildingsForAddress.put(address.getId(), land.getBuildings());
 			}
 		}
+		
 		final HashMap<Integer, Integer> addressHouseIds = new HashMap<>();
+		
 		Connection con = null;
 		PreparedStatement stmt = null;
 		try
@@ -272,6 +338,7 @@ public class MySQL5HousesDAO extends HousesDAO
 			con = DatabaseFactory.getConnection();
 			stmt = con.prepareStatement(studios ? SELECT_STUDIOS_QUERY : SELECT_HOUSES_QUERY);
 			final ResultSet rset = stmt.executeQuery();
+			
 			while (rset.next())
 			{
 				final int houseId = rset.getInt("id");
@@ -286,17 +353,20 @@ public class MySQL5HousesDAO extends HousesDAO
 						break;
 					}
 				}
+				
 				House house = null;
 				if (addressHouseIds.containsKey(address.getId()))
 				{
 					log.warn("Duplicate house address " + address.getId() + "!");
 					continue;
 				}
+				
 				house = new House(houseId, building, address, 0);
 				if ((building != null) && (building.getType() == BuildingType.PERSONAL_FIELD))
 				{
 					addressHouseIds.put(address.getId(), houseId);
 				}
+				
 				house.setOwnerId(rset.getInt("player_id"));
 				house.setAcquiredTime(rset.getTimestamp("acquire_time"));
 				house.setPermissions(rset.getInt("settings"));
@@ -304,6 +374,7 @@ public class MySQL5HousesDAO extends HousesDAO
 				house.setFeePaid(rset.getInt("fee_paid") != 0);
 				house.setNextPay(rset.getTimestamp("next_pay"));
 				house.setSellStarted(rset.getTimestamp("sell_started"));
+				
 				final InputStream binaryStream = rset.getBinaryStream("sign_notice");
 				if (binaryStream != null)
 				{
@@ -314,9 +385,11 @@ public class MySQL5HousesDAO extends HousesDAO
 						house.setSignNotice(bytes);
 					}
 				}
+				
 				final int id = studios ? house.getOwnerId() : address.getId();
 				houses.put(id, house);
 			}
+			
 			rset.close();
 		}
 		catch (Exception e)
@@ -327,17 +400,25 @@ public class MySQL5HousesDAO extends HousesDAO
 		{
 			DatabaseFactory.close(stmt, con);
 		}
+		
 		return houses;
 	}
 	
+	/**
+	 * Removes all houses associated with a specific player.<br>
+	 * This method updates the database by deleting records for the given {@code playerId}.
+	 * @param playerId The unique identifier of the player whose houses should be removed.
+	 */
 	@Override
 	public void deleteHouse(int playerId)
 	{
 		Connection con = null;
+		
 		try
 		{
 			con = DatabaseFactory.getConnection();
 			final PreparedStatement stmt = con.prepareStatement(DELETE_HOUSE_QUERY);
+			
 			stmt.setInt(1, playerId);
 			stmt.execute();
 		}

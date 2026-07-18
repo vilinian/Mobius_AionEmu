@@ -1,25 +1,24 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aionemu.gameserver.configs.main.NameConfig;
 import com.aionemu.gameserver.model.EmotionType;
 import com.aionemu.gameserver.model.gameobjects.Pet;
 import com.aionemu.gameserver.model.gameobjects.PetAction;
@@ -28,7 +27,7 @@ import com.aionemu.gameserver.network.aion.AionClientPacket;
 import com.aionemu.gameserver.network.aion.AionConnection.State;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_EMOTION;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_PET;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
+import com.aionemu.gameserver.services.MinionService;
 import com.aionemu.gameserver.services.NameRestrictionService;
 import com.aionemu.gameserver.services.toypet.PetAdoptionService;
 import com.aionemu.gameserver.services.toypet.PetMoodService;
@@ -37,13 +36,14 @@ import com.aionemu.gameserver.services.toypet.PetSpawnService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles client-to-server packets related to {@link Pet} interactions.<br>
+ * This class processes various pet commands sent by the player to the server.
  * @author M@xx, xTz
  */
 public class CM_PET extends AionClientPacket
 {
 	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(CM_PET.class);
-	
 	private int actionId;
 	private PetAction action;
 	private int petId;
@@ -69,7 +69,7 @@ public class CM_PET extends AionClientPacket
 	@SuppressWarnings("unused")
 	private int unk6;
 	
-	// Cheer
+	// Buff
 	private int activateCheering;
 	@SuppressWarnings("unused")
 	private int unkCheer2;
@@ -83,6 +83,13 @@ public class CM_PET extends AionClientPacket
 	@SuppressWarnings("unused")
 	private int unkMerchand3;
 	
+	/**
+	 * This constructor initializes a new {@link CM_PET} packet.<br>
+	 * It passes the network details to the parent class.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state of the client.
+	 * @param restStates A variable number of additional states for the connection.
+	 */
 	public CM_PET(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -96,7 +103,6 @@ public class CM_PET extends AionClientPacket
 		switch (action)
 		{
 			case ADOPT:
-			{
 				eggObjId = readD();
 				petId = readD();
 				unk2 = readC();
@@ -106,16 +112,12 @@ public class CM_PET extends AionClientPacket
 				unk6 = readD();
 				petName = readS();
 				break;
-			}
 			case SURRENDER:
 			case SPAWN:
 			case DISMISS:
-			{
 				petId = readD();
 				break;
-			}
 			case FOOD:
-			{
 				actionType = readD();
 				if (actionType == 3)
 				{
@@ -126,21 +128,25 @@ public class CM_PET extends AionClientPacket
 					dopingAction = readD();
 					if (dopingAction == 0)
 					{
+						// add item
 						dopingItemId = readD();
 						dopingSlot1 = readD();
 					}
 					else if (dopingAction == 1)
 					{
+						// remove item
 						dopingSlot1 = readD();
 						dopingItemId = readD();
 					}
 					else if (dopingAction == 2)
 					{
+						// move item
 						dopingSlot1 = readD();
 						dopingSlot2 = readD();
 					}
 					else if (dopingAction == 3)
 					{
+						// use doping
 						dopingItemId = readD();
 						dopingSlot1 = readD();
 					}
@@ -161,25 +167,19 @@ public class CM_PET extends AionClientPacket
 				{
 					objectId = readD();
 					count = readD();
+					unk2 = readD();
 				}
 				break;
-			}
 			case RENAME:
-			{
 				petId = readD();
 				petName = readS();
 				break;
-			}
 			case MOOD:
-			{
 				subType = readD();
 				emotionId = readD();
 				break;
-			}
 			default:
-			{
 				break;
-			}
 		}
 	}
 	
@@ -191,11 +191,11 @@ public class CM_PET extends AionClientPacket
 		{
 			return;
 		}
+		
 		final Pet pet = player.getPet();
 		switch (action)
 		{
 			case ADOPT:
-			{
 				if (NameRestrictionService.isForbiddenWord(petName))
 				{
 					PacketSendUtility.sendMessage(player, "You are trying to use a forbidden name. Choose another one!");
@@ -205,28 +205,24 @@ public class CM_PET extends AionClientPacket
 					PetAdoptionService.adoptPet(player, eggObjId, petId, petName, decorationId);
 				}
 				break;
-			}
 			case SURRENDER:
-			{
 				PetAdoptionService.surrenderPet(player, petId);
-				// Items stored in the surrendered pet's bag have been returned to your cube.
-				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_TOYPET_RETURN_MASTER_ITEM);
 				break;
-			}
 			case SPAWN:
-			{
+				if (player.getMinion() != null)
+				{
+					MinionService.getInstance().despawnMinion(player, 0);
+				}
+				
 				PetSpawnService.summonPet(player, petId, true);
 				break;
-			}
 			case DISMISS:
-			{
 				PetSpawnService.dismissPet(player, true);
 				break;
-			}
 			case FOOD:
-			{
 				if (actionType == 2)
 				{
+					// Pet doping
 					if (dopingAction == 2)
 					{
 						PetService.getInstance().relocateDoping(player, dopingSlot1, dopingSlot2);
@@ -238,6 +234,7 @@ public class CM_PET extends AionClientPacket
 				}
 				else if (actionType == 3)
 				{
+					// Pet looting
 					PetService.getInstance().activateLoot(player, activateLoot != 0);
 				}
 				else if (actionType == 4)
@@ -255,55 +252,48 @@ public class CM_PET extends AionClientPacket
 				{
 					if (activateCheering == 1)
 					{
-						PetService.getInstance().activeCheering(player, true);
+						PetService.getInstance().activateBuff(player, true);
 					}
 					else if (activateCheering == 0)
 					{
-						PetService.getInstance().activeCheering(player, false);
+						PetService.getInstance().activateBuff(player, false);
 					}
 				}
-				else if ((pet != null) && !pet.getCommonData().isFeedingTime())
+				else if (pet != null)
 				{
-					PacketSendUtility.sendPacket(player, new SM_PET(8, actionId, objectId, count, player.getPet()));
-				}
-				else if ((pet != null) && (objectId == 0) && pet.getCommonData().isFeedingTime())
-				{
-					pet.getCommonData().setCancelFeed(true);
-					PacketSendUtility.sendPacket(player, new SM_PET(4, actionId, 0, 0, player.getPet()));
-					PacketSendUtility.sendPacket(player, new SM_EMOTION(player, EmotionType.END_FEEDING, 0, player.getObjectId()));
-				}
-				else
-				{
-					PetService.getInstance().removeObject(objectId, count, actionId, player);
-				}
-				break;
-			}
-			case RENAME:
-			{
-				if (NameConfig.PET_NAME_CHANGE_ENABLE)
-				{
-					if (NameRestrictionService.isForbiddenWord(petName))
+					if (objectId == 0)
 					{
-						PacketSendUtility.sendMessage(player, "You are trying to use a forbidden name. Choose another one!");
+						pet.getCommonData().setCancelFeed(true);
+						PacketSendUtility.sendPacket(player, new SM_PET(4, actionId, 0, 0, player.getPet()));
+						PacketSendUtility.sendPacket(player, new SM_EMOTION(player, EmotionType.END_FEEDING, 0, player.getObjectId()));
+					}
+					else if (!pet.getCommonData().isFeedingTime())
+					{
+						PacketSendUtility.sendPacket(player, new SM_PET(8, actionId, objectId, count, player.getPet()));
 					}
 					else
 					{
-						PetService.getInstance().renamePet(player, petName);
+						PetService.getInstance().removeObject(objectId, count, actionId, player);
 					}
 				}
 				break;
-			}
+			case RENAME:
+				if (NameRestrictionService.isForbiddenWord(petName))
+				{
+					PacketSendUtility.sendMessage(player, "You are trying to use a forbidden name. Choose another one!");
+				}
+				else
+				{
+					PetService.getInstance().renamePet(player, petName);
+				}
+				break;
 			case MOOD:
-			{
 				if ((pet != null) && (((subType == 0) && (pet.getCommonData().getMoodRemainingTime() == 0)) || ((subType == 3) && (pet.getCommonData().getGiftRemainingTime() == 0)) || (emotionId != 0)))
 				{
 					PetMoodService.checkMood(pet, subType, emotionId);
 				}
-			}
 			default:
-			{
 				break;
-			}
 		}
 	}
 }

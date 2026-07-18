@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -22,7 +22,10 @@ import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 
 /**
- * @author Dr.Nism
+ * This packet is sent to the client when a target has been selected.<br>
+ * It informs the player about the {@code Creature} or {@link Player} they are currently targeting.
+ * @author Sweetkr
+ * @modified -Enomine- 4.0
  */
 public class SM_TARGET_SELECTED extends AionServerPacket
 {
@@ -33,6 +36,12 @@ public class SM_TARGET_SELECTED extends AionServerPacket
 	private int currentMp;
 	private int targetObjId;
 	
+	/**
+	 * This constructor initializes the packet with data from a target.<br>
+	 * It checks if the {@link Player} has a valid target.<br>
+	 * It extracts stats like level and health based on the target type.
+	 * @param player The {@code Player} who is selecting a target.
+	 */
 	public SM_TARGET_SELECTED(Player player)
 	{
 		if (player != null)
@@ -52,12 +61,11 @@ public class SM_TARGET_SELECTED extends AionServerPacket
 				level = creature.getLevel();
 				maxHp = creature.getLifeStats().getMaxHp();
 				currentHp = creature.getLifeStats().getCurrentHp();
-				maxMp = creature.getLifeStats().getMaxMp();
-				currentMp = creature.getLifeStats().getCurrentMp();
+				maxMp = 0;
+				currentMp = 0;
 			}
 			else
 			{
-				// TODO: check various gather on retail
 				level = 0;
 				maxHp = 0;
 				currentHp = 0;
@@ -72,9 +80,6 @@ public class SM_TARGET_SELECTED extends AionServerPacket
 		}
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void writeImpl(AionConnection con)
 	{
@@ -82,8 +87,7 @@ public class SM_TARGET_SELECTED extends AionServerPacket
 		writeH(level);
 		writeD(maxHp);
 		writeD(currentHp);
-		writeD(maxMp);
-		writeD(currentMp);
+		writeD(maxMp); // Todo Check on Offi
+		writeD(currentMp); // Todo Check on Offi
 	}
-	
 }

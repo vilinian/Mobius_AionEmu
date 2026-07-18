@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -27,6 +27,8 @@ import com.aionemu.gameserver.network.aion.AionServerPacket;
 import com.aionemu.gameserver.network.aion.iteminfo.ItemInfoBlob;
 
 /**
+ * This packet sends warehouse information to the client.<br>
+ * It contains a list of {@link Item} objects stored in the player's warehouse.
  * @author kosyachok
  */
 public class SM_WAREHOUSE_INFO extends AionServerPacket
@@ -37,6 +39,15 @@ public class SM_WAREHOUSE_INFO extends AionServerPacket
 	private final int expandLvl;
 	private final Player player;
 	
+	/**
+	 * This constructor initializes a new {@link SM_WAREHOUSE_INFO} packet.<br>
+	 * It prepares the warehouse data to be sent to a client.
+	 * @param items The collection of {@link Item} objects to include in the packet. If {@code null}, it defaults to an empty list.
+	 * @param warehouseType The specific type identifier for the warehouse.
+	 * @param expandLvl The expansion level associated with the warehouse.
+	 * @param firstPacket A boolean flag indicating if this is the first part of the data transmission.
+	 * @param player The {@link Player} object who owns or is viewing the warehouse.
+	 */
 	public SM_WAREHOUSE_INFO(Collection<Item> items, int warehouseType, int expandLvl, boolean firstPacket, Player player)
 	{
 		this.warehouseType = warehouseType;
@@ -50,6 +61,7 @@ public class SM_WAREHOUSE_INFO extends AionServerPacket
 		{
 			itemList = items;
 		}
+		
 		this.player = player;
 	}
 	
@@ -67,6 +79,12 @@ public class SM_WAREHOUSE_INFO extends AionServerPacket
 		}
 	}
 	
+	/**
+	 * Writes the details of a single {@link Item} to the packet buffer.<br>
+	 * This method handles the serialization of IDs, names, and blobs.<br>
+	 * It is used internally by {@code writeImpl}.
+	 * @param item The {@code Item} object containing the data to be written.
+	 */
 	private void writeItemInfo(Item item)
 	{
 		final ItemTemplate itemTemplate = item.getItemTemplate();
@@ -79,6 +97,6 @@ public class SM_WAREHOUSE_INFO extends AionServerPacket
 		final ItemInfoBlob itemInfoBlob = ItemInfoBlob.getFullBlob(player, item);
 		itemInfoBlob.writeMe(getBuf());
 		
-		writeH((int) (item.getEquipmentSlot() & 0xFFFF)); // FF FF equipment
+		writeH((int) (item.getEquipmentSlot() & 0xFFFF));
 	}
 }

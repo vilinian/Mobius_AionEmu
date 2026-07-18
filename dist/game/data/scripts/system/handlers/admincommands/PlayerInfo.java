@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -34,19 +34,30 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.Util;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 import com.aionemu.gameserver.world.World;
-import com.google.common.base.Predicate;
 
 /**
+ * Handles the admin command to display detailed information about a specific player.<br>
+ * It retrieves data such as account details, items, and skills from the {@link Player} object. This class allows administrators to inspect character status within the game world.
  * @author lyahim
  * @modified antness
  */
 public class PlayerInfo extends AdminCommand
 {
+	/**
+	 * Creates a new instance of the {@link PlayerInfo} command.<br>
+	 * This constructor initializes the admin command with the name {@code playerinfo}.
+	 */
 	public PlayerInfo()
 	{
 		super("playerinfo");
 	}
 	
+	/**
+	 * Displays detailed information about a specific player.<br>
+	 * It allows admins to view stats like items, skills, location, and legion data.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings where the first element is the target name and the second is the info type.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
@@ -91,6 +102,7 @@ public class PlayerInfo extends AdminCommand
 					strbld.append("    " + act.getItemCount() + "(s) of " + ChatUtil.item(act.getItemTemplate().getTemplateId()) + "\n");
 				}
 			}
+			
 			items.clear();
 			items = target.getEquipment().getEquippedItems();
 			it = items.iterator();
@@ -107,6 +119,7 @@ public class PlayerInfo extends AdminCommand
 					strbld.append("    " + act.getItemCount() + "(s) of " + ChatUtil.item(act.getItemTemplate().getTemplateId()) + "\n");
 				}
 			}
+			
 			showAllLines(admin, strbld.toString());
 		}
 		else if (params[1].equals("group"))
@@ -121,14 +134,10 @@ public class PlayerInfo extends AdminCommand
 			else
 			{
 				strbld.append(group.getLeader().getName() + "\n  Members:\n");
-				group.applyOnMembers(new Predicate<Player>()
+				group.applyOnMembers(player ->
 				{
-					@Override
-					public boolean apply(Player player)
-					{
-						strbld.append("    " + player.getName() + "\n");
-						return true;
-					}
+					strbld.append("    " + player.getName() + "\n");
+					return true;
 				});
 				PacketSendUtility.sendMessage(admin, strbld.toString());
 			}
@@ -140,10 +149,11 @@ public class PlayerInfo extends AdminCommand
 			
 			final PlayerSkillEntry sle[] = target.getSkillList().getAllSkills();
 			
-			for (PlayerSkillEntry element : sle)
+			for (int i = 0; i < sle.length; i++)
 			{
-				strbld.append("    level " + element.getSkillLevel() + " of " + element.getSkillName() + "\n");
+				strbld.append("    level " + sle[i].getSkillLevel() + " of " + sle[i].getSkillName() + "\n");
 			}
+			
 			showAllLines(admin, strbld.toString());
 		}
 		else if (params[1].equals("loc"))
@@ -169,9 +179,10 @@ public class PlayerInfo extends AdminCommand
 				while (it.hasNext())
 				{
 					final LegionMemberEx act = it.next();
-					strbld.append("    " + act.getName() + "(" + ((act.isOnline() == true) ? "online" : "offline") + ")" + act.getRank().toString() + "\n");
+					strbld.append("    " + act.getName() + "(" + (act.isOnline() ? "online" : "offline") + ")" + act.getRank().toString() + "\n");
 				}
 			}
+			
 			showAllLines(admin, strbld.toString());
 		}
 		else if (params[1].equals("ap"))
@@ -265,6 +276,13 @@ public class PlayerInfo extends AdminCommand
 		}
 	}
 	
+	/**
+	 * Displays a multi-line string to an administrator.<br>
+	 * This method splits the input into chunks of 20 lines.<br>
+	 * It sends each chunk as a separate message using {@code sendMessage}.
+	 * @param admin The {@code Player} who will receive the messages.
+	 * @param str The full string containing all lines to be displayed.
+	 */
 	private void showAllLines(Player admin, String str)
 	{
 		int index = 0;
@@ -281,17 +299,26 @@ public class PlayerInfo extends AdminCommand
 					strbld.append("\n");
 				}
 			}
+			
 			PacketSendUtility.sendMessage(admin, strbld.toString());
 		}
+		
 		final int odd = strarray.length - index;
 		final StringBuilder strbld = new StringBuilder();
 		for (int i = 0; i < odd; i++, index++)
 		{
 			strbld.append(strarray[index] + "\n");
 		}
+		
 		PacketSendUtility.sendMessage(admin, strbld.toString());
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{

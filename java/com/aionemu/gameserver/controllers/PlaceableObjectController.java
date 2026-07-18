@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.controllers;
 
@@ -29,16 +29,26 @@ import com.aionemu.gameserver.utils.MathUtil;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.world.World;
 
-import javolution.util.FastMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * This controller manages the logic for objects that can be placed within a house.<br>
+ * It handles interactions and updates for {@link HouseObject} instances.<br>
+ * It extends {@link VisibleObjectController} to provide specialized behavior for placeable items.
  * @author Rolandas
  * @param <T>
  */
 public class PlaceableObjectController<T extends PlaceableHouseObject>extends VisibleObjectController<HouseObject<T>>
 {
-	FastMap<Integer, ActionObserver> observed = new FastMap<Integer, ActionObserver>().shared();
+	Map<Integer, ActionObserver> observed = new ConcurrentHashMap<>();
 	
+	/**
+	 * This method registers a {@link Player} as an observer.<br>
+	 * It creates a new {@code FlyRingObserver} for the target.<br>
+	 * The observer is added to the player's observation controller.
+	 * @param object The {@code VisibleObject} representing the player to observe.
+	 */
 	@Override
 	public void see(VisibleObject object)
 	{
@@ -49,6 +59,12 @@ public class PlaceableObjectController<T extends PlaceableHouseObject>extends Vi
 		PacketSendUtility.sendPacket(p, new SM_HOUSE_OBJECT(getOwner()));
 	}
 	
+	/**
+	 * Updates the visibility status of a specific object.<br>
+	 * This method also clears the target if the object is the current target.
+	 * @param object The {@code VisibleObject} that is no longer seen.
+	 * @param isOutOfRange Whether the object is outside of the visible range.
+	 */
 	@Override
 	public void notSee(VisibleObject object, boolean isOutOfRange)
 	{
@@ -57,17 +73,27 @@ public class PlaceableObjectController<T extends PlaceableHouseObject>extends Vi
 		if (isOutOfRange)
 		{
 			observer.moved();
-			PacketSendUtility.sendPacket(p, new SM_DELETE_HOUSE_OBJECT((getOwner()).getObjectId()));
+			PacketSendUtility.sendPacket(p, new SM_DELETE_HOUSE_OBJECT(getOwner().getObjectId()));
 		}
+		
 		p.getObserveController().removeObserver(observer);
 	}
 	
+	/**
+	 * Handles the logic when an object is despawned.<br>
+	 * This method calls {@code onDespawn} on the owner of this object.
+	 */
 	@Override
 	public void onDespawn()
 	{
 		getOwner().onDespawn();
 	}
 	
+	/**
+	 * Removes the object from the game world.<br>
+	 * This method calls {@code boolean)} on the owner if it is currently spawned.<br>
+	 * It then removes the owner from the {@link World} instance.
+	 */
 	@Override
 	public void delete()
 	{
@@ -75,9 +101,15 @@ public class PlaceableObjectController<T extends PlaceableHouseObject>extends Vi
 		{
 			World.getInstance().despawn(getOwner(), false);
 		}
+		
 		World.getInstance().removeObject(getOwner());
 	}
 	
+	/**
+	 * Handles the request from a {@link Player} to start a dialog.<br>
+	 * This method is triggered when a player interacts with an NPC.
+	 * @param player The {@code Player} object who initiated the request.
+	 */
 	public void onDialogRequest(Player player)
 	{
 		if (!MathUtil.isInRange(getOwner(), player, getOwner().getObjectTemplate().getTalkingDistance() + 2))
@@ -85,6 +117,7 @@ public class PlaceableObjectController<T extends PlaceableHouseObject>extends Vi
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_HOUSING_OBJECT_TOO_FAR_TO_USE);
 			return;
 		}
+		
 		getOwner().onDialogRequest(player);
 	}
 }

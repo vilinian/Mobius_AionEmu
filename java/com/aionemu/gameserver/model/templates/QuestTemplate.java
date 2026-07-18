@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates;
 
@@ -34,22 +34,24 @@ import com.aionemu.gameserver.model.templates.quest.InventoryItems;
 import com.aionemu.gameserver.model.templates.quest.QuestBonuses;
 import com.aionemu.gameserver.model.templates.quest.QuestCategory;
 import com.aionemu.gameserver.model.templates.quest.QuestDrop;
+import com.aionemu.gameserver.model.templates.quest.QuestExtraCategory;
 import com.aionemu.gameserver.model.templates.quest.QuestItems;
 import com.aionemu.gameserver.model.templates.quest.QuestKill;
 import com.aionemu.gameserver.model.templates.quest.QuestMentorType;
 import com.aionemu.gameserver.model.templates.quest.QuestRepeatCycle;
-import com.aionemu.gameserver.model.templates.quest.QuestTargetType;
+import com.aionemu.gameserver.model.templates.quest.QuestTarget;
 import com.aionemu.gameserver.model.templates.quest.QuestWorkItems;
 import com.aionemu.gameserver.model.templates.quest.Rewards;
 import com.aionemu.gameserver.model.templates.quest.XMLStartCondition;
 
 /**
+ * Represents the static data and configuration for a quest in the game.<br>
+ * This class serves as a template used to define requirements, rewards, and objectives for {@code Quest} instances.
  * @author MrPoke
  * @modified vlog
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Quest")
-
 public class QuestTemplate
 {
 	@XmlElement(name = "collect_items")
@@ -91,13 +93,14 @@ public class QuestTemplate
 	protected List<QuestItems> priestSelectableReward;
 	@XmlElement(name = "chanter_selectable_reward")
 	protected List<QuestItems> chanterSelectableReward;
-	@XmlElement(name = "gunslinger_selectable_reward")
-	protected List<QuestItems> gunslingerSelectableReward;
-	@XmlElement(name = "songweaver_selectable_reward")
-	protected List<QuestItems> songweaverSelectableReward;
-	@XmlElement(name = "aethertech_selectable_reward")
-	protected List<QuestItems> aethertechSelectableReward;
-	
+	@XmlElement(name = "gunner_selectable_reward")
+	protected List<QuestItems> gunnerSelectableReward;
+	@XmlElement(name = "bard_selectable_reward")
+	protected List<QuestItems> bardSelectableReward;
+	@XmlElement(name = "painter_selectable_reward")
+	protected List<QuestItems> painterSelectableReward;
+	@XmlElement(name = "rider_selectable_reward")
+	protected List<QuestItems> riderSelectableReward;
 	@XmlAttribute(name = "id", required = true)
 	protected int id;
 	@XmlAttribute(name = "name")
@@ -114,16 +117,12 @@ public class QuestTemplate
 	protected int questCooltime;
 	@XmlAttribute(name = "rank")
 	private int rank;
-	@XmlAttribute(name = "max_count_limited_quest")
-	protected Integer maxCountLimitedQuest;
-	@XmlAttribute(name = "count_recover_limited_quest")
-	protected Integer countRecoverLimitedQuest;
 	@XmlAttribute(name = "cannot_share")
 	protected Boolean cannotShare;
 	@XmlAttribute(name = "cannot_giveup")
 	protected Boolean cannotGiveup;
-	@XmlAttribute(name = "bounty_reward")
-	protected Boolean bountyReward;
+	@XmlAttribute(name = "can_report")
+	protected Boolean canReport;
 	@XmlAttribute(name = "use_class_reward")
 	protected Integer useClassReward;
 	@XmlAttribute(name = "race_permitted")
@@ -136,44 +135,43 @@ public class QuestTemplate
 	protected Boolean timer;
 	@XmlAttribute(name = "category")
 	protected QuestCategory category;
+	@XmlAttribute(name = "extra_category")
+	protected QuestExtraCategory extraCategory;
 	@XmlAttribute(name = "repeat_cycle")
 	protected List<QuestRepeatCycle> repeatCycle;
 	@XmlAttribute(name = "npcfaction_id")
 	protected int npcFactionId;
 	@XmlAttribute(name = "mentor_type")
 	protected QuestMentorType mentorType = QuestMentorType.NONE;
-	@XmlAttribute(name = "target_type")
-	private final QuestTargetType targetType = QuestTargetType.NONE;
+	@XmlAttribute(name = "target")
+	private QuestTarget target = QuestTarget.NONE;
 	@XmlAttribute(name = "titleId")
 	protected int titleId;
 	
 	/**
-	 * Gets the value of the collectItems property.
-	 * @return possible object is {@link CollectItems }
+	 * Retrieves the items that need to be collected for this quest.<br>
+	 * This method returns the {@code CollectItems} object associated with the template.
+	 * @return the {@code CollectItems} data.
 	 */
 	public CollectItems getCollectItems()
 	{
 		return collectItems;
 	}
 	
+	/**
+	 * Retrieves the {@link InventoryItems} associated with this quest.<br>
+	 * This method returns the list of items required for the quest.
+	 * @return the {@code InventoryItems} object.
+	 */
 	public InventoryItems getInventoryItems()
 	{
 		return inventoryItems;
 	}
 	
 	/**
-	 * Gets the value of the rewards property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the rewards property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getRewards().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link Rewards }
-	 * @return
+	 * Retrieves the list of rewards for this quest.<br>
+	 * If no rewards are defined, it returns an empty {@code List}.
+	 * @return a {@code List} of {@link Rewards} objects.
 	 */
 	public List<Rewards> getRewards()
 	{
@@ -181,40 +179,44 @@ public class QuestTemplate
 		{
 			rewards = new ArrayList<>();
 		}
+		
 		return rewards;
 	}
 	
+	/**
+	 * Retrieves the list of extended rewards for this quest.<br>
+	 * If no extended rewards exist, it returns an empty {@code List}.
+	 * @return A {@code List} of {@link Rewards} objects.
+	 */
 	public List<Rewards> getExtendedRewards()
 	{
 		if (extendedRewards == null)
 		{
 			extendedRewards = new ArrayList<>();
 		}
+		
 		return extendedRewards;
 	}
 	
+	/**
+	 * Retrieves the list of bonuses associated with this quest.<br>
+	 * If no bonuses exist, it returns an empty {@code List}.
+	 * @return a {@code List} of {@link QuestBonuses} objects.
+	 */
 	public List<QuestBonuses> getBonus()
 	{
 		if (bonus == null)
 		{
 			bonus = new ArrayList<>();
 		}
+		
 		return bonus;
 	}
 	
 	/**
-	 * Gets the value of the questDrop property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the questDrop property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getQuestDrop().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link QuestDrop }
-	 * @return
+	 * Retrieves the list of items dropped by this quest.<br>
+	 * If no drops are defined, it returns an empty {@code List}.
+	 * @return a {@code List} of {@link QuestDrop} objects.
 	 */
 	public List<QuestDrop> getQuestDrop()
 	{
@@ -222,40 +224,44 @@ public class QuestTemplate
 		{
 			questDrop = new ArrayList<>();
 		}
+		
 		return questDrop;
 	}
 	
+	/**
+	 * Retrieves the list of required kills for this quest.<br>
+	 * If no kills are defined, it returns an empty {@code List}.
+	 * @return A {@code List} of {@link QuestKill} objects.
+	 */
 	public List<QuestKill> getQuestKill()
 	{
 		if (questKill == null)
 		{
 			questKill = new ArrayList<>();
 		}
+		
 		return questKill;
 	}
 	
+	/**
+	 * Retrieves the list of conditions required to start a quest.<br>
+	 * If no conditions are defined, it returns an empty {@code List}.
+	 * @return A {@code List} of {@link XMLStartCondition} objects.
+	 */
 	public List<XMLStartCondition> getXMLStartConditions()
 	{
 		if (startConds == null)
 		{
 			startConds = new ArrayList<>();
 		}
+		
 		return startConds;
 	}
 	
 	/**
-	 * Gets the value of the classPermitted property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the classPermitted property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getClassPermitted().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link PlayerClass }
-	 * @return
+	 * Retrieves the list of player classes allowed to complete this quest.<br>
+	 * If no specific classes are defined, it returns an empty {@code List}.
+	 * @return a {@code List} of {@link PlayerClass} objects.
 	 */
 	public List<PlayerClass> getClassPermitted()
 	{
@@ -263,12 +269,14 @@ public class QuestTemplate
 		{
 			classPermitted = new ArrayList<>();
 		}
+		
 		return classPermitted;
 	}
 	
 	/**
-	 * Gets the value of the genderPermitted property.
-	 * @return possible object is {@link Gender }
+	 * Retrieves the allowed {@link Gender} for this quest.<br>
+	 * This method returns the value stored in the {@code genderPermitted} field.
+	 * @return The permitted {@code Gender} for the quest.
 	 */
 	public Gender getGenderPermitted()
 	{
@@ -276,8 +284,9 @@ public class QuestTemplate
 	}
 	
 	/**
-	 * Gets the value of the questWorkItems property.
-	 * @return possible object is {@link QuestWorkItems }
+	 * Retrieves the work items associated with this quest.<br>
+	 * This method returns the {@code QuestWorkItems} object for the template.
+	 * @return the {@code QuestWorkItems} of the quest.
 	 */
 	public QuestWorkItems getQuestWorkItems()
 	{
@@ -285,18 +294,9 @@ public class QuestTemplate
 	}
 	
 	/**
-	 * Gets the value of the fighterSelectableReward property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the fighterSelectableReward property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getFighterSelectableReward().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link QuestItems }
-	 * @return
+	 * Retrieves the list of rewards available for the Fighter class.<br>
+	 * This method returns an empty {@code List} if no rewards are defined.
+	 * @return A {@code List} of {@link QuestItems} for the Fighter class.
 	 */
 	public List<QuestItems> getFighterSelectableReward()
 	{
@@ -304,22 +304,14 @@ public class QuestTemplate
 		{
 			fighterSelectableReward = new ArrayList<>();
 		}
+		
 		return fighterSelectableReward;
 	}
 	
 	/**
-	 * Gets the value of the knightSelectableReward property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the knightSelectableReward property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getKnightSelectableReward().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link QuestItems }
-	 * @return
+	 * Retrieves the list of rewards available for the Knight class.<br>
+	 * This method returns an empty {@code List} if no rewards are defined.
+	 * @return A {@code List} of {@link QuestItems} for the Knight class.
 	 */
 	public List<QuestItems> getKnightSelectableReward()
 	{
@@ -327,22 +319,14 @@ public class QuestTemplate
 		{
 			knightSelectableReward = new ArrayList<>();
 		}
+		
 		return knightSelectableReward;
 	}
 	
 	/**
-	 * Gets the value of the rangerSelectableReward property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the rangerSelectableReward property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getRangerSelectableReward().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link QuestItems }
-	 * @return
+	 * Retrieves the list of rewards available for the Ranger class.<br>
+	 * This method returns an empty {@code List} if no rewards are defined.
+	 * @return A {@code List} of {@link QuestItems} for the Ranger class.
 	 */
 	public List<QuestItems> getRangerSelectableReward()
 	{
@@ -350,22 +334,14 @@ public class QuestTemplate
 		{
 			rangerSelectableReward = new ArrayList<>();
 		}
+		
 		return rangerSelectableReward;
 	}
 	
 	/**
-	 * Gets the value of the assassinSelectableReward property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the assassinSelectableReward property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getAssassinSelectableReward().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link QuestItems }
-	 * @return
+	 * Retrieves the list of rewards selectable by the Assassin class.<br>
+	 * This method returns an empty {@code List} if no rewards are defined.
+	 * @return A {@code List} of {@link QuestItems} for the Assassin class.
 	 */
 	public List<QuestItems> getAssassinSelectableReward()
 	{
@@ -373,22 +349,14 @@ public class QuestTemplate
 		{
 			assassinSelectableReward = new ArrayList<>();
 		}
+		
 		return assassinSelectableReward;
 	}
 	
 	/**
-	 * Gets the value of the wizardSelectableReward property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the wizardSelectableReward property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getWizardSelectableReward().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link QuestItems }
-	 * @return
+	 * Retrieves the list of rewards available for the Wizard class.<br>
+	 * This method returns an empty {@code List} if no rewards are defined.
+	 * @return A {@code List} of {@link QuestItems} for the Wizard class.
 	 */
 	public List<QuestItems> getWizardSelectableReward()
 	{
@@ -396,22 +364,14 @@ public class QuestTemplate
 		{
 			wizardSelectableReward = new ArrayList<>();
 		}
+		
 		return wizardSelectableReward;
 	}
 	
 	/**
-	 * Gets the value of the elementalistSelectableReward property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the elementalistSelectableReward property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getElementalistSelectableReward().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link QuestItems }
-	 * @return
+	 * Retrieves the list of rewards available for the Elementalist class.<br>
+	 * This method returns an empty {@code List} if no rewards are defined.
+	 * @return A {@code List} of {@link QuestItems} for the Elementalist class.
 	 */
 	public List<QuestItems> getElementalistSelectableReward()
 	{
@@ -419,22 +379,14 @@ public class QuestTemplate
 		{
 			elementalistSelectableReward = new ArrayList<>();
 		}
+		
 		return elementalistSelectableReward;
 	}
 	
 	/**
-	 * Gets the value of the priestSelectableReward property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the priestSelectableReward property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getPriestSelectableReward().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link QuestItems }
-	 * @return
+	 * Retrieves the list of rewards available for the Priest class.<br>
+	 * This method returns an empty {@code List} if no rewards are defined.
+	 * @return A {@code List} of {@link QuestItems} for the Priest class.
 	 */
 	public List<QuestItems> getPriestSelectableReward()
 	{
@@ -442,22 +394,14 @@ public class QuestTemplate
 		{
 			priestSelectableReward = new ArrayList<>();
 		}
+		
 		return priestSelectableReward;
 	}
 	
 	/**
-	 * Gets the value of the chanterSelectableReward property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the chanterSelectableReward property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getChanterSelectableReward().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link QuestItems }
-	 * @return
+	 * Retrieves the list of rewards selectable by the Chanter class.<br>
+	 * This method returns an empty {@code List} if no rewards are defined.
+	 * @return A {@code List} of {@link QuestItems} for the Chanter class.
 	 */
 	public List<QuestItems> getChanterSelectableReward()
 	{
@@ -465,81 +409,73 @@ public class QuestTemplate
 		{
 			chanterSelectableReward = new ArrayList<>();
 		}
+		
 		return chanterSelectableReward;
 	}
 	
 	/**
-	 * Gets the value of the gunslingerSelectableReward property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the GunslingerSelectableReward property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getGunslingerSelectableReward().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link QuestItems }
-	 * @return
+	 * Retrieves the list of rewards selectable by the Gunner class.<br>
+	 * This method ensures a non-null {@code List} is returned.
+	 * @return A {@code List} of {@link QuestItems} for the Gunner class.
 	 */
-	public List<QuestItems> getGunslingerSelectableReward()
+	public List<QuestItems> getGunnerSelectableReward()
 	{
-		if (gunslingerSelectableReward == null)
+		if (gunnerSelectableReward == null)
 		{
-			gunslingerSelectableReward = new ArrayList<>();
+			gunnerSelectableReward = new ArrayList<>();
 		}
-		return gunslingerSelectableReward;
+		
+		return gunnerSelectableReward;
 	}
 	
 	/**
-	 * Gets the value of the songweaverSelectableReward property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the songweaverSelectableReward property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getSongweaverSelectableReward().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link QuestItems }
-	 * @return
+	 * Retrieves the list of rewards selectable by the Bard class.<br>
+	 * This method returns an empty {@code List} if no rewards are defined.
+	 * @return A {@code List} of {@link QuestItems} for the Bard class.
 	 */
-	public List<QuestItems> getSongweaverSelectableReward()
+	public List<QuestItems> getBardSelectableReward()
 	{
-		if (songweaverSelectableReward == null)
+		if (bardSelectableReward == null)
 		{
-			songweaverSelectableReward = new ArrayList<>();
+			bardSelectableReward = new ArrayList<>();
 		}
-		return songweaverSelectableReward;
+		
+		return bardSelectableReward;
 	}
 	
 	/**
-	 * Gets the value of the aethertechSelectableReward property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the aethertechSelectableReward property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getAethertechSelectableReward().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link QuestItems }
-	 * @return
+	 * Retrieves the list of rewards selectable by the Painter class.<br>
+	 * This method ensures a non-null {@code List} is returned.
+	 * @return A {@code List} of {@link QuestItems} for the Painter class.
 	 */
-	public List<QuestItems> getAethertechSelectableReward()
+	public List<QuestItems> getPainterSelectableReward()
 	{
-		if (aethertechSelectableReward == null)
+		if (painterSelectableReward == null)
 		{
-			aethertechSelectableReward = new ArrayList<>();
+			painterSelectableReward = new ArrayList<>();
 		}
-		return aethertechSelectableReward;
+		
+		return painterSelectableReward;
 	}
 	
 	/**
-	 * Gets the value of the id property.
-	 * @return
+	 * Retrieves the list of rewards selectable by a Rider.<br>
+	 * This method returns an empty {@code ArrayList} if no rewards are defined.
+	 * @return A {@code List} of {@link QuestItems} for the Rider class.
+	 */
+	public List<QuestItems> getRiderSelectableReward()
+	{
+		if (riderSelectableReward == null)
+		{
+			riderSelectableReward = new ArrayList<>();
+		}
+		
+		return riderSelectableReward;
+	}
+	
+	/**
+	 * Returns the unique identifier of this object.
+	 * @return The integer ID.
 	 */
 	public int getId()
 	{
@@ -547,8 +483,9 @@ public class QuestTemplate
 	}
 	
 	/**
-	 * Gets the value of the name property.
-	 * @return possible object is {@link String }
+	 * Retrieves the name of the bookmark.<br>
+	 * This method returns the {@code String`name`} associated with this object.
+	 * @return The name of the bookmark as a {@code String}.
 	 */
 	public String getName()
 	{
@@ -556,8 +493,9 @@ public class QuestTemplate
 	}
 	
 	/**
-	 * Gets the value of the nameId property.
-	 * @return possible object is {@link Integer }
+	 * Retrieves the unique identifier for the quest name.<br>
+	 * This value is used to identify the quest in the database.
+	 * @return The {@code Integer} ID of the quest name.
 	 */
 	public Integer getNameId()
 	{
@@ -565,27 +503,40 @@ public class QuestTemplate
 	}
 	
 	/**
-	 * Gets the value of the minlevelPermitted property.
-	 * @return possible object is {@link Integer }
+	 * Retrieves the minimum level required to start this quest.<br>
+	 * This value is used to check if a player meets the level requirements.
+	 * @return the {@code Integer} representing the minimum permitted level.
 	 */
 	public Integer getMinlevelPermitted()
 	{
 		return minlevelPermitted;
 	}
 	
+	/**
+	 * Retrieves the maximum level allowed for this quest.<br>
+	 * This value determines if a player meets the level requirement.
+	 * @return the maximum permitted level as an {@code int}.
+	 */
 	public int getMaxlevelPermitted()
 	{
 		return maxlevelPermitted;
 	}
 	
+	/**
+	 * Retrieves the minimum rank required to complete this quest.<br>
+	 * This value is used to check if a player meets the level requirements.
+	 * @return The required rank as an {@code int}.
+	 */
 	public int getRequiredRank()
 	{
 		return rank;
 	}
 	
 	/**
-	 * Gets the value of the maxRepeatCount property.
-	 * @return possible object is {@link Integer }
+	 * Retrieves the maximum number of times a quest can be repeated.<br>
+	 * It returns {@code 1} if the value is {@code null} or less than {@code 2}.<br>
+	 * Otherwise, it returns the stored {@code maxRepeatCount}.
+	 * @return The maximum repeat count as an {@link Integer}.
 	 */
 	public Integer getMaxRepeatCount()
 	{
@@ -593,38 +544,14 @@ public class QuestTemplate
 		{
 			return 1;
 		}
+		
 		return maxRepeatCount;
 	}
 	
 	/**
-	 * Gets the value of the maxCountLimitedQuest property.
-	 * @return possible object is {@link Integer }
-	 */
-	public Integer getMaxCountLimitedQuest()
-	{
-		if ((maxCountLimitedQuest == null) || !(maxCountLimitedQuest > 1))
-		{
-			return 1;
-		}
-		return maxCountLimitedQuest;
-	}
-	
-	/**
-	 * Gets the value of the countRecoverLimitedQuest property.
-	 * @return possible object is {@link Integer }
-	 */
-	public Integer getCountRecoverLimitedQuest()
-	{
-		if ((countRecoverLimitedQuest == null) || !(countRecoverLimitedQuest > 1))
-		{
-			return 1;
-		}
-		return countRecoverLimitedQuest;
-	}
-	
-	/**
-	 * Gets the value of the cannotShare property.
-	 * @return possible object is {@link Boolean }
+	 * Checks if the quest is restricted from being shared.<br>
+	 * Returns {@code false} if the value is {@code null}.
+	 * @return {@code true} if sharing is disabled, otherwise {@code false}.
 	 */
 	public boolean isCannotShare()
 	{
@@ -632,12 +559,15 @@ public class QuestTemplate
 		{
 			return false;
 		}
+		
 		return cannotShare;
 	}
 	
 	/**
-	 * Gets the value of the cannotGiveup property.
-	 * @return possible object is {@link Boolean }
+	 * Checks if the quest has a "cannot give up" status.<br>
+	 * This method returns {@code true} if the value is set to {@code true}.<br>
+	 * It returns {@code false} if the value is {@code null} or {@code false}.
+	 * @return {@code true} if the quest cannot be given up, otherwise {@code false}.
 	 */
 	public boolean isCannotGiveup()
 	{
@@ -645,44 +575,70 @@ public class QuestTemplate
 		{
 			return false;
 		}
+		
 		return cannotGiveup;
 	}
 	
-	public boolean isBountyReward()
+	/**
+	 * Checks if the quest is eligible to be reported.<br>
+	 * This method returns {@code false} if the report status is {@code null}.
+	 * @return {@code true} if reporting is allowed, otherwise {@code false}.
+	 */
+	public boolean isCanReport()
 	{
-		if (bountyReward == null)
+		if (canReport == null)
 		{
 			return false;
 		}
-		return bountyReward;
+		
+		return canReport;
 	}
 	
+	/**
+	 * Checks if the quest uses a single class reward.<br>
+	 * This method verifies if the {@code useClassReward} value is equal to {@code 1}.
+	 * @return {@code true} if the reward is restricted to a single class, {@code false} otherwise.
+	 */
 	public boolean isUseSingleClassReward()
 	{
 		if (useClassReward == null)
 		{
 			return false;
 		}
+		
 		return useClassReward == 1;
 	}
 	
+	/**
+	 * Checks if the quest uses repeated class rewards.<br>
+	 * This method verifies if the {@code useClassReward} value is equal to {@code 2}.
+	 * @return {@code true} if repeated class rewards are enabled, otherwise {@code false}.
+	 */
 	public boolean isUseRepeatedClassReward()
 	{
 		if (useClassReward == null)
 		{
 			return false;
 		}
+		
 		return useClassReward == 2;
 	}
 	
+	/**
+	 * Checks if this quest can be completed more than once.<br>
+	 * It returns {@code true} if the maximum repeat count is greater than {@code 1}.<br>
+	 * Otherwise, it returns {@code false}.
+	 * @return {@code true} if repeatable, {@code false} otherwise.
+	 */
 	public boolean isRepeatable()
 	{
 		return getMaxRepeatCount() > 1;
 	}
 	
 	/**
-	 * Gets the value of the racePermitted property.
-	 * @return possible object is {@link Race }
+	 * Retrieves the {@link Race} allowed for this quest.<br>
+	 * This method returns the value stored in the {@code racePermitted} field.
+	 * @return the permitted {@code Race} object.
 	 */
 	public Race getRacePermitted()
 	{
@@ -690,8 +646,8 @@ public class QuestTemplate
 	}
 	
 	/**
-	 * Gets the value of the combineskill property.
-	 * @return possible object is {@link Integer }
+	 * Retrieves the combined skill value for this quest.
+	 * @return The {@code Integer} value of the combined skill.
 	 */
 	public Integer getCombineSkill()
 	{
@@ -699,8 +655,9 @@ public class QuestTemplate
 	}
 	
 	/**
-	 * Gets the value of the combineSkillpoint property.
-	 * @return possible object is {@link Integer }
+	 * Retrieves the total combined skill points for this quest.<br>
+	 * This value is used to determine the overall skill point reward.
+	 * @return The {@code Integer} value of the combined skill points.
 	 */
 	public Integer getCombineSkillPoint()
 	{
@@ -708,30 +665,56 @@ public class QuestTemplate
 	}
 	
 	/**
-	 * Gets the value of the timer property.
-	 * @return possible object is {@link Integer }
+	 * Checks if the quest has an associated timer.<br>
+	 * Returns {@code true} if a timer exists.<br>
+	 * Returns {@code false} if the timer is {@code null}.
+	 * @return {@code true} if there is a timer, otherwise {@code false}.
 	 */
-	
 	public boolean isTimer()
 	{
 		if (timer == null)
 		{
 			return false;
 		}
+		
 		return timer;
 	}
 	
+	/**
+	 * Retrieves the category of the quest.<br>
+	 * If no category is defined, it defaults to {@code QuestCategory.QUEST}.
+	 * @return the {@link QuestCategory} associated with this template.
+	 */
 	public QuestCategory getCategory()
 	{
 		if (category == null)
 		{
 			category = QuestCategory.QUEST;
 		}
+		
 		return category;
 	}
 	
 	/**
-	 * @return the mentor
+	 * Retrieves the additional category for this quest.<br>
+	 * If no category is defined, it returns {@code QuestExtraCategory.NONE}.
+	 * @return the {@link QuestExtraCategory} associated with this quest.
+	 */
+	public QuestExtraCategory getExtraCategory()
+	{
+		if (extraCategory == null)
+		{
+			extraCategory = QuestExtraCategory.NONE;
+		}
+		
+		return extraCategory;
+	}
+	
+	/**
+	 * Checks if this quest template is associated with a mentor type.<br>
+	 * It returns {@code true} if the mentor type is not {@code NONE}.<br>
+	 * Otherwise, it returns {@code false}.
+	 * @return {@code true} if the quest has a mentor status, {@code false} otherwise.
 	 */
 	public boolean isMentor()
 	{
@@ -739,63 +722,122 @@ public class QuestTemplate
 	}
 	
 	/**
-	 * @return the mentor
+	 * Retrieves the mentor type associated with this quest.<br>
+	 * This value determines which mentor category the quest belongs to.
+	 * @return the {@code QuestMentorType} of the quest.
 	 */
 	public QuestMentorType getMentorType()
 	{
 		return mentorType;
 	}
 	
-	public QuestTargetType getTargetType()
+	/**
+	 * Retrieves the primary target for this quest.<br>
+	 * This method returns the {@code QuestTarget} object associated with the template.
+	 * @return the {@code QuestTarget} of the quest.
+	 */
+	public QuestTarget getTarget()
 	{
-		return targetType;
+		return target;
 	}
 	
-	public List<QuestRepeatCycle> getRepeatCycle()
-	{
-		return repeatCycle;
-	}
-	
+	/**
+	 * Retrieves the unique identifier for the title.<br>
+	 * This value corresponds to the {@code title_id} attribute.
+	 * @return The integer ID of the title.
+	 */
 	public int getTitleId()
 	{
 		return titleId;
 	}
 	
+	/**
+	 * Retrieves the list of repeat cycles for this quest.<br>
+	 * This method returns all {@link QuestRepeatCycle} objects associated with the template.
+	 * @return A {@code List} of {@code QuestRepeatCycle} objects.
+	 */
+	public List<QuestRepeatCycle> getRepeatCycle()
+	{
+		return repeatCycle;
+	}
+	
+	/**
+	 * Retrieves the unique identifier for the NPC faction.<br>
+	 * This ID determines which group the NPC belongs to.
+	 * @return The {@code int} value of the NPC faction ID.
+	 */
 	public int getNpcFactionId()
 	{
 		return npcFactionId;
 	}
 	
+	/**
+	 * Checks if the quest is based on a time cycle.<br>
+	 * It returns {@code true} if the {@code repeatCycle} field is not {@code null}.<br>
+	 * Otherwise, it returns {@code false}.
+	 * @return {@code true} if the quest has a time-based cycle, {@code false} otherwise.
+	 */
 	public boolean isTimeBased()
 	{
 		return repeatCycle != null;
 	}
 	
+	/**
+	 * Retrieves the cooldown time for this quest.<br>
+	 * This value determines how long a player must wait before repeating the quest.
+	 * @return The cooldown time as an {@code int}.
+	 */
 	public int getQuestCoolTime()
 	{
 		return questCooltime;
 	}
 	
+	/**
+	 * Checks if the quest is a daily quest.<br>
+	 * This method verifies if the quest is time-based and has a repeating cycle of {@code ALL}.
+	 * @return {@code true} if the quest is daily, otherwise {@code false}.
+	 */
 	public boolean isDaily()
 	{
 		return isTimeBased() && (repeatCycle.size() == 1) && (repeatCycle.get(0) == QuestRepeatCycle.ALL);
 	}
 	
+	/**
+	 * Checks if the quest instance type is weekly.<br>
+	 * This method returns {@code true} if it is time-based but not daily.
+	 * @return {@code true} if the instance is weekly, otherwise {@code false}.
+	 */
 	public boolean isWeekly()
 	{
 		return isTimeBased() && !isDaily();
 	}
 	
+	/**
+	 * Checks if this quest template is a master quest.<br>
+	 * This determines if the quest has a specific skill point value.
+	 * @return {@code true} if the quest is a master, {@code false} otherwise.
+	 */
 	public boolean isMaster()
 	{
 		return (getCombineSkillPoint() != null) && (getCombineSkillPoint() == 499);
 	}
 	
+	/**
+	 * Checks if the quest is designated for experts.<br>
+	 * This returns {@code true} only if the combine skill point is exactly {@code 399}.
+	 * @return {@code true} if the quest is an expert quest, otherwise {@code false}.
+	 */
 	public boolean isExpert()
 	{
 		return (getCombineSkillPoint() != null) && (getCombineSkillPoint() == 399);
 	}
 	
+	/**
+	 * Checks if the quest belongs to a specific category.<br>
+	 * It returns {@code true} if the category is {@code NON_COUNT} or {@code EVENT}.<br>
+	 * Otherwise, it returns {@code false}.
+	 * @return {@code true} if the quest is non-count or an event, {@code false} otherwise.
+	 */
 	public boolean isNoCount()
 	{
 		return category.equals(QuestCategory.NON_COUNT) || category.equals(QuestCategory.EVENT);

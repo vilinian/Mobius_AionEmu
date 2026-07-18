@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -20,15 +20,23 @@ import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.templates.challenge.ChallengeType;
 import com.aionemu.gameserver.network.aion.AionClientPacket;
 import com.aionemu.gameserver.network.aion.AionConnection.State;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.services.ChallengeTaskService;
-import com.aionemu.gameserver.utils.PacketSendUtility;
+import com.aionemu.gameserver.utils.audit.AuditLogger;
 
 /**
+ * Handles the client request to retrieve a list of available challenges.<br>
+ * This packet allows players to view current {@link ChallengeType} options in the game.
  * @author Rolandas
  */
 public class CM_CHALLENGE_LIST extends AionClientPacket
 {
+	/**
+	 * Creates a new instance of {@link CM_CHALLENGE_LIST}.<br>
+	 * This constructor initializes the packet with specific states.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary {@code State} associated with the packet.
+	 * @param restStates A variable number of additional {@code State} objects.
+	 */
 	public CM_CHALLENGE_LIST(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -58,9 +66,10 @@ public class CM_CHALLENGE_LIST extends AionClientPacket
 		{
 			if (player.getLegion() == null)
 			{
-				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_GUILD_LEAVE_I_AM_NOT_BELONG_TO_GUILD);
+				AuditLogger.info(player, "Trying to receive legion challenge task without legion.");
 				return;
 			}
+			
 			ChallengeTaskService.getInstance().showTaskList(player, ChallengeType.LEGION, taskOwner);
 		}
 		else

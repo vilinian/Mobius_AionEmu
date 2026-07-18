@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -30,7 +30,8 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.services.player.PlayerService;
 
 /**
- * In this packets aion client is requesting deletion of character.
+ * This packet handles the request from the {@code Aion} client to delete a specific character.<br>
+ * It processes the deletion logic and triggers the appropriate server responses.
  * @author -Nemesiss-
  */
 public class CM_DELETE_CHARACTER extends AionClientPacket
@@ -46,19 +47,17 @@ public class CM_DELETE_CHARACTER extends AionClientPacket
 	private int chaOid;
 	
 	/**
-	 * Constructs new instance of <tt>CM_DELETE_CHARACTER </tt> packet
-	 * @param opcode
-	 * @param state
-	 * @param restStates
+	 * This method creates a new {@link CM_DELETE_CHARACTER} packet.<br>
+	 * It is used when the client requests to delete a character.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state of the client.
+	 * @param restStates Additional states associated with the connection.
 	 */
 	public CM_DELETE_CHARACTER(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void readImpl()
 	{
@@ -66,14 +65,12 @@ public class CM_DELETE_CHARACTER extends AionClientPacket
 		chaOid = readD();
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void runImpl()
 	{
 		final AionConnection client = getConnection();
 		final PlayerAccountData playerAccData = client.getAccount().getPlayerAccountData(chaOid);
+		
 		if ((playerAccData != null) && !playerAccData.isLegionMember())
 		{
 			// passkey check

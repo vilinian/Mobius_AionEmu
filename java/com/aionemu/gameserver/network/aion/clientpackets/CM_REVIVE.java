@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -23,12 +23,21 @@ import com.aionemu.gameserver.network.aion.AionConnection.State;
 import com.aionemu.gameserver.services.player.PlayerReviveService;
 
 /**
+ * Handles the client request to revive a player character.<br>
+ * This packet triggers the {@link PlayerReviveService} to process the revival logic.
  * @author ATracer, orz, avol, Simple
  */
 public class CM_REVIVE extends AionClientPacket
 {
 	private int reviveId;
 	
+	/**
+	 * Creates a new instance of the {@code CM_REVIVE} packet.<br>
+	 * This packet is used to handle player revival actions.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary {@link State} associated with the request.
+	 * @param restStates A variable number of additional {@link State} objects.
+	 */
 	public CM_REVIVE(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -44,48 +53,44 @@ public class CM_REVIVE extends AionClientPacket
 	protected void runImpl()
 	{
 		final Player activePlayer = getConnection().getActivePlayer();
+		
 		if (!activePlayer.getLifeStats().isAlreadyDead())
 		{
 			return;
 		}
-		final ReviveType reviveType = ReviveType.getReviveTypeById(reviveId, activePlayer);
+		
+		final ReviveType reviveType = ReviveType.getReviveTypeById(reviveId);
+		
 		switch (reviveType)
 		{
 			case BIND_REVIVE:
-			case VORTEX_REVIVE:
-			{
+			case OBELISK_REVIVE:
 				PlayerReviveService.bindRevive(activePlayer);
 				break;
-			}
 			case REBIRTH_REVIVE:
-			{
 				PlayerReviveService.rebirthRevive(activePlayer);
 				break;
-			}
 			case ITEM_SELF_REVIVE:
-			{
 				PlayerReviveService.itemSelfRevive(activePlayer);
 				break;
-			}
 			case SKILL_REVIVE:
-			{
 				PlayerReviveService.skillRevive(activePlayer);
 				break;
-			}
 			case KISK_REVIVE:
-			{
 				PlayerReviveService.kiskRevive(activePlayer);
 				break;
-			}
 			case INSTANCE_REVIVE:
-			{
 				PlayerReviveService.instanceRevive(activePlayer);
 				break;
-			}
-			default:
-			{
+			case START_POINT_REVIVE:
+				PlayerReviveService.startPositionRevive(activePlayer);
 				break;
-			}
+			case LUNA_REVIVE:
+				PlayerReviveService.startLunaRevive(activePlayer);
+				break;
+			default:
+				break;
 		}
+		
 	}
 }

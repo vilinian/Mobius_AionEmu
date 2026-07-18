@@ -1,24 +1,25 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.utils.concurrent;
 
 import java.io.PrintStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -28,12 +29,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Manages and tracks statistics for {@code Runnable} tasks.<br>
+ * It provides tools to monitor execution metrics in a thread-safe manner.
  * @author NB4L1
  */
 @SuppressWarnings("unchecked")
@@ -41,18 +42,17 @@ public final class RunnableStatsManager
 {
 	private static final Logger log = LoggerFactory.getLogger(RunnableStatsManager.class);
 	
-	static final Map<Class<?>, ClassStat> classStats = new HashMap<>();
+	private static final Map<Class<?>, ClassStat> classStats = new HashMap<>();
 	
 	private static final class ClassStat
 	{
-		
 		private final String className;
 		private final MethodStat runnableStat;
 		
 		private String[] methodNames = new String[0];
-		MethodStat[] methodStats = new MethodStat[0];
+		private MethodStat[] methodStats = new MethodStat[0];
 		
-		ClassStat(Class<?> clazz)
+		private ClassStat(Class<?> clazz)
 		{
 			className = clazz.getName().replace("com.aionemu.gameserver.", "");
 			runnableStat = new MethodStat(className, "run()");
@@ -69,14 +69,15 @@ public final class RunnableStatsManager
 			classStats.put(clazz, this);
 		}
 		
-		MethodStat getRunnableStat()
+		private MethodStat getRunnableStat()
 		{
 			return runnableStat;
 		}
 		
-		MethodStat getMethodStat(String methodName, boolean synchronizedAlready)
+		private MethodStat getMethodStat(String methodName, boolean synchronizedAlready)
 		{
-			// method names will be interned automatically because of compiling, so this gonna work
+			// method names will be interned automatically because of compiling,
+			// so this gonna work
 			if ("run()".equals(methodName))
 			{
 				return runnableStat;
@@ -102,8 +103,10 @@ public final class RunnableStatsManager
 			
 			final MethodStat methodStat = new MethodStat(className, methodName);
 			
-			methodNames = (String[]) ArrayUtils.add(methodNames, methodName);
-			methodStats = (MethodStat[]) ArrayUtils.add(methodStats, methodStat);
+			methodNames = Arrays.copyOf(methodNames, methodNames.length + 1);
+			methodNames[methodNames.length - 1] = methodName;
+			methodStats = Arrays.copyOf(methodStats, methodStats.length + 1);
+			methodStats[methodStats.length - 1] = methodStat;
 			
 			return methodStat;
 		}
@@ -111,24 +114,23 @@ public final class RunnableStatsManager
 	
 	private static final class MethodStat
 	{
-		
 		private final ReentrantLock lock = new ReentrantLock();
 		
-		final String className;
-		final String methodName;
+		private final String className;
+		private final String methodName;
 		
-		long count;
-		long total;
-		long min = Long.MAX_VALUE;
-		long max = Long.MIN_VALUE;
+		private long count;
+		private long total;
+		private long min = Long.MAX_VALUE;
+		private long max = Long.MIN_VALUE;
 		
-		MethodStat(String className, String methodName)
+		private MethodStat(String className, String methodName)
 		{
 			this.className = className;
 			this.methodName = methodName;
 		}
 		
-		void handleStats(long runTime)
+		private void handleStats(long runTime)
 		{
 			lock.lock();
 			try
@@ -145,6 +147,13 @@ public final class RunnableStatsManager
 		}
 	}
 	
+	/**
+	 * Retrieves the {@code ClassStat} for a specific class.<br>
+	 * This method handles thread-safe initialization of stats.
+	 * @param clazz The class to retrieve statistics for.
+	 * @param synchronizedAlready A flag indicating if the caller has already locked the manager.
+	 * @return The {@code ClassStat} object associated with the provided class.
+	 */
 	private static ClassStat getClassStat(Class<?> clazz, boolean synchronizedAlready)
 	{
 		final ClassStat classStat = classStats.get(clazz);
@@ -165,11 +174,24 @@ public final class RunnableStatsManager
 		return new ClassStat(clazz);
 	}
 	
+	/**
+	 * Updates the execution statistics for a specific {@code Runnable} class.<br>
+	 * This method records the time taken to execute the {@code run()} method.
+	 * @param clazz The class of the {@code Runnable} to update.
+	 * @param runTime The amount of time spent during execution in milliseconds.
+	 */
 	public static void handleStats(Class<? extends Runnable> clazz, long runTime)
 	{
 		getClassStat(clazz, false).getRunnableStat().handleStats(runTime);
 	}
 	
+	/**
+	 * Records the execution time for a specific method within a class.<br>
+	 * This method updates the statistics used by {@code dumpClassStats}.
+	 * @param clazz The {@code Class} object of the target class.
+	 * @param methodName The name of the method being measured.
+	 * @param runTime The time taken to execute the method in milliseconds.
+	 */
 	public static void handleStats(Class<?> clazz, String methodName, long runTime)
 	{
 		getClassStat(clazz, false).getMethodStat(methodName, false).handleStats(runTime);
@@ -177,7 +199,6 @@ public final class RunnableStatsManager
 	
 	public static enum SortBy
 	{
-		
 		AVG("average"),
 		COUNT("count"),
 		TOTAL("total"),
@@ -186,16 +207,15 @@ public final class RunnableStatsManager
 		MIN("min"),
 		MAX("max"),;
 		
-		final String xmlAttributeName;
+		private final String xmlAttributeName;
 		
 		private SortBy(String xmlAttributeName)
 		{
 			this.xmlAttributeName = xmlAttributeName;
 		}
 		
-		final Comparator<MethodStat> comparator = new Comparator<MethodStat>()
+		private final Comparator<MethodStat> comparator = new Comparator<>()
 		{
-			
 			@Override
 			@SuppressWarnings("rawtypes")
 			public int compare(MethodStat o1, MethodStat o2)
@@ -226,6 +246,7 @@ public final class RunnableStatsManager
 						{
 							return ch2 - ch1;
 						}
+						
 						return ch1 - ch2;
 					}
 				}
@@ -240,65 +261,55 @@ public final class RunnableStatsManager
 				switch (SortBy.this)
 				{
 					case METHOD:
-					{
 						return NAME.comparator.compare(o1, o2);
-					}
 					default:
-					{
 						return 0;
-					}
 				}
 			}
 		};
 		
 		@SuppressWarnings("rawtypes")
-		Comparable getComparableValueOf(MethodStat stat)
+		private Comparable getComparableValueOf(MethodStat stat)
 		{
 			switch (this)
 			{
 				case AVG:
-				{
 					return stat.total / stat.count;
-				}
 				case COUNT:
-				{
 					return stat.count;
-				}
 				case TOTAL:
-				{
 					return stat.total;
-				}
 				case NAME:
-				{
 					return stat.className;
-				}
 				case METHOD:
-				{
 					return stat.methodName;
-				}
 				case MIN:
-				{
 					return stat.min;
-				}
 				case MAX:
-				{
 					return stat.max;
-				}
 				default:
-				{
 					throw new InternalError();
-				}
 			}
 		}
 		
-		static final SortBy[] VALUES = SortBy.values();
+		private static final SortBy[] VALUES = SortBy.values();
 	}
 	
+	/**
+	 * Prints the current statistics for all classes to the console.<br>
+	 * This method uses {@code null} as the sorting criteria.
+	 */
 	public static void dumpClassStats()
 	{
 		dumpClassStats(null);
 	}
 	
+	/**
+	 * Prints the execution statistics of all classes to a log file.<br>
+	 * The output is formatted as an XML structure for easier analysis.<br>
+	 * This method creates a new file named with the current system time.
+	 * @param sortBy The {@code SortBy} criteria used to order the entries in the output.
+	 */
 	public static void dumpClassStats(SortBy sortBy)
 	{
 		final List<MethodStat> methodStats = new ArrayList<>();
@@ -371,19 +382,16 @@ public final class RunnableStatsManager
 				{
 					case NAME:
 					case METHOD:
-					{
 						appendAttribute(sb, SortBy.NAME, values[SortBy.NAME.ordinal()][k], maxLength[SortBy.NAME.ordinal()]);
 						set.remove(SortBy.NAME);
+						
 						appendAttribute(sb, SortBy.METHOD, values[SortBy.METHOD.ordinal()][k], maxLength[SortBy.METHOD.ordinal()]);
 						set.remove(SortBy.METHOD);
 						break;
-					}
 					default:
-					{
 						appendAttribute(sb, sortBy, values[sortBy.ordinal()][k], maxLength[sortBy.ordinal()]);
 						set.remove(sortBy);
 						break;
-					}
 				}
 			}
 			
@@ -418,10 +426,25 @@ public final class RunnableStatsManager
 		}
 		finally
 		{
-			IOUtils.closeQuietly(ps);
+			try
+			{
+				if (ps != null)
+					ps.close();
+			}
+			catch (Exception ignored)
+			{
+			}
 		}
 	}
 	
+	/**
+	 * Appends a formatted attribute to the provided {@code StringBuilder}.<br>
+	 * It handles specific padding logic based on the {@code SortBy} type.
+	 * @param sb The {@code StringBuilder} to modify.
+	 * @param sortBy The sorting criteria used to determine formatting rules.
+	 * @param value The string value to be included in the attribute.
+	 * @param fillTo The total length to pad the attribute with spaces.
+	 */
 	private static void appendAttribute(StringBuilder sb, SortBy sortBy, String value, int fillTo)
 	{
 		sb.append(sortBy.xmlAttributeName);

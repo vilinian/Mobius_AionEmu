@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -27,6 +27,9 @@ import com.aionemu.gameserver.utils.Util;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * Handles the client request for a Game Master to use a bookmark.<br>
+ * This packet allows an administrator to teleport a {@link Player} to a specific location.<br>
+ * It interacts with the {@link TeleportService2} to process the movement.
  * @author xTz
  */
 public class CM_GM_BOOKMARK extends AionClientPacket
@@ -35,6 +38,13 @@ public class CM_GM_BOOKMARK extends AionClientPacket
 	private String playerName;
 	private String[] parts;
 	
+	/**
+	 * This constructor initializes a new {@link CM_GM_BOOKMARK} packet.<br>
+	 * It sets the required network states for the packet.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary state of the connection.
+	 * @param restStates Additional states associated with the connection.
+	 */
 	public CM_GM_BOOKMARK(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -54,64 +64,44 @@ public class CM_GM_BOOKMARK extends AionClientPacket
 	{
 		final Player admin = getConnection().getActivePlayer();
 		final Player player = World.getInstance().findPlayer(Util.convertName(playerName));
-		if (admin == null)
+		if ((admin == null) || (admin.getAccessLevel() < AdminConfig.GM_PANEL))
 		{
 			return;
 		}
-		if (admin.getAccessLevel() < AdminConfig.GM_PANEL)
-		{
-			return;
-		}
+		
 		if (player == null)
 		{
 			PacketSendUtility.sendMessage(admin, "Could not find an online player with that name.");
 			return;
 		}
+		
 		switch (command)
 		{
-			case GM_DIALOG_TELEPORTTO:
-			{
+			case GM_MAIL_LIST:
+				// TODO Show mail box
+				break;
+			case INVENTORY:
+				break;
+			case TELEPORTTO:
 				TeleportService2.teleportTo(admin, player.getWorldId(), player.getX(), player.getY(), player.getZ());
 				break;
-			}
-			case GM_DIALOG_RECALL:
-			{
+			case STATUS:
+				// TODO Player Status
+				break;
+			case SEARCH:
+				// TODO Target selected
+				break;
+			case GM_GUILDHISTORY:
+				// TODO Player Legion Info
+				break;
+			case GM_BUDDY_LIST:
+				// TODO FRIEND LIST
+				break;
+			case RECALL:
 				TeleportService2.teleportTo(player, admin.getWorldId(), admin.getX(), admin.getY(), admin.getZ());
-				break;
-			}
-			//
-			case GM_DIALOG:
-			case GM_DIALOG_POS:
-			case GM_DIALOG_MEMO:
-			case GM_DIALOG_BOOKMARK:
-			case GM_DIALOG_INVENTORY:
-			case GM_DIALOG_SKILL:
-			case GM_DIALOG_STATUS:
-			case GM_DIALOG_QUEST:
-			case GM_DIALOG_REFRESH:
-			case GM_DIALOG_WAREHOUSE:
-			case GM_DIALOG_MAIL:
-			case GM_POLL_DIALOG:
-			case GM_POLL_DIALOG_SUBMIT:
-			case GM_BOOKMARK_DIALOG:
-			case GM_BOOKMARK_DIALOG_ADD_BOOKMARK:
-			case GM_MEMO_DIALOG:
-			case GM_MEMO_DIALOG_ADD_MEMO:
-			case GM_DIALOG_CHECK_BOT1:
-			case GM_DIALOG_CHECK_BOT99:
-			case GM_INDICATOR_DIALOG_TOOLTIP_HOUSING_MODE:
-			case GM_DIALOG_CHARACTER:
-			case GM_DIALOG_OPTION:
-			case GM_DIALOG_BUILDER_CONTROL:
-			case GM_DIALOG_BUILDER_COMMAND:
-			{
-				break;
-			}
 			default:
-			{
 				PacketSendUtility.sendMessage(admin, "Invalid command: " + command.name());
 				break;
-			}
 		}
 	}
 }

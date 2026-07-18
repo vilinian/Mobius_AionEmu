@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.network.util;
 
@@ -28,39 +28,35 @@ import org.slf4j.LoggerFactory;
 import com.aionemu.commons.utils.ExitCode;
 
 /**
+ * This class monitors the system for potential deadlocks between threads.<br>
+ * It periodically checks thread states to identify and report blocked resources.
  * @author -Nemesiss-, ATracer
  */
 public class DeadLockDetector extends Thread
 {
 	private static final Logger log = LoggerFactory.getLogger(DeadLockDetector.class);
-	/**
-	 * What should we do on DeadLock
-	 */
+	/** What should we do on DeadLock */
 	public static final byte NOTHING = 0;
-	/**
-	 * What should we do on DeadLock
-	 */
+	/** What should we do on DeadLock */
 	public static final byte RESTART = 1;
 	
-	/**
-	 * how often check for deadlocks
-	 */
+	/** how often check for deadlocks */
 	private final int sleepTime;
 	/**
 	 * ThreadMXBean
 	 */
 	private final ThreadMXBean tmx;
-	/**
-	 * What should we do on DeadLock
-	 */
+	/** What should we do on DeadLock */
 	private final byte doWhenDL;
 	
 	/**
-	 * Create new DeadLockDetector with given values.
-	 * @param sleepTime
-	 * @param doWhenDL
+	 * Initializes a new {@link DeadLockDetector} thread.<br>
+	 * This constructor sets the interval for checking deadlocks.<br>
+	 * It also defines the action to take if a deadlock is found.
+	 * @param sleepTime The delay in milliseconds between checks.
+	 * @param doWhenDL The action to perform, such as {@code NOTHING} or {@code RESTART}.
 	 */
-	public DeadLockDetector(int sleepTime, byte doWhenDL)
+	public DeadLockDetector(final int sleepTime, byte doWhenDL)
 	{
 		super("DeadLockDetector");
 		this.sleepTime = sleepTime * 1000;
@@ -68,11 +64,8 @@ public class DeadLockDetector extends Thread
 		this.doWhenDL = doWhenDL;
 	}
 	
-	/**
-	 * Check if there is a DeadLock.
-	 */
 	@Override
-	public final void run()
+	public void run()
 	{
 		boolean deadlock = false;
 		while (!deadlock)
@@ -83,9 +76,7 @@ public class DeadLockDetector extends Thread
 				
 				if (ids != null)
 				{
-					/**
-					 * deadlock found :/
-					 */
+					/** deadlock found :/ */
 					deadlock = true;
 					final ThreadInfo[] tis = tmx.getThreadInfo(ids, true, true);
 					String info = "DeadLock Found!\n";
@@ -99,10 +90,8 @@ public class DeadLockDetector extends Thread
 						final LockInfo[] locks = ti.getLockedSynchronizers();
 						final MonitorInfo[] monitors = ti.getLockedMonitors();
 						if ((locks.length == 0) && (monitors.length == 0))
-						/**
-						 * this thread is deadlocked but its not guilty
-						 */
 						{
+							/** this thread is deadlocked but its not guilty */
 							continue;
 						}
 						
@@ -123,6 +112,7 @@ public class DeadLockDetector extends Thread
 							info += printDumpedThreadInfo(dumpedTI);
 						}
 					}
+					
 					log.warn(info);
 					
 					if (doWhenDL == RESTART)
@@ -130,6 +120,7 @@ public class DeadLockDetector extends Thread
 						System.exit(ExitCode.CODE_RESTART);
 					}
 				}
+				
 				Thread.sleep(sleepTime);
 			}
 			catch (Exception e)
@@ -140,14 +131,11 @@ public class DeadLockDetector extends Thread
 	}
 	
 	/**
-	 * Example:
-	 * <p>
-	 * Java-level deadlock:<br>
-	 * Thread-0 is waiting to lock java.lang.Object@276af2 which is held by main. Locked synchronizers:0 monitors:1<br>
-	 * main is waiting to lock java.lang.Object@fa3ac1 which is held by Thread-0. Locked synchronizers:0 monitors:1<br>
-	 * </p>
-	 * @param threadInfo
-	 * @return
+	 * Converts a {@link ThreadInfo} object into a brief summary string.<br>
+	 * This method extracts key details about the thread's current lock status.<br>
+	 * It includes information about the waiting lock and its owner.
+	 * @param threadInfo The {@code ThreadInfo} to process.
+	 * @return A formatted {@code String} containing the summary of the lock info.
 	 */
 	private String createShortLockInfo(ThreadInfo threadInfo)
 	{
@@ -166,16 +154,11 @@ public class DeadLockDetector extends Thread
 	}
 	
 	/**
-	 * Full thread info (short info and stacktrace)<br>
-	 * Example:
-	 * <p>
-	 * "Thread-0" Id=10 BLOCKED <br>
-	 * at com.aionemu.gameserver.DeadlockTest$1$1.run(DeadlockTest.java:70)<br>
-	 * - locked java.lang.Object@fa3ac1<br>
-	 * at java.lang.Thread.run(Thread.java:662)
-	 * </p>
-	 * @param threadInfo
-	 * @return
+	 * Converts a {@link ThreadInfo} object into a formatted string.<br>
+	 * This method builds a readable summary of the thread's state and stack trace.<br>
+	 * It also includes information about any locked monitors.
+	 * @param threadInfo The {@code ThreadInfo} object to be processed.
+	 * @return A formatted {@code String} containing the dumped thread details.
 	 */
 	private String printDumpedThreadInfo(ThreadInfo threadInfo)
 	{
@@ -195,6 +178,7 @@ public class DeadLockDetector extends Thread
 				}
 			}
 		}
+		
 		return sb.toString();
 	}
 }

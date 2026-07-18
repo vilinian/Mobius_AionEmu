@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.skill;
 
@@ -22,6 +22,8 @@ import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.stats.container.StatEnum;
 
 /**
+ * Represents a specific skill instance owned by a {@link Player}.<br>
+ * It stores the unique data and progression for an individual skill in a player's repertoire.
  * @author ATracer
  */
 public class PlayerSkillEntry extends SkillEntry
@@ -36,27 +38,48 @@ public class PlayerSkillEntry extends SkillEntry
 	
 	private PersistentState persistentState;
 	
+	/**
+	 * Creates a new instance of {@link PlayerSkillEntry}.<br>
+	 * This constructor initializes the skill data for a player.
+	 * @param skillId The unique identifier for the skill.
+	 * @param isStigma Indicates if the skill is a stigma.
+	 * @param isLinked Indicates if the skill is linked to another skill.
+	 * @param skillLvl The current level of the skill.
+	 * @param persistentState The state associated with this skill entry.
+	 */
 	public PlayerSkillEntry(int skillId, boolean isStigma, boolean isLinked, int skillLvl, PersistentState persistentState)
 	{
-		super(skillId, skillLvl);
+		super(skillId, skillLvl, 0, 0);
 		this.isStigma = isStigma;
 		this.isLinked = isLinked;
 		this.persistentState = persistentState;
 	}
 	
 	/**
-	 * @return isStigma
+	 * Checks if the skill is a stigma.<br>
+	 * This method returns the status of the {@code isStigma} flag.
+	 * @return {@code true} if the skill is a stigma, {@code false} otherwise.
 	 */
 	public boolean isStigma()
 	{
 		return isStigma;
 	}
 	
+	/**
+	 * Checks if the skill is currently linked.<br>
+	 * This status determines how the skill behaves in the game world.
+	 * @return {@code true} if the skill is linked, {@code false} otherwise.
+	 */
 	public boolean isLinked()
 	{
 		return isLinked;
 	}
 	
+	/**
+	 * Updates the skill level for this entry.<br>
+	 * This method also marks the state as requiring an update.
+	 * @param skillLevel The new level to assign to the skill.
+	 */
 	@Override
 	public void setSkillLvl(int skillLevel)
 	{
@@ -64,8 +87,17 @@ public class PlayerSkillEntry extends SkillEntry
 		setPersistentState(PersistentState.UPDATE_REQUIRED);
 	}
 	
+	/*
+	 * TODO CP
+	 * @Override public void setSkillLvlCp(int skillLevel) { super.setSkillLvlCp(skillLevel); }
+	 * @Override public void setSkillLvlBoost(int skillLevel) { super.setSkillLvlBoost(skillLevel); }
+	 */
+	
 	/**
-	 * @return The skill extra lvl
+	 * Retrieves the extra level bonus for a specific skill.<br>
+	 * This value depends on the {@code skillId} and current {@code skillLevel}.<br>
+	 * It returns different values based on predefined ranges.
+	 * @return The calculated extra level as an {@code int}.
 	 */
 	public int getExtraLvl()
 	{
@@ -73,12 +105,10 @@ public class PlayerSkillEntry extends SkillEntry
 		{
 			case 30002:
 			case 30003:
-			{
 				if ((skillLevel > 399) && (skillLevel < 500))
 				{
 					return 4;
 				}
-			}
 			case 40001:
 			case 40002:
 			case 40003:
@@ -86,7 +116,6 @@ public class PlayerSkillEntry extends SkillEntry
 			case 40007:
 			case 40008:
 			case 40010:
-			{
 				if ((skillLevel > 449) && (skillLevel < 500))
 				{
 					return 5;
@@ -99,13 +128,17 @@ public class PlayerSkillEntry extends SkillEntry
 				{
 					return skillLevel / 100;
 				}
-			}
+			case 40011:
+				return 0;
 		}
+		
 		return 0;
 	}
 	
 	/**
-	 * @return the currentXp
+	 * Retrieves the current experience points for this skill.<br>
+	 * This value is used primarily for crafting skills.
+	 * @return The current {@code int} amount of experience.
 	 */
 	public int getCurrentXp()
 	{
@@ -113,7 +146,9 @@ public class PlayerSkillEntry extends SkillEntry
 	}
 	
 	/**
-	 * @param currentXp the currentXp to set
+	 * Updates the experience points for a crafting skill.<br>
+	 * This method sets the {@code currentXp} field to a new value.
+	 * @param currentXp The new amount of experience points to set.
 	 */
 	public void setCurrentXp(int currentXp)
 	{
@@ -121,14 +156,17 @@ public class PlayerSkillEntry extends SkillEntry
 	}
 	
 	/**
-	 * @param player
-	 * @param xp
-	 * @return
+	 * Adds experience points to the current skill.<br>
+	 * This method checks if the new total exceeds the required amount for a level up.<br>
+	 * It also applies stat modifiers from the {@link Player} to reduce the required experience.
+	 * @param player The {@code Player} who is gaining experience.
+	 * @param xp The amount of experience points to add.
+	 * @return {@code true} if the skill leveled up, or {@code false} otherwise.
 	 */
 	public boolean addSkillXp(Player player, int xp)
 	{
 		currentXp += xp;
-		int requiredExp = (int) (0.23 * (skillLevel + 17.2) * (skillLevel + 17.2));
+		int requiredExp = (int) ((0.37 * (skillLevel + 17.2) * (skillLevel + 17.2)) / 3.7); // 4.7.5
 		final StatEnum boostStat = StatEnum.getModifier(skillId);
 		if (boostStat != null)
 		{
@@ -138,11 +176,12 @@ public class PlayerSkillEntry extends SkillEntry
 				requiredExp /= statRate;
 			}
 		}
+		
 		if (currentXp > requiredExp)
 		{
-			if (CraftConfig.UNABLE_CRAFT_SKILLS_UNRESTRICTED_LEVELUP == true)
+			if (CraftConfig.UNABLE_CRAFT_SKILLS_UNRESTRICTED_LEVELUP)
 			{
-				final float skillUpRatio = (currentXp / (0.23f * (skillLevel + 17.2f) * (skillLevel + 17.2f)));
+				final float skillUpRatio = (currentXp / (0.37f * (skillLevel + 17.2f) * (skillLevel + 17.2f)));
 				int skillUp = skillLevel + (int) skillUpRatio;
 				
 				if ((skillLevel > 0) && (skillLevel < 99))
@@ -203,13 +242,51 @@ public class PlayerSkillEntry extends SkillEntry
 				setSkillLvl(skillLevel + 1);
 				currentXp = 0;
 			}
+			
 			return true;
 		}
+		
+		return false;
+	}
+	
+	int count = 0;
+	
+	/**
+	 * Adds experience points to a player's Magic Craft skill.<br>
+	 * This method checks if the new total exceeds the required amount.<br>
+	 * It also applies stat modifiers from {@link StatEnum} to reduce requirements.
+	 * @param player The {@code Player} receiving the experience.
+	 * @param xp The amount of experience points to add.
+	 * @return {@code true} if the skill level was increased, otherwise {@code false}.
+	 */
+	public boolean addMagicCraftSkillXp(Player player, int xp)
+	{
+		currentXp += xp;
+		int requiredExp = (int) ((1000 * 1000) + (1000 * 1000 * 0.4)); // Temp for MagicCraft
+		final StatEnum boostStat = StatEnum.getModifier(skillId);
+		if (boostStat != null)
+		{
+			final float statRate = player.getGameStats().getStat(boostStat, 100).getCurrent() / 100f;
+			if (statRate > 0)
+			{
+				requiredExp /= statRate;
+			}
+		}
+		
+		if (currentXp > requiredExp)
+		{
+			setSkillLvl(skillLevel + 1);
+			currentXp = 0;
+			return true;
+		}
+		
 		return false;
 	}
 	
 	/**
-	 * @return the pState
+	 * Retrieves the current state of this challenge.<br>
+	 * This information is saved between game sessions.
+	 * @return the {@link PersistentState} object.
 	 */
 	public PersistentState getPersistentState()
 	{
@@ -217,14 +294,15 @@ public class PlayerSkillEntry extends SkillEntry
 	}
 	
 	/**
-	 * @param persistentState the pState to set
+	 * Updates the {@code persistentState} of this wardrobe entry.<br>
+	 * This method applies specific logic to handle state transitions.
+	 * @param persistentState The new {@link PersistentState} to assign.
 	 */
 	public void setPersistentState(PersistentState persistentState)
 	{
 		switch (persistentState)
 		{
 			case DELETED:
-			{
 				if (this.persistentState == PersistentState.NEW)
 				{
 					this.persistentState = PersistentState.NOACTION;
@@ -234,24 +312,16 @@ public class PlayerSkillEntry extends SkillEntry
 					this.persistentState = PersistentState.DELETED;
 				}
 				break;
-			}
 			case UPDATE_REQUIRED:
-			{
 				if (this.persistentState != PersistentState.NEW)
 				{
 					this.persistentState = PersistentState.UPDATE_REQUIRED;
 				}
 				break;
-			}
 			case NOACTION:
-			{
 				break;
-			}
 			default:
-			{
 				this.persistentState = persistentState;
-			}
 		}
 	}
-	
 }

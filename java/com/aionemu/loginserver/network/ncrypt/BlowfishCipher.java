@@ -1,23 +1,25 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.ncrypt;
 
 /**
- * Blowfish Cipher - symmetric 16-round cipher, uses 64-bit blocks, 32-448 key size and key-dependend 32-bit four S-boxes
+ * This class implements the {@code Blowfish} symmetric block cipher.<br>
+ * It handles encryption and decryption using a 16-round process with 64-bit blocks.<br>
+ * The algorithm supports key sizes ranging from 32 to 448 bits.
  * @author EvilSpirit
  */
 public class BlowfishCipher
@@ -1109,8 +1111,10 @@ public class BlowfishCipher
 	private final int[][] sBoxes;
 	
 	/**
-	 * Default constructor. Initializes the Blowfish Cipher with blowfishKey
-	 * @param blowfishKey Blowfish Key
+	 * Creates a new instance of {@link BlowfishCipher}.<br>
+	 * This constructor initializes the internal arrays.<br>
+	 * It uses the provided key to set up the cipher state.
+	 * @param blowfishKey The byte array used as the encryption key.
 	 */
 	public BlowfishCipher(byte[] blowfishKey)
 	{
@@ -1120,8 +1124,10 @@ public class BlowfishCipher
 	}
 	
 	/**
-	 * Update current blowfish key with the new one and reinitialize the P-array and S-boxes
-	 * @param blowfishKey new blowfish key
+	 * Updates the internal key for the {@link BlowfishCipher}.<br>
+	 * This method resets the S-boxes and P-array using the new key.<br>
+	 * It calls {@code initArrays()} to finalize the setup.
+	 * @param blowfishKey The new {@code byte[]} key to use for encryption.
 	 */
 	public void updateKey(byte[] blowfishKey)
 	{
@@ -1134,7 +1140,9 @@ public class BlowfishCipher
 	}
 	
 	/**
-	 * Initialise the P-array and S-boxes
+	 * Initializes the internal cipher arrays for Blowfish.<br>
+	 * This method sets up the {@code pArray} and all four {@code sBoxes}.<br>
+	 * It uses the provided {@code blowfishKey} to perform the initial transformations.
 	 */
 	private void initArrays()
 	{
@@ -1173,8 +1181,11 @@ public class BlowfishCipher
 	}
 	
 	/**
-	 * @param b
-	 * @param sBox
+	 * Initializes the S-box values for the Blowfish cipher.<br>
+	 * This method populates the {@code sBox} array by repeatedly calling {@code cipher}.<br>
+	 * It converts the resulting bytes into integers using {@code int)}.
+	 * @param b The byte array used for the encryption process.
+	 * @param sBox The integer array where the S-box values will be stored.
 	 */
 	private void initSBox(byte[] b, int[] sBox)
 	{
@@ -1187,8 +1198,10 @@ public class BlowfishCipher
 	}
 	
 	/**
-	 * Cipher the given byte-array with Blowfish cipher
-	 * @param data byte array to be ciphered
+	 * Encrypts the provided byte array using the Blowfish algorithm.<br>
+	 * This method processes the entire length of the {@code data} array.<br>
+	 * It is a convenience wrapper for the {@code int, int)} method.
+	 * @param data The byte array to be encrypted.
 	 */
 	public void cipher(byte[] data)
 	{
@@ -1196,10 +1209,12 @@ public class BlowfishCipher
 	}
 	
 	/**
-	 * Cipher the given byte-array with Blowfish cipher
-	 * @param data byte array to be ciphered
-	 * @param offset byte array offset
-	 * @param length byte array length
+	 * Encrypts a specific portion of the provided byte array.<br>
+	 * This method processes the data in blocks using the Blowfish algorithm.<br>
+	 * It modifies the {@code data} array directly.
+	 * @param data The byte array containing the data to be encrypted.
+	 * @param offset The starting position within the {@code data} array.
+	 * @param length The number of bytes to process from the specified offset.
 	 */
 	public void cipher(byte[] data, int offset, int length)
 	{
@@ -1234,8 +1249,10 @@ public class BlowfishCipher
 	}
 	
 	/**
-	 * Decipher the given byte-array with Blowfish cipher
-	 * @param data byte array to be deciphered
+	 * Deciphers the provided byte array using the Blowfish algorithm.<br>
+	 * This method processes the entire length of the input data.<br>
+	 * It modifies the {@code data} array in place.
+	 * @param data The byte array to be deciphered.
 	 */
 	public void decipher(byte[] data)
 	{
@@ -1243,10 +1260,12 @@ public class BlowfishCipher
 	}
 	
 	/**
-	 * Decipher the given byte-array with Blowfish cipher
-	 * @param data byte array to be deciphered
-	 * @param offset byte array offset
-	 * @param length byte array length
+	 * Decrypts a specific portion of the provided byte array.<br>
+	 * This method processes the data in blocks using the Blowfish algorithm.<br>
+	 * The result is stored directly back into the {@code data} array.
+	 * @param data The byte array containing the encrypted information.
+	 * @param offset The starting position within the array to begin decryption.
+	 * @param length The number of bytes to process for decryption.
 	 */
 	public void decipher(byte[] data, int offset, int length)
 	{
@@ -1281,9 +1300,11 @@ public class BlowfishCipher
 	}
 	
 	/**
-	 * The round (Feistel) function of Blowfish cipher
-	 * @param x
-	 * @return y
+	 * Performs the {@code F} function used in the Blowfish cipher.<br>
+	 * This method processes a 32-bit integer by splitting it into four bytes.<br>
+	 * It then combines these bytes using the initialized S-boxes.
+	 * @param x The 32-bit input value to process.
+	 * @return The resulting integer after applying the cipher transformations.
 	 */
 	private int F(int x)
 	{
@@ -1306,10 +1327,12 @@ public class BlowfishCipher
 	}
 	
 	/**
-	 * Convert 4 bytes to Integer
-	 * @param b byte array (4 bytes)
-	 * @param offset byte array offset
-	 * @return integer value
+	 * Converts a sequence of bytes into a single integer.<br>
+	 * This method reads four bytes starting from the specified {@code offset}.<br>
+	 * It reconstructs the integer using big-endian byte order.
+	 * @param b The source byte array containing the data.
+	 * @param offset The starting index within the array to begin reading.
+	 * @return The resulting integer value.
 	 */
 	private int byteArrayToInteger(byte[] b, int offset)
 	{
@@ -1317,10 +1340,12 @@ public class BlowfishCipher
 	}
 	
 	/**
-	 * Convert integer value to bytes
-	 * @param value integer value
-	 * @param b dest byte array
-	 * @param offset byte array offset
+	 * Converts an {@code int} value into a byte array.<br>
+	 * The bytes are stored in little-endian order.<br>
+	 * This method modifies the provided {@code byte[]} array.
+	 * @param value The integer to convert.
+	 * @param b The destination byte array.
+	 * @param offset The starting index in the array where the conversion begins.
 	 */
 	private void integerToByteArray(int value, byte[] b, int offset)
 	{

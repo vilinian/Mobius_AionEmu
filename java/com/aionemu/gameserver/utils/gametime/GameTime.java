@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.utils.gametime;
 
@@ -22,7 +22,8 @@ import com.aionemu.gameserver.services.WeatherService;
 import com.aionemu.gameserver.spawnengine.TemporarySpawnEngine;
 
 /**
- * Represents the internal clock for the time in aion world
+ * This class represents the internal clock for the time within the Aion world.<br>
+ * It manages the progression of game time and provides access to current time values.
  * @author Ben, reworked by vlog
  */
 public class GameTime implements Cloneable
@@ -35,7 +36,6 @@ public class GameTime implements Cloneable
 	
 	private enum Monthes
 	{
-		
 		JANUARY(31),
 		FEBRUARY(28),
 		MARCH(31),
@@ -49,7 +49,7 @@ public class GameTime implements Cloneable
 		NOVEMBER(30),
 		DECEMBER(31);
 		
-		private int _days;
+		private final int _days;
 		
 		Monthes(int days)
 		{
@@ -63,8 +63,10 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Constructs a GameTime with the given time in minutes since midnight 01.01.0000
-	 * @param time Minutes since midnight 01.01.0000
+	 * Creates a new {@link GameTime} instance.<br>
+	 * This constructor sets the initial clock based on minutes passed since midnight of 01.01.0000.<br>
+	 * It automatically calls {@code calculateDayTime} to update internal values.
+	 * @param time The total number of minutes since the start date. Must be greater than or equal to {@code 0}.
 	 */
 	public GameTime(int time)
 	{
@@ -72,14 +74,17 @@ public class GameTime implements Cloneable
 		{
 			throw new InvalidParameterException("Time must be >= 0");
 		}
+		
 		gameTime = time;
 		calculateDayTime();
 	}
 	
 	/**
-	 * Get the proper amount of minutes in this month
-	 * @param m
-	 * @return time in minutes in this month
+	 * Calculates the total number of minutes in a specific month.<br>
+	 * This method uses the days defined in the {@code Monthes} enum.<br>
+	 * It multiplies the number of days by the constant for minutes in one day.
+	 * @param m The {@code Monthes} object representing the month to calculate.
+	 * @return The total number of minutes in that month as an {@code int}.
 	 */
 	public int getProperMinutesInMonth(Monthes m)
 	{
@@ -87,8 +92,9 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Gets the ingame time in minutes
-	 * @return The number of minutes since 01.01.0000 00:00:00
+	 * Retrieves the current internal game time.<br>
+	 * The value represents total minutes since midnight on 01.01.0000.
+	 * @return the current game time as an {@code int}
 	 */
 	public int getTime()
 	{
@@ -96,7 +102,9 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Increases game time by a minute
+	 * Advances the internal game clock by one minute.<br>
+	 * This method updates the {@code gameTime} value.<br>
+	 * It also triggers a check for day time changes if the new minute is {@code 0}.
 	 */
 	public void increase()
 	{
@@ -108,7 +116,9 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Calculate new day time and send events on change
+	 * Updates the current game time and checks for changes.<br>
+	 * This method calls {@code calculateDayTime} to refresh the state.<br>
+	 * It triggers specific events if the day of the week changes.
 	 */
 	public void checkDayTimeChange()
 	{
@@ -122,7 +132,8 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Calculate the day time
+	 * Updates the current {@link DayTime} based on the game hour.<br>
+	 * This method checks the value from {@code getHour} to determine if it is morning, afternoon, evening, or night.
 	 */
 	public void calculateDayTime()
 	{
@@ -145,13 +156,18 @@ public class GameTime implements Cloneable
 		}
 	}
 	
+	/**
+	 * Updates the game world when the hour changes.<br>
+	 * This method notifies the {@link TemporarySpawnEngine} to refresh its data.
+	 */
 	private void onHourChange()
 	{
 		TemporarySpawnEngine.onHourChange();
 	}
 	
 	/**
-	 * Perform actions upon day time change
+	 * Updates the weather based on the new day time.<br>
+	 * This method calls {@code checkWeathersTime}.
 	 */
 	private void onDayTimeChange()
 	{
@@ -159,8 +175,9 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Gets the year in the game: 0 - <integer bound>
-	 * @return Year
+	 * Retrieves the current year from the internal clock.<br>
+	 * This value is calculated based on the total minutes elapsed since the start date.
+	 * @return The current year as an {@code int}.
 	 */
 	public int getYear()
 	{
@@ -168,8 +185,9 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Gets the month in the game, 1 - 12
-	 * @return Month 1-12
+	 * Retrieves the current month of the game time.<br>
+	 * This method calculates the month based on the total minutes elapsed.
+	 * @return The month as an integer value.
 	 */
 	public int getMonth()
 	{
@@ -192,12 +210,14 @@ public class GameTime implements Cloneable
 				break;
 			}
 		}
+		
 		return answer;
 	}
 	
 	/**
-	 * Gets the day in the game, 1 - Monthes.getDays()
-	 * @return Day 1 - Monthes.getDays()
+	 * Retrieves the current day of the year.<br>
+	 * This value is calculated based on the total minutes elapsed since the start of the year.
+	 * @return The integer representation of the current day.
 	 */
 	public int getDay()
 	{
@@ -219,12 +239,14 @@ public class GameTime implements Cloneable
 				break;
 			}
 		}
+		
 		return answer;
 	}
 	
 	/**
-	 * Gets the hour in the game, 0-23
-	 * @return Hour 0-23
+	 * Retrieves the current hour from the game time.<br>
+	 * This value is calculated based on the total minutes elapsed.
+	 * @return The current hour as an {@code int}.
 	 */
 	public int getHour()
 	{
@@ -232,8 +254,9 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Gets the minute in the game, 0-59
-	 * @return Minute 0-59
+	 * Retrieves the current minute of the hour.<br>
+	 * This value is calculated based on the internal {@code gameTime}.
+	 * @return The current minute as an {@code int}.
 	 */
 	public int getMinute()
 	{
@@ -241,7 +264,9 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * @return the dayTime
+	 * Retrieves the current {@link DayTime} object.<br>
+	 * This represents the specific time of day in the game world.
+	 * @return The current {@code DayTime} instance.
 	 */
 	public DayTime getDayTime()
 	{
@@ -249,9 +274,9 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Convert from game time into real time
-	 * @author vlog
-	 * @return
+	 * Converts the current game time into a specific unit.<br>
+	 * This method divides the total minutes by {@code 12}.
+	 * @return The converted time value as an {@code int}.
 	 */
 	public int convertTime()
 	{
@@ -259,9 +284,11 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Subtract the given game time from this game time
-	 * @param gt game time to subtract
-	 * @return new game time
+	 * Subtracts one {@link GameTime} from the current time.<br>
+	 * This method returns a new {@code GameTime} object.<br>
+	 * It calculates the difference based on total minutes.
+	 * @param gt The {@code GameTime} to subtract.
+	 * @return A new {@code GameTime} representing the result of the subtraction.
 	 */
 	public GameTime minus(GameTime gt)
 	{
@@ -269,9 +296,10 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Add the given game time to this game time
-	 * @param gt game time to add
-	 * @return new game time
+	 * Adds the time from another {@link GameTime} object to this one.<br>
+	 * This method returns a new instance representing the sum of both times.
+	 * @param gt The {@code GameTime} value to add.
+	 * @return A new {@code GameTime} object containing the combined total.
 	 */
 	public GameTime plus(GameTime gt)
 	{
@@ -279,9 +307,10 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Compares this time and the time given
-	 * @param gt
-	 * @return true, if this time is greater
+	 * Checks if this time is later than another {@link GameTime}.<br>
+	 * It compares the total minutes of both objects.
+	 * @param gt The other {@code GameTime} to compare against.
+	 * @return {@code true} if this time is greater, otherwise {@code false}.
 	 */
 	public boolean isGreaterThan(GameTime gt)
 	{
@@ -289,9 +318,10 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Compares this time and the time given
-	 * @param gt
-	 * @return true, if this time is less
+	 * Checks if this time is earlier than another {@link GameTime}.<br>
+	 * It compares the total minutes of both objects.
+	 * @param gt The other {@link GameTime} to compare against.
+	 * @return {@code true} if this time is less than {@code gt}, otherwise {@code false}.
 	 */
 	public boolean isLessThan(GameTime gt)
 	{
@@ -299,10 +329,10 @@ public class GameTime implements Cloneable
 	}
 	
 	/**
-	 * Compare two game times
-	 * @param o object
-	 * @return true or false
-	 * @author vlog
+	 * Compares this {@link GameTime} object with another object for equality.<br>
+	 * It checks if both objects represent the same time in minutes.
+	 * @param o The object to compare this instance against.
+	 * @return {@code true} if the objects are equal, {@code false} otherwise.
 	 */
 	@Override
 	public boolean equals(Object o)
@@ -311,6 +341,12 @@ public class GameTime implements Cloneable
 		return getTime() == other.getTime();
 	}
 	
+	/**
+	 * Returns a hash code value for this {@link GameTime} object.<br>
+	 * This value is used to identify the object in collections like {@code HashSet}.<br>
+	 * It is calculated based on the default implementation of the {@code Object} class.
+	 * @return The integer hash code of this object.
+	 */
 	@Override
 	public int hashCode()
 	{
@@ -318,6 +354,11 @@ public class GameTime implements Cloneable
 		return super.hashCode();
 	}
 	
+	/**
+	 * Creates and returns a copy of this {@link GameTime} object.<br>
+	 * This method creates a new instance with the same internal time value.
+	 * @return A new {@code Object} that is a copy of this instance, or {@code null} if cloning fails.
+	 */
 	@Override
 	public Object clone()
 	{

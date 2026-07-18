@@ -1,41 +1,44 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.world.container;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.aionemu.gameserver.model.team.legion.LegionMember;
 import com.aionemu.gameserver.model.team.legion.LegionMemberEx;
 import com.aionemu.gameserver.world.exceptions.DuplicateAionObjectException;
 
-import javolution.util.FastMap;
-
 /**
- * Container for storing Legion members by Id and name.
+ * This class serves as a container for managing {@link LegionMember} objects.<br>
+ * It allows for efficient storage and retrieval of members using their unique {@code Id} or name.
  * @author Simple
  */
 public class LegionMemberContainer
 {
-	private final FastMap<Integer, LegionMember> legionMemberById = new FastMap<Integer, LegionMember>().shared();
-	
-	private final FastMap<Integer, LegionMemberEx> legionMemberExById = new FastMap<Integer, LegionMemberEx>().shared();
-	private final FastMap<String, LegionMemberEx> legionMemberExByName = new FastMap<String, LegionMemberEx>().shared();
+	private final Map<Integer, LegionMember> legionMemberById = new ConcurrentHashMap<>();
+	private final Map<Integer, LegionMemberEx> legionMemberExById = new ConcurrentHashMap<>();
+	private final Map<String, LegionMemberEx> legionMemberExByName = new ConcurrentHashMap<>();
 	
 	/**
-	 * Add LegionMember to this Container.
-	 * @param legionMember
+	 * Adds a new member to the container.<br>
+	 * This method checks if the {@code LegionMember} already exists by its ID.<br>
+	 * It only adds the member if it is not already present.
+	 * @param legionMember The {@link LegionMember} object to be added.
 	 */
 	public void addMember(LegionMember legionMember)
 	{
@@ -46,9 +49,10 @@ public class LegionMemberContainer
 	}
 	
 	/**
-	 * This method will return a member from cache
-	 * @param memberObjId
-	 * @return
+	 * Retrieves a {@link LegionMember} from the container.<br>
+	 * It uses the provided unique identifier to find the member.
+	 * @param memberObjId The unique ID of the member to retrieve.
+	 * @return The {@code LegionMember} associated with the ID, or {@code null} if not found.
 	 */
 	public LegionMember getMember(int memberObjId)
 	{
@@ -56,8 +60,10 @@ public class LegionMemberContainer
 	}
 	
 	/**
-	 * Add LegionMemberEx to this Container.
-	 * @param legionMember
+	 * Adds a {@link LegionMemberEx} to the container.<br>
+	 * This method stores the member by both ID and name.<br>
+	 * It throws a {@code DuplicateAionObjectException} if the member already exists.
+	 * @param legionMember The {@code LegionMemberEx} object to add.
 	 */
 	public void addMemberEx(LegionMemberEx legionMember)
 	{
@@ -65,14 +71,16 @@ public class LegionMemberContainer
 		{
 			throw new DuplicateAionObjectException();
 		}
+		
 		legionMemberExById.put(legionMember.getObjectId(), legionMember);
 		legionMemberExByName.put(legionMember.getName(), legionMember);
 	}
 	
 	/**
-	 * This method will return a memberEx from cache
-	 * @param memberObjId
-	 * @return
+	 * Retrieves a {@link LegionMemberEx} object using its unique ID.<br>
+	 * This method looks up the member in the internal storage map.
+	 * @param memberObjId The unique identifier of the legion member.
+	 * @return The corresponding {@code LegionMemberEx} object or {@code null} if not found.
 	 */
 	public LegionMemberEx getMemberEx(int memberObjId)
 	{
@@ -80,9 +88,10 @@ public class LegionMemberContainer
 	}
 	
 	/**
-	 * This method will return a memberEx from cache
-	 * @param memberName
-	 * @return
+	 * Retrieves a {@link LegionMemberEx} object based on the provided name.<br>
+	 * This method searches the internal map using the {@code memberName} key.
+	 * @param memberName The unique name of the legion member to find.
+	 * @return The {@code LegionMemberEx} associated with the name, or {@code null} if not found.
 	 */
 	public LegionMemberEx getMemberEx(String memberName)
 	{
@@ -90,8 +99,9 @@ public class LegionMemberContainer
 	}
 	
 	/**
-	 * Remove LegionMember from this Container.
-	 * @param legionMember
+	 * Removes a specific member from the container.<br>
+	 * This method deletes the entry from all internal maps.
+	 * @param legionMember The {@code LegionMemberEx} object to remove.
 	 */
 	public void remove(LegionMemberEx legionMember)
 	{
@@ -101,9 +111,10 @@ public class LegionMemberContainer
 	}
 	
 	/**
-	 * Returns true if legion is in cached by id
-	 * @param memberObjId
-	 * @return true or false
+	 * Checks if a specific member exists in the container.<br>
+	 * This method looks for an ID within the {@code legionMemberById} map.
+	 * @param memberObjId The unique identifier of the member to find.
+	 * @return {@code true} if the ID is found, otherwise {@code false}.
 	 */
 	public boolean contains(int memberObjId)
 	{
@@ -111,9 +122,10 @@ public class LegionMemberContainer
 	}
 	
 	/**
-	 * Returns true if legion is in cached by id
-	 * @param memberObjId
-	 * @return true or false
+	 * Checks if a specific {@code LegionMemberEx} exists in the container.<br>
+	 * This method looks up the member using their unique ID.
+	 * @param memberObjId The unique identifier of the member to find.
+	 * @return {@code true} if the member exists, otherwise {@code false}.
 	 */
 	public boolean containsEx(int memberObjId)
 	{
@@ -121,15 +133,21 @@ public class LegionMemberContainer
 	}
 	
 	/**
-	 * Returns true if legion is in cached by id
-	 * @param memberName
-	 * @return true or false
+	 * Checks if a specific member exists in the container by their name.<br>
+	 * This method looks up the {@code memberName} in the internal map.
+	 * @param memberName The name of the member to search for.
+	 * @return {@code true} if the name is found, otherwise {@code false}.
 	 */
 	public boolean containsEx(String memberName)
 	{
 		return legionMemberExByName.containsKey(memberName);
 	}
 	
+	/**
+	 * Removes all members from the container.<br>
+	 * This method clears all internal maps.<br>
+	 * The container will be empty after this call.
+	 */
 	public void clear()
 	{
 		legionMemberById.clear();

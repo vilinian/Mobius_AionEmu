@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -24,7 +24,8 @@ import com.aionemu.gameserver.network.aion.AionClientPacket;
 import com.aionemu.gameserver.network.aion.AionConnection.State;
 
 /**
- * Developer's note please dont remove Duoc goi ra khi trong group va su dung assign group leader khi doi tuong dang offline
+ * This packet is triggered when a player enters the game world.<br>
+ * It is also used during various group management operations.
  * @author Lyahim, ATracer, Simple, xTz
  */
 public class CM_PLAYER_STATUS_INFO extends AionClientPacket
@@ -34,6 +35,13 @@ public class CM_PLAYER_STATUS_INFO extends AionClientPacket
 	private int allianceGroupId;
 	private int secondObjectId;
 	
+	/**
+	 * Creates a new instance of {@link CM_PLAYER_STATUS_INFO}.<br>
+	 * This constructor initializes the packet with specific states.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state.
+	 * @param restStates Additional connection states if they exist.
+	 */
 	public CM_PLAYER_STATUS_INFO(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -46,7 +54,6 @@ public class CM_PLAYER_STATUS_INFO extends AionClientPacket
 		playerObjId = readD();
 		allianceGroupId = readD();
 		secondObjectId = readD();
-		
 	}
 	
 	@Override
@@ -57,19 +64,14 @@ public class CM_PLAYER_STATUS_INFO extends AionClientPacket
 		switch (command)
 		{
 			case GROUP_SET_LFG:
-			{
 				activePlayer.setLookingForGroup(playerObjId == 2);
 				break;
-			}
 			case ALLIANCE_CHANGE_GROUP:
-			{
 				PlayerAllianceService.changeMemberGroup(activePlayer, playerObjId, secondObjectId, allianceGroupId);
 				break;
-			}
 			default:
-			{
 				PlayerTeamCommandService.executeCommand(activePlayer, command, playerObjId);
-			}
+				break;
 		}
 	}
 }

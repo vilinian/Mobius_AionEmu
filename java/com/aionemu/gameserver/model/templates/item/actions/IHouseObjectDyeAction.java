@@ -1,0 +1,34 @@
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.aionemu.gameserver.model.templates.item.actions;
+
+import com.aionemu.gameserver.model.gameobjects.HouseObject;
+import com.aionemu.gameserver.model.gameobjects.Item;
+import com.aionemu.gameserver.model.gameobjects.player.Player;
+
+/**
+ * Defines the logic for applying a dye to a {@link HouseObject}.<br>
+ * This action allows players to change the visual appearance of house decorations.<br>
+ * It handles the interaction between an {@link Item} and a target object.
+ * @author Rolandas
+ */
+public interface IHouseObjectDyeAction
+{
+	boolean canAct(Player player, Item parentItem, HouseObject<?> targetHouseObject);
+	
+	void act(Player player, Item parentItem, HouseObject<?> targetHouseObject);
+}

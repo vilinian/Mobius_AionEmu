@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.itemgroups;
 
@@ -30,16 +30,18 @@ import com.aionemu.gameserver.model.templates.rewards.IdLevelReward;
  * @author Rolandas
  *
  */
+
 /**
- * <p>
+ * <p/>
  * Java class for MedicineGroup complex type.
- * <p>
+ * <p/>
  * The following schema fragment specifies the expected content contained within this class.
+ * <p/>
  * 
  * <pre>
  * &lt;complexType name="MedicineGroup">
  *   &lt;complexContent>
- *     &lt;extension base="{}ItemGroup">
+ *     &lt;extension base="{}BonusItemGroup">
  *       &lt;sequence>
  *         &lt;element name="item" type="{}IdLevelReward" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
@@ -56,18 +58,10 @@ public class MedicineGroup extends BonusItemGroup
 	protected List<IdLevelReward> items;
 	
 	/**
-	 * Gets the value of the item property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the item property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getItems().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link IdLevelReward }
-	 * @return
+	 * Retrieves the list of rewards associated with this group.<br>
+	 * If the list is {@code null}, a new empty {@code ArrayList} is created.<br>
+	 * This method returns a reference to the live list.
+	 * @return A {@code List} of {@link IdLevelReward} objects.
 	 */
 	public List<IdLevelReward> getItems()
 	{
@@ -75,12 +69,14 @@ public class MedicineGroup extends BonusItemGroup
 		{
 			items = new ArrayList<>();
 		}
+		
 		return items;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see com.aionemu.gameserver.model.templates.itemgroups.ItemGroup#getRewards()
+	/**
+	 * Retrieves the list of rewards as an array.<br>
+	 * This method converts the internal {@code List} of items into a new {@code ItemRaceEntry[]} array.
+	 * @return An array containing all {@link ItemRaceEntry} objects.
 	 */
 	@Override
 	public ItemRaceEntry[] getRewards()

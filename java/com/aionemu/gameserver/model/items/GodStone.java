@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.items;
 
@@ -20,9 +20,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.database.dao.DAOManager;
+import com.aionemu.commons.network.util.ThreadPoolManager;
 import com.aionemu.commons.utils.Rnd;
-import com.aionemu.gameserver.configs.main.AdvCustomConfig;
 import com.aionemu.gameserver.configs.main.CustomConfig;
+import com.aionemu.gameserver.configs.main.EnchantsConfig;
 import com.aionemu.gameserver.controllers.observer.ActionObserver;
 import com.aionemu.gameserver.controllers.observer.ObserverType;
 import com.aionemu.gameserver.dao.InventoryDAO;
@@ -41,28 +42,39 @@ import com.aionemu.gameserver.skillengine.SkillEngine;
 import com.aionemu.gameserver.skillengine.model.Effect;
 import com.aionemu.gameserver.skillengine.model.Skill;
 import com.aionemu.gameserver.utils.PacketSendUtility;
-import com.aionemu.gameserver.utils.ThreadPoolManager;
 
 /**
+ * Represents a {@link Item} used for enhancing equipment with specific attributes.<br>
+ * This class handles the logic for applying effects and managing stone properties.
  * @author ATracer
+ * @Reworked Kill3r
+ * @Rework Phantom_KNA
  */
 public class GodStone extends ItemStone
 {
 	private static final Logger log = LoggerFactory.getLogger(GodStone.class);
-	
-	final GodstoneInfo godstoneInfo;
+	private final GodstoneInfo godstoneInfo;
 	private ActionObserver actionListener;
 	private final int probability;
-	boolean breakProc;
+	private boolean breakProc;
 	private final int probabilityLeft;
-	final ItemTemplate godItem;
+	private final ItemTemplate godItem;
 	
+	/**
+	 * Creates a new instance of a {@link GodStone}.<br>
+	 * This constructor initializes the stone with its unique ID and template data.<br>
+	 * It also sets up the success probability based on the item configuration.
+	 * @param itemObjId The unique object identifier for this specific instance.
+	 * @param itemId The template identifier used to look up item data.
+	 * @param persistentState The state of the object regarding its persistence in the world.
+	 */
 	public GodStone(int itemObjId, int itemId, PersistentState persistentState)
 	{
 		super(itemObjId, itemId, 0, persistentState);
 		final ItemTemplate itemTemplate = DataManager.ITEM_DATA.getItemTemplate(itemId);
 		godItem = itemTemplate;
 		godstoneInfo = itemTemplate.getGodstoneInfo();
+		
 		if (godstoneInfo != null)
 		{
 			probability = godstoneInfo.getProbability();
@@ -74,14 +86,22 @@ public class GodStone extends ItemStone
 			probabilityLeft = 0;
 			log.warn("CHECKPOINT: Godstone info missing for item : " + itemId);
 		}
+		
 	}
 	
+	/**
+	 * Handles the logic when a {@code GodStone} is equipped by a {@link Player}.<br>
+	 * It registers an attack observer to trigger skills and handle item breakage.<br>
+	 * The method checks for valid configuration data before proceeding.
+	 * @param player The {@link Player} who equipped the stone.
+	 */
 	public void onEquip(Player player)
 	{
 		if ((godstoneInfo == null) || (godItem == null))
 		{
 			return;
 		}
+		
 		final Item equippedItem = player.getEquipment().getEquippedItemByObjId(getItemObjId());
 		final long equipmentSlot = equippedItem.getEquipmentSlot();
 		final int handProbability = equipmentSlot == ItemSlot.MAIN_HAND.getSlotIdMask() ? probability : probabilityLeft;
@@ -92,9 +112,10 @@ public class GodStone extends ItemStone
 			{
 				final int chance = 100;
 				final float breakChance = godstoneInfo.getProbabilityleft() / CustomConfig.ILLUSION_GODSTONE_BREAK_RATE;
-				if (handProbability > Rnd.get(0, AdvCustomConfig.BASE_GODSTONE))
+				if (handProbability > Rnd.get(0, EnchantsConfig.BASE_GODSTONE))
 				{
 					final Skill skill = SkillEngine.getInstance().getSkill(player, godstoneInfo.getSkillid(), godstoneInfo.getSkilllvl(), player.getTarget(), godItem);
+					
 					// %effect godstone has been activated.
 					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SKILL_PROC_EFFECT_OCCURRED(skill.getSkillTemplate().getNameId()));
 					skill.setFirstTargetRangeCheck(false);
@@ -106,43 +127,56 @@ public class GodStone extends ItemStone
 						effect = null;
 					}
 					/**
-					 * The destruction of a Godstone is not instantaneous, there is a 10min grace period. - When a Illusion Godstone gets damaged a message 'Illusion Godstone has cracked' will appear and a 10min timer will be activated. - The remaining time is going to be displayed in the item's
-					 * tooltip. - Regardless of the actions below, Illusion Godstone is going to disappear. . Mounting, dismounting, switching weapons, armsfusing . Changing characters, logging out, terminating connection
+					 * The destruction of a Godstone is not instantaneous, there is a 10min grace period. - When a Illusion Godstone gets damaged a message 'Illusion Godstone has cracked' will appear and a 10min timer will be activated. - The remaining time is going to be displayed in the item's tooltip. - Regardless of the actions below, Illusion Godstone is going to disappear. . Mounting, dismounting, switching weapons, armsfusing . Changing characters, logging out, terminating connection
 					 */
 					if ((chance < breakChance) && !breakProc)
 					{
 						breakProc = true;
 						// %1 equipped in %0 was fractured. %1 will be destroyed in 10 minutes even if it is unequipped.
 						PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1402536, new DescriptionId(equippedItem.getNameId()), new DescriptionId(godItem.getNameId())));
+						
 						// The %1 equipped in %0 will be destroyed in %2 minutes
 						PacketSendUtility.playerSendPacketTime(player, new SM_SYSTEM_MESSAGE(1402537, new DescriptionId(equippedItem.getNameId()), new DescriptionId(godItem.getNameId()), 5), 300000);
 						PacketSendUtility.playerSendPacketTime(player, new SM_SYSTEM_MESSAGE(1402537, new DescriptionId(equippedItem.getNameId()), new DescriptionId(godItem.getNameId()), 2), 480000);
+						
 						// The %1 equipped in %0 will be destroyed in %2 seconds
 						PacketSendUtility.playerSendPacketTime(player, new SM_SYSTEM_MESSAGE(1402538, new DescriptionId(equippedItem.getNameId()), new DescriptionId(godItem.getNameId()), 60), 540000);
 						PacketSendUtility.playerSendPacketTime(player, new SM_SYSTEM_MESSAGE(1402538, new DescriptionId(equippedItem.getNameId()), new DescriptionId(godItem.getNameId()), 30), 570000);
 						PacketSendUtility.playerSendPacketTime(player, new SM_SYSTEM_MESSAGE(1402538, new DescriptionId(equippedItem.getNameId()), new DescriptionId(godItem.getNameId()), 10), 590000);
 						PacketSendUtility.playerSendPacketTime(player, new SM_SYSTEM_MESSAGE(1402237, new DescriptionId(equippedItem.getNameId()), new DescriptionId(godItem.getNameId())), 600000);
-						ThreadPoolManager.getInstance().schedule(() ->
+						ThreadPoolManager.getInstance().schedule(new Runnable()
 						{
-							onUnEquip(player);
-							equippedItem.setGodStone(null);
-							setPersistentState(PersistentState.DELETED);
-							ItemPacketService.updateItemAfterInfoChange(player, equippedItem);
-							DAOManager.getDAO(InventoryDAO.class).store(equippedItem, player);
-							PacketSendUtility.sendPacket(player, new SM_INVENTORY_UPDATE_ITEM(player, equippedItem));
+							
+							@Override
+							public void run()
+							{
+								onUnEquip(player);
+								equippedItem.setGodStone(null);
+								setPersistentState(PersistentState.DELETED);
+								ItemPacketService.updateItemAfterInfoChange(player, equippedItem);
+								DAOManager.getDAO(InventoryDAO.class).store(equippedItem, player);
+								PacketSendUtility.sendPacket(player, new SM_INVENTORY_UPDATE_ITEM(player, equippedItem));
+							}
 						}, 600000);
 					}
 				}
 			}
 		};
+		
 		player.getObserveController().addObserver(actionListener);
 	}
 	
+	/**
+	 * Handles the logic when a player removes this item.<br>
+	 * It removes any active observers associated with the {@code GodStone}.
+	 * @param player The {@link Player} who is unequipping the item.
+	 */
 	public void onUnEquip(Player player)
 	{
 		if (actionListener != null)
 		{
 			player.getObserveController().removeObserver(actionListener);
 		}
+		
 	}
 }

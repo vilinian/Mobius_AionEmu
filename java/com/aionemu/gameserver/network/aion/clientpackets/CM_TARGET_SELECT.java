@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -29,10 +29,9 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.audit.AuditLogger;
 
 /**
- * Client Sends this packet when /Select NAME is typed.<br>
- * I believe it's the same as mouse click on a character.<br>
- * If client want's to select target - d is object id.<br>
- * If client unselects target - d is 0;
+ * This packet is sent by the client when a user selects a target.<br>
+ * It handles both manual selection via commands and mouse clicks on characters.<br>
+ * The object ID {@code d} represents the selected entity, or {@code 0} if the target is unselected.
  * @author SoulKeeper, Sweetkr, KID
  */
 public class CM_TARGET_SELECT extends AionClientPacket
@@ -44,20 +43,18 @@ public class CM_TARGET_SELECT extends AionClientPacket
 	private int type;
 	
 	/**
-	 * Constructs new client packet instance.
-	 * @param opcode
-	 * @param state
-	 * @param restStates
+	 * Creates a new instance of the {@link CM_TARGET_SELECT} packet.<br>
+	 * This packet is sent when a player selects or unselects a target.<br>
+	 * It handles actions like typing a name or clicking an object.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary {@link State} of the packet.
+	 * @param restStates Additional {@link State} values for the packet.
 	 */
 	public CM_TARGET_SELECT(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
 	}
 	
-	/**
-	 * Read packet.<br>
-	 * d - object id; c - selection type;
-	 */
 	@Override
 	protected void readImpl()
 	{
@@ -65,15 +62,12 @@ public class CM_TARGET_SELECT extends AionClientPacket
 		type = readC();
 	}
 	
-	/**
-	 * Do logging
-	 */
 	@Override
 	protected void runImpl()
 	{
 		final Player player = getConnection().getActivePlayer();
 		
-		VisibleObject obj = null;
+		VisibleObject obj;
 		if (targetObjectId == player.getObjectId())
 		{
 			obj = player;
@@ -100,12 +94,14 @@ public class CM_TARGET_SELECT extends AionClientPacket
 				{
 					return;
 				}
+				
 				player.setTarget(obj.getTarget());
 			}
 			else
 			{
 				player.setTarget(obj);
 			}
+			
 			if (obj instanceof Player)
 			{
 				final Player target = (Player) obj;
@@ -122,10 +118,12 @@ public class CM_TARGET_SELECT extends AionClientPacket
 				{
 					isSameTeamTrap = ((Player) target.getMaster()).isInSameTeam(player);
 				}
+				
 				if ((player != obj) && !player.canSee(target) && !isSameTeamTrap)
 				{
 					AuditLogger.info(player, "Possible radar hacker detected, targeting on invisible Trap name: " + target.getName() + " objectId: " + target.getObjectId() + " by");
 				}
+				
 			}
 			else if (obj instanceof Creature)
 			{
@@ -140,6 +138,7 @@ public class CM_TARGET_SELECT extends AionClientPacket
 		{
 			player.setTarget(null);
 		}
+		
 		sendPacket(new SM_TARGET_SELECTED(player));
 		PacketSendUtility.broadcastPacket(player, new SM_TARGET_UPDATE(player));
 	}

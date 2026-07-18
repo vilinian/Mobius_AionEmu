@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.dao;
 
@@ -27,10 +27,17 @@ import com.aionemu.gameserver.model.items.IdianStone;
 import com.aionemu.gameserver.model.items.ManaStone;
 
 /**
+ * This class provides data access methods for managing lists of {@link IdianStone} and {@link ManaStone} objects.<br>
+ * It handles the retrieval and storage of stone-related items within the database.
  * @author ATracer modified by Wakizashi
+ * @rework FrozenKiller
  */
 public abstract class ItemStoneListDAO implements DAO
 {
+	/**
+	 * Loads stones of item
+	 * @param items list of items to load stones
+	 */
 	public abstract void load(Collection<Item> items);
 	
 	public abstract void storeManaStones(Set<ManaStone> manaStones);
@@ -39,6 +46,11 @@ public abstract class ItemStoneListDAO implements DAO
 	
 	public abstract void storeIdianStones(IdianStone idianStone);
 	
+	/**
+	 * Saves all stone items belonging to a specific {@link Player}.<br>
+	 * This method retrieves the player's items and persists them to the database.
+	 * @param player The {@code Player} object whose stones need to be saved.
+	 */
 	public void save(Player player)
 	{
 		save(player.getAllItems());
@@ -46,6 +58,11 @@ public abstract class ItemStoneListDAO implements DAO
 	
 	public abstract void save(List<Item> items);
 	
+	/**
+	 * Returns the name of the current class.<br>
+	 * This is useful for identifying the {@code DAO} type in logs or configurations.
+	 * @return The full name of the class as a {@code String}.
+	 */
 	@Override
 	public String getClassName()
 	{

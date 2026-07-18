@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.dataholders.loadingutils;
 
@@ -24,12 +24,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * This class handles validation events during the XML parsing process.<br>
+ * It provides custom logic for managing errors or warnings encountered while loading data.
  * @author Rolandas
  */
 public class XmlValidationHandler implements ValidationEventHandler
 {
 	private static final Logger log = LoggerFactory.getLogger(XmlValidationHandler.class);
 	
+	/**
+	 * Processes a {@code ValidationEvent} during XML parsing.<br>
+	 * It logs errors and throws an exception if the severity is {@code FATAL_ERROR} or {@code ERROR}.
+	 * @param event The {@code ValidationEvent} to be processed.
+	 * @return {@code true} if the error was handled successfully.
+	 */
 	@Override
 	public boolean handleEvent(ValidationEvent event)
 	{
@@ -42,7 +50,7 @@ public class XmlValidationHandler implements ValidationEventHandler
 			log.error("Error at [line=" + line + ", column=" + column + "]: " + message);
 			throw new Error(event.getLinkedException());
 		}
+		
 		return true;
 	}
-	
 }

@@ -1,38 +1,40 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.gameobjects.player;
 
 /**
+ * Represents the different types of XP capes available to a player.<br>
+ * This enum is used to define visual and functional cape rewards in the game.
  * @author MrPoke
  */
 public enum XPCape
 {
 	_0(0),
-	_1(130),
-	_2(284),
-	_3(418),
-	_4(561),
-	_5(721),
+	_1(130), // retail
+	_2(284), // retail
+	_3(418), // retail
+	_4(561), // retail
+	_5(721), // retail
 	_6(970),
 	_7(1200),
 	_8(1450),
 	_9(1750),
-	_10(2007),
-	_11(2362),
+	_10(2007), // retail
+	_11(2362), // retail
 	_12(2592),
 	_13(2909),
 	_14(3336),
@@ -43,7 +45,7 @@ public enum XPCape
 	_19(8169),
 	_20(9947),
 	_21(12108),
-	_22(14035),
+	_22(14035), // retail
 	_23(17820),
 	_24(21506),
 	_25(25847),
@@ -82,40 +84,39 @@ public enum XPCape
 	_58(1522538),
 	_59(1655556),
 	_60(1797050),
-	// 4.3
 	_61(1947276),
 	_62(2106490),
 	_63(2274948),
 	_64(2452906),
 	_65(2640620),
-	// 5.0
-	_66(4640620),
-	_67(6641631),
-	_68(8642642),
-	_69(10643653),
-	_70(12644664),
-	_71(14645675),
-	_72(16646686),
-	_73(20670697),
-	_74(22680708),
-	_75(24690719),
-	// Custom
-	_76(26600720),
-	_77(28610731),
-	_78(30620742),
-	_79(32630753),
-	_80(34640764),
-	_81(36650775),
-	_82(38660786),
-	_83(40670787);
+	_66(2640620), // Todo
+	_67(2640620), // Todo
+	_68(2640620), // Todo
+	_69(2640620), // Todo
+	_70(2640620), // Todo
+	_71(2640620), // Todo
+	_72(2640620), // Todo
+	_73(2640620), // Todo
+	_74(2640620), // Todo
+	_75(2640620); // Todo
 	
-	private int id;
+	private final int id;
 	
+	/**
+	 * Initializes a new {@link XPCape} instance.<br>
+	 * Sets the internal {@code id} field to the provided value.
+	 * @param id The unique identifier for the cape.
+	 */
 	private XPCape(int id)
 	{
 		this.id = id;
 	}
 	
+	/**
+	 * Retrieves the unique identifier for this cape.<br>
+	 * This corresponds to the internal {@code id} field.
+	 * @return The integer value of the cape ID.
+	 */
 	public int value()
 	{
 		return id;

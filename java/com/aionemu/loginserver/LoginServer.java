@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver;
 
@@ -45,6 +45,7 @@ import com.aionemu.loginserver.service.PlayerTransferService;
 import com.aionemu.loginserver.taskmanager.TaskFromDBManager;
 import com.aionemu.loginserver.utils.DeadLockDetector;
 import com.aionemu.loginserver.utils.ThreadPoolManager;
+import com.aionemu.loginserver.utils.Util;
 import com.aionemu.loginserver.utils.cron.ThreadPoolManagerRunnableRunner;
 
 import ch.qos.logback.classic.LoggerContext;
@@ -52,6 +53,8 @@ import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 
 /**
+ * This class serves as the main entry point for the {@link com.aionemu.loginserver.LoginServer} application.<br>
+ * It initializes the server components and manages the core execution flow of the login service.
  * @author -Nemesiss-
  */
 public class LoginServer
@@ -61,17 +64,15 @@ public class LoginServer
 	 */
 	private static final Logger log = LoggerFactory.getLogger(LoginServer.class);
 	
+	/**
+	 * Prepares the logging system for the application.<br>
+	 * This method creates a backup of existing log files before starting.<br>
+	 * It then configures {@code slf4j-logback.xml} to set up the logger context.
+	 */
 	private static void initalizeLoggger()
 	{
 		new File("./log/backup/").mkdirs();
-		final File[] files = new File("log").listFiles(new FilenameFilter()
-		{
-			@Override
-			public boolean accept(File dir, String name)
-			{
-				return name.endsWith(".log");
-			}
-		});
+		final File[] files = new File("log").listFiles((FilenameFilter) (dir, name) -> name.endsWith(".log"));
 		
 		if ((files != null) && (files.length > 0))
 		{
@@ -92,16 +93,19 @@ public class LoginServer
 					{
 						out.write(buf, 0, len);
 					}
+					
 					out.closeEntry();
 					in.close();
 					logFile.delete();
 				}
+				
 				out.close();
 			}
 			catch (IOException e)
 			{
 			}
 		}
+		
 		final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
 		try
 		{
@@ -117,7 +121,10 @@ public class LoginServer
 	}
 	
 	/**
-	 * @param args
+	 * This is the main entry point for the game server application.<br>
+	 * It initializes all necessary services, configurations, and engines.<br>
+	 * The method handles the startup sequence for the entire game world.
+	 * @param args Command line arguments passed to the application.
 	 */
 	public static void main(String[] args)
 	{
@@ -129,6 +136,7 @@ public class LoginServer
 		// write a timestamp that can be used by TruncateToZipFileAppender
 		log.info("\f" + new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date(System.currentTimeMillis())) + "\f");
 		Config.load();
+		Util.printCredits();
 		DatabaseFactory.init();
 		DAOManager.init();
 		
@@ -164,6 +172,6 @@ public class LoginServer
 		AEInfos.printAllInfos();
 		
 		PremiumController.getController();
-		log.info("AionEmu Login Server started in " + ((System.currentTimeMillis() - start) / 1000) + " seconds.");
+		log.info("AL Login Server started in " + ((System.currentTimeMillis() - start) / 1000) + " seconds.");
 	}
 }

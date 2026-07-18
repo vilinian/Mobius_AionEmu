@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.toypet;
 
@@ -33,22 +33,33 @@ import com.aionemu.gameserver.model.templates.pet.PetFunction;
 import com.aionemu.gameserver.model.templates.pet.PetTemplate;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_PET;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_WAREHOUSE_INFO;
+import com.aionemu.gameserver.services.MinionService;
 import com.aionemu.gameserver.spawnengine.VisibleObjectSpawner;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
 
 /**
+ * Handles the spawning and management of toy pets in the game world.<br>
+ * This service manages pet creation, visibility, and synchronization for {@link Player} objects.
  * @author ATracer
  */
 public class PetSpawnService
 {
 	/**
-	 * @param player
-	 * @param petId
-	 * @param isManualSpawn
+	 * Summons a specific pet for the given {@link Player}.<br>
+	 * This method handles despawning existing pets and updating mood statistics.<br>
+	 * It uses {@code int)} to create the new pet.
+	 * @param player The {@link Player} who is summoning the pet.
+	 * @param petId The unique identifier for the pet to be summoned.
+	 * @param isManualSpawn A boolean flag indicating if the spawn was triggered manually.
 	 */
 	public static void summonPet(Player player, int petId, boolean isManualSpawn)
 	{
+		if (player.getMinion() != null)
+		{
+			MinionService.getInstance().despawnMinion(player, player.getMinion().getObjectId());
+		}
+		
 		PetCommonData lastPetCommonData;
 		
 		if (player.getPet() != null)
@@ -79,6 +90,7 @@ public class PetSpawnService
 		player.getController().addTask(TaskId.PET_UPDATE, ThreadPoolManager.getInstance().scheduleAtFixedRate(new PetController.PetUpdateTask(player), PeriodicSaveConfig.PLAYER_PETS * 1000, PeriodicSaveConfig.PLAYER_PETS * 1000));
 		
 		final Pet pet = VisibleObjectSpawner.spawnPet(player, petId);
+		
 		// It means serious error or cheater - why its just nothing say "null"?
 		if (pet != null)
 		{
@@ -96,8 +108,11 @@ public class PetSpawnService
 	}
 	
 	/**
-	 * @param player
-	 * @param petId
+	 * Sends warehouse information to a specific player.<br>
+	 * This method checks if the pet has an associated storage location.<br>
+	 * It sends {@link SM_WAREHOUSE_INFO} packets based on that location.
+	 * @param player The {@code Player} who will receive the packet.
+	 * @param petId The unique identifier for the pet being checked.
 	 */
 	private static void sendWhInfo(Player player, int petId)
 	{
@@ -115,8 +130,11 @@ public class PetSpawnService
 	}
 	
 	/**
-	 * @param player
-	 * @param isManualDespawn
+	 * Removes the current pet from a {@link Player}.<br>
+	 * This method saves the pet's progress and mood data before deletion.<br>
+	 * It also cancels any active pet update tasks.
+	 * @param player The {@link Player} who owns the pet to be dismissed.
+	 * @param isManualDespawn Set to {@code true} if the despawn was triggered by a manual action.
 	 */
 	public static void dismissPet(Player player, boolean isManualDespawn)
 	{
@@ -127,8 +145,9 @@ public class PetSpawnService
 			if (progress != null)
 			{
 				toyPet.getCommonData().setCancelFeed(true);
-				DAOManager.getDAO(PlayerPetsDAO.class).saveFeedStatus(player, toyPet.getPetId(), progress.getHungryLevel().getValue(), progress.getDataForPacket(), toyPet.getCommonData().getCurentTime());
+				DAOManager.getDAO(PlayerPetsDAO.class).saveFeedStatus(player, toyPet.getPetId(), progress.getHungryLevel().getValue(), progress.getDataForPacket(), toyPet.getCommonData().getRefeedTime());
 			}
+			
 			final PetDopingBag bag = toyPet.getCommonData().getDopingBag();
 			if ((bag != null) && bag.isDirty())
 			{
@@ -148,5 +167,6 @@ public class PetSpawnService
 			player.setToyPet(null);
 			toyPet.getController().delete();
 		}
+		
 	}
 }

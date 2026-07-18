@@ -1,31 +1,34 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
 /**
+ * Defines the different categories of effects that can be applied to entities.<br>
+ * This enum is used by the {@code Effect} system to determine how an effect behaves.<br>
+ * It helps distinguish between types such as buffs, debuffs, and environmental changes.
  * @author kecimis
  */
 public enum EffectType
 {
-	ABSOLUTEEXPPOINTHEALINSTANT,
 	ABSOLUTESLOW,
 	ABSOLUTESNARE,
 	ABSOLUTESTATTOPCBUFF,
 	ABSOLUTESTATTOPCDEBUFF,
+	ABSOLUTEFAMEPOINTHEALINSTANT,
 	ACTIVATEENSLAVE,
 	ALWAYSBLOCK,
 	ALWAYSDODGE,
@@ -35,6 +38,7 @@ public enum EffectType
 	ARMORMASTERY,
 	AURA,
 	BACKDASH,
+	FRONTDASH,
 	BIND,
 	BLEED,
 	BLIND,
@@ -115,6 +119,7 @@ public enum EffectType
 	ONETIMEBOOSTSKILLCRITICAL,
 	OPENAERIAL,
 	PARALYZE,
+	PETORDERUNSUMMON,
 	PETORDERUSEULTRASKILL,
 	PETRIFICATION,
 	POISON,
@@ -181,12 +186,16 @@ public enum EffectType
 	SUMMONTRAP,
 	SWITCHHOSTILE,
 	SWITCHHPMP,
-	TARGETCHANGE,
 	TARGETTELEPORT,
+	TARGETCHANGE,
 	WEAPONSTATBOOST,
 	WEAPONSTATUP,
 	WEAPONDUAL,
 	WEAPONMASTERY,
 	XPBOOST,
-	XPHEALINSTANT;
+	XPHEALINSTANT,
+	STUNALWAYS,
+	DELAYEDSKILL2,
+	SILVERSTAR,
+	WORLDPLAYTIME
 }

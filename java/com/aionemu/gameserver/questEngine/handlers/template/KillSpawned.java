@@ -1,42 +1,44 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.template;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.aionemu.gameserver.dataholders.DataManager;
+import com.aionemu.gameserver.model.DialogAction;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.templates.spawns.SpawnSearchResult;
 import com.aionemu.gameserver.questEngine.handlers.QuestHandler;
 import com.aionemu.gameserver.questEngine.handlers.models.Monster;
 import com.aionemu.gameserver.questEngine.handlers.models.SpawnedMonster;
-import com.aionemu.gameserver.questEngine.model.QuestDialog;
 import com.aionemu.gameserver.questEngine.model.QuestEnv;
 import com.aionemu.gameserver.questEngine.model.QuestState;
 import com.aionemu.gameserver.questEngine.model.QuestStatus;
 import com.aionemu.gameserver.services.QuestService;
 
 import gnu.trove.list.array.TIntArrayList;
-import javolution.util.FastMap;
 
 /**
+ * This handler manages quest objectives that require a player to kill specific spawned monsters.<br>
+ * It tracks the progress of these kills and updates the {@link QuestState} accordingly.
  * @author vlog
  */
 public class KillSpawned extends QuestHandler
@@ -44,10 +46,18 @@ public class KillSpawned extends QuestHandler
 	private final int questId;
 	private final Set<Integer> startNpcs = new HashSet<>();
 	private final Set<Integer> endNpcs = new HashSet<>();
-	private final FastMap<List<Integer>, SpawnedMonster> spawnedMonsters;
+	private final Map<List<Integer>, SpawnedMonster> spawnedMonsters;
 	private final TIntArrayList spawnerObjects;
 	
-	public KillSpawned(int questId, List<Integer> startNpcIds, List<Integer> endNpcIds, FastMap<List<Integer>, SpawnedMonster> spawnedMonsters)
+	/**
+	 * Initializes a new {@link KillSpawned} quest handler.<br>
+	 * This constructor sets up the required NPC IDs and monster data for the quest.
+	 * @param questId The unique identifier for the quest.
+	 * @param startNpcIds A list of NPC IDs that trigger the start of this quest.
+	 * @param endNpcIds A list of NPC IDs that complete the quest requirements.
+	 * @param spawnedMonsters A {@link Map} containing the monsters associated with specific spawn locations.
+	 */
+	public KillSpawned(int questId, List<Integer> startNpcIds, List<Integer> endNpcIds, Map<List<Integer>, SpawnedMonster> spawnedMonsters)
 	{
 		super(questId);
 		this.questId = questId;
@@ -62,6 +72,7 @@ public class KillSpawned extends QuestHandler
 			endNpcs.addAll(endNpcIds);
 			endNpcs.remove(0);
 		}
+		
 		this.spawnedMonsters = spawnedMonsters;
 		spawnerObjects = new TIntArrayList();
 		for (SpawnedMonster m : spawnedMonsters.values())
@@ -70,6 +81,11 @@ public class KillSpawned extends QuestHandler
 		}
 	}
 	
+	/**
+	 * Registers the required quest events.<br>
+	 * This method tells the system which actions to listen for.<br>
+	 * You should add your specific event listeners inside this method.
+	 */
 	@Override
 	public void register()
 	{
@@ -80,6 +96,7 @@ public class KillSpawned extends QuestHandler
 			qe.registerQuestNpc(startNpc).addOnQuestStart(getQuestId());
 			qe.registerQuestNpc(startNpc).addOnTalkEvent(getQuestId());
 		}
+		
 		for (List<Integer> spawnedMonsterIds : spawnedMonsters.keySet())
 		{
 			iterator = spawnedMonsterIds.iterator();
@@ -89,18 +106,27 @@ public class KillSpawned extends QuestHandler
 				qe.registerQuestNpc(spawnedMonsterId).addOnKillEvent(questId);
 			}
 		}
+		
 		iterator = endNpcs.iterator();
 		while (iterator.hasNext())
 		{
 			final int endNpc = iterator.next();
 			qe.registerQuestNpc(endNpc).addOnTalkEvent(getQuestId());
 		}
+		
 		for (int i = 0; i < spawnerObjects.size(); i++)
 		{
 			qe.registerQuestNpc(spawnerObjects.get(i)).addOnTalkEvent(questId);
 		}
 	}
 	
+	/**
+	 * Handles dialog events for the quest.<br>
+	 * This method checks the current {@link QuestState} and {@code targetId}.<br>
+	 * It determines which dialog to send based on the {@link DialogAction}.
+	 * @param env The environment containing player data and current quest context.
+	 * @return {@code true} if the event was handled, otherwise {@code false}.
+	 */
 	@Override
 	public boolean onDialogEvent(QuestEnv env)
 	{
@@ -111,10 +137,11 @@ public class KillSpawned extends QuestHandler
 		{
 			if (startNpcs.isEmpty() || startNpcs.contains(targetId))
 			{
-				if (env.getDialog() == QuestDialog.START_DIALOG)
+				if (env.getDialog() == DialogAction.QUEST_SELECT)
 				{
 					return sendQuestDialog(env, 1011);
 				}
+				
 				return sendQuestStartDialog(env);
 			}
 		}
@@ -122,7 +149,7 @@ public class KillSpawned extends QuestHandler
 		{
 			if (spawnerObjects.contains(targetId))
 			{
-				if (env.getDialog() == QuestDialog.USE_OBJECT)
+				if (env.getDialog() == DialogAction.USE_OBJECT)
 				{
 					int monsterId = 0;
 					for (SpawnedMonster m : spawnedMonsters.values())
@@ -133,6 +160,7 @@ public class KillSpawned extends QuestHandler
 							break;
 						}
 					}
+					
 					final SpawnSearchResult searchResult = DataManager.SPAWNS_DATA2.getFirstSpawnByNpcId(player.getWorldId(), targetId);
 					QuestService.addNewSpawn(player.getWorldId(), player.getInstanceId(), monsterId, searchResult.getSpot().getX(), searchResult.getSpot().getY(), searchResult.getSpot().getZ(), searchResult.getSpot().getHeading());
 					return true;
@@ -147,13 +175,14 @@ public class KillSpawned extends QuestHandler
 						return false;
 					}
 				}
+				
 				if (endNpcs.contains(targetId))
 				{
-					if (env.getDialog() == QuestDialog.START_DIALOG)
+					if (env.getDialog() == DialogAction.QUEST_SELECT)
 					{
 						return sendQuestDialog(env, 10002);
 					}
-					else if (env.getDialog() == QuestDialog.SELECT_REWARD)
+					else if (env.getDialog() == DialogAction.SELECT_QUEST_REWARD)
 					{
 						return sendQuestDialog(env, 5);
 					}
@@ -167,9 +196,17 @@ public class KillSpawned extends QuestHandler
 				return sendQuestEndDialog(env);
 			}
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * This method is triggered when a player kills a target.<br>
+	 * It checks if the kill meets the requirements for the quest.<br>
+	 * Use this to progress the quest state.
+	 * @param env The {@link QuestEnv} object containing current quest data.
+	 * @return {@code true} if the event was handled successfully, otherwise {@code false}.
+	 */
 	@Override
 	public boolean onKillEvent(QuestEnv env)
 	{
@@ -192,6 +229,7 @@ public class KillSpawned extends QuestHandler
 								return true;
 							}
 						}
+						
 						qs.setStatus(QuestStatus.REWARD);
 						updateQuestStatus(env);
 						return true;
@@ -199,6 +237,7 @@ public class KillSpawned extends QuestHandler
 				}
 			}
 		}
+		
 		return false;
 	}
 }

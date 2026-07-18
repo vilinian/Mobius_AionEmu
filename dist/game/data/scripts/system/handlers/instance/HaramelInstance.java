@@ -1,182 +1,142 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.instance;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import com.aionemu.gameserver.cache.HTMLCache;
 import com.aionemu.gameserver.instance.handlers.GeneralInstanceHandler;
 import com.aionemu.gameserver.instance.handlers.InstanceID;
 import com.aionemu.gameserver.model.EmotionType;
 import com.aionemu.gameserver.model.Race;
-import com.aionemu.gameserver.model.drop.DropItem;
 import com.aionemu.gameserver.model.gameobjects.Creature;
 import com.aionemu.gameserver.model.gameobjects.Npc;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_DIE;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_EMOTION;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_PLAY_MOVIE;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_QUESTION_WINDOW;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
-import com.aionemu.gameserver.services.HTMLService;
-import com.aionemu.gameserver.services.drop.DropRegistrationService;
-import com.aionemu.gameserver.services.item.ItemService;
-import com.aionemu.gameserver.services.player.PlayerReviveService;
 import com.aionemu.gameserver.services.teleport.TeleportService2;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
-import com.aionemu.gameserver.world.knownlist.Visitor;
 
 /**
- * @author Rinzler (Encom)
+ * Handles the specific logic and events for the Haramel instance.<br>
+ * This class extends {@link GeneralInstanceHandler} to manage unique behaviors within this area.
+ * @author Falke_34
  */
 @InstanceID(300200000)
 public class HaramelInstance extends GeneralInstanceHandler
 {
-	private final List<Integer> movies = new ArrayList<>();
+	private Race spawnRace;
 	
+	/**
+	 * This method is called when a {@link Player} enters the instance.<br>
+	 * It initializes the race data if it is currently {@code null}.<br>
+	 * It triggers the {@code SpawnHaramelRace} method to set up the environment.
+	 * @param player The {@link Player} object who entered the instance.
+	 */
 	@Override
 	public void onEnterInstance(Player player)
 	{
 		super.onInstanceCreate(instance);
-		HTMLService.showHTML(player, HTMLCache.getInstance().getHTML("instances/haramel.xhtml"));
-	}
-	
-	@Override
-	public void onDropRegistered(Npc npc)
-	{
-		final Set<DropItem> dropItems = DropRegistrationService.getInstance().getCurrentDropMap().get(npc.getObjectId());
-		final int npcId = npc.getNpcId();
-		switch (npcId)
+		
+		if (spawnRace == null)
 		{
-			case 217025: // Keymaster MuMu Dang.
-			{
-				dropItems.add(DropRegistrationService.getInstance().regDropItem(1, 0, npcId, 185000103, 1)); // Rusty Key.
-				break;
-			}
-			case 217108: // MuMu Mechanic.
-			{
-				dropItems.add(DropRegistrationService.getInstance().regDropItem(1, 0, npcId, 185000107, 1)); // Lubricating Oil.
-				break;
-			}
-			case 700829: // Ancient Treasure Box.
-			{
-				dropItems.add(DropRegistrationService.getInstance().regDropItem(1, 0, npcId, 188052574, 1)); // Hamerun's Special Box.
-				dropItems.add(DropRegistrationService.getInstance().regDropItem(1, 0, npcId, 188053787, 1)); // Stigma Support Bundle.
-				break;
-			}
+			spawnRace = player.getRace();
+			SpawnHaramelRace();
 		}
 	}
 	
+	/**
+	 * Handles the logic that occurs when an {@link Npc} dies.<br>
+	 * This method identifies the player who dealt the most damage to the NPC.<br>
+	 * It triggers specific messages or spawns based on the unique ID of the dead NPC.
+	 * @param npc The {@link Npc} object that has died.
+	 */
 	@Override
 	public void onDie(Npc npc)
 	{
 		final Player player = npc.getAggroList().getMostPlayerDamage();
-		switch (npc.getObjectTemplate().getTemplateId())
+		if (player == null)
 		{
-			case 216915: // Boss Nukiti.
-			{
-				sendMsg("<Hamerun The Bleeder> appear");
-				spawn(216922, 224.39445f, 262.08163f, 144.89798f, (byte) 30); // Hamerun The Bleeder.
+			return;
+		}
+		
+		switch (npc.getNpcId())
+		{
+			case 653196: // Drudgelord Kakiti
+				sendMsgByRace(1500094, Race.PC_ALL, 0);
 				break;
-			}
-			case 700855: // Prison Doors.
-			{
-				despawnNpc(npc);
+			case 653205: // MuMu Ham the Grey
+				sendMsgByRace(1500096, Race.PC_ALL, 0);
 				break;
-			}
-			case 216922: // Hamerun The Bleeder.
-			{
-				despawnNpc(npc);
-				sendMovie(player, 457);
-				// Hamerun has dropped a treasure chest.
-				sendMsgByRace(1400713, Race.PC_ALL, 0);
-				sendMsg("[Congratulation]: you finish <Haramel>");
-				spawn(700829, 224.137f, 268.608f, 144.898f, (byte) 90); // Ancient Treasure Box.
-				spawn(700852, 223.93062f, 337.5487f, 142.43079f, (byte) 90); // Opened Dimensional Gate.
-				ItemService.addItem(player, 188900008, 1); // Secret Remedy Of Growth II.
+			case 653213: // Overseer Nukiti
+				sendMsgByRace(1500098, Race.PC_ALL, 0);
 				break;
-			}
+			case 653218: // Hamerun the Bleeder
+				sendMsg(1500099);
+				sendMsg(1400713); // Hamerun has dropped a treasure chest.
+				PacketSendUtility.sendPacket(player, new SM_PLAY_MOVIE(0, 457));
+				
+				// TODO - Treasure Chest only tested with Priest
+				spawn(700829, 224.1367f, 268.60825f, 144.89798f, (byte) 90); // Antique Treasure Chest
+				spawn(749306, 224.36278f, 261.913f, 144.89798f, (byte) 30); // Haramel Exit
+				break;
 		}
 	}
 	
-	private void despawnNpc(Npc npc)
+	/**
+	 * This method handles the spawning of specific NPCs for the Haramel instance.<br>
+	 * It checks the {@code spawnRace} variable to determine which models to use.<br>
+	 * The logic places two different entities at predefined coordinates based on whether the race is {@code ASMODIANS}.
+	 */
+	private void SpawnHaramelRace()
 	{
-		if (npc != null)
-		{
-			npc.getController().onDelete();
-		}
+		final int Cheska_Royer1 = spawnRace == Race.ASMODIANS ? 799995 : 799994;
+		final int Cheska_Royer2 = spawnRace == Race.ASMODIANS ? 806883 : 820133;
+		spawn(Cheska_Royer1, 221.85893f, 351.66858f, 141.01141f, (byte) 30);
+		spawn(Cheska_Royer2, 141.7932f, 22.274172f, 144.2455f, (byte) 0);
 	}
 	
-	private void sendMovie(Player player, int movie)
-	{
-		if (!movies.contains(movie))
-		{
-			movies.add(movie);
-			PacketSendUtility.sendPacket(player, new SM_PLAY_MOVIE(0, movie));
-		}
-	}
-	
-	private void sendMsg(String str)
-	{
-		instance.doOnAllPlayers(new Visitor<Player>()
-		{
-			@Override
-			public void visit(Player player)
-			{
-				PacketSendUtility.sendMessage(player, str);
-			}
-		});
-	}
-	
+	/**
+	 * Sends a system message to players based on their race.<br>
+	 * This method uses {@link ThreadPoolManager} to delay the delivery of the message.<br>
+	 * It checks if the player's race matches the provided {@code Race} or is set to {@code Race.PC_ALL}.
+	 * @param msg The unique identifier for the system message to send.
+	 * @param race The specific {@code Race} that should receive the message.
+	 * @param time The delay in milliseconds before sending the message.
+	 */
 	protected void sendMsgByRace(int msg, Race race, int time)
 	{
-		ThreadPoolManager.getInstance().schedule(new Runnable()
+		ThreadPoolManager.getInstance().schedule(() -> instance.doOnAllPlayers(player ->
 		{
-			@Override
-			public void run()
+			if (player.getRace().equals(race) || race.equals(Race.PC_ALL))
 			{
-				instance.doOnAllPlayers(new Visitor<Player>()
-				{
-					@Override
-					public void visit(Player player)
-					{
-						if (player.getRace().equals(race) || race.equals(Race.PC_ALL))
-						{
-							PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(msg));
-						}
-					}
-				});
+				PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(msg));
 			}
-		}, time);
+			
+		}), time);
 	}
 	
-	@Override
-	public boolean onReviveEvent(Player player)
-	{
-		player.getGameStats().updateStatsAndSpeedVisually();
-		PlayerReviveService.revive(player, 100, 100, false, 0);
-		PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_REBIRTH_MASSAGE_ME);
-		PacketSendUtility.sendPacket(player, new SM_QUESTION_WINDOW(SM_QUESTION_WINDOW.STR_INSTANT_DUNGEON_RESURRECT, 0, 0));
-		return TeleportService2.teleportTo(player, mapId, instanceId, 172.00f, 20.00f, 144.22f, (byte) 0);
-	}
-	
+	/**
+	 * Handles the logic when a {@link Player} dies in this instance.<br>
+	 * It broadcasts an emotion and sends death packets to the client.
+	 * @param player The {@code Player} object that has died.
+	 * @param lastAttacker The {@code Creature} that dealt the final blow.
+	 * @return {@code true} if the death was handled successfully, otherwise {@code false}.
+	 */
 	@Override
 	public boolean onDie(Player player, Creature lastAttacker)
 	{
@@ -185,9 +145,26 @@ public class HaramelInstance extends GeneralInstanceHandler
 		return true;
 	}
 	
+	/**
+	 * This method is called when a {@link Player} logs out of the instance.<br>
+	 * It handles moving the player to the exit point.
+	 * @param player The {@code Player} object who is logging out.
+	 */
 	@Override
-	public void onInstanceDestroy()
+	public void onPlayerLogOut(Player player)
 	{
-		movies.clear();
+		TeleportService2.moveToInstanceExit(player, mapId, player.getRace());
+	}
+	
+	/**
+	 * This method is called when a {@link Player} leaves the instance.<br>
+	 * It handles the teleportation logic to move the player to the exit point.<br>
+	 * The {@code TeleportService2} class is used to perform this action.
+	 * @param player The {@code Player} object that is exiting the instance.
+	 */
+	@Override
+	public void onExitInstance(Player player)
+	{
+		TeleportService2.moveToInstanceExit(player, mapId, player.getRace());
 	}
 }

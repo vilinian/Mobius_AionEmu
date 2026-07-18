@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.portal;
 
@@ -21,7 +21,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
+import com.aionemu.gameserver.model.templates.base.BaseTemplate;
+
 /**
+ * Represents the spatial coordinates and properties of a portal location.<br>
+ * This class is used to define where portals appear within the game world.
  * @author xTz
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -30,77 +34,132 @@ public class PortalLoc
 {
 	@XmlAttribute(name = "world_id")
 	protected int worldId;
-	
 	@XmlAttribute(name = "loc_id")
 	protected int locId;
-	
 	@XmlAttribute(name = "x")
 	protected float x;
-	
 	@XmlAttribute(name = "y")
 	protected float y;
-	
 	@XmlAttribute(name = "z")
 	protected float z;
-	
 	@XmlAttribute(name = "h")
 	protected byte h;
 	
+	/**
+	 * Retrieves the unique identifier for the world.<br>
+	 * This value is fetched from the associated {@link BaseTemplate}.
+	 * @return The {@code int} ID of the world.
+	 */
 	public int getWorldId()
 	{
 		return worldId;
 	}
 	
+	/**
+	 * Sets the unique identifier for the world.<br>
+	 * This updates the {@code worldId} field of the {@link PortalLoc} object.
+	 * @param value The new ID to assign to the world.
+	 */
 	public void setWorldId(int value)
 	{
 		worldId = value;
 	}
 	
+	/**
+	 * Retrieves the location identifier for this event drop.<br>
+	 * This value corresponds to the {@code loc_id} attribute.
+	 * @return The unique integer ID of the location.
+	 */
 	public int getLocId()
 	{
 		return locId;
 	}
 	
+	/**
+	 * Sets the unique location identifier for this portal.<br>
+	 * This updates the {@code locId} field.
+	 * @param value The new integer ID to assign.
+	 */
 	public void setLocId(int value)
 	{
 		locId = value;
 	}
 	
+	/**
+	 * Retrieves the X coordinate of the bookmark.<br>
+	 * This value represents the horizontal position in the world.
+	 * @return The {@code float} value of the X coordinate.
+	 */
 	public float getX()
 	{
 		return x;
 	}
 	
+	/**
+	 * Sets the x-coordinate for this instance exit.<br>
+	 * This updates the {@code x} field with a new value.
+	 * @param value The new {@code float} coordinate to set.
+	 */
 	public void setX(float value)
 	{
 		x = value;
 	}
 	
+	/**
+	 * Retrieves the vertical coordinate of the bookmark.<br>
+	 * This value represents the height in the game world.
+	 * @return The {@code float} value of the Y coordinate.
+	 */
 	public float getY()
 	{
 		return y;
 	}
 	
+	/**
+	 * Sets the Y coordinate of the instance exit.<br>
+	 * This updates the vertical position in the world.
+	 * @param value The new {@code float} value for the Y coordinate.
+	 */
 	public void setY(float value)
 	{
 		y = value;
 	}
 	
+	/**
+	 * Retrieves the vertical coordinate of the bookmark.<br>
+	 * This value represents the height in the game world.
+	 * @return The {@code float} value of the Z coordinate.
+	 */
 	public float getZ()
 	{
 		return z;
 	}
 	
+	/**
+	 * Sets the vertical coordinate of the exit point.<br>
+	 * This updates the {@code z} field with a new value.
+	 * @param value The new {@code float} value for the height.
+	 */
 	public void setZ(float value)
 	{
 		z = value;
 	}
 	
+	/**
+	 * Retrieves the horizontal rotation value.<br>
+	 * This value represents the orientation of the {@code SummonGroup}.
+	 * @return The current {@code byte} value for {@code h}.
+	 */
 	public byte getH()
 	{
 		return h;
 	}
 	
+	/**
+	 * Sets the {@code h} coordinate for this instance exit.<br>
+	 * This updates the internal field with the provided {@code byte} value.
+	 * @param value The new value to assign to the {@code h} property.
+	 */
 	public void setH(byte value)
 	{
 		h = value;

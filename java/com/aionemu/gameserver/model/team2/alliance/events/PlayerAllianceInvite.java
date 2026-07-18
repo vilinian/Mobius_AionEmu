@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.team2.alliance.events;
 
@@ -31,9 +31,10 @@ import com.aionemu.gameserver.model.team2.group.PlayerGroup;
 import com.aionemu.gameserver.model.team2.group.PlayerGroupService;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.utils.PacketSendUtility;
-import com.google.common.base.Preconditions;
 
 /**
+ * Represents a request to invite a {@link Player} to join an alliance.<br>
+ * This class handles the logic for processing and responding to alliance invitation events.
  * @author ATracer
  */
 public class PlayerAllianceInvite extends RequestResponseHandler
@@ -41,6 +42,12 @@ public class PlayerAllianceInvite extends RequestResponseHandler
 	private final Player inviter;
 	private final Player invited;
 	
+	/**
+	 * Creates a new alliance invitation request.<br>
+	 * This object handles the interaction between two players regarding an alliance join.
+	 * @param inviter The {@link Player} who is sending the invitation.
+	 * @param invited The {@link Player} who is receiving the invitation.
+	 */
 	public PlayerAllianceInvite(Player inviter, Player invited)
 	{
 		super(inviter);
@@ -48,14 +55,21 @@ public class PlayerAllianceInvite extends RequestResponseHandler
 		this.invited = invited;
 	}
 	
+	/**
+	 * Processes the request to join an alliance.<br>
+	 * This method checks if the {@code invited} player can join and adds them along with their group members.<br>
+	 * It also handles cases where the alliance is already full.
+	 * @param requester The {@code Creature} who sent the request.
+	 * @param responder The {@link Player} who is responding to the request.
+	 */
 	@Override
 	public void acceptRequest(Creature requester, Player responder)
 	{
 		if (PlayerAllianceService.canInvite(inviter, invited))
 		{
-			// %0 has joined the alliance.
 			PacketSendUtility.sendPacket(inviter, SM_SYSTEM_MESSAGE.STR_FORCE_ENTER_HIM(invited.getName()));
 			PlayerAlliance alliance = inviter.getPlayerAlliance2();
+			
 			if (alliance != null)
 			{
 				if (alliance.size() == 24)
@@ -71,12 +85,15 @@ public class PlayerAllianceInvite extends RequestResponseHandler
 					return;
 				}
 			}
+			
 			final List<Player> playersToAdd = new ArrayList<>();
 			collectPlayersToAdd(playersToAdd, alliance);
+			
 			if (alliance == null)
 			{
 				alliance = PlayerAllianceService.createAlliance(inviter, invited, TeamType.ALLIANCE);
 			}
+			
 			for (Player member : playersToAdd)
 			{
 				PlayerAllianceService.addPlayer(alliance, member);
@@ -84,19 +101,33 @@ public class PlayerAllianceInvite extends RequestResponseHandler
 		}
 	}
 	
-	private final void collectPlayersToAdd(List<Player> playersToAdd, PlayerAlliance alliance)
+	/**
+	 * Identifies and adds players to the provided list based on group membership.<br>
+	 * This method handles logic for both the inviter and the invited player.<br>
+	 * It removes members from their respective groups during the process.
+	 * @param playersToAdd The {@code List} of {@link Player} objects to be populated.
+	 * @param alliance The {@link PlayerAlliance} associated with the action.
+	 */
+	private void collectPlayersToAdd(List<Player> playersToAdd, PlayerAlliance alliance)
 	{
+		// Collect Inviter Group without leader
 		if (inviter.isInGroup2())
 		{
-			Preconditions.checkState(alliance == null, "If inviter is in group - alliance should be null");
+			if (!(alliance == null))
+			{
+				throw new IllegalStateException("If inviter is in group - alliance should be null");
+			}
 			final PlayerGroup group = inviter.getPlayerGroup2();
 			playersToAdd.addAll(group.filterMembers(new ExcludePlayerFilter(inviter)));
+			
 			final Iterator<Player> pIter = group.getMembers().iterator();
 			while (pIter.hasNext())
 			{
 				PlayerGroupService.removePlayer(pIter.next());
 			}
 		}
+		
+		// Collect full Invited Group
 		if (invited.isInGroup2())
 		{
 			final PlayerGroup group = invited.getPlayerGroup2();
@@ -106,17 +137,23 @@ public class PlayerAllianceInvite extends RequestResponseHandler
 			{
 				PlayerGroupService.removePlayer(pIter.next());
 			}
-		}
+			
+		} // or just single player
 		else
 		{
 			playersToAdd.add(invited);
 		}
 	}
 	
+	/**
+	 * This method handles the rejection of a request.<br>
+	 * It notifies the {@code requester} that their action was declined by the {@link Player}.
+	 * @param requester The {@code Creature} who sent the initial request.
+	 * @param responder The {@code Player} who is declining the request.
+	 */
 	@Override
 	public void denyRequest(Creature requester, Player responder)
 	{
-		// %0 has declined your invitation to join the alliance.
 		PacketSendUtility.sendPacket(inviter, SM_SYSTEM_MESSAGE.STR_PARTY_ALLIANCE_HE_REJECT_INVITATION(responder.getName()));
 	}
 }

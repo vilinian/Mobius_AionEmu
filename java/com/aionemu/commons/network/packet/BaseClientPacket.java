@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.network.packet;
 
@@ -24,9 +24,10 @@ import org.slf4j.LoggerFactory;
 import com.aionemu.commons.network.AConnection;
 
 /**
- * Base class for every Client Packet
- * @param <T> AConnection - owner of this client packet.
+ * This is the base class for all client packets in the network system.<br>
+ * It provides common functionality shared by every packet sent from the client to the server.
  * @author -Nemesiss-
+ * @param <T> AConnection - owner of this client packet.
  */
 public abstract class BaseClientPacket<T extends AConnection>extends BasePacket implements Runnable
 {
@@ -44,9 +45,11 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 	private ByteBuffer buf;
 	
 	/**
-	 * Constructs a new client packet with specified id and data buffer.
-	 * @param buf packet data container.
-	 * @param opcode packet opcode.
+	 * Creates a new instance of a client packet.<br>
+	 * This constructor initializes the packet with a specific {@code opcode}.<br>
+	 * It also assigns the provided data buffer to this packet.
+	 * @param buf The {@code ByteBuffer} containing the packet data.
+	 * @param opcode The unique identifier for this type of packet.
 	 */
 	public BaseClientPacket(ByteBuffer buf, int opcode)
 	{
@@ -55,8 +58,10 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 	}
 	
 	/**
-	 * Constructs a new client packet with specified id. ByteBuffer must be later set with setBuffer method.
-	 * @param opcode packet opcode.
+	 * Creates a new instance of a client packet.<br>
+	 * This constructor initializes the packet with a specific {@code opcode}.<br>
+	 * It uses the {@code CLIENT} type for identification.
+	 * @param opcode The unique identifier for this packet type.
 	 */
 	public BaseClientPacket(int opcode)
 	{
@@ -64,8 +69,9 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 	}
 	
 	/**
-	 * Attach ByteBuffer to this packet.
-	 * @param buf
+	 * Sets the data buffer for this packet.<br>
+	 * This method updates the internal {@code ByteBuffer} used to read or write packet data.
+	 * @param buf The {@code ByteBuffer} to use as the packet's data container.
 	 */
 	public void setBuffer(ByteBuffer buf)
 	{
@@ -73,8 +79,9 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 	}
 	
 	/**
-	 * Attach client connection to this packet.
-	 * @param client
+	 * Sets the connection owner for this packet.<br>
+	 * This method links the packet to a specific {@link AConnection}.
+	 * @param client The {@code T} type connection object to assign.
 	 */
 	public void setConnection(T client)
 	{
@@ -82,10 +89,12 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 	}
 	
 	/**
-	 * This method reads data from a packet buffer. If the error occurred while reading data, the connection is closed.
-	 * @return <code>true</code> if reading was successful, otherwise <code>false</code>
+	 * Reads the data from the internal buffer.<br>
+	 * This method calls {@code readImpl} to process the packet content.<br>
+	 * It logs a warning if there are leftover bytes after reading.
+	 * @return {@code true} if the packet was read successfully, or {@code false} if an error occurred.
 	 */
-	public final boolean read()
+	public boolean read()
 	{
 		try
 		{
@@ -111,18 +120,22 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 	protected abstract void readImpl();
 	
 	/**
-	 * @return number of bytes remaining in this packet buffer.
+	 * Returns the number of bytes left in the buffer.<br>
+	 * This method checks the {@code ByteBuffer} for remaining data.
+	 * @return The count of remaining bytes as an {@code int}.
 	 */
-	public final int getRemainingBytes()
+	public int getRemainingBytes()
 	{
 		return buf.remaining();
 	}
 	
 	/**
-	 * Read int from this packet buffer.
-	 * @return int
+	 * Reads a {@code int} value from the current buffer.<br>
+	 * This method is used to extract data of type {@code D}.<br>
+	 * It returns {@code 0} if an error occurs during reading.
+	 * @return The integer value read from the buffer.
 	 */
-	protected final int readD()
+	protected int readD()
 	{
 		try
 		{
@@ -132,14 +145,17 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 		{
 			log.error("Missing D for: " + this);
 		}
+		
 		return 0;
 	}
 	
 	/**
-	 * Read byte from this packet buffer.
-	 * @return int
+	 * Reads a single unsigned byte from the current buffer.<br>
+	 * This method is used to retrieve a {@code C} type value.<br>
+	 * It returns {@code 0} if an error occurs during reading.
+	 * @return The integer value of the read byte.
 	 */
-	protected final int readC()
+	protected int readC()
 	{
 		try
 		{
@@ -149,14 +165,17 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 		{
 			log.error("Missing C for: " + this);
 		}
+		
 		return 0;
 	}
 	
 	/**
-	 * Read signed byte from this packet buffer.
-	 * @return int
+	 * Reads a single {@code byte} from the current buffer.<br>
+	 * This method is used to extract data during packet parsing.<br>
+	 * It logs an error if the buffer is empty or missing data.
+	 * @return The {@code byte} read from the buffer, or {@code 0} if an error occurs.
 	 */
-	protected final byte readSC()
+	protected byte readSC()
 	{
 		try
 		{
@@ -166,14 +185,17 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 		{
 			log.error("Missing C for: " + this);
 		}
+		
 		return 0;
 	}
 	
 	/**
-	 * Read signed short from this packet buffer.
-	 * @return int
+	 * Reads a {@code short} value from the current buffer.<br>
+	 * This method is used to parse packet data.<br>
+	 * It returns {@code 0} if an error occurs during reading.
+	 * @return The {@code short} value read from the buffer.
 	 */
-	protected final short readSH()
+	protected short readSH()
 	{
 		try
 		{
@@ -183,10 +205,17 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 		{
 			log.error("Missing H for: " + this);
 		}
+		
 		return 0;
 	}
 	
-	protected final int readH()
+	/**
+	 * Reads a short value from the buffer as an unsigned integer.<br>
+	 * This method handles the {@code H} packet type.<br>
+	 * It returns {@code 0} if an error occurs during reading.
+	 * @return The unsigned short value read from the buffer.
+	 */
+	protected int readH()
 	{
 		try
 		{
@@ -196,14 +225,17 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 		{
 			log.error("Missing H for: " + this);
 		}
+		
 		return 0;
 	}
 	
 	/**
-	 * Read double from this packet buffer.
-	 * @return double
+	 * Reads a {@code double} value from the current buffer.<br>
+	 * This method is used to extract data during packet parsing.<br>
+	 * It returns {@code 0} if an error occurs while reading.
+	 * @return The {@code double} value read from the buffer.
 	 */
-	protected final double readDF()
+	protected double readDF()
 	{
 		try
 		{
@@ -213,14 +245,17 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 		{
 			log.error("Missing DF for: " + this);
 		}
+		
 		return 0;
 	}
 	
 	/**
-	 * Read double from this packet buffer.
-	 * @return double
+	 * Reads a {@code float} value from the current buffer.<br>
+	 * This method is used to extract floating-point data during packet parsing.<br>
+	 * If an error occurs, it logs the issue and returns {@code 0}.
+	 * @return The {@code float} value read from the buffer.
 	 */
-	protected final float readF()
+	protected float readF()
 	{
 		try
 		{
@@ -230,14 +265,17 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 		{
 			log.error("Missing F for: " + this);
 		}
+		
 		return 0;
 	}
 	
 	/**
-	 * Read long from this packet buffer.
-	 * @return long
+	 * Reads a {@code long} value from the current buffer.<br>
+	 * This method is used to extract 8-byte data types.<br>
+	 * It returns {@code 0} if an error occurs during reading.
+	 * @return The {@code long} value read from the buffer.
 	 */
-	protected final long readQ()
+	protected long readQ()
 	{
 		try
 		{
@@ -247,14 +285,17 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 		{
 			log.error("Missing Q for: " + this);
 		}
+		
 		return 0;
 	}
 	
 	/**
-	 * Read String from this packet buffer.
-	 * @return String
+	 * Reads a string from the current buffer.<br>
+	 * It reads characters until it encounters a null character.<br>
+	 * If an error occurs, it logs the issue for this packet.
+	 * @return The string read from the buffer as a {@code String}.
 	 */
-	protected final String readS()
+	protected String readS()
 	{
 		final StringBuffer sb = new StringBuffer();
 		char ch;
@@ -269,15 +310,18 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 		{
 			log.error("Missing S for: " + this);
 		}
+		
 		return sb.toString();
 	}
 	
 	/**
-	 * Read n bytes from this packet buffer, n = length.
-	 * @param length
-	 * @return byte[]
+	 * Reads a sequence of bytes from the internal buffer.<br>
+	 * The method extracts data into a new {@code byte[]} array.<br>
+	 * It logs an error if there are not enough bytes to read.
+	 * @param length The number of bytes to read from the buffer.
+	 * @return A {@code byte[]} containing the requested data.
 	 */
-	protected final byte[] readB(int length)
+	protected byte[] readB(int length)
 	{
 		final byte[] result = new byte[length];
 		try
@@ -288,7 +332,36 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 		{
 			log.error("Missing byte[] for: " + this);
 		}
+		
 		return result;
+	}
+	
+	/**
+	 * Reads a sequence of bytes from the buffer based on a hex string.<br>
+	 * This method removes all whitespace from the input {@code string}.<br>
+	 * It converts each pair of hex characters into a single byte.
+	 * @param string The hex string representing the bytes to read.
+	 * @return A {@code byte[]} containing the parsed data.
+	 */
+	protected byte[] readB(String string)
+	{
+		final String finalString = string.replaceAll("\\s+", "");
+		final byte[] bytes = new byte[finalString.length() / 2];
+		for (int i = 0; i < bytes.length; ++i)
+		{
+			bytes[i] = (byte) Integer.parseInt(finalString.substring(2 * i, (2 * i) + 2), 16);
+		}
+		
+		try
+		{
+			buf.get(bytes);
+		}
+		catch (Exception e)
+		{
+			BaseClientPacket.log.error("Missing byte[] for: " + this);
+		}
+		
+		return bytes;
 	}
 	
 	/**
@@ -297,9 +370,11 @@ public abstract class BaseClientPacket<T extends AConnection>extends BasePacket 
 	protected abstract void runImpl();
 	
 	/**
-	 * @return Connection that is owner of this packet.
+	 * Retrieves the connection associated with this packet.<br>
+	 * This method returns the owner of the current {@code BaseClientPacket}.
+	 * @return The {@code AConnection} object linked to this packet.
 	 */
-	public final T getConnection()
+	public T getConnection()
 	{
 		return client;
 	}

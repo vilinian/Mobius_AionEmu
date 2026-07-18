@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -20,31 +20,39 @@ import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 
 /**
+ * Handles the admin command for granting power-ups to players.<br>
+ * This class processes requests to modify player status effects or attributes.
  * @author Tago
  */
 public class PowerUp extends AdminCommand
 {
+	/**
+	 * Creates a new instance of the {@link PowerUp} command.<br>
+	 * This constructor registers the {@code powerup} command with the system.
+	 */
 	public PowerUp()
 	{
 		super("powerup");
 	}
 	
+	/**
+	 * Multiplies a player's stats based on the administrator's stats and a given multiplier.<br>
+	 * The target is determined by name, then target, then self.<br>
+	 * A value of {@code 0} resets the player to normal stats.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings where the first element is the multiplier.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
-		// TODO rewrite
-		// int index = 2;
+		// Rewrite the integer index variable to two.
 		// int i = 0;
 		// Player player = null;
 		// if (params.length != 0) {
 		// if ("help".startsWith(params[i])) {
 		// PacketSendUtility.sendMessage(admin, "0 to return to normal state");
 		// PacketSendUtility.sendMessage(admin, "//powerup <Multiplier = 2>");
-		// PacketSendUtility.sendMessage(admin, "Syntax: //powerup [playerName] [Multiplier = 2]\n"
-		// + " This command multiplies your actual power to the number given.\n"
-		// + " Using 0 as the Multiplier resets the power to normal.\n"
-		// + " Notice: You can ommit parameters between [], especially playerName.\n"
-		// + " Target: Named player, then targeted player, only then self.\n" + " Default Value: Multiplier is 2.");
+		// This command multiplies your actual power by the given multiplier, where a value of 0 resets it to normal; parameters can be omitted, and the target priority is named player, then targeted player, then self, with a default multiplier of 2.
 		// return;
 		// }
 		// player = World.getInstance().findPlayer(Util.convertName(params[i]));
@@ -52,11 +60,9 @@ public class PowerUp extends AdminCommand
 		// VisibleObject target = admin.getTarget();
 		// if (target instanceof Player)
 		// player = (Player) target;
-		// else
-		// player = admin;
+		// Set the player as an administrator.
 		// }
-		// else
-		// i++;
+		// Increment the counter by one.
 		// try {
 		// index = Integer.parseInt(params[i]);
 		// }
@@ -128,13 +134,17 @@ public class PowerUp extends AdminCommand
 		// if (player == admin)
 		// PacketSendUtility.sendMessage(player, "You are now " + index + " times more powerfull than before.");
 		// else {
-		// PacketSendUtility.sendMessage(admin, "Player " + player.getName() + " is now " + index +
-		// " times more powerfull than before.");
-		// PacketSendUtility.sendMessage(player, "Admin " + admin.getName() + " made you " + index +
-		// " times more powerfull than before.");
+		// Send a message to the admin stating that the player is now index times more powerful than before.
+		// PacketSendUtility.sendMessage(player, "Admin " + admin.getName() + " made you " + index + " times more powerful than before.");.
 		// }
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{

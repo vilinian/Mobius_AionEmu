@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.restrictions;
 
@@ -39,11 +39,20 @@ import com.aionemu.gameserver.world.zone.ZoneInstance;
 import com.aionemu.gameserver.world.zone.ZoneName;
 
 /**
- * @Author lord_rex modified by Sippolo
- * @Reworked Kill3r
+ * This class manages the various restrictions and limitations applied to {@link Player} objects.<br>
+ * It handles rules regarding actions, items, and interactions within the game world.
+ * @author lord_rex modified by Sippolo
  */
 public class PlayerRestrictions extends AbstractRestrictions
 {
+	/**
+	 * Checks if a {@link Player} can be affected by a specific {@link Skill} on a {@link VisibleObject}.<br>
+	 * This method validates various game rules and restrictions to see if the skill effect is allowed.
+	 * @param player The player who will be affected by the skill.
+	 * @param target The object that is being targeted by the skill.
+	 * @param skill The specific skill being used.
+	 * @return {@code true} if the player can be affected, {@code false} otherwise.
+	 */
 	@Override
 	public boolean canAffectBySkill(Player player, VisibleObject target, Skill skill)
 	{
@@ -51,28 +60,43 @@ public class PlayerRestrictions extends AbstractRestrictions
 		{
 			return false;
 		}
+		
 		if (player.isInPlayerMode(PlayerMode.RIDE))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_CANNOT_RIDE_ABNORMAL_STATE);
 			return false;
 		}
+		
+		// dont allow to use skills in Fly Teleport state
 		if ((target instanceof Player) && ((Player) target).isProtectionActive())
 		{
 			return false;
 		}
+		
 		if (player.isUsingFlyTeleport() || ((target instanceof Player) && ((Player) target).isUsingFlyTeleport()))
 		{
 			return false;
 		}
+		
 		if (((Creature) target).getLifeStats().isAlreadyDead() && !skill.getSkillTemplate().hasResurrectEffect() && !skill.checkNonTargetAOE())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SKILL_TARGET_IS_NOT_VALID);
 			return false;
 		}
+		
+		// cant ressurect non players and non dead
 		if (skill.getSkillTemplate().hasResurrectEffect() && (!(target instanceof Player) || !((Creature) target).getLifeStats().isAlreadyDead() || (!((Creature) target).isInState(CreatureState.DEAD) && !((Creature) target).isInState(CreatureState.FLOATING_CORPSE))))
 		{
 			return false;
 		}
+		
+		if (skill.getSkillTemplate().hasItemHealFpEffect() && !player.isInFlyingState())
+		{
+			// player must be
+			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SKILL_RESTRICTION_FLY_ONLY);
+			return false;
+		}
+		
 		if (!skill.getSkillTemplate().hasEvadeEffect())
 		{
 			if (player.getEffectController().isAbnormalState(AbnormalState.CANT_ATTACK_STATE))
@@ -80,91 +104,131 @@ public class PlayerRestrictions extends AbstractRestrictions
 				return false;
 			}
 		}
+		
+		// Fixes an issue where Summon Group Member could not be used while either the caster or the summoned entity was actively in combat (e.g., skillId: 1606).
 		if (skill.getSkillTemplate().hasRecallInstant())
 		{
+			// skill properties should already filter only players
 			if (player.getController().isInCombat() || ((Player) target).getController().isInCombat())
 			{
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_Recall_CANNOT_ACCEPT_EFFECT(target.getName()));
 				return false;
 			}
 		}
+		
 		if (player.isInState(CreatureState.PRIVATE_SHOP))
 		{
+			// You cannot use an item while running a Private Store.
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_CANNOT_USE_ITEM_DURING_PATH_FLYING(new DescriptionId(2800123)));
 			return false;
 		}
+		
 		if (((target instanceof Player)) && (((Player) target).isTransformed()) && (((Player) target).getTransformModel().getType() == TransformType.AVATAR) && (skill.getSkillTemplate().getEffects().isEffectTypePresent(EffectType.HIDE)))
 		{
 			return false;
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if the action is allowed based on flight status.<br>
+	 * This method verifies if either the {@code player} or the {@code target} are currently flying.<br>
+	 * It returns {@code false} if a restriction message is sent to the user.
+	 * @param player The {@link Player} performing the action.
+	 * @param target The {@link VisibleObject} being targeted.
+	 * @return {@code true} if the action is allowed, or {@code false} otherwise.
+	 */
 	private boolean checkFly(Player player, VisibleObject target)
 	{
-		if ((player.isUsingFlyTeleport()) || (player.isInPlayerMode(PlayerMode.WINDSTREAM)))
+		if (player.isUsingFlyTeleport() || player.isInPlayerMode(PlayerMode.WINDSTREAM))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SKILL_RESTRICTION_NO_FLY);
 			return false;
 		}
-		if ((target != null) && ((target instanceof Player)))
+		
+		if ((target != null) && (target instanceof Player))
 		{
 			final Player playerTarget = (Player) target;
-			if ((playerTarget.isUsingFlyTeleport()) || (playerTarget.isInPlayerMode(PlayerMode.WINDSTREAM)))
+			if (playerTarget.isUsingFlyTeleport() || playerTarget.isInPlayerMode(PlayerMode.WINDSTREAM))
 			{
 				return false;
 			}
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if a {@link Player} is allowed to use a specific {@link Skill}.<br>
+	 * This method validates all active restrictions for the player.
+	 * @param player The {@code Player} who wants to use the skill.
+	 * @param skill The {@code Skill} being attempted.
+	 * @return {@code true} if the player can use the skill, otherwise {@code false}.
+	 */
 	@Override
 	public boolean canUseSkill(Player player, Skill skill)
 	{
 		final VisibleObject target = player.getTarget();
 		final SkillTemplate template = skill.getSkillTemplate();
-		if (!checkFly(player, target))
+		
+		// TODO cancel skill if other is used
+		if (!checkFly(player, target) || player.isCasting())
 		{
 			return false;
 		}
-		if (player.isCasting())
-		{
-			return false;
-		}
+		
 		if (player.isInPlayerMode(PlayerMode.RIDE))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_SKILL_RESTRICTION_RIDE);
 			return false;
 		}
+		
 		if (player.getInventory().isFull())
 		{
 			// You are too overburdened to fight.
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_TOO_HEAVY_TO_ATTACK);
 			return false;
 		}
+		
 		if (!player.canAttack() && !template.hasEvadeEffect())
 		{
 			return false;
 		}
-		if ((template.getType() == SkillType.MAGICAL) && (player.getEffectController().isAbnormalSet(AbnormalState.SILENCE)) && (!template.hasEvadeEffect()))
+		
+		// in 3.0 players can use remove shock even when silenced
+		if ((template.getType() == SkillType.MAGICAL) && player.getEffectController().isAbnormalSet(AbnormalState.SILENCE) && !template.hasEvadeEffect())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SKILL_CANT_CAST_MAGIC_SKILL_WHILE_SILENCED);
 			return false;
 		}
-		if ((template.getType() == SkillType.PHYSICAL) && (player.getEffectController().isAbnormalSet(AbnormalState.BIND)))
+		
+		if ((template.getType() == SkillType.PHYSICAL) && player.getEffectController().isAbnormalSet(AbnormalState.BIND))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SKILL_CANT_CAST_PHYSICAL_SKILL_IN_FEAR);
 			return false;
 		}
+		
+		// Cannot use Abyss skill in Tiamat Down.
+		// PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SKILL_CANT_CAST_IN_CURRENT_POSTION);
+		// return false;
+		// }
+		
 		if (player.isSkillDisabled(template))
 		{
 			return false;
 		}
-		if (player.getTransformModel().isActive() && (player.getTransformModel().getType() == TransformType.NONE))
+		
+		// cannot use skills while transformed
+		if (player.getTransformModel().isActive())
 		{
-			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SKILL_CAN_NOT_CAST_IN_SHAPECHANGE);
-			return false;
+			if (player.getTransformModel().getType() == TransformType.NONE)
+			{
+				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SKILL_CAN_NOT_CAST_IN_SHAPECHANGE);
+				return false;
+			}
 		}
+		
 		if (template.hasResurrectEffect())
 		{
 			if (!(target instanceof Player))
@@ -172,6 +236,7 @@ public class PlayerRestrictions extends AbstractRestrictions
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SKILL_TARGET_IS_NOT_VALID);
 				return false;
 			}
+			
 			final Player targetPlayer = (Player) target;
 			if (!targetPlayer.isInState(CreatureState.DEAD))
 			{
@@ -179,17 +244,27 @@ public class PlayerRestrictions extends AbstractRestrictions
 				return false;
 			}
 		}
+		
 		if ((player.isTransformed()) && (player.getTransformModel().getType() == TransformType.AVATAR) && (skill.getSkillTemplate().getEffects().isEffectTypePresent(EffectType.HIDE)))
 		{
 			return false;
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if a {@link Player} is allowed to invite another {@link Player} to a group.<br>
+	 * This method validates the permissions of both players involved.
+	 * @param player The player attempting to send the invitation.
+	 * @param target The player who will receive the invitation.
+	 * @return {@code true} if the invitation is allowed, {@code false} otherwise.
+	 */
 	@Override
 	public boolean canInviteToGroup(Player player, Player target)
 	{
 		final PlayerGroup group = player.getPlayerGroup2();
+		
 		if ((group != null) && group.isFull())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_PARTY_CANT_ADD_NEW_MEMBER);
@@ -239,9 +314,18 @@ public class PlayerRestrictions extends AbstractRestrictions
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_FORCE_ALREADY_OTHER_FORCE(target.getName()));
 			return false;
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if a player is allowed to invite another player to their alliance.<br>
+	 * This method validates level requirements, race restrictions, and alliance capacity.<br>
+	 * It also ensures that neither player is dead and the target is not already in an alliance.
+	 * @param player The player attempting to send the invitation.
+	 * @param target The player who will receive the invitation.
+	 * @return {@code true} if the invitation is valid, otherwise {@code false}.
+	 */
 	@Override
 	public boolean canInviteToAlliance(Player player, Player target)
 	{
@@ -251,18 +335,20 @@ public class PlayerRestrictions extends AbstractRestrictions
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_FORCE_NO_USER_TO_INVITE);
 			return false;
 		}
+		
 		if ((target.getRace() != player.getRace()) && !GroupConfig.ALLIANCE_INVITEOTHERFACTION)
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_PARTY_CANT_INVITE_OTHER_RACE);
 			return false;
 		}
+		
 		final PlayerAlliance alliance = player.getPlayerAlliance2();
 		if (level < 10)
 		{
-			// Characters under level 10 cannot send Alliance invitations.
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_PARTY_ALLIANCE_TOO_LOW_LEVEL_TO_INVITE("10"));
 			return false;
 		}
+		
 		if (target.isInAlliance2())
 		{
 			if (target.getPlayerAlliance2() == alliance)
@@ -270,34 +356,41 @@ public class PlayerRestrictions extends AbstractRestrictions
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_PARTY_ALLIANCE_HE_IS_ALREADY_MEMBER_OF_OUR_ALLIANCE(target.getName()));
 				return false;
 			}
+			
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_FORCE_ALREADY_OTHER_FORCE(target.getName()));
 			return false;
 		}
+		
 		if ((alliance != null) && alliance.isFull())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_PARTY_ALLIANCE_CANT_ADD_NEW_MEMBER);
 			return false;
 		}
+		
 		if ((alliance != null) && !alliance.isSomeCaptain(player))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_PARTY_ALLIANCE_ONLY_PARTY_LEADER_CAN_LEAVE_ALLIANCE);
 			return false;
 		}
+		
 		if (target.sameObjectId(player.getObjectId()))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_FORCE_CAN_NOT_INVITE_SELF);
 			return false;
 		}
+		
 		if (target.getLifeStats().isAlreadyDead())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_UI_PARTY_DEAD);
 			return false;
 		}
+		
 		if (player.getLifeStats().isAlreadyDead())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_FORCE_CANT_INVITE_WHEN_DEAD);
 			return false;
 		}
+		
 		if (target.isInGroup2())
 		{
 			final PlayerGroup targetGroup = target.getPlayerGroup2();
@@ -306,15 +399,25 @@ public class PlayerRestrictions extends AbstractRestrictions
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_FORCE_INVITE_PARTY_HIM(target.getName(), targetGroup.getLeader().getName()));
 				return false;
 			}
+			
 			if ((alliance != null) && ((targetGroup.size() + alliance.size()) >= 24))
 			{
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_FORCE_INVITE_FAILED_NOT_ENOUGH_SLOT);
 				return false;
 			}
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if a player is allowed to invite another player to their league.<br>
+	 * This method validates various conditions such as alliance capacity and group status.<br>
+	 * It sends system messages to the {@code player} if the invitation fails.
+	 * @param player The player attempting to send the invitation.
+	 * @param target The player who is being invited.
+	 * @return {@code true} if the invitation is allowed, otherwise {@code false}.
+	 */
 	@Override
 	public boolean canInviteToLeague(Player player, Player target)
 	{
@@ -323,6 +426,7 @@ public class PlayerRestrictions extends AbstractRestrictions
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_UNION_ONLY_INVITE_FORCE_MEMBER);
 			return false;
 		}
+		
 		final PlayerAlliance alliance = player.getPlayerAlliance2();
 		if (target.isInLeague())
 		{
@@ -331,24 +435,29 @@ public class PlayerRestrictions extends AbstractRestrictions
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_UNION_ALREADY_MY_UNION(target.getName()));
 				return false;
 			}
+			
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_UNION_ALREADY_OTHER_UNION(target.getName()));
 			return false;
 		}
+		
 		if ((alliance != null) && alliance.isFull())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_UNION_CANT_ADD_NEW_MEMBER);
 			return false;
 		}
+		
 		if (alliance != null)
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_UNION_ONLY_LEADER_CAN_LEAVE);
 			return false;
 		}
+		
 		if (player.getLifeStats().isAlreadyDead())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_UNION_CANT_INVITE_WHEN_DEAD);
 			return false;
 		}
+		
 		if (target.isInGroup2())
 		{
 			final PlayerGroup targetGroup = target.getPlayerGroup2();
@@ -357,72 +466,81 @@ public class PlayerRestrictions extends AbstractRestrictions
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_UNION_INVITE_HIM(target.getName(), targetGroup.getLeader().getName()));
 				return false;
 			}
-			// dead code?
-			// if ((alliance != null) && ((targetGroup.size() + alliance.size()) >= 48))
-			// {
-			// PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_FORCE_INVITE_FAILED_NOT_ENOUGH_SLOT);
-			// return false;
-			// }
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if a {@link Player} is allowed to attack a specific {@link VisibleObject}.<br>
+	 * This method validates the interaction between the attacker and the target.
+	 * @param player The player attempting to perform the action.
+	 * @param target The object being targeted by the player.
+	 * @return {@code true} if the attack is permitted, otherwise {@code false}.
+	 */
 	@Override
 	public boolean canAttack(Player player, VisibleObject target)
 	{
-		if (target == null)
+		if ((target == null) || !checkFly(player, target) || !(target instanceof Creature))
 		{
 			return false;
 		}
-		if (!checkFly(player, target))
-		{
-			return false;
-		}
-		if (!(target instanceof Creature))
-		{
-			return false;
-		}
+		
 		final Creature creature = (Creature) target;
+		
 		if (creature.getLifeStats().isAlreadyDead())
 		{
 			return false;
 		}
+		
 		if (player.isInPlayerMode(PlayerMode.RIDE))
 		{
 			// You cannot attack while mounted.
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_ATTACK_RESTRICTION_RIDE);
 			return false;
 		}
+		
 		if (player.getInventory().isFull())
 		{
 			// You are too overburdened to fight.
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_TOO_HEAVY_TO_ATTACK);
 			return false;
 		}
+		
 		return player.isEnemy(creature);
 	}
 	
+	/**
+	 * Checks if a {@link Player} is allowed to access the warehouse.<br>
+	 * This method validates specific permissions for the given player.
+	 * @param player The {@code Player} object to check.
+	 * @return {@code true} if the player can use the warehouse, {@code false} otherwise.
+	 */
 	@Override
 	public boolean canUseWarehouse(Player player)
 	{
-		if ((player == null) || !player.isOnline())
-		{
-			return false;
-		}
-		if (player.isTrading())
+		if ((player == null) || !player.isOnline() || player.isTrading())
 		{
 			return false;
 		}
 		
-		if (player.getLevel() < 10)
+		final int level = player.getLevel();
+		
+		if (level < 10)
 		{
-			// Characters under level 10 who are using a free trial cannot use the Account warehouse.
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_FREE_EXPERIENCE_CHARACTER_CANT_USE_ACCOUNT_WAREHOUSE("10"));
 			return false;
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if a {@link Player} is allowed to perform trades.<br>
+	 * This method validates the trading permissions for the given player.
+	 * @param player The {@code Player} object to check.
+	 * @return {@code true} if the player can trade, {@code false} otherwise.
+	 */
 	@Override
 	public boolean canTrade(Player player)
 	{
@@ -430,27 +548,36 @@ public class PlayerRestrictions extends AbstractRestrictions
 		{
 			return false;
 		}
+		
+		final int level = player.getLevel();
+		
 		if (player.isTrading())
 		{
-			// The target is already trading with someone else.
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_EXCHANGE_PARTNER_IS_EXCHANGING_WITH_OTHER);
 			return false;
 		}
+		
 		if (player.getEffectController().isAbnormalSet(AbnormalState.HIDE))
 		{
-			// You cannot trade while you are invisible.
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_EXCHANGE_CANT_EXCHANGE_WHILE_INVISIBLE);
 			return false;
 		}
-		if (player.getLevel() < 10)
+		
+		if (level < 10)
 		{
-			// Characters under level 10 who are playing a free trial cannot trade.
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_FREE_EXPERIENCE_CHARACTER_CANT_TRADE("10"));
 			return false;
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if a {@link Player} is allowed to change their equipment.<br>
+	 * This method validates the current restrictions for the given player.
+	 * @param player The {@code Player} object to check.
+	 * @return {@code true} if the player can change equipment, {@code false} otherwise.
+	 */
 	@Override
 	public boolean canChangeEquip(Player player)
 	{
@@ -458,9 +585,16 @@ public class PlayerRestrictions extends AbstractRestrictions
 		{
 			return false;
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if a {@link Player} is allowed to send chat messages.<br>
+	 * This method validates the current permissions of the player.
+	 * @param player The {@code Player} object to check.
+	 * @return {@code true} if the player can chat, {@code false} otherwise.
+	 */
 	@Override
 	public boolean canChat(Player player)
 	{
@@ -468,9 +602,17 @@ public class PlayerRestrictions extends AbstractRestrictions
 		{
 			return false;
 		}
+		
 		return !player.isGagged();
 	}
 	
+	/**
+	 * Checks if a {@link Player} is allowed to use a specific {@link Item}.<br>
+	 * This method validates the player's permissions against the item provided.
+	 * @param player The {@code Player} attempting to use the item.
+	 * @param item The {@code Item} that wants to be used.
+	 * @return {@code true} if the action is allowed, {@code false} otherwise.
+	 */
 	@Override
 	public boolean canUseItem(Player player, Item item)
 	{
@@ -478,16 +620,13 @@ public class PlayerRestrictions extends AbstractRestrictions
 		{
 			return false;
 		}
+		
 		if (player.getEffectController().isAbnormalState(AbnormalState.CANT_ATTACK_STATE))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SKILL_CAN_NOT_USE_ITEM_WHILE_IN_ABNORMAL_STATE);
 			return false;
 		}
-		if (item.getItemTemplate().isArchdaeva() && !player.getCommonData().isArchDaeva())
-		{
-			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_CANNOT_USE_ITEM_INVALID_HIGHDEVA(item.getName()));
-			return false;
-		}
+		
 		if (item.getItemTemplate().hasAreaRestriction())
 		{
 			final ZoneName restriction = item.getItemTemplate().getUseArea();
@@ -502,18 +641,21 @@ public class PlayerRestrictions extends AbstractRestrictions
 						break;
 					}
 				}
+				
 				if (!isInFortZone)
 				{
-					PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1300143, new Object[0]));
+					PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1300143));
 					return false;
 				}
 			}
-			else if ((restriction != null) && !player.isInsideZone(restriction))
+			else if ((restriction != null) && !player.isInsideItemUseZone(restriction))
 			{
+				// You cannot use that item here.
 				PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1300143));
 				return false;
 			}
 		}
+		
 		return true;
 	}
 }

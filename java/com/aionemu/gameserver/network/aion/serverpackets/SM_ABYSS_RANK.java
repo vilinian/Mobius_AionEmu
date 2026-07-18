@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -22,14 +22,21 @@ import com.aionemu.gameserver.network.aion.AionServerPacket;
 import com.aionemu.gameserver.utils.stats.AbyssRankEnum;
 
 /**
+ * This packet handles the synchronization of a player's {@link AbyssRank} data.<br>
+ * It is sent to the client to update the current rank information in the game world.
  * @author Nemiroff Date: 25.01.2010
- * @author GiGatR00n v4.7.5.x
  */
 public class SM_ABYSS_RANK extends AionServerPacket
 {
 	private final AbyssRank rank;
 	private final int currentRankId;
 	
+	/**
+	 * Creates a new {@code SM_ABYSS_RANK} packet.<br>
+	 * This constructor initializes the packet with a specific {@link AbyssRank}.<br>
+	 * It automatically sets the internal rank ID based on the provided object.
+	 * @param rank The {@code AbyssRank} to be included in the packet.
+	 */
 	public SM_ABYSS_RANK(AbyssRank rank)
 	{
 		this.rank = rank;
@@ -39,31 +46,39 @@ public class SM_ABYSS_RANK extends AionServerPacket
 	@Override
 	protected void writeImpl(AionConnection con)
 	{
-		writeQ(rank.getAp()); // Rank AP.
-		writeD(rank.getGp()); // Rank GP.
-		writeD(currentRankId); // Current Rank Ap/Gp.
-		writeD(rank.getTopRanking()); // Top Ranking.
-		if (currentRankId < 9)
+		writeQ(rank.getAp()); // curAP
+		writeD(rank.getGp()); // curGP
+		writeD(currentRankId); // curRank
+		writeD(rank.getTopRanking()); // curRating
+		
+		if (currentRankId <= 9)
 		{
 			final int nextRankId = currentRankId < AbyssRankEnum.values().length ? currentRankId + 1 : currentRankId;
-			writeD((100 * rank.getAp()) / AbyssRankEnum.getRankById(nextRankId).getApRequired());
+			writeD((100 * rank.getAp()) / AbyssRankEnum.getRankById(nextRankId).getRequiredAp());
 		}
-		else if ((currentRankId >= 9) && (currentRankId <= 18))
+		else if ((currentRankId > 9) && (currentRankId <= 18))
 		{
-			final int nextRankId = currentRankId < AbyssRankEnum.values().length ? currentRankId + 1 : currentRankId;
-			writeD((100 * rank.getGp()) / AbyssRankEnum.getRankById(nextRankId).getGpRequired());
+			final int nextGpRankId = currentRankId < AbyssRankEnum.values().length ? currentRankId + 1 : currentRankId;
+			writeD((100 * rank.getGp()) / AbyssRankEnum.getRankById(nextGpRankId).getRequiredGp());
 		}
-		writeD(rank.getAllKill()); // All Kill.
-		writeD(rank.getMaxRank()); // Max Rank.
-		writeD(rank.getDailyKill()); // Daily Kill.
-		writeQ(rank.getDailyAP()); // Daily AP.
-		writeD(rank.getDailyGP()); // Daily GP.
-		writeD(rank.getWeeklyKill()); // Weekly Kill.
-		writeQ(rank.getWeeklyAP()); // Weekly AP.
-		writeD(rank.getWeeklyGP()); // Weekly GP.
-		writeD(rank.getLastKill()); // Last Kill.
-		writeQ(rank.getLastAP()); // Last AP.
-		writeD(rank.getLastGP()); // Last GP.
-		writeC(0x00);
+		
+		writeD(rank.getAllKill()); // allKill
+		writeD(rank.getMaxRank()); // maxRank
+		
+		writeD(rank.getDailyKill()); // dayKill
+		writeQ(rank.getDailyAP()); // dayAP
+		writeD(rank.getDailyGP()); // dayGP
+		
+		writeD(rank.getWeeklyKill()); // weekKill
+		writeQ(rank.getWeeklyAP()); // weekAP
+		writeD(rank.getWeeklyGP()); // weekGP
+		
+		writeD(rank.getLastKill()); // laterKill
+		writeQ(rank.getLastAP()); // laterAP
+		writeD(rank.getLastGP()); // laterGP
+		
+		writeD(0); // unk 5.3
+		writeD(0); // unk 5.3
+		writeC(0); // unk
 	}
 }

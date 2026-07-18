@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -26,19 +26,35 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 
 /**
+ * Handles the admin command to change the color of a player's equipment.<br>
+ * This class allows administrators to apply custom dyes to {@link Item} objects.<br>
+ * It updates the visual appearance for the target {@link Player}.
  * @author loleron pieced together from DyeAction.java, Set.java
  */
 public class Dye extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link Dye} class.<br>
+	 * This constructor registers the command as {@code dye}.
+	 */
 	public Dye()
 	{
 		super("dye");
 	}
 	
+	/**
+	 * Executes the command to dye a player's equipment.<br>
+	 * It allows using color names, hex codes, or removing colors.<br>
+	 * The admin must pay the required price unless they are a GM.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings representing the color name or hex code.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
 		Player target;
+		
+		// Add a check to prevent players to dye other people
 		if ((admin.getAccessLevel() > 0) && (admin.getTarget() instanceof Player))
 		{
 			target = (Player) admin.getTarget();
@@ -47,22 +63,26 @@ public class Dye extends AdminCommand
 		{
 			target = admin;
 		}
+		
 		if (target == null)
 		{
 			PacketSendUtility.sendMessage(admin, "You should select a target first!");
 			return;
 		}
+		
 		if ((params.length == 0) || (params.length > 2))
 		{
 			PacketSendUtility.sendMessage(admin, "syntax //dye <dye color|hex color|no>");
 			return;
 		}
+		
 		final long price = CustomConfig.DYE_PRICE;
 		if ((admin.getInventory().getKinah() < price) && !admin.isGM())
 		{
 			PacketSendUtility.sendMessage(admin, "You need " + CustomConfig.DYE_PRICE + " kinah to dye yourself.");
 			return;
 		}
+		
 		String color = "";
 		if (params.length == 2)
 		{
@@ -79,141 +99,133 @@ public class Dye extends AdminCommand
 		{
 			color = params[0];
 		}
+		
 		int rgb = 0;
 		int bgra = 0;
-		if (color.equalsIgnoreCase("blue"))
-		{
-			color = "f0f8ff";
-		}
-		if (color.equalsIgnoreCase("white"))
-		{
-			color = "faebd7";
-		}
-		if (color.equalsIgnoreCase("aqua"))
-		{
-			color = "00fff";
-		}
+		
 		if (color.equalsIgnoreCase("turquoise"))
 		{
 			color = "198d94";
-		}
-		if (color.equalsIgnoreCase("blue2"))
+		} // 169200001, 169201001
+		else if (color.equalsIgnoreCase("blue"))
 		{
 			color = "1f87f5";
-		}
-		if (color.equalsIgnoreCase("brown"))
+		} // 169200002, 169201002
+		else if (color.equalsIgnoreCase("brown"))
 		{
 			color = "66250e";
-		}
-		if (color.equalsIgnoreCase("purple"))
+		} // 169200003, 169201003
+		else if (color.equalsIgnoreCase("purple"))
 		{
 			color = "c38df5";
-		}
-		if (color.equalsIgnoreCase("red"))
+		} // 169200004, 169201004
+		else if (color.equalsIgnoreCase("true red"))
 		{
 			color = "c22626";
-		}
-		if (color.equalsIgnoreCase("white2"))
+		} // 169200005, 169201005, 169220001, 169230001, 169231001
+		else if (color.equalsIgnoreCase("true white") || color.equalsIgnoreCase("white"))
 		{
 			color = "ffffff";
-		}
-		if (color.equalsIgnoreCase("black"))
+		} // 169200006, 169201006, 169220002, 169231002
+		else if (color.equalsIgnoreCase("black") || color.equalsIgnoreCase("true black"))
 		{
 			color = "000000";
-		}
-		if (color.equalsIgnoreCase("orange"))
+		} // 169200007, 169201007, 169230008, 169231008
+		else if (color.equalsIgnoreCase("hot orange"))
 		{
 			color = "e36b00";
-		}
-		if (color.equalsIgnoreCase("purple"))
+		} // 169201008, 169220004, 169230009, 169231009
+		else if (color.equalsIgnoreCase("rich purple"))
 		{
 			color = "440b9a";
-		}
-		if (color.equalsIgnoreCase("pink"))
+		} // 169201009, 169220005, 169230007, 169231003
+		else if (color.equalsIgnoreCase("hot pink"))
 		{
 			color = "d60b7e";
-		}
-		if (color.equalsIgnoreCase("mustard"))
+		} // 169201010, 169220006, 169230010, 169231010
+		else if (color.equalsIgnoreCase("mustard"))
 		{
 			color = "fcd251";
-		}
-		if (color.equalsIgnoreCase("green"))
+		} // 169201011, 169220007, 169230004, 169231004
+		else if (color.equalsIgnoreCase("green tea"))
 		{
 			color = "61bb4f";
-		}
-		if (color.equalsIgnoreCase("green2"))
+		} // 169201012, 169220008, 169230003, 169231005
+		else if (color.equalsIgnoreCase("olive green"))
 		{
 			color = "5f730e";
-		}
-		if (color.equalsIgnoreCase("blue3"))
+		} // 169201013, 169220009, 169230005, 169231006
+		else if (color.equalsIgnoreCase("deep blue"))
 		{
 			color = "14398b";
-		}
-		if (color.equalsIgnoreCase("purple2"))
+		} // 169201014, 169220010, 169230006, 169231007
+		else if (color.equalsIgnoreCase("romantic purple"))
 		{
 			color = "80185d";
-		}
-		if (color.equalsIgnoreCase("wiki"))
+		} // 169230011
+		else if (color.equalsIgnoreCase("wiki"))
 		{
 			color = "85e831";
-		}
-		if (color.equalsIgnoreCase("omblic"))
+		} // 169240001
+		else if (color.equalsIgnoreCase("omblic"))
 		{
 			color = "ff5151";
-		}
-		if (color.equalsIgnoreCase("meon"))
+		} // 169240002
+		else if (color.equalsIgnoreCase("meon"))
 		{
 			color = "afaf26";
-		}
-		if (color.equalsIgnoreCase("ormea"))
+		} // 169240003
+		else if (color.equalsIgnoreCase("ormea"))
 		{
 			color = "ffaa11";
-		}
-		if (color.equalsIgnoreCase("tange"))
+		} // 169240004
+		else if (color.equalsIgnoreCase("tange"))
 		{
 			color = "bd5fff";
-		}
-		if (color.equalsIgnoreCase("ervio"))
+		} // 169240005
+		else if (color.equalsIgnoreCase("ervio"))
 		{
 			color = "3bb7fe";
-		}
-		if (color.equalsIgnoreCase("lunime"))
+		} // 169240006
+		else if (color.equalsIgnoreCase("lunime"))
 		{
 			color = "c7af27";
-		}
-		if (color.equalsIgnoreCase("vinna"))
+		} // 169240007
+		else if (color.equalsIgnoreCase("vinna"))
 		{
 			color = "052775";
-		}
-		if (color.equalsIgnoreCase("kirka"))
+		} // 169240008
+		else if (color.equalsIgnoreCase("kirka"))
 		{
 			color = "ca84ff";
-		}
-		if (color.equalsIgnoreCase("brommel"))
+		} // 169240009
+		else if (color.equalsIgnoreCase("brommel"))
 		{
 			color = "c7af27";
-		}
-		if (color.equalsIgnoreCase("pressa"))
+		} // 169240010
+		else if (color.equalsIgnoreCase("pressa"))
 		{
 			color = "ff9d29";
-		}
-		if (color.equalsIgnoreCase("merone"))
+		} // 169240011
+		else if (color.equalsIgnoreCase("merone"))
 		{
 			color = "8df598";
-		}
-		if (color.equalsIgnoreCase("kukar"))
+		} // 169240012
+		else if (color.equalsIgnoreCase("kukar"))
 		{
 			color = "ffff96";
-		}
-		if (color.equalsIgnoreCase("leopis"))
+		} // 169240013
+		else if (color.equalsIgnoreCase("leopis"))
 		{
 			color = "31dfff";
-		}
+		} // 169240014
+		
 		try
 		{
 			rgb = Integer.parseInt(color, 16);
 			bgra = 0xFF | ((rgb & 0xFF) << 24) | ((rgb & 0xFF00) << 8) | ((rgb & 0xFF0000) >>> 8);
 		}
+		
 		catch (NumberFormatException e)
 		{
 			if (!color.equalsIgnoreCase("no"))
@@ -222,10 +234,12 @@ public class Dye extends AdminCommand
 				return;
 			}
 		}
+		
 		if (!admin.isGM())
 		{
 			admin.getInventory().decreaseKinah(price);
 		}
+		
 		for (Item targetItem : target.getEquipment().getEquippedItemsWithoutStigma())
 		{
 			if (color.equals("no"))
@@ -236,19 +250,29 @@ public class Dye extends AdminCommand
 			{
 				targetItem.setItemColor(bgra);
 			}
+			
 			ItemPacketService.updateItemAfterInfoChange(target, targetItem);
 		}
+		
 		PacketSendUtility.broadcastPacket(target, new SM_UPDATE_PLAYER_APPEARANCE(target.getObjectId(), target.getEquipment().getEquippedForApparence()), true);
 		target.getEquipment().setPersistentState(PersistentState.UPDATE_REQUIRED);
 		if (target.getObjectId() != admin.getObjectId())
 		{
 			PacketSendUtility.sendMessage(target, "You have been dyed by " + admin.getName() + "!");
 		}
+		
 		PacketSendUtility.sendMessage(admin, "Dyed " + target.getName() + " successfully!");
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{
+		// TODO Auto-generated method stub
 	}
 }

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.taskmanager.trigger.implementations;
 
@@ -25,6 +25,8 @@ import com.aionemu.loginserver.taskmanager.trigger.TaskFromDBTrigger;
 import com.aionemu.loginserver.utils.ThreadPoolManager;
 
 /**
+ * This class handles tasks that are scheduled to run at a specific fixed time.<br>
+ * It extends {@link TaskFromDBTrigger} to provide time-based execution logic.
  * @author nrg
  */
 public class FixedInTimeTrigger extends TaskFromDBTrigger
@@ -33,6 +35,12 @@ public class FixedInTimeTrigger extends TaskFromDBTrigger
 	private final int DAY_IN_MSEC = 24 * 60 * 60 * 1000;
 	private int hour, minute, second;
 	
+	/**
+	 * Checks if the trigger configuration is valid.<br>
+	 * It verifies that exactly one parameter is provided.<br>
+	 * This method updates the {@code isBlocking} field during validation.
+	 * @return {@code true} if the parameters are correct, {@code false} otherwise.
+	 */
 	@Override
 	public boolean isValidTrigger()
 	{
@@ -55,12 +63,16 @@ public class FixedInTimeTrigger extends TaskFromDBTrigger
 				log.warn("A time for FixedInTimeTrigger is missing or invalid", e);
 			}
 		}
+		
 		log.warn("Not exact 1 parameter for FixedInTimeTrigger received, task is not registered");
 		return false;
 	}
 	
 	/**
-	 * Run a fixed in the time (HH:MM:SS) task
+	 * Initializes the trigger logic for this task.<br>
+	 * It checks if the task is blocking to decide how to start it.<br>
+	 * If {@code isBlocking} is false, it schedules the task via {@link ThreadPoolManager}.<br>
+	 * Otherwise, it calls the {@code run()} method immediately.
 	 */
 	@Override
 	public void initTrigger()

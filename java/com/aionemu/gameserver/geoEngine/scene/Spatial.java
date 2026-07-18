@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.scene;
 
@@ -23,17 +23,17 @@ import com.aionemu.gameserver.geoEngine.math.Matrix3f;
 import com.aionemu.gameserver.geoEngine.math.Vector3f;
 
 /**
- * <code>Spatial</code> defines the base class for scene graph nodes. It maintains a link to a parent, it's local transforms and the world's transforms. All other nodes, such as <code>Node</code> and <code>Geometry</code> are subclasses of <code>Spatial</code>.
+ * This class serves as the base class for all nodes within the scene graph.<br>
+ * It manages parent links, local transforms, and world transforms.<br>
+ * Classes like {@link Node} and {@link Geometry} inherit from this class.
  * @author Mark Powell
  * @author Joshua Slack
  * @author Rolandas - added materials
- * @version $Revision: 4075 $, $Data$
  */
 public abstract class Spatial implements Collidable, Cloneable
 {
 	public enum CullHint
 	{
-		
 		/**
 		 * Do whatever our parent does. If no parent, we'll default to dynamic.
 		 */
@@ -66,15 +66,18 @@ public abstract class Spatial implements Collidable, Cloneable
 	protected transient Node parent;
 	
 	/**
-	 * Default Constructor.
+	 * Creates a new instance of the {@link Spatial} class.<br>
+	 * This is the default constructor for all scene graph nodes.
 	 */
 	public Spatial()
 	{
 	}
 	
 	/**
-	 * Constructor instantiates a new <code>Spatial</code> object setting the rotation, translation and scale value to defaults.
-	 * @param name the name of the scene element. This is required for identification and comparision purposes.
+	 * Creates a new {@link Spatial} instance with a specific name.<br>
+	 * The name is stored using the {@code intern()} method to save memory.<br>
+	 * If the provided name is {@code null}, the internal name remains {@code null}.
+	 * @param name The unique identifier for this spatial node.
 	 */
 	public Spatial(String name)
 	{
@@ -86,8 +89,9 @@ public abstract class Spatial implements Collidable, Cloneable
 	}
 	
 	/**
-	 * Sets the name of this spatial.
-	 * @param name The spatial's new name.
+	 * Sets the name for this {@link Spatial} object.<br>
+	 * The provided {@code String} is interned if it is not {@code null}.
+	 * @param name The new name to assign to the spatial.
 	 */
 	public void setName(String name)
 	{
@@ -98,8 +102,9 @@ public abstract class Spatial implements Collidable, Cloneable
 	}
 	
 	/**
-	 * Returns the name of this spatial.
-	 * @return This spatial's name.
+	 * Retrieves the name of the bookmark.<br>
+	 * This method returns the {@code String`name`} associated with this object.
+	 * @return The name of the bookmark as a {@code String}.
 	 */
 	public String getName()
 	{
@@ -107,8 +112,10 @@ public abstract class Spatial implements Collidable, Cloneable
 	}
 	
 	/**
-	 * <code>getParent</code> retrieve's this node's parent. If the parent is null this is the root node.
-	 * @return the parent of this node.
+	 * Returns the parent {@link Node} of this spatial.<br>
+	 * This method helps navigate up the scene graph hierarchy.<br>
+	 * It returns {@code null} if no parent exists.
+	 * @return The parent {@link Node}, or {@code null}.
 	 */
 	public Node getParent()
 	{
@@ -116,8 +123,10 @@ public abstract class Spatial implements Collidable, Cloneable
 	}
 	
 	/**
-	 * Called by {@link Node#attachChild(Spatial)} and {@link Node#detachChild(Spatial)} - don't call directly. <code>setParent</code> sets the parent of this node.
-	 * @param parent the parent of this node.
+	 * Sets the parent node for this {@link Spatial} object.<br>
+	 * This establishes a link in the scene graph hierarchy.<br>
+	 * Pass {@code null} if the node has no parent.
+	 * @param parent The {@code Node} to set as the parent.
 	 */
 	protected void setParent(Node parent)
 	{
@@ -125,8 +134,9 @@ public abstract class Spatial implements Collidable, Cloneable
 	}
 	
 	/**
-	 * <code>removeFromParent</code> removes this Spatial from it's parent.
-	 * @return true if it has a parent and performed the remove.
+	 * Removes this node from its current parent.<br>
+	 * This method calls {@code detachChild} if a parent exists.
+	 * @return {@code true} if the node was successfully removed, or {@code false} if it had no parent.
 	 */
 	public boolean removeFromParent()
 	{
@@ -135,13 +145,15 @@ public abstract class Spatial implements Collidable, Cloneable
 			parent.detachChild(this);
 			return true;
 		}
+		
 		return false;
 	}
 	
 	/**
-	 * determines if the provided Node is the parent, or parent's parent, etc. of this Spatial.
-	 * @param ancestor the ancestor object to look for.
-	 * @return true if the ancestor is found, false otherwise.
+	 * Checks if a specific {@link Node} is an ancestor of this node.<br>
+	 * This method searches up the scene graph hierarchy.
+	 * @param ancestor The {@code Node} to search for in the parent chain.
+	 * @return {@code true} if the node is found, {@code false} otherwise.
 	 */
 	public boolean hasAncestor(Node ancestor)
 	{
@@ -180,11 +192,21 @@ public abstract class Spatial implements Collidable, Cloneable
 	 */
 	public abstract int getTriangleCount();
 	
+	/**
+	 * Retrieves the material identifier for this mesh.<br>
+	 * This value is extracted from the internal collision flags.
+	 * @return The material ID as a {@code byte}.
+	 */
 	public byte getMaterialId()
 	{
 		return (byte) (getCollisionFlags() & 0xFF);
 	}
 	
+	/**
+	 * Retrieves the intention flags from the collision data.<br>
+	 * This value is extracted by shifting the {@code getCollisionFlags()} result.
+	 * @return The {@code byte} value representing the intentions.
+	 */
 	public byte getIntentions()
 	{
 		return (byte) (getCollisionFlags() >> 8);
@@ -195,11 +217,11 @@ public abstract class Spatial implements Collidable, Cloneable
 	public abstract void setCollisionFlags(short flags);
 	
 	/**
-	 * Note that we are <i>matching</i> the pattern, therefore the pattern must match the entire pattern (i.e. it behaves as if it is sandwiched between "^" and "$"). You can set regex modes, like case insensitivity, by using the (?X) or (?X:Y) constructs.
-	 * @param spatialSubclass Subclass which this must implement. Null causes all Spatials to qualify.
-	 * @param nameRegex Regular expression to match this name against. Null causes all Names to qualify.
-	 * @return true if this implements the specified class and this's name matches the specified pattern.
-	 * @see java.util.regex.Pattern
+	 * Checks if this {@link Spatial} object matches specific criteria.<br>
+	 * It verifies the object's class type and its name against a regular expression.
+	 * @param spatialSubclass The expected subclass of {@link Spatial}. If {@code null}, any class is accepted.
+	 * @param nameRegex The regular expression to match against the name of this object. If {@code null}, any name is accepted.
+	 * @return {@code true} if the object matches both criteria, otherwise {@code false}.
 	 */
 	public boolean matches(Class<? extends Spatial> spatialSubclass, String nameRegex)
 	{
@@ -217,8 +239,9 @@ public abstract class Spatial implements Collidable, Cloneable
 	}
 	
 	/**
-	 * <code>getWorldBound</code> retrieves the world bound at this node level.
-	 * @return the world bound at this level.
+	 * Retrieves the bounding volume of this spatial in world coordinates.<br>
+	 * This is useful for collision detection and visibility checks.
+	 * @return the {@code BoundingVolume} representing the object's size in the world.
 	 */
 	public BoundingVolume getWorldBound()
 	{
@@ -226,18 +249,23 @@ public abstract class Spatial implements Collidable, Cloneable
 	}
 	
 	/**
-	 * Returns the Spatial's name followed by the class of the spatial <br>
-	 * Example: "MyNode (com.jme3.scene.Spatial)
-	 * @return Spatial's name followed by the class of the Spatial
+	 * Returns a string representation of the {@code Spatial} object.<br>
+	 * This includes the name, class type, and collision intentions.
+	 * @return A formatted string describing this spatial node.
 	 */
 	@Override
 	public String toString()
 	{
-		return name + " (" + getClass().getSimpleName() + ") use " + CollisionIntention.toString(getIntentions());
+		return name + " (" + this.getClass().getSimpleName() + ") use " + CollisionIntention.toString(getIntentions());
 	}
 	
 	public abstract void setTransform(Matrix3f rotation, Vector3f loc, float scale);
 	
+	/**
+	 * Creates a new copy of this {@link Spatial} object.<br>
+	 * This method performs a shallow copy of the current instance.
+	 * @return A new {@code Spatial} object that is a copy of this one.
+	 */
 	@Override
 	public Spatial clone() throws CloneNotSupportedException
 	{

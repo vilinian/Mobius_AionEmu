@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.gameobjects;
 
@@ -28,7 +28,10 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.world.geo.GeoService;
 
 /**
- * @author MrPoke
+ * Represents a static door object within the game world.<br>
+ * This class handles the state and behavior of doors that can be opened or closed by players.<br>
+ * It extends {@link StaticObject} to provide specific functionality for door interactions.
+ * @author MrPoke, Rolandas
  */
 public class StaticDoor extends StaticObject
 {
@@ -36,11 +39,13 @@ public class StaticDoor extends StaticObject
 	private String doorName;
 	
 	/**
-	 * @param objectId
-	 * @param controller
-	 * @param spawnTemplate
-	 * @param objectTemplate
-	 * @param instanceId
+	 * Creates a new instance of a {@link StaticDoor}.<br>
+	 * This constructor initializes the door states and name based on the provided templates.
+	 * @param objectId The unique identifier for the object.
+	 * @param controller The {@link StaticObjectController} that manages this object.
+	 * @param spawnTemplate The template containing spawn information.
+	 * @param objectTemplate The template defining the door's properties and mesh.
+	 * @param instanceId The unique ID for this specific instance.
 	 */
 	public StaticDoor(int objectId, StaticObjectController controller, SpawnTemplate spawnTemplate, StaticDoorTemplate objectTemplate, int instanceId)
 	{
@@ -53,20 +58,29 @@ public class StaticDoor extends StaticObject
 	}
 	
 	/**
-	 * @return the open state from states set
+	 * Checks if the door is currently in an open state.<br>
+	 * This method looks for the {@code OPENED} status within the internal states.
+	 * @return {@code true} if the door is open, {@code false} otherwise.
 	 */
 	public boolean isOpen()
 	{
 		return states.contains(StaticDoorState.OPENED);
 	}
 	
+	/**
+	 * Retrieves the current states of the door.<br>
+	 * This method returns a set of {@link StaticDoorState} values.
+	 * @return an {@code EnumSet} containing all active door states.
+	 */
 	public EnumSet<StaticDoorState> getStates()
 	{
 		return states;
 	}
 	
 	/**
-	 * @param open the open state to set
+	 * Updates the door to an open or closed state.<br>
+	 * This method modifies the internal {@code states} and broadcasts the change.
+	 * @param open Set to {@code true} to open the door, or {@code false} to close it.
 	 */
 	public void setOpen(boolean open)
 	{
@@ -86,31 +100,50 @@ public class StaticDoor extends StaticObject
 			{
 				states.add(StaticDoorState.CLICKABLE);
 			}
+			
 			states.remove(StaticDoorState.OPENED); // 1010
 			packetState = 0xA;
 		}
+		
 		if (doorName != null)
 		{
 			GeoService.getInstance().setDoorState(getWorldId(), getInstanceId(), doorName, open);
 		}
+		
 		// int stateFlags = StaticDoorState.getFlags(states);
-		PacketSendUtility.broadcastPacket(this, new SM_EMOTION(getSpawn().getEntityId(), emotion, packetState));
+		PacketSendUtility.broadcastPacket(this, new SM_EMOTION(getSpawn().getStaticId(), emotion, packetState));
 	}
 	
+	/**
+	 * Updates the current status of the door.<br>
+	 * This method modifies the {@code states} and sends a broadcast packet to all players.
+	 * @param open A {@code boolean} indicating if the door is now open or closed.
+	 * @param state An {@code int} representing the new state value.
+	 */
 	public void changeState(boolean open, int state)
 	{
 		state = state & 0xF;
 		StaticDoorState.setStates(state, states);
 		EmotionType emotion = open ? emotion = EmotionType.OPEN_DOOR : EmotionType.CLOSE_DOOR;
-		PacketSendUtility.broadcastPacket(this, new SM_EMOTION(getSpawn().getEntityId(), emotion, state));
+		PacketSendUtility.broadcastPacket(this, new SM_EMOTION(getSpawn().getStaticId(), emotion, state));
 	}
 	
+	/**
+	 * Retrieves the template for this static door.<br>
+	 * This method casts the base {@link StaticObject} template to a {@code StaticDoorTemplate}.
+	 * @return The {@code StaticDoorTemplate} associated with this object.
+	 */
 	@Override
 	public StaticDoorTemplate getObjectTemplate()
 	{
 		return (StaticDoorTemplate) super.getObjectTemplate();
 	}
 	
+	/**
+	 * Retrieves the name of the {@code StaticDoor}.<br>
+	 * This method returns the string identifier for the door.
+	 * @return The name of the door as a {@code String}.
+	 */
 	public String getDoorName()
 	{
 		return doorName;

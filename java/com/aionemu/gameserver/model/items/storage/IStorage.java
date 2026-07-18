@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.items.storage;
 
@@ -22,13 +22,14 @@ import java.util.Queue;
 import com.aionemu.gameserver.model.gameobjects.Item;
 import com.aionemu.gameserver.model.gameobjects.PersistentState;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
+import com.aionemu.gameserver.questEngine.model.QuestStatus;
+import com.aionemu.gameserver.services.item.ItemPacketService.ItemAddType;
 import com.aionemu.gameserver.services.item.ItemPacketService.ItemDeleteType;
 import com.aionemu.gameserver.services.item.ItemPacketService.ItemUpdateType;
 
-import javolution.util.FastList;
-
 /**
- * Public interface for Storage, later will rename probably
+ * This interface defines the core operations for managing player storage systems.<br>
+ * It provides a standard way to handle items and persistent data within a storage container.
  * @author ATracer
  */
 public interface IStorage
@@ -69,6 +70,8 @@ public interface IStorage
 	 * @return
 	 */
 	boolean tryDecreaseKinah(long amount);
+	
+	boolean tryDecreaseKinah(long amount, ItemUpdateType updateType);
 	
 	/**
 	 * @param amount
@@ -111,12 +114,16 @@ public interface IStorage
 	 */
 	long decreaseItemCount(Item item, long count, ItemUpdateType updateType);
 	
+	long decreaseItemCount(Item item, long count, ItemUpdateType updateType, QuestStatus questStatus);
+	
 	/**
 	 * Add operation should be used for new items incoming into storage from outside
 	 * @param item
 	 * @return
 	 */
 	Item add(Item item);
+	
+	Item add(Item item, ItemAddType addType);
 	
 	/**
 	 * Put operation is used in some operations like unequip
@@ -151,6 +158,8 @@ public interface IStorage
 	 */
 	boolean decreaseByItemId(int itemId, long count);
 	
+	boolean decreaseByItemId(int itemId, long count, QuestStatus questStatus);
+	
 	/**
 	 * @param itemObjId
 	 * @param count
@@ -166,6 +175,8 @@ public interface IStorage
 	 */
 	boolean decreaseByObjectId(int itemObjId, long count, ItemUpdateType updateType);
 	
+	boolean decreaseByObjectId(int itemObjId, long count, QuestStatus questStatus);
+	
 	/**
 	 * @param itemId
 	 * @return
@@ -175,7 +186,7 @@ public interface IStorage
 	/**
 	 * @return
 	 */
-	FastList<Item> getItemsWithKinah();
+	List<Item> getItemsWithKinah();
 	
 	/**
 	 * @return
@@ -215,6 +226,8 @@ public interface IStorage
 	 */
 	int getLimit();
 	
+	int getRowLength();
+	
 	/**
 	 * @return
 	 */
@@ -239,5 +252,4 @@ public interface IStorage
 	 * @param item
 	 */
 	void onLoadHandler(Item item);
-	
 }

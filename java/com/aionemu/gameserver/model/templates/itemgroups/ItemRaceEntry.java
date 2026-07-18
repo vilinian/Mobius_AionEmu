@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.itemgroups;
 
@@ -27,9 +27,6 @@ import com.aionemu.gameserver.model.Race;
 import com.aionemu.gameserver.model.templates.item.ItemTemplate;
 import com.aionemu.gameserver.model.templates.rewards.IdLevelReward;
 
-/**
- * @author Rolandas
- */
 /**
  * <p/>
  * Java class for ItemRaceEntry complex type.
@@ -47,6 +44,8 @@ import com.aionemu.gameserver.model.templates.rewards.IdLevelReward;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
+ * 
+ * @author Rolandas
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "ItemRaceEntry")
@@ -58,20 +57,35 @@ public class ItemRaceEntry
 {
 	@XmlAttribute(name = "id", required = true)
 	protected int id;
-	
 	@XmlAttribute(name = "race")
 	protected Race race;
 	
+	/**
+	 * Returns the unique identifier of this object.
+	 * @return The integer ID.
+	 */
 	public int getId()
 	{
 		return id;
 	}
 	
+	/**
+	 * Retrieves the {@code Race} of the player.<br>
+	 * This method returns the current character race.
+	 * @return The {@link Race} of the player.
+	 */
 	public Race getRace()
 	{
 		return race;
 	}
 	
+	/**
+	 * Checks if a player is allowed to use an item based on their race.<br>
+	 * This method compares the {@code playerRace} against the item's requirements.<br>
+	 * It accounts for items available to all players or specific races.
+	 * @param playerRace The race of the player attempting to use the item.
+	 * @return {@code true} if the player's race is valid for the item, {@code false} otherwise.
+	 */
 	public boolean checkRace(Race playerRace)
 	{
 		final ItemTemplate template = DataManager.ITEM_DATA.getItemTemplate(id);

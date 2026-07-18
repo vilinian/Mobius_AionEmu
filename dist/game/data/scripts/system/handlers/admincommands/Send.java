@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -43,23 +43,21 @@ import com.aionemu.gameserver.utils.ThreadPoolManager;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 
 /**
- * This admin command is used for sending custom packets from server to client.
- * <p/>
- * Sends packets based on xml mappings in folder "./data/packets".<br />
- * Command details: "//send [1]<br />
- * * 1 - packet mappings name.<br />
- * * - 'demo' for file './data/packets/demo.xml'<br />
- * * - 'test' for file './data/packets/test.xml'<br />
- * * Reciever is a targetted by admin player. If target is 'null' or not a Player - sends to admin.<br />
- * <p/>
- * Created on: 14.07.2009 13:54:46
+ * This admin command allows for sending custom packets from the server to a client.<br>
+ * It uses XML mappings located in the {@code ./data/packets} folder to determine packet data.<br>
+ * The recipient is determined by the admin's target, defaulting to the admin if no valid player is selected.
  * @author Aquanox
  */
 public class Send extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link Send} class.<br>
+	 * This constructor sets up the JAXB unmarshaller for packet processing.
+	 */
 	public Send()
 	{
 		super("send");
+		
 		// init unmrshaller once.
 		try
 		{
@@ -72,11 +70,15 @@ public class Send extends AdminCommand
 	}
 	
 	private static final Logger logger = LoggerFactory.getLogger(Send.class);
-	
 	private static final File FOLDER = new File("./data/packets");
-	
 	private Unmarshaller unmarshaller;
 	
+	/**
+	 * Executes the command to send custom packets to a player.<br>
+	 * It loads packet data from an XML file based on the provided mapping name.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings where the first element is the mapping name.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
@@ -91,7 +93,6 @@ public class Send extends AdminCommand
 		
 		// logger.debug("Mapping: " + mappingName);
 		// logger.debug("Target: " + target);
-		
 		final File packetsData = new File(FOLDER, mappingName + ".xml");
 		
 		if (!packetsData.exists())
@@ -121,6 +122,14 @@ public class Send extends AdminCommand
 		send(admin, target, packetsTemplate);
 	}
 	
+	/**
+	 * Sends a collection of custom packets to a specific player.<br>
+	 * This method replaces placeholders with the correct object IDs.<br>
+	 * It schedules each packet for delivery based on defined delays.
+	 * @param sender The {@code Player} who initiated the command.
+	 * @param target The {@code Player} who will receive the packets.
+	 * @param packets The collection of {@code Packets} to be sent.
+	 */
 	private void send(Player sender, Player target, Packets packets)
 	{
 		final String senderObjectId = String.valueOf(sender.getObjectId());
@@ -143,10 +152,12 @@ public class Send extends AdminCommand
 				{
 					value = value.replace("${objectId}", targetObjectId);
 				}
+				
 				if (value.indexOf("${senderObjectId}") != -1)
 				{
 					value = value.replace("${senderObjectId}", senderObjectId);
 				}
+				
 				if (value.indexOf("${targetObjectId}") != -1)
 				{
 					value = value.replace("${targetObjectId}", targetObjectId);
@@ -167,27 +178,26 @@ public class Send extends AdminCommand
 			
 			delay += packetTemplate.getDelay();
 			
-			ThreadPoolManager.getInstance().schedule(new Runnable()
-			{
-				
-				@Override
-				public void run()
-				{
-					// logger.debug("Sending: " + packetTemplate);
-					PacketSendUtility.sendPacket(target, packet);
-				}
-			}, delay);
+			ThreadPoolManager.getInstance().schedule(() -> PacketSendUtility.sendPacket(target, packet), delay);
 			
 			delay += packets.getDelay();
 		}
 	}
 	
+	/**
+	 * Determines which {@link Player} should receive a packet.<br>
+	 * It checks if the {@code admin} has a valid target.<br>
+	 * If no target exists, it returns the {@code admin} instead.
+	 * @param admin The player who is executing the command.
+	 * @return The targeted {@link Player} or the {@code admin} if no target is found.
+	 */
 	private Player getTargetPlayer(Player admin)
 	{
 		if (admin.getTarget() instanceof Player)
 		{
 			return (Player) admin.getTarget();
 		}
+		
 		return admin;
 	}
 	
@@ -195,10 +205,8 @@ public class Send extends AdminCommand
 	@XmlRootElement(name = "packets")
 	private static class Packets implements Iterable<Packet>
 	{
-		
 		@XmlElement(name = "packet")
 		private final List<Packet> packets = new ArrayList<>();
-		
 		@XmlAttribute(name = "delay")
 		private final long delay = -1;
 		
@@ -240,13 +248,10 @@ public class Send extends AdminCommand
 	@XmlRootElement(name = "packet")
 	private static class Packet
 	{
-		
 		@XmlElement(name = "part")
 		private final Collection<Part> parts = new ArrayList<>();
-		
 		@XmlAttribute(name = "opcode")
 		private final String opcode = "-1";
-		
 		@XmlAttribute(name = "delay")
 		private final long delay = 0;
 		
@@ -281,13 +286,10 @@ public class Send extends AdminCommand
 	@XmlRootElement(name = "part")
 	private static class Part
 	{
-		
 		@XmlAttribute(name = "type", required = true)
 		private final String type = null;
-		
 		@XmlAttribute(name = "value", required = true)
 		private final String value = null;
-		
 		@XmlAttribute(name = "repeat", required = true)
 		private final int repeatCount = 1;
 		
@@ -319,6 +321,12 @@ public class Send extends AdminCommand
 		}
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{

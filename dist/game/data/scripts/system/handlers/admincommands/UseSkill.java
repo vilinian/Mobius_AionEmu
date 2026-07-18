@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -27,17 +27,29 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 
 /**
+ * Handles the admin command to execute a specific skill on a target.<br>
+ * It allows administrators to trigger {@link Skill} effects manually for testing or debugging purposes.
  * @author Source, kecimis
  */
 public class UseSkill extends AdminCommand
 {
 	private final String syntax = "Syntax: //skill <skillId> <skillLevel> [true|target] <duration>";
 	
+	/**
+	 * Initializes a new instance of the {@link UseSkill} command.<br>
+	 * This class handles the admin command for manually triggering skills.
+	 */
 	public UseSkill()
 	{
 		super("useskill");
 	}
 	
+	/**
+	 * Executes the command to use a specific skill on a selected target.<br>
+	 * It allows for direct application or targeting based on provided parameters.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings containing the skill ID, level, and other options.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
@@ -100,6 +112,7 @@ public class UseSkill extends AdminCommand
 						return;
 					}
 				}
+				
 				if ((time < 0) || (time > 86400))
 				{
 					PacketSendUtility.sendMessage(admin, "Time has to be in range 0 - 86400!");
@@ -134,6 +147,17 @@ public class UseSkill extends AdminCommand
 		}
 	}
 	
+	/**
+	 * Executes a specific skill for an administrator.<br>
+	 * This method retrieves the skill from {@link SkillEngine}.<br>
+	 * It triggers the skill without playing any animations.<br>
+	 * If the skill is not found, it notifies the admin of the failure.
+	 * @param admin The {@code Player} who issued the command.
+	 * @param effector The {@code Creature} performing the skill.
+	 * @param target The {@code Creature} receiving the skill effect.
+	 * @param skillId The unique identifier for the skill.
+	 * @param skillLevel The level of the skill to be used.
+	 */
 	private void useSkill(Player admin, Creature effector, Creature target, int skillId, int skillLevel)
 	{
 		final Skill skill = SkillEngine.getInstance().getSkill(effector, skillId, skillLevel, target);
@@ -147,6 +171,12 @@ public class UseSkill extends AdminCommand
 		}
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{

@@ -1,31 +1,31 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.instance;
 
 /**
+ * Defines the different types of stages available within a game instance.<br>
+ * This enum is used to categorize and identify specific stage configurations for the {@code Instance} model.
  * @author xTz
  */
 public enum StageType
 {
-	DEFAULT(0, 0),
+	DEFAULT(0, 0), // 34464
 	START_STAGE_1_ELEVATOR(35464, 1),
 	START_STAGE_1_ROUND_1(35465, 1),
-	START_KAISINEL_STAGE_1_ROUND_1(35465, 1),
-	START_MARCHUTAN_STAGE_1_ROUND_1(35465, 1),
 	START_STAGE_1_ROUND_2(35466, 1),
 	START_STAGE_1_ROUND_3(35467, 1),
 	START_STAGE_1_ROUND_4(35468, 1),
@@ -44,16 +44,13 @@ public enum StageType
 	START_STAGE_3_ROUND_5(37469, 1),
 	START_STAGE_4_ELEVATOR(38464, 1),
 	START_STAGE_4_ROUND_1(38465, 1),
-	START_HARAMEL_STAGE_4_ROUND_1(38465, 1),
-	START_KROMEDE_STAGE_4_ROUND_1(38465, 1),
+	START_ALTERNATIVE_STAGE_4_ROUND_1(38465, 1),
 	START_STAGE_4_ROUND_2(38466, 1),
 	START_STAGE_4_ROUND_3(38467, 1),
 	START_STAGE_4_ROUND_4(38468, 1),
 	START_STAGE_4_ROUND_5(38469, 1),
 	START_STAGE_5(8392, 3),
 	START_STAGE_5_ROUND_1(8393, 3),
-	START_AZOTURAN_STAGE_5_ROUND_1(8393, 3),
-	START_STEEL_RAKE_STAGE_5_ROUND_1(8393, 3),
 	START_STAGE_5_ROUND_2(8394, 3),
 	START_STAGE_5_ROUND_3(8395, 3),
 	START_STAGE_5_ROUND_4(8396, 3),
@@ -90,7 +87,6 @@ public enum StageType
 	START_STAGE_10_ROUND_5(54645, 10),
 	PASS_STAGE_1(35566, 1),
 	PASS_STAGE_2(36565, 1),
-	PASS_STAGE_3(37566, 1),
 	PASS_STAGE_4(38566, 1),
 	PASS_STAGE_5(39566, 1),
 	PASS_STAGE_6(40565, 1),
@@ -116,20 +112,35 @@ public enum StageType
 	PVP_STAGE_6(6, 0),
 	PVP_STAGE_OVER(0, 0);
 	
-	private int id;
-	private int type;
+	private final int id;
+	private final int type;
 	
+	/**
+	 * Constructs a new {@link StageType} instance.<br>
+	 * This constructor initializes the internal ID and type values.
+	 * @param id The unique identifier for the stage.
+	 * @param type The category or group type of the stage.
+	 */
 	private StageType(int id, int type)
 	{
 		this.id = id;
 		this.type = type;
 	}
 	
+	/**
+	 * Returns the unique identifier of this object.
+	 * @return The integer ID.
+	 */
 	public int getId()
 	{
 		return id;
 	}
 	
+	/**
+	 * Retrieves the category type of this {@link StageType}.<br>
+	 * This value is used to distinguish between different types of stages.
+	 * @return The integer value representing the stage type.
+	 */
 	public int getType()
 	{
 		return type;

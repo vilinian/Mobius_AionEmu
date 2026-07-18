@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -29,6 +29,9 @@ import com.aionemu.gameserver.services.HousingBidService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles the client request to register a new house.<br>
+ * This packet processes the registration logic for {@link House} objects.<br>
+ * It validates the player's eligibility and updates the housing status.
  * @author Rolandas
  */
 public class CM_REGISTER_HOUSE extends AionClientPacket
@@ -36,6 +39,13 @@ public class CM_REGISTER_HOUSE extends AionClientPacket
 	long bidKinah;
 	long unk1;
 	
+	/**
+	 * Registers a house for the player.<br>
+	 * This method handles the incoming packet to process house registration.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state.
+	 * @param restStates Additional connection states associated with the packet.
+	 */
 	public CM_REGISTER_HOUSE(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -45,7 +55,7 @@ public class CM_REGISTER_HOUSE extends AionClientPacket
 	protected void readImpl()
 	{
 		bidKinah = readQ();
-		unk1 = readQ();
+		unk1 = readQ(); // 100000
 	}
 	
 	@Override
@@ -55,37 +65,46 @@ public class CM_REGISTER_HOUSE extends AionClientPacket
 		{
 			return;
 		}
+		
 		final Player player = getConnection().getActivePlayer();
 		final House house = player.getActiveHouse();
 		if ((house == null) || (house.getHouseType() == HouseType.STUDIO))
 		{
-			return;
+			return; // should not happen
 		}
+		
 		if (house.getStatus() == HouseStatus.SELL_WAIT)
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_HOUSING_AUCTION_FAIL_ALREADY_REGISTED);
 			return;
 		}
+		
 		if (!HousingBidService.getInstance().isRegisteringAllowed())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_HOUSING_CANT_AUCTION_TIMEOUT);
 			return;
 		}
+		
 		if (!house.isFeePaid() && HousingConfig.ENABLE_HOUSE_PAY)
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_HOUSING_CANT_AUCTION_OVERDUE);
 			return;
 		}
+		
 		final long fee = (long) (bidKinah * 0.3f);
+		
 		if (player.getInventory().getKinah() < fee)
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_NOT_ENOUGH_MONEY);
 			return;
 		}
+		
 		player.getInventory().decreaseKinah(fee);
 		HousingBidService.getInstance().addHouseToAuction(house, bidKinah);
+		
 		PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_HOUSING_AUCTION_MY_HOUSE(house.getAddress().getId()));
 		house.getController().updateAppearance();
+		
 		PacketSendUtility.sendPacket(player, new SM_HOUSE_OWNER_INFO(player, house));
 	}
 }

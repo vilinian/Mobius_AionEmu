@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.dataholders;
 
@@ -29,6 +29,8 @@ import com.aionemu.gameserver.model.templates.staticdoor.StaticDoorWorld;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 /**
+ * This class serves as a data holder for {@link StaticDoorWorld} templates.<br>
+ * It stores and manages the static configuration data for doors within the game world.
  * @author Wakizashi
  */
 @XmlRootElement(name = "staticdoor_templates")
@@ -37,13 +39,17 @@ public class StaticDoorData
 {
 	@XmlElement(name = "world")
 	private List<StaticDoorWorld> staticDorWorlds;
-	
-	/** A map containing all door templates */
+	/**
+	 * A map containing all door templates
+	 */
 	private final TIntObjectHashMap<StaticDoorWorld> staticDoorData = new TIntObjectHashMap<>();
 	
 	/**
-	 * @param u
-	 * @param parent
+	 * This method is called after the XML data has been unmarshalled.<br>
+	 * It populates the {@code staticDoorData} map using the list of {@link StaticDoorWorld} templates.<br>
+	 * The {@code staticDoorData} map is cleared before being rebuilt.
+	 * @param u The {@link Unmarshaller} used to read the data.
+	 * @param parent The parent object of the current element.
 	 */
 	void afterUnmarshal(Unmarshaller u, Object parent)
 	{
@@ -55,14 +61,21 @@ public class StaticDoorData
 		}
 	}
 	
+	/**
+	 * Returns the number of elements in this set.<br>
+	 * This method calls {@code size} to get the count.
+	 * @return The total number of items currently stored in the collection.
+	 */
 	public int size()
 	{
 		return staticDoorData.size();
 	}
 	
 	/**
-	 * @param world
-	 * @return
+	 * Retrieves the {@link StaticDoorWorld} data for a specific world ID.<br>
+	 * This method looks up the template in the internal map.
+	 * @param world The unique identifier of the world to search for.
+	 * @return The {@code StaticDoorWorld} object associated with the given world, or {@code null} if not found.
 	 */
 	public StaticDoorWorld getStaticDoorWorlds(int world)
 	{
@@ -70,7 +83,9 @@ public class StaticDoorData
 	}
 	
 	/**
-	 * @return the staticDorWorlds
+	 * Retrieves the list of all door worlds.<br>
+	 * This method returns the internal collection of {@link StaticDoorWorld} objects.
+	 * @return a {@code List} containing all {@code StaticDoorWorld} entries.
 	 */
 	public List<StaticDoorWorld> getStaticDorWorlds()
 	{
@@ -78,7 +93,9 @@ public class StaticDoorData
 	}
 	
 	/**
-	 * @param staticDorWorlds
+	 * Sets the list of {@link StaticDoorWorld} objects.<br>
+	 * This method updates the internal data and triggers a refresh.
+	 * @param staticDorWorlds The list of worlds to set.
 	 */
 	public void setStaticDorWorlds(List<StaticDoorWorld> staticDorWorlds)
 	{

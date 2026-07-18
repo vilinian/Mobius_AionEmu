@@ -1,36 +1,36 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.objects.filter;
 
 /**
- * This filter is used to combine a few ObjectFilters into one. Its acceptObject method returns true only if all filters, that were passed through constructor return true
- * @param <T>
+ * This filter combines multiple {@link ObjectFilter} instances into a single logical unit.<br>
+ * The {@code acceptObject} method returns {@code true} only if every filter passed to the constructor returns {@code true}.
  * @author Luno
+ * @param <T>
  */
 public class AndObjectFilter<T> implements ObjectFilter<T>
 {
-	/**
-	 * All filters that are used when running acceptObject() method
-	 */
+	/** All filters that are used when running acceptObject() method */
 	private final ObjectFilter<? super T>[] filters;
 	
 	/**
-	 * Constructs new <tt>AndObjectFilter</tt> object, that uses given filters.
-	 * @param filters
+	 * Creates a new {@link AndObjectFilter} using the provided filters.<br>
+	 * This filter will only pass an object if every filter in the list returns {@code true}.
+	 * @param filters The array of {@link ObjectFilter} instances to combine.
 	 */
 	@SafeVarargs
 	public AndObjectFilter(ObjectFilter<? super T>... filters)
@@ -39,7 +39,11 @@ public class AndObjectFilter<T> implements ObjectFilter<T>
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Checks if the given {@code object} passes all internal filters.<br>
+	 * It returns {@code true} only if every filter accepts the object.<br>
+	 * If any filter rejects the object, it returns {@code false}.
+	 * @param object The item to be checked by the filters.
+	 * @return {@code true} if all filters pass, otherwise {@code false}.
 	 */
 	@Override
 	public boolean acceptObject(T object)
@@ -51,6 +55,7 @@ public class AndObjectFilter<T> implements ObjectFilter<T>
 				return false;
 			}
 		}
+		
 		return true;
 	}
 }

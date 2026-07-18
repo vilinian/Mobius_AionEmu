@@ -1,38 +1,66 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
+import com.aionemu.commons.database.dao.DAOManager;
+import com.aionemu.gameserver.dao.PlayerAppearanceDAO;
+import com.aionemu.gameserver.dataholders.DataManager;
+import com.aionemu.gameserver.dataholders.PlayersAppearanceData;
+import com.aionemu.gameserver.model.gameobjects.Item;
 import com.aionemu.gameserver.model.gameobjects.VisibleObject;
+import com.aionemu.gameserver.model.gameobjects.player.Equipment;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.gameobjects.player.PlayerAppearance;
+import com.aionemu.gameserver.model.items.storage.Storage;
+import com.aionemu.gameserver.model.templates.appearances.PlayerApp;
+import com.aionemu.gameserver.model.templates.appearances.PlayerAppearanceTemplate;
+import com.aionemu.gameserver.model.templates.appearances.PlayerItem;
+import com.aionemu.gameserver.model.templates.item.ItemTemplate;
+import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
+import com.aionemu.gameserver.services.item.ItemPacketService;
+import com.aionemu.gameserver.services.item.ItemService;
 import com.aionemu.gameserver.services.teleport.TeleportService2;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 
+import java.util.List;
+
 /**
- * @author Divinity
+ * Handles administrative commands related to player appearances.<br>
+ * This class allows administrators to modify or view {@link PlayerAppearance} data for characters.
+ * @author Divinity / CoolyT
  */
 public class Appearance extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link Appearance} class.<br>
+	 * This class handles the admin command for managing player appearances.
+	 */
 	public Appearance()
 	{
 		super("appearance");
 	}
 	
+	/**
+	 * Executes commands to manage and modify player appearances.<br>
+	 * Supports listing all appearances, saving data, getting specific looks, and resetting changes.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings containing the action and optional identifiers.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
@@ -42,6 +70,8 @@ public class Appearance extends AdminCommand
 			return;
 		}
 		
+		final PlayersAppearanceData appData = DataManager.PLAYER_APPEARANCE_DATA;
+		final List<PlayerApp> apps = PlayersAppearanceData.getApp();
 		final VisibleObject target = admin.getTarget();
 		Player player;
 		
@@ -54,7 +84,133 @@ public class Appearance extends AdminCommand
 			player = (Player) target;
 		}
 		
-		if (params[0].equals("reset"))
+		if (params[0].equals("list"))
+		{
+			for (int i = 0; i <= (apps.size() - 1); i++)
+			{
+				final PlayerApp a = apps.get(i);
+				PacketSendUtility.sendMessage(player, "[" + i + ".] " + a.name + " (" + a.gender + "-" + a.race + "-" + a.playerClass + "-Lv. " + a.level + ")");
+			}
+			
+			PacketSendUtility.sendMessage(player, "-----------------------------------------------------------");
+			
+			return;
+		}
+		
+		if (params[0].equals("save"))
+		{
+			if (DAOManager.getDAO(PlayerAppearanceDAO.class).store(player))
+			{
+				PacketSendUtility.sendMessage(player, "Sucessfully saved new Appearance Data");
+			}
+			else
+			{
+				PacketSendUtility.sendMessage(player, "Something went wrong on saving Appearance Data");
+			}
+			
+			return;
+		}
+		
+		else if (params[0].equals("get"))
+		{
+			// Get the current player's appearance
+			final PlayerAppearance playerAppearance = player.getPlayerAppearance();
+			PlayerApp a = new PlayerApp();
+			
+			// Save a clean player's appearance
+			if (player.getSavedPlayerAppearance() == null)
+			{
+				player.setSavedPlayerAppearance((PlayerAppearance) playerAppearance.clone());
+			}
+			
+			final int index = Integer.parseInt(params[1]);
+			if (index <= 0)
+			{
+				a = appData.getAppearanceByName(params[1].toLowerCase());
+			}
+			else
+			{
+				a = apps.get(index);
+			}
+			
+			final PlayerAppearanceTemplate app = a.appearance;
+			final List<PlayerItem> items = a.items;
+			final Equipment equip = player.getEquipment();
+			for (PlayerItem item : items)
+			{
+				final ItemTemplate it = DataManager.ITEM_DATA.getItemTemplate(item.itemTemplateId);
+				final Storage inv = player.getInventory();
+				if ((it.getItemSlot() > 0) && (inv.getFreeSlots() >= 1))
+				{
+					ItemService.addItem(player, item.itemTemplateId, 1);
+					
+					final Item _item = inv.getFirstItemByItemId(item.itemTemplateId);
+					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SOUL_BOUND_ITEM_SUCCEED(_item.getNameId()));
+					_item.setSoulBound(true);
+					ItemPacketService.updateItemAfterInfoChange(player, _item);
+					equip.equipItem(_item.getObjectId(), it.getItemSlot());
+				}
+			}
+			
+			playerAppearance.setSkinRGB(app.skinRGB);
+			playerAppearance.setHairRGB(app.hairRGB);
+			playerAppearance.setLipRGB(app.lipRGB);
+			playerAppearance.setEyeRGB(app.eyeRGB);
+			playerAppearance.setFace(app.face);
+			playerAppearance.setHair(app.hairShape);
+			playerAppearance.setDeco(app.deco);
+			playerAppearance.setTattoo(app.tattoo);
+			playerAppearance.setFaceContour(app.faceContour);
+			playerAppearance.setExpression(app.expresion);
+			// playerAppearance.setunk_0x06(app.unk1); //0x06
+			playerAppearance.setJawLine(app.jawLine);
+			playerAppearance.setForehead(app.foreHead);
+			playerAppearance.setEyeHeight(app.eyeHeight);
+			playerAppearance.setEyeSpace(app.eyeSpace);
+			playerAppearance.setEyeWidth(app.eyeWidth);
+			playerAppearance.setEyeSize(app.eyeSize);
+			playerAppearance.setEyeShape(app.eyeShape);
+			playerAppearance.setEyeAngle(app.eyeAngle);
+			playerAppearance.setBrowHeight(app.browHeight);
+			playerAppearance.setBrowAngle(app.browAngle);
+			playerAppearance.setBrowAngle(app.browShape);
+			playerAppearance.setNose(app.nose);
+			playerAppearance.setNoseBridge(app.noseBridge);
+			playerAppearance.setNoseWidth(app.noseWidth);
+			playerAppearance.setNoseTip(app.noseTip);
+			playerAppearance.setCheek(app.cheek);
+			playerAppearance.setLipHeight(app.lipHeight);
+			playerAppearance.setMouthSize(app.mouthSize);
+			playerAppearance.setLipSize(app.lipSize);
+			playerAppearance.setSmile(app.smile);
+			playerAppearance.setLipShape(app.lipShape);
+			playerAppearance.setJawHeigh(app.ChinHeight);
+			playerAppearance.setChinJut(app.CheckBones);
+			playerAppearance.setEarShape(app.earShape);
+			playerAppearance.setHeadSize(app.headSize);
+			playerAppearance.setNeck(app.neck);
+			playerAppearance.setNeckLength(app.neckLength);
+			playerAppearance.setShoulderSize(app.shoulderSize);
+			playerAppearance.setTorso(app.torso);
+			playerAppearance.setChest(app.chest);
+			playerAppearance.setWaist(app.waist);
+			playerAppearance.setHips(app.hips);
+			playerAppearance.setArmThickness(app.armThickness);
+			playerAppearance.setHandSize(app.handSize);
+			playerAppearance.setLegThickness(app.legThickness);
+			playerAppearance.setFootSize(app.footSize);
+			playerAppearance.setFacialRate(app.facialRatio);
+			// playerAppearance.setunk_0x00(app.unk2);
+			playerAppearance.setArmLength(app.armLength);
+			playerAppearance.setLegLength(app.legLength);
+			playerAppearance.setShoulders(app.shoulders);
+			playerAppearance.setFaceShape(app.faceShape);
+			playerAppearance.setHeight(app.height);
+			
+			player.setPlayerAppearance(playerAppearance);
+		}
+		
+		else if (params[0].equals("reset"))
 		{
 			final PlayerAppearance savedPlayerAppearance = player.getSavedPlayerAppearance();
 			
@@ -78,198 +234,13 @@ public class Appearance extends AdminCommand
 			
 			return;
 		}
-		
-		if (params.length < 2)
-		{
-			onFail(player, null);
-			return;
-		}
-		
-		// Get the current player's appearance
-		final PlayerAppearance playerAppearance = player.getPlayerAppearance();
-		
-		// Save a clean player's appearance
-		if (player.getSavedPlayerAppearance() == null)
-		{
-			player.setSavedPlayerAppearance((PlayerAppearance) playerAppearance.clone());
-		}
-		
-		if (params[0].equals("size")) // Edit player's size. Min: 0, Max: 50 (prevent bug)
-		{
-			float height;
-			
-			try
-			{
-				height = Float.parseFloat(params[1]);
-			}
-			catch (NumberFormatException e)
-			{
-				PacketSendUtility.sendMessage(admin, "The value must be a number !");
-				onFail(player, e.getMessage());
-				return;
-			}
-			
-			if ((height < 0) || (height > 50))
-			{
-				PacketSendUtility.sendMessage(admin, "Size: Min value : 0 - Max value : 50");
-				return;
-			}
-			
-			// Edit the height
-			playerAppearance.setHeight(height);
-		}
-		else if (params[0].equals("voice")) // Min: 0, Max: 3
-		{
-			int voice;
-			
-			try
-			{
-				voice = Integer.parseInt(params[1]);
-			}
-			catch (NumberFormatException e)
-			{
-				PacketSendUtility.sendMessage(admin, "The value must be a number !");
-				onFail(player, e.getMessage());
-				return;
-			}
-			
-			if ((voice < 0) || (voice > 3))
-			{
-				PacketSendUtility.sendMessage(admin, "Voice: Min value : 0 - Max value : 3");
-				return;
-			}
-			
-			// Edit the voice
-			playerAppearance.setVoice(voice);
-		}
-		else if (params[0].equals("hair")) // Min: 1, Max: 43
-		{
-			int hair;
-			
-			try
-			{
-				hair = Integer.parseInt(params[1]);
-			}
-			catch (NumberFormatException e)
-			{
-				PacketSendUtility.sendMessage(admin, "The value must be a number !");
-				onFail(player, e.getMessage());
-				return;
-			}
-			
-			if ((hair < 1) || (hair > 43))
-			{
-				PacketSendUtility.sendMessage(admin, "Hair: Min value : 1 - Max value : 43");
-				return;
-			}
-			
-			// Edit the hair
-			playerAppearance.setHair(hair);
-		}
-		else if (params[0].equals("face")) // Min: 1, Max: 24
-		{
-			int face;
-			
-			try
-			{
-				face = Integer.parseInt(params[1]);
-			}
-			catch (NumberFormatException e)
-			{
-				PacketSendUtility.sendMessage(admin, "The value must be a number !");
-				onFail(player, e.getMessage());
-				return;
-			}
-			
-			if ((face < 1) || (face > 24))
-			{
-				PacketSendUtility.sendMessage(admin, "Face: Min value : 1 - Max value : 24");
-				return;
-			}
-			
-			// Edit the face
-			playerAppearance.setFace(face);
-		}
-		else if (params[0].equals("deco")) // Min: 1, Max: 18
-		{
-			int deco;
-			
-			try
-			{
-				deco = Integer.parseInt(params[1]);
-			}
-			catch (NumberFormatException e)
-			{
-				PacketSendUtility.sendMessage(admin, "The value must be a number !");
-				onFail(player, e.getMessage());
-				return;
-			}
-			
-			if ((deco < 1) || (deco > 18))
-			{
-				PacketSendUtility.sendMessage(admin, "Deco: Min value : 1 - Max value : 18");
-				return;
-			}
-			
-			// Edit the deco
-			playerAppearance.setDeco(deco);
-		}
-		else if (params[0].equals("head_size")) // Min: 0, Max: 100
-		{
-			int head;
-			
-			try
-			{
-				head = Integer.parseInt(params[1]);
-			}
-			catch (NumberFormatException e)
-			{
-				PacketSendUtility.sendMessage(admin, "The value must be a number !");
-				onFail(player, e.getMessage());
-				return;
-			}
-			
-			if ((head < 0) || (head > 100))
-			{
-				PacketSendUtility.sendMessage(admin, "Head Size: Min value : 0 - Max value : 100");
-				return;
-			}
-			
-			// Edit the head
-			playerAppearance.setHeadSize(head + 200);
-		}
-		else if (params[0].equals("tattoo")) // Min: 1, Max: 13
-		{
-			int tattoo;
-			
-			try
-			{
-				tattoo = Integer.parseInt(params[1]);
-			}
-			catch (NumberFormatException e)
-			{
-				PacketSendUtility.sendMessage(admin, "The value must be a number !");
-				onFail(player, e.getMessage());
-				return;
-			}
-			
-			if ((tattoo < 1) || (tattoo > 13))
-			{
-				PacketSendUtility.sendMessage(admin, "Tattoo: Min value : 1 - Max value : 13");
-				return;
-			}
-			
-			// Edit the tattoo
-			playerAppearance.setTattoo(tattoo);
-		}
 		else
+		
+		if (params.length < 1)
 		{
 			onFail(player, null);
 			return;
 		}
-		
-		// Edit the current player's appearance with our modifications
-		player.setPlayerAppearance(playerAppearance);
 		
 		// Warn the player
 		PacketSendUtility.sendMessage(player, "An admin has changed your appearance.");
@@ -278,10 +249,16 @@ public class Appearance extends AdminCommand
 		TeleportService2.teleportTo(player, player.getWorldId(), player.getInstanceId(), player.getX(), player.getY(), player.getZ(), player.getHeading());
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{
-		final String syntax = "Syntax: //appearance <size | voice | hair | face | deco | head_size | tattoo | reset (to reset the appearance)> <value>";
+		final String syntax = "Syntax: //appearance <list | get <Number> | reset | save>";
 		PacketSendUtility.sendMessage(player, syntax);
 	}
 }

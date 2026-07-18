@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver;
 
@@ -29,6 +29,8 @@ import com.aionemu.loginserver.network.NetConnector;
 import com.aionemu.loginserver.utils.ThreadPoolManager;
 
 /**
+ * Handles the graceful shutdown procedure for the login server.<br>
+ * It ensures that all services and connections are closed properly before the application exits.
  * @author -Nemesiss-, nrg
  */
 public class Shutdown extends Thread
@@ -47,8 +49,9 @@ public class Shutdown extends Thread
 	private static boolean restartOnly = false;
 	
 	/**
-	 * Set's restartOnly attribute
-	 * @param restartOnly Indicates wether the loginserver should shut dpwn or only restart
+	 * Sets whether the login server should perform a full shutdown or just a restart.<br>
+	 * This updates the {@code restartOnly} flag used by the {@code run} method.
+	 * @param restartOnly Set to {@code true} for a restart, or {@code false} for a full shutdown.
 	 */
 	public void setRestartOnly(boolean restartOnly)
 	{
@@ -56,18 +59,15 @@ public class Shutdown extends Thread
 	}
 	
 	/**
-	 * get the shutdown-hook instance the shutdown-hook instance is created by the first call of this function, but it has to be registrered externaly.
-	 * @return instance of Shutdown, to be used as shutdown hook
+	 * Provides the global access point for the {@link Shutdown} class.<br>
+	 * This method follows the singleton pattern to return the single existing instance.
+	 * @return The singleton instance of {@code Shutdown}.
 	 */
 	public static Shutdown getInstance()
 	{
 		return instance;
 	}
 	
-	/**
-	 * this function is called, when a new thread starts if this thread is the thread of getInstance, then this is the shutdown hook and we save all data and disconnect all clients. after this thread ends, the server will completely exit if this is not the thread of getInstance, then this is a
-	 * countdown thread. we start the countdown, and when we finished it, and it was not aborted, we tell the shutdown-hook why we call exit, and then call exit when the exit status of the server is 1, startServer.sh / startServer.bat will restart the server.
-	 */
 	@Override
 	public void run()
 	{

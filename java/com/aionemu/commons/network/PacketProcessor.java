@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.network;
 
@@ -29,34 +29,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.network.packet.BaseClientPacket;
-import com.google.common.base.Preconditions;
 
 /**
- * Packet Processor responsible for executing packets in correct order with respecting rules: - 1 packet / client at one time. - execute packets in received order.
- * @param <T> AConnection - owner of client packets.
+ * This class handles the execution of network packets for a specific connection.<br>
+ * It ensures that packets are processed in the order they were received.<br>
+ * It enforces a rule where only one packet per client is executed at any given time.
  * @author -Nemesiss-
+ * @param <T> AConnection - owner of client packets.
  */
 public class PacketProcessor<T extends AConnection>
 {
 	/**
 	 * Logger for PacketProcessor
 	 */
-	static final Logger log = LoggerFactory.getLogger(PacketProcessor.class.getName());
+	private static final Logger log = LoggerFactory.getLogger(PacketProcessor.class.getName());
 	
 	/**
 	 * When one working thread should be created.
 	 */
-	final int threadSpawnThreshold;
+	private final int threadSpawnThreshold;
 	
 	/**
 	 * When one working thread should be killed.
 	 */
-	final int threadKillThreshold;
+	private final int threadKillThreshold;
 	
 	/**
 	 * Lock for synchronization.
 	 */
-	final Lock lock = new ReentrantLock();
+	private final Lock lock = new ReentrantLock();
 	
 	/**
 	 * Not Empty condition.
@@ -66,7 +67,7 @@ public class PacketProcessor<T extends AConnection>
 	/**
 	 * Queue of packet that will be executed in correct order.
 	 */
-	final List<BaseClientPacket<T>> packets = new LinkedList<>();
+	private final List<BaseClientPacket<T>> packets = new LinkedList<>();
 	
 	/**
 	 * Working threads.
@@ -86,14 +87,10 @@ public class PacketProcessor<T extends AConnection>
 	/**
 	 * Executor that will be used to execute packets
 	 */
-	final Executor executor;
+	private final Executor executor;
 	
 	private static class DummyExecutor implements Executor
 	{
-		public DummyExecutor()
-		{
-		}
-		
 		@Override
 		public void execute(Runnable command)
 		{
@@ -102,11 +99,13 @@ public class PacketProcessor<T extends AConnection>
 	}
 	
 	/**
-	 * Create and start PacketProcessor responsible for executing packets.
-	 * @param minThreads - minimum number of working Threads.
-	 * @param maxThreads - maximum number of working Threads.
-	 * @param threadSpawnThreshold - if not yet executed packets count exceeds given threshold then new thread would be spawned. (if current thread count is smaller than maxThreads).
-	 * @param threadKillThreshold - if not yet executed packets count went below given threshold then one of worker thread will be killed (if current thread count is bigger than minThreads).
+	 * Initializes a new {@link PacketProcessor} with specific threading rules.<br>
+	 * This constructor sets the limits for the internal thread pool.<br>
+	 * It uses a default executor for processing packets.
+	 * @param minThreads The minimum number of threads to keep alive.
+	 * @param maxThreads The maximum number of threads allowed.
+	 * @param threadSpawnThreshold The queue size that triggers creating a new thread.
+	 * @param threadKillThreshold The queue size that triggers removing a thread.
 	 */
 	public PacketProcessor(int minThreads, int maxThreads, int threadSpawnThreshold, int threadKillThreshold)
 	{
@@ -114,19 +113,33 @@ public class PacketProcessor<T extends AConnection>
 	}
 	
 	/**
-	 * Create and start PacketProcessor responsible for executing packets.
-	 * @param minThreads - minimum number of working Threads.
-	 * @param maxThreads - maximum number of working Threads.
-	 * @param threadSpawnThreshold - if not yet executed packets count exceeds given threshold then new thread would be spawned. (if current thread count is smaller than maxThreads).
-	 * @param threadKillThreshold - if not yet executed packets count went below given threshold then one of worker thread will be killed (if current thread count is bigger than minThreads).
-	 * @param executor - Executor that will be used to execute task (should be used only as decorator).
+	 * Initializes a new {@link PacketProcessor} with specific thread pool settings.<br>
+	 * This constructor sets the limits for worker threads and starts the initial pool.<br>
+	 * It also configures the thresholds for spawning and killing threads dynamically.
+	 * @param minThreads The minimum number of threads to keep alive in the pool.
+	 * @param maxThreads The maximum number of threads allowed in the pool.
+	 * @param threadSpawnThreshold The queue size at which a new thread should be created.
+	 * @param threadKillThreshold The queue size at which an idle thread should be removed.
+	 * @param executor The {@code Executor} used to run the packet processing tasks.
 	 */
 	public PacketProcessor(int minThreads, int maxThreads, int threadSpawnThreshold, int threadKillThreshold, Executor executor)
 	{
-		Preconditions.checkArgument(minThreads > 0, "Min Threads must be positive");
-		Preconditions.checkArgument(maxThreads >= minThreads, "Max Threads must be >= Min Threads");
-		Preconditions.checkArgument(threadSpawnThreshold > 0, "Thread Spawn Threshold must be positive");
-		Preconditions.checkArgument(threadKillThreshold > 0, "Thread Kill Threshold must be positive");
+		if (!(minThreads > 0))
+		{
+			throw new IllegalArgumentException("Min Threads must be positive");
+		}
+		if (!(maxThreads >= minThreads))
+		{
+			throw new IllegalArgumentException("Max Threads must be >= Min Threads");
+		}
+		if (!(threadSpawnThreshold > 0))
+		{
+			throw new IllegalArgumentException("Thread Spawn Threshold must be positive");
+		}
+		if (!(threadKillThreshold > 0))
+		{
+			throw new IllegalArgumentException("Thread Kill Threshold must be positive");
+		}
 		
 		this.minThreads = minThreads;
 		this.maxThreads = maxThreads;
@@ -146,7 +159,9 @@ public class PacketProcessor<T extends AConnection>
 	}
 	
 	/**
-	 * Start Checker Thread. Checker is responsible for increasing / reducing PacketProcessor Thread count based on Runtime needs.
+	 * Starts a new background thread to monitor the packet queue.<br>
+	 * This thread runs the {@code CheckerTask} logic.<br>
+	 * It is used to manage the lifecycle of worker threads.
 	 */
 	private void startCheckerThread()
 	{
@@ -154,10 +169,12 @@ public class PacketProcessor<T extends AConnection>
 	}
 	
 	/**
-	 * Create and start new PacketProcessor Thread, but only if there wont be more working Threads than "maxThreads"
-	 * @return true if new Thread was created.
+	 * Checks if a new worker thread can be created.<br>
+	 * It verifies that the current count is below {@code maxThreads}.<br>
+	 * If successful, it starts a new {@link Thread} and adds it to the list.
+	 * @return {@code true} if a new thread was successfully started, or {@code false} otherwise.
 	 */
-	boolean newThread()
+	private boolean newThread()
 	{
 		if (threads.size() >= maxThreads)
 		{
@@ -175,9 +192,11 @@ public class PacketProcessor<T extends AConnection>
 	}
 	
 	/**
-	 * Kill one PacketProcessor Thread, but only if there are more working Threads than "minThreads"
+	 * Stops an active worker thread.<br>
+	 * This method checks if the current number of threads exceeds {@code minThreads}.<br>
+	 * If it does, it removes and interrupts the last thread in the {@code threads} list.
 	 */
-	void killThread()
+	private void killThread()
 	{
 		if (threads.size() < minThreads)
 		{
@@ -188,10 +207,12 @@ public class PacketProcessor<T extends AConnection>
 	}
 	
 	/**
-	 * Add packet to execution queue and execute it as soon as possible on another Thread.
-	 * @param packet that will be executed.
+	 * Adds a packet to the processing queue.<br>
+	 * This method ensures the packet is handled in the correct order.<br>
+	 * It signals the worker threads that new data is available.
+	 * @param packet The {@code BaseClientPacket<T>} to be executed.
 	 */
-	public final void executePacket(BaseClientPacket<T> packet)
+	public void executePacket(BaseClientPacket<T> packet)
 	{
 		lock.lock();
 		try
@@ -206,10 +227,12 @@ public class PacketProcessor<T extends AConnection>
 	}
 	
 	/**
-	 * Return first packet available for execution with respecting rules: - 1 packet / client at one time. - execute packets in received order.
-	 * @return first available BaseClientPacket
+	 * Retrieves the next available packet from the queue.<br>
+	 * This method waits until a packet is found that can be processed.<br>
+	 * It checks if the connection associated with the packet is currently free.
+	 * @return The first {@code BaseClientPacket<T>} that is ready for execution.
 	 */
-	BaseClientPacket<T> getFirstAviable()
+	private BaseClientPacket<T> getFirstAviable()
 	{
 		for (;;)
 		{
@@ -228,6 +251,7 @@ public class PacketProcessor<T extends AConnection>
 					return packet;
 				}
 			}
+			
 			notEmpty.awaitUninterruptibly();
 		}
 	}
@@ -238,10 +262,6 @@ public class PacketProcessor<T extends AConnection>
 	 */
 	private final class PacketProcessorTask implements Runnable
 	{
-		public PacketProcessorTask()
-		{
-		}
-		
 		/**
 		 * {@inheritDoc}
 		 */
@@ -271,6 +291,7 @@ public class PacketProcessor<T extends AConnection>
 				{
 					lock.unlock();
 				}
+				
 				executor.execute(packet);
 			}
 		}
@@ -285,15 +306,11 @@ public class PacketProcessor<T extends AConnection>
 		/**
 		 * How often CheckerTask should do check.
 		 */
-		private static final int sleepTime = 60 * 1000;
+		private final static int sleepTime = 60 * 1000;
 		/**
 		 * Number of packets waiting for execution on last check.
 		 */
 		private int lastSize = 0;
-		
-		public CheckerTask()
-		{
-		}
 		
 		/**
 		 * {@inheritDoc}
@@ -327,6 +344,7 @@ public class PacketProcessor<T extends AConnection>
 					log.info("Lagg detected! [" + packetsToExecute + " client packets are waiting for execution]. You should consider increasing PacketProcessor maxThreads or hardware upgrade.");
 				}
 			}
+			
 			lastSize = packetsToExecute;
 		}
 	}

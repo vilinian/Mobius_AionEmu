@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.mail;
 
@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.database.dao.DAOManager;
+import com.aionemu.gameserver.configs.main.LoggingConfig;
 import com.aionemu.gameserver.dao.InventoryDAO;
 import com.aionemu.gameserver.dao.MailDAO;
 import com.aionemu.gameserver.dao.PlayerDAO;
@@ -44,6 +45,9 @@ import com.aionemu.gameserver.utils.idfactory.IDFactory;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * Handles the logic for system-generated mail messages within the game.<br>
+ * This service manages sending, receiving, and processing {@link Letter} objects for players.<br>
+ * It interacts with {@link MailDAO} to persist mail data and updates player {@link Mailbox} states.
  * @author xTz
  * @author Antraxx
  */
@@ -51,16 +55,41 @@ public class SystemMailService
 {
 	private static final Logger log = LoggerFactory.getLogger("SYSMAIL_LOG");
 	
+	/**
+	 * Provides the global instance of the {@link SystemMailService}.<br>
+	 * This method follows the singleton pattern.<br>
+	 * Use this to access the mail service from anywhere in the code.
+	 * @return The single instance of {@code SystemMailService}.
+	 */
 	public static SystemMailService getInstance()
 	{
 		return SingletonHolder.instance;
 	}
 	
+	/**
+	 * This is a private constructor for the {@link SystemMailService} class.<br>
+	 * It prevents other classes from creating new instances of this service.<br>
+	 * The service should be accessed using the {@code getInstance} method.
+	 */
 	private SystemMailService()
 	{
 		log.info("SystemMailService: Initialized.");
 	}
 	
+	/**
+	 * Sends a new mail letter to a specific player.<br>
+	 * This method validates the sender and recipient names, checks mailbox capacity, and handles item attachments.<br>
+	 * It stores the letter in the database and notifies the recipient if they are currently online.
+	 * @param sender The name of the person sending the mail.
+	 * @param recipientName The name of the player who will receive the mail.
+	 * @param title The subject line of the mail, truncated to 20 characters.
+	 * @param message The main content of the mail, truncated to 1000 characters.
+	 * @param attachedItemObjId The unique identifier for the item to be attached. Use {@code 0} if no item is attached.
+	 * @param attachedItemCount The quantity of the attached item.
+	 * @param attachedKinahCount The amount of Kinah currency to include in the mail.
+	 * @param letterType The category or type of the letter being sent.
+	 * @return {@code true} if the mail was successfully sent and stored; {@code false} otherwise.
+	 */
 	public boolean sendMail(String sender, String recipientName, String title, String message, int attachedItemObjId, long attachedItemCount, long attachedKinahCount, LetterType letterType)
 	{
 		if (attachedItemObjId != 0)
@@ -68,48 +97,52 @@ public class SystemMailService
 			final ItemTemplate itemTemplate = DataManager.ITEM_DATA.getItemTemplate(attachedItemObjId);
 			if (itemTemplate == null)
 			{
-				// log.info("[SYSMAILSERVICE] > [SenderName: " + sender + "] [RecipientName: " + recipientName + "] RETURN ITEM ID:" + itemTemplate
-				// + " ITEM COUNT " + attachedItemCount + " KINAH COUNT " + attachedKinahCount + " ITEM TEMPLATE IS MISSING ");
+				log.info("[SYSMAILSERVICE] > [SenderName: " + sender + "] [RecipientName: " + recipientName + "] RETURN ITEM ID:" + itemTemplate + " ITEM COUNT " + attachedItemCount + " KINAH COUNT " + attachedKinahCount + " ITEM TEMPLATE IS MISSING ");
 				return false;
 			}
 		}
+		
 		if ((attachedItemCount == 0) && (attachedItemObjId != 0))
 		{
 			return false;
 		}
+		
 		if (recipientName.length() > 16)
 		{
-			// log.info("[SYSMAILSERVICE] > [SenderName: " + sender + "] [RecipientName: " + recipientName + "] ITEM RETURN" + attachedItemObjId
-			// + " ITEM COUNT " + attachedItemCount + " KINAH COUNT " + attachedKinahCount + " RECIPIENT NAME LENGTH > 16 ");
+			log.info("[SYSMAILSERVICE] > [SenderName: " + sender + "] [RecipientName: " + recipientName + "] ITEM RETURN" + attachedItemObjId + " ITEM COUNT " + attachedItemCount + " KINAH COUNT " + attachedKinahCount + " RECIPIENT NAME LENGTH > 16 ");
 			return false;
 		}
+		
 		if (!sender.startsWith("$$") && (sender.length() > 16))
 		{
-			// log.info("[SYSMAILSERVICE] > [SenderName: " + sender + "] [RecipientName: " + recipientName + "] ITEM RETURN" + attachedItemObjId
-			// + " ITEM COUNT " + attachedItemCount + " KINAH COUNT " + attachedKinahCount + " SENDER NAME LENGTH > 16 ");
+			log.info("[SYSMAILSERVICE] > [SenderName: " + sender + "] [RecipientName: " + recipientName + "] ITEM RETURN" + attachedItemObjId + " ITEM COUNT " + attachedItemCount + " KINAH COUNT " + attachedKinahCount + " SENDER NAME LENGTH > 16 ");
 			return false;
 		}
+		
 		if (title.length() > 20)
 		{
 			title = title.substring(0, 20);
 		}
+		
 		if (message.length() > 1000)
 		{
 			message = message.substring(0, 1000);
 		}
+		
 		final PlayerCommonData recipientCommonData = DAOManager.getDAO(PlayerDAO.class).loadPlayerCommonDataByName(recipientName);
+		
 		if (recipientCommonData == null)
 		{
-			// log.info("[SYSMAILSERVICE] > [RecipientName: " + recipientName + "] NO SUCH CHARACTER NAME.");
+			log.info("[SYSMAILSERVICE] > [RecipientName: " + recipientName + "] NO SUCH CHARACTER NAME.");
 			return false;
 		}
+		
 		final Player recipient = World.getInstance().findPlayer(recipientCommonData.getPlayerObjId());
 		if (recipient != null)
 		{
 			if ((recipient.getMailbox() != null) && !(recipient.getMailbox().size() < 200))
 			{
-				// log.info("[SYSMAILSERVICE] > [SenderName: " + sender + "] [RecipientName: " + recipientCommonData.getName() + "] ITEM RETURN"
-				// + attachedItemObjId + " ITEM COUNT " + attachedItemCount + " KINAH COUNT " + attachedKinahCount + " MAILBOX FULL ");
+				log.info("[SYSMAILSERVICE] > [SenderName: " + sender + "] [RecipientName: " + recipientCommonData.getName() + "] ITEM RETURN" + attachedItemObjId + " ITEM COUNT " + attachedItemCount + " KINAH COUNT " + attachedKinahCount + " MAILBOX FULL ");
 				return false;
 			}
 		}
@@ -117,10 +150,12 @@ public class SystemMailService
 		{
 			return false;
 		}
+		
 		Item attachedItem = null;
 		long finalAttachedKinahCount = 0;
 		final int itemId = attachedItemObjId;
 		final long count = attachedItemCount;
+		
 		if (itemId != 0)
 		{
 			final Item senderItem = ItemFactory.newItem(itemId, count);
@@ -132,17 +167,21 @@ public class SystemMailService
 				attachedItem = senderItem;
 			}
 		}
+		
 		if (attachedKinahCount > 0)
 		{
 			finalAttachedKinahCount = attachedKinahCount;
 		}
+		
 		final String finalSender = sender;
 		final Timestamp time = new Timestamp(Calendar.getInstance().getTimeInMillis());
 		final Letter newLetter = new Letter(IDFactory.getInstance().nextId(), recipientCommonData.getPlayerObjId(), attachedItem, finalAttachedKinahCount, title, message, finalSender, time, true, letterType);
+		
 		if (!DAOManager.getDAO(MailDAO.class).storeLetter(time, newLetter))
 		{
 			return false;
 		}
+		
 		if (attachedItem != null)
 		{
 			if (!DAOManager.getDAO(InventoryDAO.class).store(attachedItem, recipientCommonData.getPlayerObjId()))
@@ -150,46 +189,87 @@ public class SystemMailService
 				return false;
 			}
 		}
+		
+		/**
+		 * Send mail update packets
+		 */
 		if (recipient != null)
 		{
 			final Mailbox recipientMailbox = recipient.getMailbox();
 			recipientMailbox.putLetterToMailbox(newLetter);
+			
 			PacketSendUtility.sendPacket(recipient, new SM_MAIL_SERVICE(recipient.getMailbox()));
 			recipientMailbox.isMailListUpdateRequired = true;
+			
+			// if recipient have opened mail list we should update it
 			if (recipientMailbox.mailBoxState != 0)
 			{
 				final boolean isPostman = (recipientMailbox.mailBoxState & PlayerMailboxState.EXPRESS) == PlayerMailboxState.EXPRESS;
 				PacketSendUtility.sendPacket(recipient, new SM_MAIL_SERVICE(recipient, recipientMailbox.getLetters(), isPostman));
 			}
+			
 			if (letterType == LetterType.EXPRESS)
 			{
-				// Express mail has arrived.
 				PacketSendUtility.sendPacket(recipient, SM_SYSTEM_MESSAGE.STR_POSTMAN_NOTIFY);
 			}
 		}
+		
+		/**
+		 * Update loaded common data and db if player is offline
+		 */
 		if (!recipientCommonData.isOnline())
 		{
 			recipientCommonData.setMailboxLetters(recipientCommonData.getMailboxLetters() + 1);
 			DAOManager.getDAO(MailDAO.class).updateOfflineMailCounter(recipientCommonData);
 		}
+		
+		if (LoggingConfig.LOG_SYSMAIL)
+		{
+			log.info("[SYSMAILSERVICE] > [SenderName: " + sender + "] [RecipientName: " + recipientName + "] RETURN ITEM ID:" + itemId + " ITEM COUNT " + attachedItemCount + " KINAH COUNT " + attachedKinahCount + " MESSAGE SUCCESSFULLY SENDED ");
+		}
+		
 		return true;
 	}
 	
+	/**
+	 * Sends a system mail to a specific player.<br>
+	 * This method handles item attachment and mailbox capacity checks.<br>
+	 * It updates the database and notifies online players.
+	 * @param sender The name of the sender.
+	 * @param sysTitle The title of the system mail.
+	 * @param sysMessage The content message of the system mail.
+	 * @param recipientName The name of the player receiving the mail.
+	 * @param item The {@code Item} to attach to the mail, or {@code null}.
+	 * @param attachedKinahCount The amount of Kinah to include in the mail.
+	 * @param type The {@link LetterType} for the mail delivery.
+	 * @return {@code true} if the mail was sent successfully, {@code false} otherwise.
+	 */
 	public boolean sendSystemMail(String sender, String sysTitle, String sysMessage, String recipientName, Item item, long attachedKinahCount, LetterType type)
 	{
 		final String title = sysTitle;
 		final String message = sysMessage;
+		final Item attachedItem = item;
+		int attachedItemObjId = 0;
+		long attachedItemCount = 0;
+		if (attachedItem != null)
+		{
+			attachedItemObjId = attachedItem.getItemId();
+			attachedItemCount = attachedItem.getItemCount();
+		}
 		
 		final PlayerCommonData recipientCommonData = DAOManager.getDAO(PlayerDAO.class).loadPlayerCommonDataByName(recipientName);
 		if (recipientCommonData == null)
 		{
+			log.info("[SYSMAILSERVICE] > [RecipientName: " + recipientName + "] NO SUCH CHARACTER NAME.");
 			return false;
 		}
+		
 		final Player recipient = World.getInstance().findPlayer(recipientCommonData.getPlayerObjId());
 		if (recipient != null)
 		{
 			if ((recipient.getMailbox() != null) && !(recipient.getMailbox().size() < 200))
 			{
+				log.info("[SYSMAILSERVICE] > [SenderName: " + sender + "] [RecipientName: " + recipientCommonData.getName() + "] ITEM RETURN" + attachedItemObjId + " ITEM COUNT " + attachedItemCount + " KINAH COUNT " + attachedKinahCount + " MAILBOX FULL ");
 				return false;
 			}
 		}
@@ -197,55 +277,60 @@ public class SystemMailService
 		{
 			return false;
 		}
+		
 		Player onlineRecipient = null;
 		if (recipientCommonData.getMailboxLetters() >= 100)
 		{
 			return false;
 		}
+		
 		if (recipientCommonData.isOnline())
 		{
 			onlineRecipient = World.getInstance().findPlayer(recipientCommonData.getPlayerObjId());
 		}
-		if (item != null)
+		
+		if (attachedItem != null)
 		{
-			item.setEquipped(false);
-			item.setEquipmentSlot(0);
-			item.setItemLocation(StorageType.MAILBOX.getId());
+			attachedItem.setEquipped(false);
+			attachedItem.setEquipmentSlot(0);
+			attachedItem.setItemLocation(StorageType.MAILBOX.getId());
 		}
+		
 		final Timestamp time = new Timestamp(System.currentTimeMillis());
-		final Letter newLetter = new Letter(IDFactory.getInstance().nextId(), recipientCommonData.getPlayerObjId(), item, attachedKinahCount, title, message, sender, time, true, type);
-		if (!DAOManager.getDAO(MailDAO.class).storeLetter(time, newLetter))
+		final Letter newLetter = new Letter(IDFactory.getInstance().nextId(), recipientCommonData.getPlayerObjId(), attachedItem, attachedKinahCount, title, message, sender, time, true, type);
+		
+		if (!DAOManager.getDAO(MailDAO.class).storeLetter(time, newLetter) || !DAOManager.getDAO(InventoryDAO.class).store(attachedItem, recipientCommonData.getPlayerObjId()))
 		{
 			return false;
 		}
-		if (item != null)
-		{
-			if (!DAOManager.getDAO(InventoryDAO.class).store(item, recipientCommonData.getPlayerObjId()))
-			{
-				return false;
-			}
-		}
+		
+		/**
+		 * Send mail update packets
+		 */
 		if (onlineRecipient != null)
 		{
 			final Mailbox recipientMailbox = onlineRecipient.getMailbox();
 			recipientMailbox.putLetterToMailbox(newLetter);
 			PacketSendUtility.sendPacket(onlineRecipient, new SM_MAIL_SERVICE(onlineRecipient, onlineRecipient.getMailbox().getLetters()));
 			PacketSendUtility.sendPacket(onlineRecipient, new SM_MAIL_SERVICE(onlineRecipient.getMailbox()));
-			// Express mail has arrived.
 			if ((type == LetterType.EXPRESS) || (type == LetterType.BLACKCLOUD))
 			{
 				PacketSendUtility.sendPacket(recipient, SM_SYSTEM_MESSAGE.STR_POSTMAN_NOTIFY);
 			}
 		}
+		
+		/**
+		 * Update loaded common data and db if player is offline
+		 */
 		if (!recipientCommonData.isOnline())
 		{
 			recipientCommonData.setMailboxLetters(recipientCommonData.getMailboxLetters() + 1);
 			DAOManager.getDAO(MailDAO.class).updateOfflineMailCounter(recipientCommonData);
 		}
+		
 		return true;
 	}
 	
-	@SuppressWarnings("synthetic-access")
 	private static class SingletonHolder
 	{
 		protected static final SystemMailService instance = new SystemMailService();

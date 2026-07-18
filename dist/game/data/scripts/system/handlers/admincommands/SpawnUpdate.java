@@ -1,33 +1,27 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
-import static ch.lambdaj.Lambda.extractIterator;
-import static ch.lambdaj.Lambda.filter;
-import static ch.lambdaj.Lambda.flatten;
-import static ch.lambdaj.Lambda.having;
-import static ch.lambdaj.Lambda.on;
-import static org.hamcrest.Matchers.equalTo;
-
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.aionemu.gameserver.dataholders.DataManager;
-import com.aionemu.gameserver.model.Race;
 import com.aionemu.gameserver.model.gameobjects.Npc;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.templates.spawns.SpawnGroup2;
@@ -39,16 +33,30 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 
 /**
+ * Handles the admin command to update spawn data in the game world.<br>
+ * It allows administrators to refresh {@link SpawnTemplate} information dynamically.
  * @author KID
  * @modified Rolandas
  */
 public class SpawnUpdate extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link SpawnUpdate} class.<br>
+	 * This command allows administrators to update spawn data in the game world.
+	 */
 	public SpawnUpdate()
 	{
 		super("spawnu");
 	}
 	
+	/**
+	 * Updates the coordinates or walker ID of a targeted {@code Npc}.<br>
+	 * The command requires the admin to target an {@code Npc} and provide specific parameters.<br>
+	 * It supports setting x, y, z, h, xyz, xyzh, or w values.<br>
+	 * Changes are saved to the spawn data and synchronized with the client.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings starting with "set" followed by the coordinate type and optional value.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
@@ -79,8 +87,9 @@ public class SpawnUpdate extends AdminCommand
 				{
 					x = Float.parseFloat(params[2]);
 				}
+				
 				npc.getPosition().setXYZH(x, null, null, null);
-				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0, admin.getRace() == Race.ELYOS ? 0 : 1));
+				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0));
 				PacketSendUtility.sendPacket(admin, new SM_NPC_INFO(npc, admin));
 				PacketSendUtility.sendMessage(admin, "updated npcs x to " + x + ".");
 				try
@@ -106,8 +115,9 @@ public class SpawnUpdate extends AdminCommand
 				{
 					y = Float.parseFloat(params[2]);
 				}
+				
 				npc.getPosition().setXYZH(null, y, null, null);
-				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0, admin.getRace() == Race.ELYOS ? 0 : 1));
+				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0));
 				PacketSendUtility.sendPacket(admin, new SM_NPC_INFO(npc, admin));
 				PacketSendUtility.sendMessage(admin, "updated npcs y to " + y + ".");
 				try
@@ -133,8 +143,9 @@ public class SpawnUpdate extends AdminCommand
 				{
 					z = Float.parseFloat(params[2]);
 				}
+				
 				npc.getPosition().setZ(z);
-				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0, admin.getRace() == Race.ELYOS ? 0 : 1));
+				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0));
 				PacketSendUtility.sendPacket(admin, new SM_NPC_INFO(npc, admin));
 				PacketSendUtility.sendMessage(admin, "updated npcs z to " + z + ".");
 				try
@@ -163,14 +174,16 @@ public class SpawnUpdate extends AdminCommand
 					{
 						heading += 60;
 					}
+					
 					h = heading;
 				}
 				else
 				{
 					h = Byte.parseByte(params[2]);
 				}
+				
 				npc.getPosition().setH(h);
-				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0, admin.getRace() == Race.ELYOS ? 0 : 1));
+				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0));
 				PacketSendUtility.sendPacket(admin, new SM_NPC_INFO(npc, admin));
 				PacketSendUtility.sendMessage(admin, "updated npcs heading to " + h + ".");
 				try
@@ -187,7 +200,7 @@ public class SpawnUpdate extends AdminCommand
 			
 			if (params[1].equalsIgnoreCase("xyz"))
 			{
-				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0, admin.getRace() == Race.ELYOS ? 0 : 1));
+				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0));
 				npc.getPosition().setXYZH(admin.getX(), null, null, null);
 				try
 				{
@@ -209,6 +222,33 @@ public class SpawnUpdate extends AdminCommand
 				return;
 			}
 			
+			if (params[1].equalsIgnoreCase("xyzh"))
+			{
+				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0));
+				npc.getPosition().setXYZH(admin.getX(), null, null, null);
+				try
+				{
+					DataManager.SPAWNS_DATA2.saveSpawn(admin, npc, false);
+					PacketSendUtility.sendPacket(admin, new SM_NPC_INFO(npc, admin));
+					npc.getPosition().setXYZH(null, admin.getY(), null, null);
+					DataManager.SPAWNS_DATA2.saveSpawn(admin, npc, false);
+					PacketSendUtility.sendPacket(admin, new SM_NPC_INFO(npc, admin));
+					npc.getPosition().setXYZH(null, null, admin.getZ(), null);
+					DataManager.SPAWNS_DATA2.saveSpawn(admin, npc, false);
+					PacketSendUtility.sendPacket(admin, new SM_NPC_INFO(npc, admin));
+					npc.getPosition().setXYZH(null, null, null, admin.getHeading());
+					DataManager.SPAWNS_DATA2.saveSpawn(admin, npc, false);
+					PacketSendUtility.sendPacket(admin, new SM_NPC_INFO(npc, admin));
+					PacketSendUtility.sendMessage(admin, "updated npcs coordinates to " + admin.getX() + ", " + admin.getY() + ", " + admin.getZ() + "," + admin.getHeading() + ".");
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+					PacketSendUtility.sendMessage(admin, "Could not save spawn");
+				}
+				return;
+			}
+			
 			if (params[1].equalsIgnoreCase("w"))
 			{
 				String walkerId = null;
@@ -216,6 +256,7 @@ public class SpawnUpdate extends AdminCommand
 				{
 					walkerId = params[2].toUpperCase();
 				}
+				
 				if (walkerId != null)
 				{
 					final WalkerTemplate template = DataManager.WALKER_DATA.getWalkerTemplate(walkerId);
@@ -224,17 +265,20 @@ public class SpawnUpdate extends AdminCommand
 						PacketSendUtility.sendMessage(admin, "No such template exists in npc_walker.xml.");
 						return;
 					}
+					
+					final String walkerIdValue = walkerId;
 					final List<SpawnGroup2> allSpawns = DataManager.SPAWNS_DATA2.getSpawnsByWorldId(npc.getWorldId());
-					final List<SpawnTemplate> allSpots = flatten(extractIterator(allSpawns, on(SpawnGroup2.class).getSpawnTemplates()));
-					final List<SpawnTemplate> sameIds = filter(having(on(SpawnTemplate.class).getWalkerId(), equalTo(walkerId)), allSpots);
+					final List<SpawnTemplate> allSpots = allSpawns.stream().flatMap(sg -> sg.getSpawnTemplates().stream()).collect(Collectors.toList());
+					final List<SpawnTemplate> sameIds = allSpots.stream().filter(st -> Objects.equals(st.getWalkerId(), walkerIdValue)).collect(Collectors.toList());
 					if (sameIds.size() >= template.getPool())
 					{
 						PacketSendUtility.sendMessage(admin, "Can not assign, walker pool reached the limit.");
 						return;
 					}
 				}
+				
 				spawn.setWalkerId(walkerId);
-				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0, admin.getRace() == Race.ELYOS ? 0 : 1));
+				PacketSendUtility.sendPacket(admin, new SM_DELETE(npc, 0));
 				PacketSendUtility.sendPacket(admin, new SM_NPC_INFO(npc, admin));
 				if (walkerId == null)
 				{
@@ -244,6 +288,7 @@ public class SpawnUpdate extends AdminCommand
 				{
 					PacketSendUtility.sendMessage(admin, "updated npcs walker_id to " + walkerId + ".");
 				}
+				
 				try
 				{
 					DataManager.SPAWNS_DATA2.saveSpawn(admin, npc, false);
@@ -257,6 +302,12 @@ public class SpawnUpdate extends AdminCommand
 		}
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{

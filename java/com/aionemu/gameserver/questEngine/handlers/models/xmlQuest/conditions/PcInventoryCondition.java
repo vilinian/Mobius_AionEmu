@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.models.xmlQuest.conditions;
 
@@ -25,6 +25,8 @@ import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.questEngine.model.QuestEnv;
 
 /**
+ * This class handles quest conditions related to a player's inventory.<br>
+ * It checks if a {@link Player} possesses specific items required to progress a quest.
  * @author Mr. Poke
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -37,8 +39,9 @@ public class PcInventoryCondition extends QuestCondition
 	protected long count;
 	
 	/**
-	 * Gets the value of the itemId property.
-	 * @return
+	 * Retrieves the unique identifier for this wardrobe item.<br>
+	 * This value corresponds to the {@code itemId} assigned during object creation.
+	 * @return The unique {@code int} ID of the item.
 	 */
 	public int getItemId()
 	{
@@ -46,17 +49,21 @@ public class PcInventoryCondition extends QuestCondition
 	}
 	
 	/**
-	 * Gets the value of the count property.
-	 * @return
+	 * Retrieves the current quantity of the item.<br>
+	 * This value is updated by the {@code calculateCount} method.
+	 * @return The total number of items as a {@code long}.
 	 */
 	public long getCount()
 	{
 		return count;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see com.aionemu.gameserver.questEngine.handlers.template.xmlQuest.condition.QuestCondition#doCheck(com.aionemu.gameserver .questEngine.model.QuestEnv)
+	/**
+	 * Checks if the player's inventory meets the required item count.<br>
+	 * This method retrieves the quantity of {@code itemId} from the {@link Player}.<br>
+	 * It compares that amount against the stored {@code count} using the defined operation.
+	 * @param env The environment containing the current quest data.
+	 * @return {@code true} if the condition is met, otherwise {@code false}.
 	 */
 	@Override
 	public boolean doCheck(QuestEnv env)
@@ -66,33 +73,19 @@ public class PcInventoryCondition extends QuestCondition
 		switch (getOp())
 		{
 			case EQUAL:
-			{
 				return itemCount == count;
-			}
 			case GREATER:
-			{
 				return itemCount > count;
-			}
 			case GREATER_EQUAL:
-			{
 				return itemCount >= count;
-			}
 			case LESSER:
-			{
 				return itemCount < count;
-			}
 			case LESSER_EQUAL:
-			{
 				return itemCount <= count;
-			}
 			case NOT_EQUAL:
-			{
 				return itemCount != count;
-			}
 			default:
-			{
 				return false;
-			}
 		}
 	}
 }

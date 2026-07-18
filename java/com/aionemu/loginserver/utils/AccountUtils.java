@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.utils;
 
@@ -25,7 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Class with usefull methods to use with accounts
+ * Provides a collection of utility methods for handling account-related operations.<br>
+ * This class simplifies common tasks such as data validation and formatting for {@code Account} objects.
  * @author SoulKeeper
  */
 public class AccountUtils
@@ -36,9 +37,11 @@ public class AccountUtils
 	private static final Logger log = LoggerFactory.getLogger(AccountUtils.class);
 	
 	/**
-	 * Encodes password. SHA-1 is used to encode password bytes, Base64 wraps SHA1-hash to string.
-	 * @param password password to encode
-	 * @return retunrs encoded password.
+	 * Converts a plain text password into an encoded string.<br>
+	 * This method uses the {@code SHA-1} algorithm to hash the input.<br>
+	 * The resulting hash is then converted into a {@code Base64} format.
+	 * @param password The raw password string to be encoded.
+	 * @return The encoded version of the provided password as a {@code String}.
 	 */
 	public static String encodePassword(String password)
 	{

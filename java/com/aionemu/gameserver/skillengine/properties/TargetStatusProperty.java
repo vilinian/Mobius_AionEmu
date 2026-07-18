@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.properties;
 
@@ -27,6 +27,8 @@ import com.aionemu.gameserver.skillengine.effect.AbnormalState;
 import com.aionemu.gameserver.skillengine.model.Skill;
 
 /**
+ * Represents a property that defines the status effects applied to a target.<br>
+ * This class is used by {@link Skill} to manage how {@link AbnormalState} effects are handled.
  * @author kecimis
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -34,9 +36,12 @@ import com.aionemu.gameserver.skillengine.model.Skill;
 public class TargetStatusProperty
 {
 	/**
-	 * @param skill
-	 * @param properties
-	 * @return
+	 * Checks if the first target of a {@link Skill} has any required abnormal states.<br>
+	 * This method verifies the status of the primary target against a list of statuses from {@code Properties}.<br>
+	 * It returns {@code true} if at least one matching state is found on the target.
+	 * @param skill The {@link Skill} to check.
+	 * @param properties The {@code Properties} containing the required status strings.
+	 * @return {@code true} if a match is found, otherwise {@code false}.
 	 */
 	public static boolean set(Skill skill, Properties properties)
 	{

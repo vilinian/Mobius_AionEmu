@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.playercommands;
 
@@ -26,15 +26,29 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.PlayerCommand;
 
 /**
+ * Handles the {@code /clean} player command.<br>
+ * This class allows players to clear their inventory and storage items.<br>
+ * It interacts with {@link Item} and {@link Storage} objects to perform the cleanup.
  * @author Source
  */
 public class cmd_clean extends PlayerCommand
 {
+	/**
+	 * Registers the {@code clean} command.<br>
+	 * This method initializes the command handler for cleaning actions.
+	 */
 	public cmd_clean()
 	{
 		super("clean");
 	}
 	
+	/**
+	 * Executes the command to remove an item from a player.<br>
+	 * It parses the provided parameters to identify the item ID or link.<br>
+	 * The method checks the inventory and removes one instance of the specified item.
+	 * @param player The {@code Player} executing the command.
+	 * @param params Variable arguments containing the item ID or item link.
+	 */
 	@Override
 	public void execute(Player player, String... params)
 	{
@@ -51,6 +65,7 @@ public class cmd_clean extends PlayerCommand
 		try
 		{
 			String item = params[0];
+			
 			// Some item links have space before Id
 			if (item.equals("[item:"))
 			{
@@ -82,6 +97,7 @@ public class cmd_clean extends PlayerCommand
 			try
 			{
 				String item = params[1];
+				
 				// Some item links have space before Id
 				if (item.equals("[item:"))
 				{
@@ -122,24 +138,26 @@ public class cmd_clean extends PlayerCommand
 		
 		final Storage bag = player.getInventory();
 		final Item item = bag.getFirstItemByItemId(itemId);
-		if ((item != null) || (itemId == 0))
+		if (item != null)
 		{
-			if (item != null)
-			{
-				bag.decreaseByObjectId(item.getObjectId(), 1);
-			}
-			PacketSendUtility.sendMessage(player, "Item removed succesfully.");
+			bag.decreaseByObjectId(item.getObjectId(), 1);
+			PacketSendUtility.sendMessage(player, "Item removed succesfully");
 		}
 		else
 		{
-			PacketSendUtility.sendMessage(player, "You don't have that item.");
+			PacketSendUtility.sendMessage(player, "You don't have that item");
 		}
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{
 		PacketSendUtility.sendMessage(player, message);
 	}
-	
 }

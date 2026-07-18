@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting.url;
 
@@ -24,9 +24,8 @@ import java.net.URLConnection;
 import com.aionemu.commons.scripting.ScriptClassLoader;
 
 /**
- * This class represents URL Connection that is used to "connect" to scripts binary data that was loaded by specified {@link com.aionemu.commons.scripting.impl.javacompiler.ScriptCompilerImpl}.<br>
- * <br>
- * TODO: Implement all methods of {@link URLConnection} to ensure valid behaviour
+ * This class represents a {@link URLConnection} used to access script binary data.<br>
+ * It connects to scripts loaded by the {@link com.aionemu.commons.scripting.impl.javacompiler.ScriptCompilerImpl} class.
  * @author SoulKeeper
  */
 public class VirtualClassURLConnection extends URLConnection
@@ -37,9 +36,10 @@ public class VirtualClassURLConnection extends URLConnection
 	private final InputStream is;
 	
 	/**
-	 * Creates URL connections that "connects" to class binary data
-	 * @param url class name
-	 * @param cl classloader
+	 * Creates a new connection to script binary data.<br>
+	 * This constructor initializes the internal {@code InputStream} using the provided {@link ScriptClassLoader}.
+	 * @param url The {@code URL} representing the script location.
+	 * @param cl The {@link ScriptClassLoader} used to fetch the byte code.
 	 */
 	protected VirtualClassURLConnection(URL url, ScriptClassLoader cl)
 	{
@@ -48,7 +48,8 @@ public class VirtualClassURLConnection extends URLConnection
 	}
 	
 	/**
-	 * This method is ignored
+	 * Establishes a connection to the script binary data.<br>
+	 * This method prepares the internal state for reading the input stream.
 	 */
 	@Override
 	public void connect()
@@ -56,7 +57,9 @@ public class VirtualClassURLConnection extends URLConnection
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Retrieves the input stream for the connected resource.<br>
+	 * This method returns the {@code InputStream} associated with this connection.
+	 * @return The {@code InputStream} of the binary data.
 	 */
 	@Override
 	public InputStream getInputStream()

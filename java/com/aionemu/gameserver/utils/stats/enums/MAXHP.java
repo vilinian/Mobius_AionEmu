@@ -1,22 +1,24 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.utils.stats.enums;
 
 /**
+ * Defines the types of maximum health points used within the game statistics system.<br>
+ * This enumeration helps identify different {@code MAXHP} categories for character stats.
  * @author ATracer
  */
 public enum MAXHP
@@ -33,18 +35,24 @@ public enum MAXHP
 	PRIEST(1.0303f, 40.824f, 201),
 	CLERIC(0.9277f, 35.988f, 229),
 	CHANTER(0.9277f, 35.988f, 229),
-	// News Class 4.3
-	TECHNIST(1.0297f, 40.823f, 219),
-	GUNSLINGER(1.0488f, 40.38f, 222),
-	MUSE(0.7554f, 29.457f, 132),
-	SONGWEAVER(1, 20.6f, 157),
-	// News Class 4.5
-	AETHERTECH(0.9277f, 35.988f, 229);
+	ENGINEER(1.0303f, 40.824f, 201),
+	RIDER(0.9277f, 35.988f, 229),
+	GUNNER(1.0303f, 40.824f, 201),
+	ARTIST(1.0303f, 40.824f, 201),
+	PAINTER(1, 20.6f, 157),
+	BARD(1, 20.6f, 157);
 	
-	private float a;
-	private float b;
-	private float c;
+	private final float a;
+	private final float b;
+	private final float c;
 	
+	/**
+	 * Initializes the health point constants for a specific class.<br>
+	 * This constructor sets the base values used by {@code getMaxHpFor}.
+	 * @param a The first multiplier value.
+	 * @param b The second growth factor.
+	 * @param c The base health constant.
+	 */
 	private MAXHP(float a, float b, float c)
 	{
 		this.a = a;
@@ -52,6 +60,12 @@ public enum MAXHP
 		this.c = c;
 	}
 	
+	/**
+	 * Calculates the maximum health points for a specific character level.<br>
+	 * This method uses the class-specific constants to determine the value.
+	 * @param level The current level of the character.
+	 * @return The calculated maximum health as an {@code int}.
+	 */
 	public int getMaxHpFor(int level)
 	{
 		return Math.round((a * (level - 1) * (level - 1)) + (b * (level - 1)) + c);

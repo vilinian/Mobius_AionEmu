@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
@@ -36,12 +36,21 @@ import com.aionemu.gameserver.world.World;
 import com.aionemu.gameserver.world.geo.GeoService;
 
 /**
+ * Handles the logic for applying a stumble effect to a {@link Creature}.<br>
+ * This effect causes the target to lose balance and move in an unpredictable direction.<br>
+ * It manages the physical displacement of the entity within the {@link World}.
  * @author ATracer
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "StumbleEffect")
 public class StumbleEffect extends EffectTemplate
 {
+	/**
+	 * Applies a specific {@code Effect} to a target.<br>
+	 * This method checks if the target is an instance of {@link Player}.<br>
+	 * It processes the logic required for the effect to take place.
+	 * @param effect The {@code Effect} object to be applied.
+	 */
 	@Override
 	public void applyEffect(Effect effect)
 	{
@@ -54,6 +63,7 @@ public class StumbleEffect extends EffectTemplate
 			{
 				((Player) effected).getFlyController().endFly(true);
 			}
+			
 			effected.getController().cancelCurrentSkill();
 			effected.getEffectController().removeParalyzeEffects();
 			effected.getMoveController().abortMove();
@@ -62,28 +72,34 @@ public class StumbleEffect extends EffectTemplate
 		}
 	}
 	
+	/**
+	 * Starts a new {@link Effect} instance.<br>
+	 * This method initializes the effect and begins its execution.<br>
+	 * It is a convenience method that passes {@code null} for the abnormal state.
+	 * @param effect The {@code Effect} object to be started.
+	 */
 	@Override
 	public void startEffect(Effect effect)
 	{
-		if (effect.getEffected().getEffectController().isAbnormalSet(AbnormalState.OPENAERIAL))
-		{
-			effect.getEffected().getEffectController().unsetAbnormal(AbnormalState.OPENAERIAL.getId());
-		}
 		effect.getEffected().getEffectController().setAbnormal(AbnormalState.STUMBLE.getId());
 		effect.setAbnormal(AbnormalState.STUMBLE.getId());
 	}
 	
+	/**
+	 * Calculates the movement and state changes for a {@code StumbleEffect}.<br>
+	 * This method checks if the target is susceptible to stumbling.<br>
+	 * It cancels the current skill of the affected creature.<br>
+	 * It then determines the new position based on the effector's heading.
+	 * @param effect The {@code Effect} object to be processed.
+	 */
 	@Override
 	public void calculate(Effect effect)
 	{
-		if (effect.getEffected().getEffectController().hasPhysicalStateEffect())
+		if (effect.getEffected().getEffectController().hasPhysicalStateEffect() || !super.calculate(effect, StatEnum.STUMBLE_RESISTANCE, SpellStatus.STUMBLE))
 		{
 			return;
 		}
-		if (!super.calculate(effect, StatEnum.STUMBLE_RESISTANCE, SpellStatus.STUMBLE))
-		{
-			return;
-		}
+		
 		effect.setSkillMoveType(SkillMoveType.STUMBLE);
 		final Creature effector = effect.getEffector();
 		final Creature effected = effect.getEffected();
@@ -101,6 +117,12 @@ public class StumbleEffect extends EffectTemplate
 		effect.setTargetLoc(x1, y1, z);
 	}
 	
+	/**
+	 * Stops a specific {@code Effect} from being active.<br>
+	 * This method removes the associated observers from the target controller.<br>
+	 * Use this to clean up effects when they expire or are removed.
+	 * @param effect The {@code Effect} object to stop.
+	 */
 	@Override
 	public void endEffect(Effect effect)
 	{

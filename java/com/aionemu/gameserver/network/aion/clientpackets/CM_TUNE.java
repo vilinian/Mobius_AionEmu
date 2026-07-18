@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -25,24 +25,34 @@ import com.aionemu.gameserver.model.gameobjects.PersistentState;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.items.storage.Storage;
 import com.aionemu.gameserver.model.templates.item.ItemTemplate;
-import com.aionemu.gameserver.model.templates.item.actions.RetuningAction;
+import com.aionemu.gameserver.model.templates.item.actions.TuningAction;
 import com.aionemu.gameserver.network.aion.AionClientPacket;
-import com.aionemu.gameserver.network.aion.AionConnection;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_INVENTORY_UPDATE_ITEM;
+import com.aionemu.gameserver.network.aion.AionConnection.State;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_ITEM_USAGE_ANIMATION;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
+import com.aionemu.gameserver.services.item.ItemPacketService;
+import com.aionemu.gameserver.services.item.RealRandomBonusService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
 
 /**
+ * Handles the client request to tune an item.<br>
+ * This packet triggers the {@link TuningAction} logic for a specific {@link Item}.<br>
+ * It processes the random bonus generation and updates the player's inventory accordingly.
  * @author xTz
  */
 public class CM_TUNE extends AionClientPacket
 {
-	private int tuningScrollId;
-	static int itemObjectId;
+	private int itemObjectId, tuningScrollId;
 	
-	public CM_TUNE(int opcode, AionConnection.State state, AionConnection.State... restStates)
+	/**
+	 * This method initializes a new {@code CM_TUNE} packet.<br>
+	 * It sets the required network states for the request.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state required to process this packet.
+	 * @param restStates Additional connection states that must be met.
+	 */
+	public CM_TUNE(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
 	}
@@ -62,12 +72,15 @@ public class CM_TUNE extends AionClientPacket
 		{
 			return;
 		}
+		
 		final Storage inventory = player.getInventory();
 		final Item item = inventory.getItemByObjId(itemObjectId);
 		if (item == null)
 		{
 			return;
 		}
+		
+		final int tunePrice = getTunePrices(item);
 		if (tuningScrollId != 0)
 		{
 			final Item tuningItem = inventory.getItemByObjId(tuningScrollId);
@@ -75,50 +88,102 @@ public class CM_TUNE extends AionClientPacket
 			{
 				return;
 			}
-			final RetuningAction action = tuningItem.getItemSkinTemplate().getActions().getTuningAction();
+			
+			final TuningAction action = tuningItem.getItemSkinTemplate().getActions().getTuningAction();
 			if ((action != null) && action.canAct(player, tuningItem, item))
 			{
 				action.act(player, tuningItem, item);
 			}
-			return;
 		}
-		if (item.getOptionalSocket() != -1)
+		else
 		{
-			return;
-		}
-		final int itemId = item.getItemId();
-		final ItemTemplate template = item.getItemTemplate();
-		final int nameId = template.getNameId();
-		PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), item.getObjectId(), itemId, 5000, 0, 0), true);
-		final ItemUseObserver observer = new ItemUseObserver()
-		{
-			@Override
-			public void abort()
-			{
-				player.getController().cancelTask(TaskId.ITEM_USE);
-				player.removeItemCoolDown(template.getUseLimits().getDelayId());
-				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_ITEM_CANCELED(new DescriptionId(nameId)));
-				PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), itemObjectId, itemId, 0, 2, 0), true);
-				player.getObserveController().removeObserver(this);
-			}
-		};
-		player.getObserveController().attach(observer);
-		player.getController().addTask(TaskId.ITEM_USE, ThreadPoolManager.getInstance().schedule(() ->
-		{
-			if (item.getOptionalSocket() != -1)
+			if ((item.getOptionalSocket() != -1) && (item.getItemTemplate().getRandomBonusId() == 0) && (item.getItemTemplate().getRealRndBonus() == 0))
 			{
 				return;
 			}
-			player.getObserveController().removeObserver(observer);
-			PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), itemObjectId, itemId, 0, 1, 1), true);
-			item.setOptionalSocket(Rnd.get(0, item.getItemTemplate().getOptionSlotBonus()));
-			/*
-			 * if (item.getItemTemplate().getMaxEnchantBonus() > 0) { item.setEnchantBonus(Rnd.get(0, item.getItemTemplate().getMaxEnchantBonus())); }
-			 */
-			item.setRndBonus();
-			item.setPersistentState(PersistentState.UPDATE_REQUIRED);
-			PacketSendUtility.sendPacket(player, new SM_INVENTORY_UPDATE_ITEM(player, item));
-			PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1401626, new DescriptionId(nameId)));
-		}, 5000));
+			
+			final ItemTemplate template = item.getItemTemplate();
+			final int nameId = template.getNameId();
+			PacketSendUtility.broadcastPacketAndReceive(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), 0, item.getObjectId(), item.getItemId(), 5000, 9));
+			final ItemUseObserver observer = new ItemUseObserver()
+			{
+				@Override
+				public void abort()
+				{
+					player.getController().cancelTask(TaskId.ITEM_USE);
+					player.removeItemCoolDown(template.getUseLimits().getDelayId());
+					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_ITEM_CANCELED(new DescriptionId(nameId)));
+					PacketSendUtility.broadcastPacketAndReceive(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), 0, item.getObjectId(), item.getItemId(), 0, 11));
+					player.getObserveController().removeObserver(this);
+				}
+			};
+			player.getObserveController().attach(observer);
+			player.getController().addTask(TaskId.ITEM_USE, ThreadPoolManager.getInstance().schedule(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					if ((item.getOptionalSocket() != -1) && (item.getItemTemplate().getRandomBonusId() == 0) && (item.getItemTemplate().getRealRndBonus() == 0))
+					{
+						return;
+					}
+					
+					if (((item.getRealRndBonus() != null) || (item.getRandomStats() != null)) && !player.getInventory().tryDecreaseKinah(tunePrice))
+					{
+						return;
+					}
+					
+					item.setRandomStats(null);
+					item.setBonusNumber(0);
+					item.setRndBonus();
+					
+					if (item.getItemTemplate().getOptionSlotBonus() != 0)
+					{
+						item.setOptionalSocket(Rnd.get(0, item.getItemTemplate().getOptionSlotBonus()));
+					}
+					
+					if (item.getRealRndBonus() == null)
+					{
+						RealRandomBonusService.setBonus(item);
+					}
+					else
+					{
+						RealRandomBonusService.rerollAllBonuses(player, item);
+					}
+					
+					player.removeItemCoolDown(template.getUseLimits().getDelayId());
+					item.setPersistentState(PersistentState.UPDATE_REQUIRED);
+					player.getInventory().setPersistentState(PersistentState.UPDATE_REQUIRED);
+					ItemPacketService.updateItemAfterInfoChange(player, item);
+					PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1401626, new Object[]
+					{
+						new DescriptionId(nameId)
+					}));
+					PacketSendUtility.broadcastPacketAndReceive(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), 0, item.getObjectId(), item.getItemId(), 0, 10));
+				}
+			}, 5000));
+		}
+	}
+	
+	/**
+	 * Calculates the cost to tune an item based on its quality.<br>
+	 * This method checks the {@code ItemTemplate} of the provided {@code Item}.<br>
+	 * It returns different values for {@code FINALITY}, {@code RELIC}, and {@code ANCIENT} qualities.
+	 * @param item The {@code Item} object to check for quality.
+	 * @return The integer price required for tuning the item.
+	 */
+	private int getTunePrices(Item item)
+	{
+		switch (item.getItemTemplate().getItemQuality())
+		{
+			case FINALITY:
+				return 532364;
+			case RELIC:
+				return 133090;
+			case ANCIENT:
+				return 36616;
+			default:
+				return 36616;
+		}
 	}
 }

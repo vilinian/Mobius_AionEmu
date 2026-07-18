@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -26,15 +26,25 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_INSTANCE_INFO;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * This packet handles the request from a client to retrieve information about an instance.<br>
+ * It allows the server to process and respond with relevant {@link SM_INSTANCE_INFO} data.
  * @author nrg
  */
 public class CM_INSTANCE_INFO extends AionClientPacket
 {
 	private static Logger log = LoggerFactory.getLogger(CM_INSTANCE_INFO.class);
-	
 	@SuppressWarnings("unused")
-	private int unk1, unk2;
+	private int unk1;
+	private boolean isInTeam;
 	
+	/**
+	 * Creates a new {@code CM_INSTANCE_INFO} packet.<br>
+	 * This constructor initializes the packet with specific states.<br>
+	 * It passes all arguments to the parent class.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary {@link State} of the instance.
+	 * @param restStates A variable number of additional {@link State} objects.
+	 */
 	public CM_INSTANCE_INFO(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -44,55 +54,61 @@ public class CM_INSTANCE_INFO extends AionClientPacket
 	protected void readImpl()
 	{
 		unk1 = readD();
-		unk2 = readC();
+		isInTeam = readC() == 0 ? false : true;
 	}
 	
 	@Override
 	protected void runImpl()
 	{
-		if ((unk2 == 1) && !getConnection().getActivePlayer().isInTeam())
+		final Player player = getConnection().getActivePlayer();
+		
+		// if (getConnection().getState() == State.AUTHED) {
+		// return;
+		// }
+		
+		if (isInTeam && !getConnection().getActivePlayer().isInTeam())
 		{
 			log.debug("Received CM_INSTANCE_INFO with teamdata request but player has no team!");
 		}
-		if (unk2 == 1)
+		
+		if (isInTeam)
 		{
-			final Player player = getConnection().getActivePlayer();
 			if (player.isInAlliance2())
 			{
 				boolean answer = true;
-				for (Player p : player.getPlayerAlliance2().getMembers())
+				for (Player players : player.getPlayerAlliance2().getMembers())
 				{
 					if (answer)
 					{
-						PacketSendUtility.sendPacket(p, new SM_INSTANCE_INFO(p, true, p.getCurrentTeam()));
+						PacketSendUtility.sendPacket(players, new SM_INSTANCE_INFO(players, true, players.getCurrentTeam()));
 						answer = false;
 					}
 					else
 					{
-						PacketSendUtility.sendPacket(p, new SM_INSTANCE_INFO(p, false, p.getCurrentTeam()));
+						PacketSendUtility.sendPacket(players, new SM_INSTANCE_INFO(players, false, players.getCurrentTeam()));
 					}
 				}
 			}
 			else if (player.isInGroup2())
 			{
 				boolean answer = true;
-				for (Player p : player.getPlayerGroup2().getMembers())
+				for (Player players : player.getPlayerGroup2().getMembers())
 				{
 					if (answer)
 					{
-						PacketSendUtility.sendPacket(p, new SM_INSTANCE_INFO(p, true, p.getCurrentTeam()));
+						PacketSendUtility.sendPacket(players, new SM_INSTANCE_INFO(players, true, players.getCurrentTeam()));
 						answer = false;
 					}
 					else
 					{
-						PacketSendUtility.sendPacket(p, new SM_INSTANCE_INFO(p, false, p.getCurrentTeam()));
+						PacketSendUtility.sendPacket(players, new SM_INSTANCE_INFO(players, false, players.getCurrentTeam()));
 					}
 				}
 			}
 		}
 		else
 		{
-			sendPacket(new SM_INSTANCE_INFO(getConnection().getActivePlayer(), true, getConnection().getActivePlayer().getCurrentTeam()));
+			PacketSendUtility.sendPacket(player, new SM_INSTANCE_INFO(player, true, player.getCurrentTeam()));
 		}
 	}
 }

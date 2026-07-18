@@ -1,28 +1,30 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.dao;
 
 import java.util.ArrayList;
 
 import com.aionemu.commons.database.dao.DAO;
-import com.aionemu.gameserver.model.tasks.TaskFromDB;
+import com.aionemu.gameserver.taskmanager.fromdb.trigger.TaskFromDBTrigger;
 
 /**
- * @author Divinity
+ * This class provides the Data Access Object (DAO) logic for handling tasks retrieved from the database.<br>
+ * It serves as a base class for interacting with {@link TaskFromDBTrigger} data.
+ * @author Divinity, nrg
  */
 public abstract class TaskFromDBDAO implements DAO
 {
@@ -30,20 +32,15 @@ public abstract class TaskFromDBDAO implements DAO
 	 * Return all tasks from DB
 	 * @return all tasks
 	 */
-	public abstract ArrayList<TaskFromDB> getAllTasks();
+	public abstract ArrayList<TaskFromDBTrigger> getAllTasks();
 	
 	/**
-	 * Set the last activation to NOW()
-	 * @param id
-	 */
-	public abstract void setLastActivation(int id);
-	
-	/**
-	 * Returns class name that will be uses as unique identifier for all DAO classes
-	 * @return class name
+	 * Returns the name of the current class.<br>
+	 * This is useful for identifying the {@code DAO} type in logs or configurations.
+	 * @return The full name of the class as a {@code String}.
 	 */
 	@Override
-	public final String getClassName()
+	public String getClassName()
 	{
 		return TaskFromDBDAO.class.getName();
 	}

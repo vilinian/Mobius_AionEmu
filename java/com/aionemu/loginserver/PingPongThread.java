@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver;
 
@@ -25,10 +25,13 @@ import com.aionemu.commons.database.dao.DAOManager;
 import com.aionemu.loginserver.configs.Config;
 import com.aionemu.loginserver.configs.SvStatsConfig;
 import com.aionemu.loginserver.dao.SvStatsDAO;
-import com.aionemu.loginserver.network.gs.GsConnection;
-import com.aionemu.loginserver.network.gs.serverpackets.SM_PING;
+import com.aionemu.loginserver.network.gameserver.GsConnection;
+import com.aionemu.loginserver.network.gameserver.serverpackets.SM_PING;
 
 /**
+ * This class handles the periodic heartbeat mechanism between the login server and game servers.<br>
+ * It sends {@code SM_PING} packets to verify that connections are still active.<br>
+ * It implements {@link Runnable} to execute these checks in a background thread.
  * @author KID
  */
 public class PingPongThread implements Runnable
@@ -41,6 +44,11 @@ public class PingPongThread implements Runnable
 	private int serverPID = -1;
 	private final boolean killProcess = false;
 	
+	/**
+	 * Initializes a new {@link PingPongThread} instance.<br>
+	 * This constructor sets up the required connection and prepares the ping packet.
+	 * @param connection The {@code GsConnection} used to communicate with the game server.
+	 */
 	public PingPongThread(GsConnection connection)
 	{
 		uptime = true;
@@ -87,12 +95,23 @@ public class PingPongThread implements Runnable
 		}
 	}
 	
+	/**
+	 * Handles the response received from a game server.<br>
+	 * This method updates the internal {@code serverPID} value.<br>
+	 * It also decrements the current request count.
+	 * @param pid The process identifier returned by the server.
+	 */
 	public void onResponse(int pid)
 	{
 		requests--;
 		serverPID = pid;
 	}
 	
+	/**
+	 * Checks if the game server has failed based on the number of requests.<br>
+	 * It updates the status and closes the connection if it fails.
+	 * @return {@code true} if the server is considered dead, {@code false} otherwise.
+	 */
 	@SuppressWarnings("unused")
 	public boolean validateResponse()
 	{
@@ -106,6 +125,7 @@ public class PingPongThread implements Runnable
 				final int currentID = connection.getGameServerInfo().getId();
 				DAOManager.getDAO(SvStatsDAO.class).update_SvStats_Offline(currentID, 0, 0);
 			}
+			
 			connection.close(false);
 			if (killProcess && (serverPID != -1))
 			{
@@ -113,7 +133,13 @@ public class PingPongThread implements Runnable
 				{
 					try
 					{
-						Runtime.getRuntime().exec("taskkill /pid " + serverPID + " /f");
+						Runtime.getRuntime().exec(new String[]
+						{
+							"taskkill",
+							"/pid",
+							String.valueOf(serverPID),
+							"/f"
+						});
 					}
 					catch (IOException e)
 					{
@@ -121,11 +147,18 @@ public class PingPongThread implements Runnable
 					}
 				}
 			}
+			
 			return true;
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * Stops the thread execution.<br>
+	 * Sets the {@code uptime} flag to {@code false}.<br>
+	 * Updates the server statistics if enabled.
+	 */
 	public void closeMe()
 	{
 		uptime = false;

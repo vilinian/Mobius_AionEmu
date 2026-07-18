@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -27,6 +27,8 @@ import com.aionemu.gameserver.network.aion.AionServerPacket;
 import com.aionemu.gameserver.services.HousingBidService;
 
 /**
+ * This packet sends the list of current bids for a house to the client.<br>
+ * It contains information about each {@link HouseBidEntry} and the current {@link HouseStatus}.
  * @author Rolandas
  */
 public class SM_HOUSE_BIDS extends AionServerPacket
@@ -36,6 +38,14 @@ public class SM_HOUSE_BIDS extends AionServerPacket
 	private final HouseBidEntry playerBid;
 	private final List<HouseBidEntry> houseBids;
 	
+	/**
+	 * This constructor initializes a packet containing house bid information.<br>
+	 * It handles the pagination of bids for the client.
+	 * @param isFirstPacket Indicates if this is the first page of results.
+	 * @param isLastPacket Indicates if this is the final page of results.
+	 * @param playerBid The specific bid made by the current player.
+	 * @param houseBids A list of all bids associated with the house.
+	 */
 	public SM_HOUSE_BIDS(boolean isFirstPacket, boolean isLastPacket, HouseBidEntry playerBid, List<HouseBidEntry> houseBids)
 	{
 		isFirst = isFirstPacket;
@@ -49,8 +59,10 @@ public class SM_HOUSE_BIDS extends AionServerPacket
 	{
 		final Player player = con.getActivePlayer();
 		final int secondsTillAuction = HousingBidService.getInstance().getSecondsTillAuction();
+		
 		writeC(isFirst ? 1 : 0);
 		writeC(isLast ? 1 : 0);
+		
 		if (playerBid == null)
 		{
 			writeD(0);
@@ -61,6 +73,7 @@ public class SM_HOUSE_BIDS extends AionServerPacket
 			writeD(playerBid.getEntryIndex());
 			writeQ(playerBid.getBidPrice());
 		}
+		
 		final List<House> playerHouses = player.getHouses();
 		House sellHouse = null;
 		for (House house : playerHouses)
@@ -71,6 +84,7 @@ public class SM_HOUSE_BIDS extends AionServerPacket
 				break;
 			}
 		}
+		
 		HouseBidEntry sellData = null;
 		if (sellHouse != null)
 		{
@@ -83,6 +97,7 @@ public class SM_HOUSE_BIDS extends AionServerPacket
 			writeD(0);
 			writeQ(0);
 		}
+		
 		writeH(houseBids.size());
 		for (int n = 0; n < houseBids.size(); n++)
 		{
@@ -103,6 +118,7 @@ public class SM_HOUSE_BIDS extends AionServerPacket
 			{
 				writeD(0);
 			}
+			
 			writeQ(entry.getBidPrice());
 			writeQ(entry.getUnk2());
 			writeD(entry.getBidCount());

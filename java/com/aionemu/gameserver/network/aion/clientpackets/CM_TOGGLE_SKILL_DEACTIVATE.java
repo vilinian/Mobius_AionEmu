@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -23,29 +23,34 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_PLAYER_STANCE;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles the client request to deactivate a toggled skill.<br>
+ * This packet informs the server that a player wants to turn off an active toggle effect.
  * @author ATracer
  */
 public class CM_TOGGLE_SKILL_DEACTIVATE extends AionClientPacket
 {
 	private int skillId;
+	// private int unk;
 	
+	/**
+	 * This method handles the deactivation of a specific skill.<br>
+	 * It processes the request sent from the client to the server.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary {@link State} associated with the action.
+	 * @param restStates Additional {@link State} values provided in the packet.
+	 */
 	public CM_TOGGLE_SKILL_DEACTIVATE(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void readImpl()
 	{
 		skillId = readH();
+		// unk = readD(); // 00 00 00 00 5.0 EU ???
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void runImpl()
 	{

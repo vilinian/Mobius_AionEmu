@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.item.actions;
 
@@ -30,9 +30,11 @@ import com.aionemu.gameserver.model.gameobjects.player.PlayerAppearance;
 import com.aionemu.gameserver.model.templates.cosmeticitems.CosmeticItemTemplate;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_PLAYER_INFO;
 import com.aionemu.gameserver.utils.PacketSendUtility;
-import com.aionemu.gameserver.world.knownlist.Visitor;
 
 /**
+ * Handles the logic for interacting with cosmetic items.<br>
+ * This class manages how players use {@link CosmeticItemTemplate} objects to modify their appearance.<br>
+ * It ensures that changes are correctly applied to the {@link PlayerAppearance}.
  * @author xTz
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -42,18 +44,24 @@ public class CosmeticItemAction extends AbstractItemAction
 	@XmlAttribute(name = "name")
 	protected String cosmeticName;
 	
+	/**
+	 * Checks if a {@link Player} can perform this action.<br>
+	 * This method validates the requirements for interacting with items.<br>
+	 * It checks race, gender, and movement status.
+	 * @param player The {@link Player} attempting the action.
+	 * @param parentItem The item that triggers the action.
+	 * @param targetItem The item being acted upon.
+	 * @return {@code true} if the action is allowed, otherwise {@code false}.
+	 */
 	@Override
 	public boolean canAct(Player player, Item parentItem, Item targetItem)
 	{
 		final CosmeticItemTemplate template = DataManager.COSMETIC_ITEMS_DATA.getCosmeticItemsTemplate(cosmeticName);
-		if (template == null)
+		if ((template == null) || !template.getRace().equals(player.getRace()))
 		{
 			return false;
 		}
-		if (!template.getRace().equals(player.getRace()))
-		{
-			return false;
-		}
+		
 		if (!template.getGenderPermitted().equals("ALL"))
 		{
 			if (!player.getGender().toString().equals(template.getGenderPermitted()))
@@ -61,9 +69,23 @@ public class CosmeticItemAction extends AbstractItemAction
 				return false;
 			}
 		}
+		
+		if (player.getMoveController().isInMove())
+		{
+			return false;
+		}
+		
 		return true;
 	}
 	
+	/**
+	 * Applies a cosmetic item to the {@link Player}.<br>
+	 * This method updates the player appearance based on the template of the target item.<br>
+	 * It removes the {@code targetItem} from the inventory and saves the changes.
+	 * @param player The {@code Player} who is using the cosmetic.
+	 * @param parentItem The {@code Item} that triggers this action.
+	 * @param targetItem The {@code Item} being used to change the appearance.
+	 */
 	@Override
 	public void act(Player player, Item parentItem, Item targetItem)
 	{
@@ -86,6 +108,10 @@ public class CosmeticItemAction extends AbstractItemAction
 		else if (type.equals("eye_color"))
 		{
 			playerAppearance.setEyeRGB(id);
+		}
+		else if (type.equals("eye_color2"))
+		{
+			playerAppearance.setRightEyeRGB(id);
 		}
 		else if (type.equals("hair_type"))
 		{
@@ -111,26 +137,19 @@ public class CosmeticItemAction extends AbstractItemAction
 		{
 			final CosmeticItemTemplate.Preset preset = template.getPreset();
 			playerAppearance.setEyeRGB((preset.getEyeColor()));
+			playerAppearance.setRightEyeRGB((preset.getEyeColor2()));
 			playerAppearance.setLipRGB((preset.getLipColor()));
 			playerAppearance.setHairRGB((preset.getHairColor()));
-			playerAppearance.setSkinRGB((preset.getEyeColor()));
+			playerAppearance.setSkinRGB((preset.getSkinColor()));
 			playerAppearance.setHair((preset.getHairType()));
 			playerAppearance.setFace((preset.getFaceType()));
 			playerAppearance.setHeight((preset.getScale()));
 		}
+		
 		DAOManager.getDAO(PlayerAppearanceDAO.class).store(player);
 		player.getInventory().delete(targetItem);
 		PacketSendUtility.sendPacket(player, new SM_PLAYER_INFO(player, false));
-		player.getKnownList().doOnAllPlayers(new Visitor<Player>()
-		{
-			@Override
-			public void visit(Player rangePlayer)
-			{
-				if (rangePlayer.isOnline())
-				{
-					PacketSendUtility.sendPacket(rangePlayer, new SM_PLAYER_INFO(player, player.isEnemy(rangePlayer)));
-				}
-			}
-		});
+		player.clearKnownlist();
+		player.updateKnownlist();
 	}
 }

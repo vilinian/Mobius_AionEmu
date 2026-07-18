@@ -1,35 +1,37 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.utils.collections;
 
+import java.io.Serializable;
 import java.util.AbstractQueue;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-import javax.annotation.concurrent.ThreadSafe;
-
 /**
- * Optimistic approach to lock-free FIFO queue; E. Ladan-Mozes and N. Shavit algorithm, less CAS failures when enqueueing, if compared with Michael and Scott Nonblocking Queue, in ConcurrentLinkedQueue
+ * A thread-safe FIFO queue that uses an optimistic lock-free algorithm.<br>
+ * It is designed to reduce {@code CAS} failures during enqueue operations compared to the standard {@code ConcurrentLinkedQueue}.<br>
+ * This class provides a high-performance collection for concurrent environments.
  * @param <E>
  */
-@ThreadSafe
-public class OptimisticLinkedQueue<E>extends AbstractQueue<E> implements java.io.Serializable
+public class OptimisticLinkedQueue<E> extends AbstractQueue<E> implements Serializable
 {
+	private static final long serialVersionUID = -3445502502831420722L;
+	
 	private static class Node<E>
 	{
 		private volatile E item;
@@ -51,7 +53,7 @@ public class OptimisticLinkedQueue<E>extends AbstractQueue<E> implements java.io
 		@SuppressWarnings("unused")
 		void setItem(E val)
 		{
-			this.item = val;
+			item = val;
 		}
 		
 		Node<E> getNext()
@@ -80,11 +82,25 @@ public class OptimisticLinkedQueue<E>extends AbstractQueue<E> implements java.io
 	@SuppressWarnings("rawtypes")
 	private static final AtomicReferenceFieldUpdater<OptimisticLinkedQueue, Node> headUpdater = AtomicReferenceFieldUpdater.newUpdater(OptimisticLinkedQueue.class, Node.class, "head");
 	
+	/**
+	 * Atomically updates the {@code tail} of the queue.<br>
+	 * It uses a compare-and-set operation to ensure thread safety.
+	 * @param cmp The expected current value of the tail.
+	 * @param val The new value to set as the tail.
+	 * @return {@code true} if the update was successful, and {@code false} otherwise.
+	 */
 	private boolean casTail(Node<E> cmp, Node<E> val)
 	{
 		return tailUpdater.compareAndSet(this, cmp, val);
 	}
 	
+	/**
+	 * Atomically updates the {@code head} of the queue.<br>
+	 * It uses a compare-and-set operation to ensure thread safety.
+	 * @param cmp The expected current value of the head.
+	 * @param val The new value to set as the head.
+	 * @return {@code true} if the update was successful, {@code false} otherwise.
+	 */
 	private boolean casHead(Node<E> cmp, Node<E> val)
 	{
 		return headUpdater.compareAndSet(this, cmp, val);
@@ -100,7 +116,8 @@ public class OptimisticLinkedQueue<E>extends AbstractQueue<E> implements java.io
 	private transient volatile Node<E> tail = head;
 	
 	/**
-	 * Creates a <tt>OptimisticLinkedQueue</tt> that is initially empty.
+	 * Creates a new empty instance of {@link OptimisticLinkedQueue}.<br>
+	 * This constructor initializes the internal structure for thread-safe operations.
 	 */
 	public OptimisticLinkedQueue()
 	{
@@ -109,7 +126,11 @@ public class OptimisticLinkedQueue<E>extends AbstractQueue<E> implements java.io
 	AtomicInteger count = new AtomicInteger();
 	
 	/**
-	 * Enqueues the specified element at the tail of this queue.
+	 * Inserts the specified element into the queue.<br>
+	 * This method returns {@code true} if the operation succeeds.<br>
+	 * It throws a {@code NullPointerException} if the input is {@code null}.
+	 * @param e The element to add to the queue.
+	 * @return {@code true} if successful, and {@code false} otherwise.
 	 */
 	@Override
 	public boolean offer(E e)
@@ -118,6 +139,7 @@ public class OptimisticLinkedQueue<E>extends AbstractQueue<E> implements java.io
 		{
 			throw new NullPointerException();
 		}
+		
 		final Node<E> n = new Node<>(e, null);
 		for (;;)
 		{
@@ -133,7 +155,10 @@ public class OptimisticLinkedQueue<E>extends AbstractQueue<E> implements java.io
 	}
 	
 	/**
-	 * Dequeues an element from the queue. After a successful casHead, the prev and next pointers of the dequeued node are set to null to allow garbage collection.
+	 * Retrieves and removes the head of this queue.<br>
+	 * This method returns {@code null} if the queue is empty.<br>
+	 * It uses a lock-free approach to ensure thread safety.
+	 * @return The element at the front of the queue, or {@code null} if empty.
 	 */
 	@Override
 	public E poll()
@@ -152,6 +177,7 @@ public class OptimisticLinkedQueue<E>extends AbstractQueue<E> implements java.io
 						fixList(t, h);
 						continue;
 					}
+					
 					final E item = first.getItem();
 					if (casHead(h, first))
 					{
@@ -170,15 +196,17 @@ public class OptimisticLinkedQueue<E>extends AbstractQueue<E> implements java.io
 	}
 	
 	/**
-	 * Fixing the backwards pointers when needed
-	 * @param t
-	 * @param h
+	 * Corrects the links between nodes in the queue.<br>
+	 * This method ensures that {@code prev} pointers are updated correctly.<br>
+	 * It iterates from node {@code t} until it reaches node {@code h}.
+	 * @param t The starting node for the repair process.
+	 * @param h The target head node to reach.
 	 */
 	private void fixList(Node<E> t, Node<E> h)
 	{
 		Node<E> curNodeNext;
 		Node<E> curNode = t;
-		while ((h == this.head) && (curNode != h))
+		while ((h == head) && (curNode != h))
 		{
 			curNodeNext = curNode.getNext();
 			curNodeNext.setPrev(curNode);
@@ -186,6 +214,11 @@ public class OptimisticLinkedQueue<E>extends AbstractQueue<E> implements java.io
 		}
 	}
 	
+	/**
+	 * Removes all elements from this queue.<br>
+	 * The {@code size()} will become 0 after this call.<br>
+	 * This method does not affect other collections.
+	 */
 	@Override
 	public void clear()
 	{
@@ -194,6 +227,11 @@ public class OptimisticLinkedQueue<E>extends AbstractQueue<E> implements java.io
 		}
 	}
 	
+	/**
+	 * Removes all elements from the queue except for the last one.<br>
+	 * The last element is re-added to the end of the queue using {@code offer}.
+	 * @return The number of elements that were removed from the queue.
+	 */
 	public int leaveTail()
 	{
 		E elem = null;
@@ -204,26 +242,43 @@ public class OptimisticLinkedQueue<E>extends AbstractQueue<E> implements java.io
 			elem1 = elem;
 			removed++;
 		}
+		
 		if (elem1 != null)
 		{
 			removed--;
 			offer(elem1);
 		}
+		
 		return removed;
 	}
 	
+	/**
+	 * This method is not supported.<br>
+	 * It will always throw an {@code UnsupportedOperationException}.
+	 * @return the element at the head of this queue, which is never returned.
+	 */
 	@Override
 	public E peek()
 	{
 		throw new UnsupportedOperationException();
 	}
 	
+	/**
+	 * Returns an {@link Iterator} for the elements in this queue.<br>
+	 * This operation is not supported and will throw an exception.
+	 * @return An {@code Iterator} of type {@code E}.
+	 */
 	@Override
 	public Iterator<E> iterator()
 	{
 		throw new UnsupportedOperationException();
 	}
 	
+	/**
+	 * Returns the current number of elements in this queue.<br>
+	 * This value is retrieved from an internal counter.
+	 * @return The total number of items currently stored in the collection.
+	 */
 	@Override
 	public int size()
 	{

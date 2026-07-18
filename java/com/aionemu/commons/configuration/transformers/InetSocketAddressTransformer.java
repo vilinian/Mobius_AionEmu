@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.configuration.transformers;
 
@@ -24,11 +24,8 @@ import com.aionemu.commons.configuration.PropertyTransformer;
 import com.aionemu.commons.configuration.TransformationException;
 
 /**
- * Thransforms string to InetSocketAddress. InetSocketAddress can be represented in following ways:
- * <ul>
- * <li>address:port</li>
- * <li>*:port - will use all avaiable network interfaces</li>
- * </ul>
+ * Transforms a {@code String} into an {@link InetSocketAddress}.<br>
+ * It supports formats like {@code address:port} or {@code *:port} to bind to all available interfaces.
  * @author SoulKeeper
  */
 public class InetSocketAddressTransformer implements PropertyTransformer<InetSocketAddress>
@@ -39,11 +36,13 @@ public class InetSocketAddressTransformer implements PropertyTransformer<InetSoc
 	public static final InetSocketAddressTransformer SHARED_INSTANCE = new InetSocketAddressTransformer();
 	
 	/**
-	 * Transforms string to InetSocketAddress
-	 * @param value value that will be transformed
-	 * @param field value will be assigned to this field
-	 * @return InetSocketAddress that represetns value
-	 * @throws TransformationException if somehting went wrong
+	 * Converts a string into an {@link InetSocketAddress} object.<br>
+	 * The input string must follow the "address:port" format.<br>
+	 * If the address is "*", it will bind to all available network interfaces.
+	 * @param value The raw string value to be converted.
+	 * @param field The {@code Field} where the result will be assigned.
+	 * @return The resulting {@link InetSocketAddress}.
+	 * @throws TransformationException If the string format is invalid or an error occurs during parsing.
 	 */
 	@Override
 	public InetSocketAddress transform(String value, Field field) throws TransformationException
@@ -61,6 +60,7 @@ public class InetSocketAddressTransformer implements PropertyTransformer<InetSoc
 			{
 				return new InetSocketAddress(Integer.parseInt(parts[1]));
 			}
+			
 			final InetAddress address = InetAddress.getByName(parts[0]);
 			final int port = Integer.parseInt(parts[1]);
 			return new InetSocketAddress(address, port);

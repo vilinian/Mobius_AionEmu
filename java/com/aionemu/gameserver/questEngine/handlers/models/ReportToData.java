@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.models;
 
@@ -27,6 +27,8 @@ import com.aionemu.gameserver.questEngine.QuestEngine;
 import com.aionemu.gameserver.questEngine.handlers.template.ReportTo;
 
 /**
+ * This class represents the data structure for a {@link ReportTo} quest requirement.<br>
+ * It holds the necessary information used by the {@link QuestEngine} to validate report actions.
  * @author MrPoke
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -35,19 +37,21 @@ public class ReportToData extends XMLQuest
 {
 	@XmlAttribute(name = "start_npc_ids")
 	protected List<Integer> startNpcIds;
-	
 	@XmlAttribute(name = "end_npc_ids")
 	protected List<Integer> endNpcIds;
-	
 	@XmlAttribute(name = "start_dialog_id")
 	protected int startDialogId;
-	
 	@XmlAttribute(name = "start_dialog_id2")
 	protected int startDialogId2;
-	
 	@XmlAttribute(name = "item_id", required = true)
 	protected int itemId;
 	
+	/**
+	 * Registers this data as a quest handler.<br>
+	 * It creates a new {@link ReportTo} instance.<br>
+	 * The instance is then added to the provided {@code QuestEngine}.
+	 * @param questEngine The engine where the quest handler will be registered.
+	 */
 	@Override
 	public void register(QuestEngine questEngine)
 	{

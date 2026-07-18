@@ -1,99 +1,118 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
 import com.aionemu.gameserver.model.gameobjects.VisibleObject;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.utils.PacketSendUtility;
-import com.aionemu.gameserver.utils.Util;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
-import com.aionemu.gameserver.world.World;
 
 /**
+ * Handles the admin command to assign a specific title to a player.<br>
+ * It allows administrators to modify player metadata via the {@link AdminCommand} system.
  * @author Eloann
+ * @modified GiGatR00n
  */
 public class AddTitle extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link AddTitle} class.<br>
+	 * This command allows administrators to assign titles to players.<br>
+	 * It registers the command with the name {@code addtitle}.
+	 */
 	public AddTitle()
 	{
 		super("addtitle");
 	}
 	
+	/**
+	 * Executes the command to give a specific title to a targeted player.<br>
+	 * It validates the title ID and checks if the target is a {@code Player}.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings where the first element is the title ID and the second is an optional expiration time in minutes.
+	 */
 	@Override
-	public void execute(Player player, String... params)
+	public void execute(Player admin, String... params)
 	{
 		if ((params.length < 1) || (params.length > 2))
 		{
-			onFail(player, null);
+			onFail(admin, null);
 			return;
 		}
-		int titleId = Integer.parseInt(params[0]);
-		if ((titleId > 327) || (titleId < 1))
+		
+		final int titleId = Integer.parseInt(params[0]);
+		if ((titleId > 369) || (titleId < 1))
 		{
-			PacketSendUtility.sendMessage(player, "title id " + titleId + " is invalid (must be between 1 and 327)");
+			PacketSendUtility.sendMessage(admin, "title id " + titleId + " is invalid (must be between 1 and 369)");
 			return;
 		}
-		Player target = null;
-		if (params.length == 2)
+		
+		final VisibleObject target = admin.getTarget();
+		
+		if (target == null)
 		{
-			target = World.getInstance().findPlayer(Util.convertName(params[1]));
-			if (target == null)
+			PacketSendUtility.sendMessage(admin, "No target selected");
+			return;
+		}
+		
+		if (target instanceof Player)
+		{
+			final Player player = (Player) target;
+			
+			boolean sucess = false;
+			
+			try
 			{
-				PacketSendUtility.sendMessage(player, "player " + params[1] + " was not found");
+				if (params.length == 2)
+				{
+					final int expireMinutes = Integer.parseInt(params[1]);
+					sucess = player.getTitleList().addTitle(titleId, true, expireMinutes);
+				}
+				else
+				{
+					sucess = player.getTitleList().addTitle(titleId, true, 0);
+				}
+			}
+			catch (NumberFormatException ex)
+			{
+				PacketSendUtility.sendMessage(admin, "Missing integer");
 				return;
 			}
-		}
-		else
-		{
-			final VisibleObject creature = player.getTarget();
-			if (player.getTarget() instanceof Player)
+			
+			if (sucess)
 			{
-				target = (Player) creature;
-			}
-			if (target == null)
-			{
-				target = player;
-			}
-		}
-		if (titleId < 328)
-		{
-			titleId = (target.getRace().getRaceId() * 327) + titleId;
-		}
-		if (!target.getTitleList().addTitle(titleId, false, 0))
-		{
-			PacketSendUtility.sendMessage(player, "you can't add title #" + titleId + " to " + (target.equals(player) ? "yourself" : target.getName()));
-		}
-		else
-		{
-			if (target.equals(player))
-			{
-				PacketSendUtility.sendMessage(player, "you added to yourself title #" + titleId);
+				PacketSendUtility.sendMessage(admin, "Title added!");
 			}
 			else
 			{
-				PacketSendUtility.sendMessage(player, "you added to " + target.getName() + " title #" + titleId);
-				PacketSendUtility.sendMessage(target, player.getName() + " gave you title #" + titleId);
+				PacketSendUtility.sendMessage(admin, "You can't add this title");
 			}
 		}
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{
-		PacketSendUtility.sendMessage(player, "syntax //addtitle title_id [playerName]");
+		PacketSendUtility.sendMessage(player, "syntax //addtitle <title_id> [expire time]");
 	}
 }

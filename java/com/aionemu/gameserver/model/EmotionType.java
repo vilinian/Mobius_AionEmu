@@ -1,22 +1,24 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model;
 
 /**
+ * Defines the different types of emotions available in the game.<br>
+ * This enum is used to categorize various character animations and expressions.
  * @author lyahim
  */
 public enum EmotionType
@@ -65,23 +67,42 @@ public enum EmotionType
 	WINDSTREAM_STRAFE(52),
 	START_SPRINT(53),
 	END_SPRINT(54),
+	START_FLYBOOST_SPEED(55),
+	END_FLYBOOST_SPEED(56),
 	PET_SNUGGLE(114),
 	PET_EMOTION_2(121),
 	PET_EMOTION_3(122),
 	PET_EMOTION_4(123);
 	
-	private int id;
+	private final int id;
 	
+	/**
+	 * Creates a new instance of {@link EmotionType}.<br>
+	 * This constructor assigns the unique identifier to the constant.
+	 * @param id The numeric ID representing the emotion type.
+	 */
 	private EmotionType(int id)
 	{
 		this.id = id;
 	}
 	
+	/**
+	 * Retrieves the unique identifier for this {@link EmotionType}.<br>
+	 * This value corresponds to the internal ID used by the game engine.
+	 * @return The integer ID of the emotion type.
+	 */
 	public int getTypeId()
 	{
 		return id;
 	}
 	
+	/**
+	 * Retrieves an {@link EmotionType} based on its unique identifier.<br>
+	 * This method searches through all available types to find a match.<br>
+	 * It returns {@code EmotionType#UNK} if no matching ID is found.
+	 * @param id The integer ID of the emotion type to look up.
+	 * @return The corresponding {@link EmotionType} or {@code EmotionType#UNK}.
+	 */
 	public static EmotionType getEmotionTypeById(int id)
 	{
 		for (EmotionType emotionType : values())
@@ -91,6 +112,7 @@ public enum EmotionType
 				return emotionType;
 			}
 		}
+		
 		return UNK;
 	}
 }

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.world.zone.handler;
 
@@ -27,12 +27,20 @@ import com.aionemu.gameserver.instance.InstanceHandlerClassListener;
 import com.aionemu.gameserver.world.zone.ZoneService;
 
 /**
+ * This class handles the registration and management of listeners for {@link ZoneService} instances.<br>
+ * It allows the server to dynamically react to events occurring within specific world zones.
  * @author MrPoke
  */
 public class ZoneHandlerClassListener implements ClassListener
 {
 	private static final Logger log = LoggerFactory.getLogger(InstanceHandlerClassListener.class);
 	
+	/**
+	 * This method registers the provided classes as zone handlers.<br>
+	 * It checks each class using {@code isValidClass} before processing.<br>
+	 * If a class is a subclass of {@link ZoneHandler}, it is added to the {@link ZoneService}.
+	 * @param classes An array of {@code Class} objects to be processed.
+	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	public void postLoad(Class<?>[] classes)
@@ -60,6 +68,11 @@ public class ZoneHandlerClassListener implements ClassListener
 		}
 	}
 	
+	/**
+	 * Logs the intent to unload specific classes.<br>
+	 * This method iterates through the provided array and logs each class name if debug logging is enabled.
+	 * @param classes The array of {@code Class<?>} objects to be logged for unloading.
+	 */
 	@Override
 	public void preUnload(Class<?>[] classes)
 	{
@@ -72,16 +85,18 @@ public class ZoneHandlerClassListener implements ClassListener
 		}
 	}
 	
+	/**
+	 * Checks if a class is valid for use.<br>
+	 * It verifies that the class is public.<br>
+	 * The class must not be abstract or an interface.
+	 * @param clazz The class to validate.
+	 * @return {@code true} if the class meets the requirements, otherwise {@code false}.
+	 */
 	public boolean isValidClass(Class<?> clazz)
 	{
 		final int modifiers = clazz.getModifiers();
 		
-		if (Modifier.isAbstract(modifiers) || Modifier.isInterface(modifiers))
-		{
-			return false;
-		}
-		
-		if (!Modifier.isPublic(modifiers))
+		if (Modifier.isAbstract(modifiers) || Modifier.isInterface(modifiers) || !Modifier.isPublic(modifiers))
 		{
 			return false;
 		}

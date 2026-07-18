@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.models.xmlQuest.operations;
 
@@ -26,6 +26,8 @@ import com.aionemu.gameserver.questEngine.model.QuestEnv;
 import com.aionemu.gameserver.services.QuestService;
 
 /**
+ * Handles the logic for quest operations that require a player to collect specific items.<br>
+ * This class manages the requirements and validation for {@link com.aionemu.gameserver.questEngine.model.QuestEnv} tasks involving item gathering.
  * @author Mr. Poke
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -43,9 +45,11 @@ public class CollectItemQuestOperation extends QuestOperation
 	@XmlAttribute
 	protected Boolean removeItems;
 	
-	/*
-	 * (non-Javadoc)
-	 * @see com.aionemu.gameserver.questEngine.handlers.models.xmlQuest.operations.QuestOperation#doOperate(com.aionemu.gameserver .questEngine.model.QuestEnv)
+	/**
+	 * Executes the logic for collecting an item.<br>
+	 * It checks if the collection requirements are met based on the {@code removeItems} flag.<br>
+	 * Depending on the result, it runs either the {@code _true} or {@code _false} operation.
+	 * @param env The quest environment containing the current context.
 	 */
 	@Override
 	public void doOperate(QuestEnv env)

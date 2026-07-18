@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.playercommands;
 
@@ -32,17 +32,29 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.PlayerCommand;
 
 /**
+ * Handles the {@code /reskin} player command to change a character's appearance.<br>
+ * It allows players to select and apply different visual skins from the available data.
  * @author Wakizashi, Imaginary
  * @revork Alex
  * @rework Eloann
  */
 public class cmd_reskin2 extends PlayerCommand
 {
+	/**
+	 * Initializes the {@code reskinvip} command.<br>
+	 * This constructor sets up the command for use by administrators.
+	 */
 	public cmd_reskin2()
 	{
 		super("reskinvip");
 	}
 	
+	/**
+	 * Executes the command to reskin an item for a player.<br>
+	 * It changes the appearance of an existing item to match another item's skin.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings containing the old and new item IDs.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
@@ -64,6 +76,7 @@ public class cmd_reskin2 extends PlayerCommand
 		{
 			target = (Player) creature;
 		}
+		
 		int oldItemId = 0;
 		int newItemId = 0;
 		try
@@ -93,6 +106,7 @@ public class cmd_reskin2 extends PlayerCommand
 					oldItemId = Integer.parseInt(params[0]);
 				}
 			}
+			
 			try
 			{
 				String items = params[1];
@@ -142,11 +156,13 @@ public class cmd_reskin2 extends PlayerCommand
 			PacketSendUtility.sendMessage(admin, "4 " + (admin.isGM() ? ex2 : ""));
 			return;
 		}
+		
 		if (DataManager.ITEM_DATA.getItemTemplate(newItemId) == null)
 		{
 			PacketSendUtility.sendMessage(admin, "Item id is incorrect: " + newItemId);
 			return;
 		}
+		
 		if (!admin.isGM())
 		{
 			target = admin;
@@ -173,6 +189,7 @@ public class cmd_reskin2 extends PlayerCommand
 			reskin(target, tollPrice, newItemId, items);
 			return;
 		}
+		
 		if (items.isEmpty())
 		{
 			if (admin.isGM())
@@ -180,9 +197,11 @@ public class cmd_reskin2 extends PlayerCommand
 				PacketSendUtility.sendMessage(admin, "Old itemID character taken to the Target is not found in the inventory.");
 				return;
 			}
+			
 			PacketSendUtility.sendMessage(admin, "Old itemID Not Found in inventory.");
 			return;
 		}
+		
 		final Iterator<Item> iter = items.iterator();
 		final Item item = iter.next();
 		if (!admin.isGM() && !itemnew.isEmpty())
@@ -198,6 +217,15 @@ public class cmd_reskin2 extends PlayerCommand
 		}
 	}
 	
+	/**
+	 * This method allows an administrator to change the skin of a player's item.<br>
+	 * It prompts the admin for confirmation and checks if they have enough Vote Points.<br>
+	 * If successful, it updates the item template and deducts the required toll.
+	 * @param admin The {@link Player} who is executing the command.
+	 * @param toll The amount of Vote Points required to perform the reskin.
+	 * @param itemId The ID of the new skin template to apply.
+	 * @param items The list of {@link Item} objects involved in the operation.
+	 */
 	public void reskin(Player admin, int toll, int itemId, List<Item> items)
 	{
 		final long tolls = admin.getClientConnection().getAccount().getToll();
@@ -211,6 +239,7 @@ public class cmd_reskin2 extends PlayerCommand
 					PacketSendUtility.sendMessage(admin, "You don't have enought Vote Points (" + tolls + "). You need : " + toll + " Vote Points.");
 					return;
 				}
+				
 				p.getClientConnection().getAccount().setToll(tolls - toll);
 				final Iterator<Item> iter = items.iterator();
 				final Item item = iter.next();
@@ -231,6 +260,12 @@ public class cmd_reskin2 extends PlayerCommand
 		}
 	}
 	
+	/**
+	 * This method is called when an {@code execute} command fails.<br>
+	 * It sends a failure notification to the administrator.
+	 * @param admin The {@code Player} who attempted the command.
+	 * @param message The error message to display.
+	 */
 	@Override
 	public void onFail(Player admin, String message)
 	{

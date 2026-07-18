@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion;
 
@@ -30,7 +30,9 @@ import com.aionemu.gameserver.network.sequrity.FloodManager;
 import com.aionemu.gameserver.network.sequrity.FloodManager.Result;
 
 /**
- * ConnectionFactory implementation that will be creating AionConnections
+ * This class is the concrete implementation of {@link ConnectionFactory}.<br>
+ * It is responsible for creating new {@link AConnection} instances for game clients.<br>
+ * Use this factory to initialize and manage incoming network connections.
  * @author -Nemesiss-
  */
 public class GameConnectionFactoryImpl implements ConnectionFactory
@@ -39,11 +41,9 @@ public class GameConnectionFactoryImpl implements ConnectionFactory
 	private FloodManager floodAcceptor;
 	
 	/**
-	 * Create a new {@link com.aionemu.commons.network.AConnection AConnection} instance.<br>
-	 * @see com.aionemu.commons.network.AConnection
-	 * @see com.aionemu.commons.network.Dispatcher
+	 * Constructs a new instance of {@link GameConnectionFactoryImpl}.<br>
+	 * This constructor initializes the {@code floodAcceptor} if enabled in the configuration.
 	 */
-	
 	public GameConnectionFactoryImpl()
 	{
 		if (NetworkConfig.ENABLE_FLOOD_CONNECTIONS)
@@ -53,9 +53,13 @@ public class GameConnectionFactoryImpl implements ConnectionFactory
 		}
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see com.aionemu.commons.network.ConnectionFactory#create(java.nio.channels.SocketChannel, com.aionemu.commons.network.Dispatcher)
+	/**
+	 * Creates a new {@link AConnection} instance from a provided socket.<br>
+	 * This method also checks for potential flooding before establishing the connection.
+	 * @param socket The {@code SocketChannel} used to connect to the client.
+	 * @param dispatcher The {@code Dispatcher} used to handle network events.
+	 * @return A new {@code AConnection} object, or {@code null} if the connection was rejected.
+	 * @throws IOException If an error occurs during the connection process.
 	 */
 	@Override
 	public AConnection create(SocketChannel socket, Dispatcher dispatcher) throws IOException
@@ -77,6 +81,8 @@ public class GameConnectionFactoryImpl implements ConnectionFactory
 					log.warn("Connection over warn limit from " + host);
 					break;
 				}
+				default:
+					break;
 			}
 		}
 		

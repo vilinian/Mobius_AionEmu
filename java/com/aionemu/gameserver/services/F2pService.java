@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services;
 
@@ -21,19 +21,26 @@ import com.aionemu.gameserver.model.bonus_service.F2pBonus;
 import com.aionemu.gameserver.model.bonus_service.ServiceBuff;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.gameobjects.player.f2p.F2pAccount;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_ACCOUNT_PROPERTIES;
+import com.aionemu.gameserver.network.aion.serverpackets.SM_ACCOUNT_ACCESS_PROPERTIES;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_PACKAGE_INFO_NOTIFY;
 import com.aionemu.gameserver.taskmanager.tasks.ExpireTimerTask;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
- * Created by wanke on 11/02/2017.
+ * Manages the Free-to-Play (F2P) account system and associated benefits.<br>
+ * This service handles {@link F2pAccount} properties, bonuses, and active buffs for players.
  */
 public class F2pService
 {
 	private static F2pBonus f2p;
 	private static ServiceBuff boost;
 	
+	/**
+	 * Handles special logic when a {@link Player} enters specific world IDs.<br>
+	 * It sends {@code SM_FLAG_INFO} packets to all players based on spawned NPCs in those worlds.<br>
+	 * This method also triggers a zone update for the player controller.
+	 * @param player The {@link Player} object that entered the world.
+	 */
 	public void onEnterWorld(Player player)
 	{
 		final boolean isGM = player.getAccessLevel() >= AdminConfig.GM_PANEL;
@@ -41,42 +48,80 @@ public class F2pService
 		{
 			playerBoostPack(player);
 			ExpireTimerTask.getInstance().addTask(player.getF2p().getF2pAccount(), player);
-			PacketSendUtility.sendPacket(player, new SM_ACCOUNT_PROPERTIES(isGM, 0, 8, player.getF2p().getF2pAccount().getRemainingTime()));
+			PacketSendUtility.sendPacket(player, new SM_ACCOUNT_ACCESS_PROPERTIES(isGM, 4, 8, player.getF2p().getF2pAccount().getRemainingTime(), true));
 			PacketSendUtility.sendPacket(player, new SM_PACKAGE_INFO_NOTIFY(1, 3, player.getF2p().getF2pAccount().getRemainingTime()));
 		}
 		else
 		{
-			PacketSendUtility.sendPacket(player, new SM_ACCOUNT_PROPERTIES(isGM, 4, 0, 0));
+			PacketSendUtility.sendPacket(player, new SM_ACCOUNT_ACCESS_PROPERTIES(isGM, 2, 0, 0, false));
 			PacketSendUtility.sendPacket(player, new SM_PACKAGE_INFO_NOTIFY(1, 0, 0));
 		}
 	}
 	
+	/**
+	 * Applies a boost pack to the specified player.<br>
+	 * This method grants multiple service buffs and bonuses.<br>
+	 * It updates the {@code Player} status with new effects.
+	 * @param player The {@link Player} who will receive the boost pack.
+	 */
 	public void playerBoostPack(Player player)
 	{
-		// MEMBERSHIP_BASE_TW_07
-		boost = new ServiceBuff(2000007);
-		boost.applyEffect(player, 2000007);
+		// MEMBERSHIP_BASE_TW_07 (TODO 0 Pointer)
+		// boost = new ServiceBuff(2000007);
+		// boost.applyEffect(player, 2000007);
 		// MEMBERSHIP_PK_A_TW_07
 		boost = new ServiceBuff(2000014);
 		boost.applyEffect(player, 2000014);
+		
 		// MEMBERSHIP_PK_B_TW_04
 		boost = new ServiceBuff(2000018);
 		boost.applyEffect(player, 2000018);
+		
 		// Gold Pack.
 		f2p = new F2pBonus(1);
 		f2p.applyEffect(player, 1);
 	}
 	
+	/**
+	 * Adds a new F2P account to the specified {@link Player}.<br>
+	 * This method calculates the expiration time based on the provided minutes.<br>
+	 * It also sends a notification packet and triggers the boost pack logic.
+	 * @param player The {@code Player} receiving the F2P status.
+	 * @param minutes The number of minutes to add to the F2P duration.
+	 */
 	public void onAddF2p(Player player, Integer minutes)
 	{
 		final boolean isGM = player.getAccessLevel() >= AdminConfig.GM_PANEL;
 		final F2pAccount f2pAccount = new F2pAccount(minutes == null ? 0 : (int) ((System.currentTimeMillis() / 1000) + (minutes.intValue() * 60)));
 		player.getF2p().add(f2pAccount, true);
-		PacketSendUtility.sendPacket(player, new SM_ACCOUNT_PROPERTIES(isGM, 0, 8, player.getF2p().getF2pAccount().getRemainingTime()));
+		PacketSendUtility.sendPacket(player, new SM_ACCOUNT_ACCESS_PROPERTIES(isGM, 4, 8, player.getF2p().getF2pAccount().getRemainingTime(), true));
 		ExpireTimerTask.getInstance().addTask(player.getF2p().getF2pAccount(), player);
 		playerBoostPack(player);
 	}
 	
+	/**
+	 * Updates the F2P account duration for a specific {@link Player}.<br>
+	 * This method calculates the new expiration time based on the provided minutes.<br>
+	 * It also sends updated packets to the client and manages the expiration task.
+	 * @param player The {@code Player} object whose F2P status is being updated.
+	 * @param minutes The number of minutes to add to the current F2P duration.
+	 */
+	public void onUpdateF2p(Player player, Integer minutes)
+	{
+		final boolean isGM = player.getAccessLevel() >= AdminConfig.GM_PANEL;
+		final F2pAccount f2pAccountUpdate = new F2pAccount(minutes == null ? 0 : player.getF2p().getF2pAccount().getExpireTime() + (minutes * 60));
+		player.getF2p().update(f2pAccountUpdate, true);
+		PacketSendUtility.sendPacket(player, new SM_ACCOUNT_ACCESS_PROPERTIES(isGM, 4, 8, player.getF2p().getF2pAccount().getRemainingTime(), true));
+		PacketSendUtility.sendPacket(player, new SM_PACKAGE_INFO_NOTIFY(1, 3, player.getF2p().getF2pAccount().getRemainingTime())); // TODO Count + Id (1, 3)
+		ExpireTimerTask.getInstance().addTask(player.getF2p().getF2pAccount(), player);
+	}
+	
+	/**
+	 * Provides the global instance of the {@link F2pService}.<br>
+	 * This method follows the singleton pattern.<br>
+	 * Use this to access the service from anywhere in the code.
+	 * @return The single instance of {@code F2pService}.
+	 */
 	public static F2pService getInstance()
 	{
 		return SingletonHolder.instance;

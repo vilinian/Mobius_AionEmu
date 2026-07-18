@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.controllers.observer;
 
@@ -25,6 +25,8 @@ import com.aionemu.gameserver.utils.MathUtil;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * This class monitors and manages {@link Shield} effects for entities.<br>
+ * It handles the logic for shield interactions within the game world.
  * @author Wakizashi, Source
  */
 public class ShieldObserver extends ActionObserver
@@ -33,6 +35,11 @@ public class ShieldObserver extends ActionObserver
 	private final Shield shield;
 	private final Point3D oldPosition;
 	
+	/**
+	 * Creates a new instance of the {@code ShieldObserver}.<br>
+	 * This constructor initializes the observer with default values.<br>
+	 * All internal fields are set to {@code null}.
+	 */
 	public ShieldObserver()
 	{
 		super(ObserverType.MOVE);
@@ -41,6 +48,12 @@ public class ShieldObserver extends ActionObserver
 		oldPosition = null;
 	}
 	
+	/**
+	 * Creates a new {@link ShieldObserver} for a specific creature and shield.<br>
+	 * This constructor initializes the observer with the current position of the {@code creature}.
+	 * @param shield The {@code Shield} object to be observed.
+	 * @param creature The {@code Creature} that owns the shield.
+	 */
 	public ShieldObserver(Shield shield, Creature creature)
 	{
 		super(ObserverType.MOVE);
@@ -49,12 +62,15 @@ public class ShieldObserver extends ActionObserver
 		oldPosition = new Point3D(creature.getX(), creature.getY(), creature.getZ());
 	}
 	
+	/**
+	 * This method handles the movement logic for a Creature.
+	 */
 	@Override
 	public void moved()
 	{
-		boolean isGM = false;
 		boolean passedThrough = false;
-		boolean isFriendlyShield = false;
+		boolean isGM = false;
+		
 		if (SiegeService.getInstance().getFortress(shield.getId()).isUnderShield())
 		{
 			if (!((creature.getZ() < shield.getZ()) && (oldPosition.getZ() < shield.getZ())))
@@ -65,30 +81,31 @@ public class ShieldObserver extends ActionObserver
 				}
 			}
 		}
+		
 		if (passedThrough)
 		{
 			if (creature instanceof Player)
 			{
 				PacketSendUtility.sendMessage(((Player) creature), "You passed through shield.");
 				isGM = ((Player) creature).isGM();
-				if (!SiegeService.getInstance().getFortresses().get(shield.getId()).isEnemy(creature))
-				{
-					isFriendlyShield = true;
-				}
 			}
-			if (!isGM && !isFriendlyShield)
+			
+			if (!isGM)
 			{
 				if (!(creature.getLifeStats().isAlreadyDead()))
 				{
 					creature.getController().die();
 				}
+				
 				if (creature instanceof Player)
 				{
 					((Player) creature).getFlyController().endFly(true);
 				}
+				
 				creature.getObserveController().removeObserver(this);
 			}
 		}
+		
 		oldPosition.x = creature.getX();
 		oldPosition.y = creature.getY();
 		oldPosition.z = creature.getZ();

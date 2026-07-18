@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.models.xmlQuest;
 
@@ -27,6 +27,8 @@ import com.aionemu.gameserver.questEngine.model.QuestEnv;
 import com.aionemu.gameserver.questEngine.model.QuestState;
 
 /**
+ * Represents a variable used within the quest system defined in {@code xmlQuest} files.<br>
+ * This class stores specific data points required to track and manage quest progress.
  * @author Mr. Poke
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -40,6 +42,13 @@ public class QuestVar
 	@XmlAttribute(required = true)
 	protected int value;
 	
+	/**
+	 * Validates the current quest variable against a required value.<br>
+	 * It then executes the operations for all associated {@link QuestNpc} objects.
+	 * @param env The environment context for the quest.
+	 * @param qs The current state of the player's quest.
+	 * @return {@code true} if any NPC operation succeeds, otherwise {@code false}.
+	 */
 	public boolean operate(QuestEnv env, QuestState qs)
 	{
 		int var = -1;
@@ -47,10 +56,12 @@ public class QuestVar
 		{
 			var = qs.getQuestVars().getQuestVars();
 		}
+		
 		if (var != value)
 		{
 			return false;
 		}
+		
 		for (QuestNpc questNpc : npc)
 		{
 			if (questNpc.operate(env, qs))
@@ -58,6 +69,7 @@ public class QuestVar
 				return true;
 			}
 		}
+		
 		return false;
 	}
 }

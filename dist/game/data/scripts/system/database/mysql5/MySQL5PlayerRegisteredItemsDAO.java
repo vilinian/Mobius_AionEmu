@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.database.mysql5;
 
@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-
-import javax.annotation.Nullable;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,12 +49,10 @@ import com.aionemu.gameserver.services.HousingService;
 import com.aionemu.gameserver.services.item.HouseObjectFactory;
 import com.aionemu.gameserver.utils.idfactory.IDFactory;
 import com.aionemu.gameserver.world.World;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-
-import javolution.util.FastList;
 
 /**
+ * This class provides the {@code MySQL5} database implementation for handling registered player items.<br>
+ * It extends {@link PlayerRegisteredItemsDAO} to perform specific SQL queries for item persistence.
  * @author Rolandas
  */
 public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
@@ -66,59 +64,24 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 	public static final String UPDATE_QUERY = "UPDATE `player_registered_items` SET " + "`expire_time`=?,`color`=?,`color_expires`=?,`owner_use_count`=?,`visitor_use_count`=?,`x`=?,`y`=?,`z`=?,`h`=?,`area`=?,`floor`=? " + "WHERE `player_id`=? AND `item_unique_id`=? AND `item_id`=?";
 	public static final String DELETE_QUERY = "DELETE FROM `player_registered_items` WHERE `item_unique_id` = ?";
 	public static final String RESET_QUERY = "UPDATE `player_registered_items` SET x=0,y=0,z=0,h=0,area='NONE' WHERE `player_id`=? AND `area` != 'DECOR'";
-	private static final Predicate<HouseObject<?>> objectsToAddPredicate = new Predicate<HouseObject<?>>()
-	{
-		@Override
-		public boolean apply(@Nullable HouseObject<?> input)
-		{
-			return (input != null) && (input.getPersistentState() == PersistentState.NEW);
-		}
-	};
-	private static final Predicate<HouseObject<?>> objectsToUpdatePredicate = new Predicate<HouseObject<?>>()
-	{
-		@Override
-		public boolean apply(@Nullable HouseObject<?> input)
-		{
-			return (input != null) && (input.getPersistentState() == PersistentState.UPDATE_REQUIRED);
-		}
-	};
-	private static final Predicate<HouseObject<?>> objectsToDeletePredicate = new Predicate<HouseObject<?>>()
-	{
-		@Override
-		public boolean apply(@Nullable HouseObject<?> input)
-		{
-			return (input != null) && (PersistentState.DELETED == input.getPersistentState());
-		}
-	};
-	private static final Predicate<HouseDecoration> partsToAddPredicate = new Predicate<HouseDecoration>()
-	{
-		@Override
-		public boolean apply(@Nullable HouseDecoration input)
-		{
-			return (input != null) && (input.getPersistentState() == PersistentState.NEW);
-		}
-	};
-	private static final Predicate<HouseDecoration> partsToUpdatePredicate = new Predicate<HouseDecoration>()
-	{
-		@Override
-		public boolean apply(@Nullable HouseDecoration input)
-		{
-			return (input != null) && (input.getPersistentState() == PersistentState.UPDATE_REQUIRED);
-		}
-	};
-	private static final Predicate<HouseDecoration> partsToDeletePredicate = new Predicate<HouseDecoration>()
-	{
-		@Override
-		public boolean apply(@Nullable HouseDecoration input)
-		{
-			return (input != null) && (PersistentState.DELETED == input.getPersistentState());
-		}
-	};
+	private static final Predicate<HouseObject<?>> objectsToAddPredicate = (HouseObject<?> input) -> (input != null) && (input.getPersistentState() == PersistentState.NEW);
+	private static final Predicate<HouseObject<?>> objectsToUpdatePredicate = (HouseObject<?> input) -> (input != null) && (input.getPersistentState() == PersistentState.UPDATE_REQUIRED);
+	private static final Predicate<HouseObject<?>> objectsToDeletePredicate = (HouseObject<?> input) -> (input != null) && (PersistentState.DELETED == input.getPersistentState());
+	private static final Predicate<HouseDecoration> partsToAddPredicate = (HouseDecoration input) -> (input != null) && (input.getPersistentState() == PersistentState.NEW);
+	private static final Predicate<HouseDecoration> partsToUpdatePredicate = (HouseDecoration input) -> (input != null) && (input.getPersistentState() == PersistentState.UPDATE_REQUIRED);
+	private static final Predicate<HouseDecoration> partsToDeletePredicate = (HouseDecoration input) -> (input != null) && (PersistentState.DELETED == input.getPersistentState());
 	
+	/**
+	 * Retrieves all unique identifiers from the {@code player_registered_items} table.<br>
+	 * This method queries the database to collect every {@code item_unique_id} that is not equal to {@code 0}.<br>
+	 * If an error occurs, it returns an empty array.
+	 * @return An array of integers containing the unique item IDs.
+	 */
 	@Override
 	public int[] getUsedIDs()
 	{
 		final PreparedStatement statement = DB.prepareStatement("SELECT item_unique_id FROM player_registered_items WHERE item_unique_id <> 0", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		
 		try
 		{
 			final ResultSet rs = statement.executeQuery();
@@ -131,6 +94,7 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 				rs.next();
 				ids[i] = rs.getInt(1);
 			}
+			
 			return ids;
 		}
 		catch (SQLException e)
@@ -141,9 +105,16 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 		{
 			DB.close(statement);
 		}
+		
 		return new int[0];
 	}
 	
+	/**
+	 * Loads the house registry data from the database for a specific player.<br>
+	 * This method retrieves all decorations and objects associated with the player's house.<br>
+	 * It updates the {@link HouseRegistry} with the correct persistent states.
+	 * @param playerId The unique identifier of the player to load.
+	 */
 	@Override
 	public void loadRegistry(int playerId)
 	{
@@ -153,6 +124,7 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 			final int address = HousingService.getInstance().getPlayerAddress(playerId);
 			house = HousingService.getInstance().getHouseByAddress(address);
 		}
+		
 		final HouseRegistry registry = house.getRegistry();
 		Connection con = null;
 		PreparedStatement stmt = null;
@@ -176,14 +148,17 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 						{
 							dec.setFloor(0);
 						}
+						
 						List<HouseDecoration> usedForType = usedParts.get(dec.getTemplate().getType());
 						if (usedForType == null)
 						{
 							usedForType = new ArrayList<>();
 							usedParts.put(dec.getTemplate().getType(), usedForType);
 						}
+						
 						usedForType.add(dec);
 					}
+					
 					dec.setPersistentState(PersistentState.UPDATED);
 				}
 				else
@@ -193,6 +168,7 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 					obj.setPersistentState(PersistentState.UPDATED);
 				}
 			}
+			
 			for (PartType partType : PartType.values())
 			{
 				if (usedParts.containsKey(partType))
@@ -203,11 +179,13 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 					}
 					continue;
 				}
+				
 				int floorCount = 1;
 				if ((house.getHouseType() == HouseType.PALACE) && ((partType == PartType.INFLOOR_ANY) || (partType == PartType.INWALL_ANY)))
 				{
 					floorCount = 6;
 				}
+				
 				for (int i = 0; i < floorCount; i++)
 				{
 					final HouseDecoration def = registry.getDefaultPartByType(partType, i);
@@ -217,6 +195,7 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 					}
 				}
 			}
+			
 			registry.setPersistentState(PersistentState.UPDATED);
 			rset.close();
 		}
@@ -230,6 +209,17 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 		}
 	}
 	
+	/**
+	 * Creates or retrieves a {@link HouseObject} from the database results.<br>
+	 * This method checks if the object exists in the world before creating a new one.<br>
+	 * It populates the object properties with data from the {@code ResultSet}.
+	 * @param registry The {@link HouseRegistry} used to look up existing objects.
+	 * @param house The {@link House} associated with the object.
+	 * @param rset The {@link ResultSet} containing the database row data.
+	 * @return The constructed or retrieved {@link HouseObject}.
+	 * @throws SQLException
+	 * @throws IllegalAccessException
+	 */
 	private HouseObject<?> constructObject(HouseRegistry registry, House house, ResultSet rset) throws SQLException, IllegalAccessException
 	{
 		final int itemUniqueId = rset.getInt("item_unique_id");
@@ -254,6 +244,7 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 				obj = HouseObjectFactory.createNew(house, itemUniqueId, rset.getInt("item_id"));
 			}
 		}
+		
 		obj.setOwnerUsedCount(rset.getInt("owner_use_count"));
 		obj.setVisitorUsedCount(rset.getInt("visitor_use_count"));
 		obj.setX(rset.getFloat("x"));
@@ -266,9 +257,18 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 		{
 			obj.setExpireTime(rset.getInt("expire_time"));
 		}
+		
 		return obj;
 	}
 	
+	/**
+	 * Converts a {@code ResultSet} into a {@link HouseDecoration} object.<br>
+	 * This method extracts the unique ID, item ID, and floor from the database row.<br>
+	 * It also determines if the decoration is currently in use.
+	 * @param rset The {@code ResultSet} containing the decoration data.
+	 * @return A new {@link HouseDecoration} instance populated with the retrieved values.
+	 * @throws SQLException If a database access error occurs.
+	 */
 	private HouseDecoration createDecoration(ResultSet rset) throws SQLException
 	{
 		final int itemUniqueId = rset.getInt("item_unique_id");
@@ -279,19 +279,29 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 		return decor;
 	}
 	
+	/**
+	 * Saves the current state of a house registry to the database.<br>
+	 * This method handles adding, updating, and deleting objects and decorations.<br>
+	 * It updates the persistent state of all items in the {@link HouseRegistry}.
+	 * @param registry The {@link HouseRegistry} containing the house data to save.
+	 * @param playerId The unique identifier for the player who owns the house.
+	 * @return Always returns {@code true} regardless of success or failure.
+	 */
 	@Override
 	public boolean store(HouseRegistry registry, int playerId)
 	{
-		final FastList<HouseObject<?>> objects = registry.getObjects();
-		final FastList<HouseDecoration> decors = registry.getAllParts();
-		final Collection<HouseObject<?>> objectsToAdd = Collections2.filter(objects, objectsToAddPredicate);
-		final Collection<HouseObject<?>> objectsToUpdate = Collections2.filter(objects, objectsToUpdatePredicate);
-		final Collection<HouseObject<?>> objectsToDelete = Collections2.filter(objects, objectsToDeletePredicate);
-		final Collection<HouseDecoration> partsToAdd = Collections2.filter(decors, partsToAddPredicate);
-		final Collection<HouseDecoration> partsToUpdate = Collections2.filter(decors, partsToUpdatePredicate);
-		final Collection<HouseDecoration> partsToDelete = Collections2.filter(decors, partsToDeletePredicate);
+		final List<HouseObject<?>> objects = registry.getObjects();
+		final List<HouseDecoration> decors = registry.getAllParts();
+		final Collection<HouseObject<?>> objectsToAdd = objects.stream().filter(objectsToAddPredicate).collect(Collectors.toList());
+		final Collection<HouseObject<?>> objectsToUpdate = objects.stream().filter(objectsToUpdatePredicate).collect(Collectors.toList());
+		final Collection<HouseObject<?>> objectsToDelete = objects.stream().filter(objectsToDeletePredicate).collect(Collectors.toList());
+		final Collection<HouseDecoration> partsToAdd = decors.stream().filter(partsToAddPredicate).collect(Collectors.toList());
+		final Collection<HouseDecoration> partsToUpdate = decors.stream().filter(partsToUpdatePredicate).collect(Collectors.toList());
+		final Collection<HouseDecoration> partsToDelete = decors.stream().filter(partsToDeletePredicate).collect(Collectors.toList());
+		
 		boolean objectDeleteResult = false;
 		boolean partsDeleteResult = false;
+		
 		Connection con = null;
 		try
 		{
@@ -313,6 +323,7 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		for (HouseObject<?> obj : objects)
 		{
 			if (obj.getPersistentState() == PersistentState.DELETED)
@@ -324,6 +335,7 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 				obj.setPersistentState(PersistentState.UPDATED);
 			}
 		}
+		
 		for (HouseDecoration decor : decors)
 		{
 			if (decor.getPersistentState() == PersistentState.DELETED)
@@ -335,11 +347,13 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 				decor.setPersistentState(PersistentState.UPDATED);
 			}
 		}
+		
 		if (!objectsToDelete.isEmpty() && objectDeleteResult)
 		{
-			final Collection<Integer> idIterator = Collections2.transform(objectsToDelete, AionObject.OBJECT_TO_ID_TRANSFORMER);
+			final Collection<Integer> idIterator = objectsToDelete.stream().map(AionObject.OBJECT_TO_ID_TRANSFORMER).collect(Collectors.toList());
 			IDFactory.getInstance().releaseIds(idIterator);
 		}
+		
 		if (!partsToDelete.isEmpty() && partsDeleteResult)
 		{
 			for (HouseDecoration part : partsToDelete)
@@ -350,19 +364,32 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 				}
 			}
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Saves a collection of {@link HouseObject} instances to the database.<br>
+	 * It uses an {@code INSERT} query if {@code isNew} is {@code true}.<br>
+	 * It uses an {@code UPDATE} query if {@code isNew} is {@code false}.
+	 * @param con The active database {@link Connection}.
+	 * @param objects The collection of house objects to save.
+	 * @param playerId The unique ID of the player owning the objects.
+	 * @param isNew A flag indicating whether to insert or update the records.
+	 * @return {@code true} if the operation succeeded, otherwise {@code false}.
+	 */
 	private boolean storeObjects(Connection con, Collection<HouseObject<?>> objects, int playerId, boolean isNew)
 	{
 		if (GenericValidator.isBlankOrNull(objects))
 		{
 			return true;
 		}
+		
 		PreparedStatement stmt = null;
 		try
 		{
 			stmt = con.prepareStatement(isNew ? INSERT_QUERY : UPDATE_QUERY);
+			
 			for (HouseObject<?> obj : objects)
 			{
 				if (obj.getExpireTime() > 0)
@@ -373,6 +400,7 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 				{
 					stmt.setNull(1, Types.INTEGER);
 				}
+				
 				if (obj.getColor() == null)
 				{
 					stmt.setNull(2, Types.INTEGER);
@@ -381,6 +409,7 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 				{
 					stmt.setInt(2, obj.getColor());
 				}
+				
 				stmt.setInt(3, obj.getColorExpireEnd());
 				stmt.setInt(4, obj.getOwnerUsedCount());
 				stmt.setInt(5, obj.getVisitorUsedCount());
@@ -396,12 +425,14 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 				{
 					stmt.setString(10, "NONE");
 				}
+				
 				stmt.setByte(11, (byte) 0);
 				stmt.setInt(12, playerId);
 				stmt.setInt(13, obj.getObjectId());
 				stmt.setInt(14, obj.getObjectTemplate().getTemplateId());
 				stmt.addBatch();
 			}
+			
 			stmt.executeBatch();
 			con.commit();
 		}
@@ -414,15 +445,27 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 		{
 			DatabaseFactory.close(stmt);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Saves a collection of {@link HouseDecoration} objects to the database.<br>
+	 * It uses an insert or update query based on the {@code isNew} flag.<br>
+	 * The method processes all parts in a single batch operation.
+	 * @param con The active {@link Connection} to the database.
+	 * @param parts The collection of decorations to be stored.
+	 * @param playerId The unique identifier of the player owning the items.
+	 * @param isNew Set to {@code true} to perform an insert, or {@code false} for an update.
+	 * @return {@code true} if the operation succeeded or if the parts collection was empty; {@code false} otherwise.
+	 */
 	private boolean storeParts(Connection con, Collection<HouseDecoration> parts, int playerId, boolean isNew)
 	{
 		if (GenericValidator.isBlankOrNull(parts))
 		{
 			return true;
 		}
+		
 		PreparedStatement stmt = null;
 		try
 		{
@@ -445,6 +488,7 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 				stmt.setInt(14, part.getTemplate().getId());
 				stmt.addBatch();
 			}
+			
 			stmt.executeBatch();
 			con.commit();
 		}
@@ -457,15 +501,25 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 		{
 			DatabaseFactory.close(stmt);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Deletes a collection of house objects from the database.<br>
+	 * This method uses a batch statement to improve performance.<br>
+	 * It returns {@code true} if the operation succeeds or if the input is null.
+	 * @param con The active {@link Connection} to the database.
+	 * @param objects The collection of {@code HouseObject<?>} to be removed.
+	 * @return {@code true} if the deletion was successful, {@code false} otherwise.
+	 */
 	private boolean deleteObjects(Connection con, Collection<HouseObject<?>> objects)
 	{
 		if (GenericValidator.isBlankOrNull(objects))
 		{
 			return true;
 		}
+		
 		PreparedStatement stmt = null;
 		try
 		{
@@ -475,6 +529,7 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 				stmt.setInt(1, obj.getObjectId());
 				stmt.addBatch();
 			}
+			
 			stmt.executeBatch();
 			con.commit();
 		}
@@ -487,15 +542,25 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 		{
 			DatabaseFactory.close(stmt);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Removes a collection of house decorations from the database.<br>
+	 * This method uses a batch process to execute the deletion.<br>
+	 * It returns {@code true} if the operation succeeds or if the input is empty.
+	 * @param con The active {@link Connection} to the database.
+	 * @param parts The collection of {@link HouseDecoration} objects to remove.
+	 * @return {@code true} if the deletion was successful, otherwise {@code false}.
+	 */
 	private boolean deleteParts(Connection con, Collection<HouseDecoration> parts)
 	{
 		if (GenericValidator.isBlankOrNull(parts))
 		{
 			return true;
 		}
+		
 		PreparedStatement stmt = null;
 		try
 		{
@@ -505,6 +570,7 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 				stmt.setInt(1, part.getObjectId());
 				stmt.addBatch();
 			}
+			
 			stmt.executeBatch();
 			con.commit();
 		}
@@ -517,9 +583,16 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 		{
 			DatabaseFactory.close(stmt);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Deletes all items belonging to a specific player from the database.<br>
+	 * This method uses {@code CLEAN_PLAYER_QUERY} to clear the inventory.
+	 * @param playerId The unique identifier of the player whose items will be removed.
+	 * @return {@code true} if the deletion was successful, or {@code false} if an error occurred.
+	 */
 	@Override
 	public boolean deletePlayerItems(int playerId)
 	{
@@ -542,9 +615,15 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Clears all registered items for a specific player.<br>
+	 * This method executes a database query to reset the data associated with the provided ID.
+	 * @param playerId The unique identifier of the player to reset.
+	 */
 	@Override
 	public void resetRegistry(int playerId)
 	{
@@ -568,6 +647,14 @@ public class MySQL5PlayerRegisteredItemsDAO extends PlayerRegisteredItemsDAO
 		}
 	}
 	
+	/**
+	 * Checks if the current database is compatible with this DAO.<br>
+	 * It uses {@code int, int)} to verify the version.
+	 * @param databaseName The name of the database to check.
+	 * @param majorVersion The major version number of the database.
+	 * @param minorVersion The minor version number of the database.
+	 * @return {@code true} if the database is supported, {@code false} otherwise.
+	 */
 	@Override
 	public boolean supports(String databaseName, int majorVersion, int minorVersion)
 	{

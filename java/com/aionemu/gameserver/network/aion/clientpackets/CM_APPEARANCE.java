@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -27,16 +27,23 @@ import com.aionemu.gameserver.services.RenameService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles the client request to change a character's appearance.<br>
+ * This packet is used when a player interacts with an item to modify their visual look.
  * @author xTz
  */
 public class CM_APPEARANCE extends AionClientPacket
 {
 	private int type;
-	
 	private int itemObjId;
-	
 	private String name;
 	
+	/**
+	 * This constructor initializes a new {@link CM_APPEARANCE} packet.<br>
+	 * It sets the required network states for the packet.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state.
+	 * @param restStates Additional connection states for the packet.
+	 */
 	public CM_APPEARANCE(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -53,11 +60,10 @@ public class CM_APPEARANCE extends AionClientPacket
 		{
 			case 0:
 			case 1:
-			{
 				name = readS();
 				break;
-			}
 		}
+		
 	}
 	
 	@Override
@@ -68,23 +74,18 @@ public class CM_APPEARANCE extends AionClientPacket
 		switch (type)
 		{
 			case 0: // Change Char Name,
-			{
 				if (RenameService.renamePlayer(player, player.getName(), name, itemObjId))
 				{
 					PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400157, name));
 				}
 				break;
-			}
 			case 1: // Change Legion Name
-			{
 				if (RenameService.renameLegion(player, name, itemObjId))
 				{
 					PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400158, name));
 				}
 				break;
-			}
 			case 2: // cosmetic items
-			{
 				final Item item = player.getInventory().getItemByObjId(itemObjId);
 				if (item != null)
 				{
@@ -96,13 +97,13 @@ public class CM_APPEARANCE extends AionClientPacket
 							{
 								return;
 							}
+							
 							action.act(player, null, item);
 							break;
 						}
 					}
 				}
 				break;
-			}
 		}
 	}
 }

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -30,6 +30,9 @@ import com.aionemu.gameserver.world.World;
 import com.aionemu.gameserver.world.zone.ZoneInstance;
 
 /**
+ * This packet handles the display of a dialog window to the client.<br>
+ * It contains the necessary data for rendering {@link DialogPage} content.<br>
+ * Use this class when an {@link Npc} or other object triggers a conversation.
  * @author alexa026
  */
 public class SM_DIALOG_WINDOW extends AionServerPacket
@@ -38,12 +41,25 @@ public class SM_DIALOG_WINDOW extends AionServerPacket
 	private final int dialogID;
 	private int questId = 0;
 	
+	/**
+	 * Creates a new {@code SM_DIALOG_WINDOW} packet.<br>
+	 * This packet is used to display a dialog window to a player.
+	 * @param targetObjectId The unique identifier of the object triggering the dialog.
+	 * @param dlgID The specific ID of the dialog to be displayed.
+	 */
 	public SM_DIALOG_WINDOW(int targetObjectId, int dlgID)
 	{
 		this.targetObjectId = targetObjectId;
 		dialogID = dlgID;
 	}
 	
+	/**
+	 * Creates a new {@code SM_DIALOG_WINDOW} packet.<br>
+	 * This packet is used to display a dialog window to a player.
+	 * @param targetObjectId The unique identifier of the object triggering the dialog.
+	 * @param dlgID The specific ID of the dialog to be displayed.
+	 * @param questId The ID of the quest associated with this dialog.
+	 */
 	public SM_DIALOG_WINDOW(int targetObjectId, int dlgID, int questId)
 	{
 		this.targetObjectId = targetObjectId;
@@ -55,6 +71,7 @@ public class SM_DIALOG_WINDOW extends AionServerPacket
 	protected void writeImpl(AionConnection con)
 	{
 		final Player player = con.getActivePlayer();
+		
 		writeD(targetObjectId);
 		writeH(dialogID);
 		writeD(questId);
@@ -92,6 +109,7 @@ public class SM_DIALOG_WINDOW extends AionServerPacket
 					final MapRegion region = npc.getPosition().getMapRegion();
 					if (region == null)
 					{
+						// some npc without region !!!
 					}
 					else
 					{
@@ -104,6 +122,7 @@ public class SM_DIALOG_WINDOW extends AionServerPacket
 								break;
 							}
 						}
+						
 						writeH(townId);
 					}
 				}

@@ -1,21 +1,22 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.controller;
 
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,14 +36,15 @@ import com.aionemu.loginserver.network.aion.LoginConnection.State;
 import com.aionemu.loginserver.network.aion.SessionKey;
 import com.aionemu.loginserver.network.aion.serverpackets.SM_SERVER_LIST;
 import com.aionemu.loginserver.network.aion.serverpackets.SM_UPDATE_SESSION;
-import com.aionemu.loginserver.network.gs.GsConnection;
-import com.aionemu.loginserver.network.gs.serverpackets.SM_ACCOUNT_AUTH_RESPONSE;
-import com.aionemu.loginserver.network.gs.serverpackets.SM_GS_CHARACTER_RESPONSE;
-import com.aionemu.loginserver.network.gs.serverpackets.SM_REQUEST_KICK_ACCOUNT;
+import com.aionemu.loginserver.network.gameserver.GsConnection;
+import com.aionemu.loginserver.network.gameserver.serverpackets.SM_ACCOUNT_AUTH_RESPONSE;
+import com.aionemu.loginserver.network.gameserver.serverpackets.SM_GS_CHARACTER_RESPONSE;
+import com.aionemu.loginserver.network.gameserver.serverpackets.SM_REQUEST_KICK_ACCOUNT;
 import com.aionemu.loginserver.utils.AccountUtils;
 
 /**
- * This class is resposible for controlling all account actions
+ * This class handles all account-related operations within the login server.<br>
+ * It manages core logic for authenticating users and processing {@code Account} actions.
  * @author KID
  * @author SoulKeeper
  */
@@ -62,8 +64,9 @@ public class AccountController
 	private static final Map<Integer, Map<Integer, Integer>> accountsGSCharacterCounts = new HashMap<>();
 	
 	/**
-	 * Removes account from list of connections
-	 * @param account account
+	 * Removes an {@code Account} from the active login server list.<br>
+	 * This method updates the internal map by using the unique ID of the provided account.
+	 * @param account The {@code Account} object to be removed.
 	 */
 	public static synchronized void removeAccountOnLS(Account account)
 	{
@@ -71,9 +74,11 @@ public class AccountController
 	}
 	
 	/**
-	 * This method is for answering GameServer question about account authentication on GameServer side.
-	 * @param key
-	 * @param gsConnection
+	 * Verifies the authentication of an account using a session key.<br>
+	 * If successful, it moves the account from the login server to the game server.<br>
+	 * It also updates the last known server and sends the final response packet.
+	 * @param key The {@code SessionKey} used to validate the current connection.
+	 * @param gsConnection The {@code GsConnection} object representing the game server link.
 	 */
 	public static synchronized void checkAuth(SessionKey key, GsConnection gsConnection)
 	{
@@ -98,20 +103,22 @@ public class AccountController
 			getAccountDAO().updateLastServer(acc.getId(), acc.getLastServer());
 			
 			final long toll = DAOManager.getDAO(PremiumDAO.class).getPoints(acc.getId());
+			final long luna = DAOManager.getDAO(PremiumDAO.class).getLuna(acc.getId());
 			/**
 			 * Send response to GameServer
 			 */
-			gsConnection.sendPacket(new SM_ACCOUNT_AUTH_RESPONSE(key.accountId, true, acc.getName(), acc.getAccessLevel(), acc.getMembership(), toll));
+			gsConnection.sendPacket(new SM_ACCOUNT_AUTH_RESPONSE(key.accountId, true, acc.getName(), acc.getAccessLevel(), acc.getMembership(), toll, luna, acc.getReturn()));
 		}
 		else
 		{
-			gsConnection.sendPacket(new SM_ACCOUNT_AUTH_RESPONSE(key.accountId, false, null, (byte) 0, (byte) 0, 0));
+			gsConnection.sendPacket(new SM_ACCOUNT_AUTH_RESPONSE(key.accountId, false, null, (byte) 0, (byte) 0, 0, 0, (byte) 0));
 		}
 	}
 	
 	/**
-	 * Add account to reconnectionAccount list
-	 * @param acc
+	 * Adds a new {@code ReconnectingAccount} to the internal tracking map.<br>
+	 * This method ensures that the account is registered for reconnection handling.
+	 * @param acc The {@code ReconnectingAccount} object to be added.
 	 */
 	public static synchronized void addReconnectingAccount(ReconnectingAccount acc)
 	{
@@ -119,11 +126,13 @@ public class AccountController
 	}
 	
 	/**
-	 * Check if reconnecting account may auth.
-	 * @param accountId id of account
-	 * @param loginOk loginOk
-	 * @param reconnectKey reconnect key
-	 * @param client aion client
+	 * Authenticates an account that is currently in the reconnection queue.<br>
+	 * This method verifies the {@code reconnectKey} before completing the login.<br>
+	 * If the key is invalid or the account is missing, the {@link LoginConnection} is closed.
+	 * @param accountId The unique identifier of the account to authenticate.
+	 * @param loginOk A status flag indicating if the login was successful.
+	 * @param reconnectKey The security key provided by the client for reconnection.
+	 * @param client The {@link LoginConnection} object representing the current client session.
 	 */
 	public static synchronized void authReconnectingAccount(int accountId, int loginOk, int reconnectKey, LoginConnection client)
 	{
@@ -146,13 +155,13 @@ public class AccountController
 	}
 	
 	/**
-	 * Tries to authentificate account.<br>
-	 * If success returns {@link AionAuthResponse#AUTHED} and sets account object to connection.<br>
-	 * If {@link com.aionemu.loginserver.configs.Config#ACCOUNT_AUTO_CREATION} is enabled - creates new account.<br>
-	 * @param name name of account
-	 * @param password password of account
-	 * @param connection connection for account
-	 * @return Response with error code
+	 * Authenticates a user based on their name and password.<br>
+	 * This method checks for IP bans, account existence, and active penalties.<br>
+	 * It also verifies if the account is already logged in elsewhere.
+	 * @param name The username of the account to log in.
+	 * @param password The plain text password provided by the user.
+	 * @param connection The {@link LoginConnection} object for the current session.
+	 * @return An {@link AionAuthResponse} indicating the result of the login attempt.
 	 */
 	public static AionAuthResponse login(String name, String password, LoginConnection connection)
 	{
@@ -181,14 +190,8 @@ public class AccountController
 			return AionAuthResponse.GM_ONLY;
 		}
 		
-		// check for paswords beeing equals
-		if (!account.getPasswordHash().equals(AccountUtils.encodePassword(password)))
-		{
-			return AionAuthResponse.INVALID_PASSWORD;
-		}
-		
-		// check for paswords beeing equals
-		if (account.getActivated() != 1)
+		// Check if the passwords are equal.
+		if (!account.getPasswordHash().equals(AccountUtils.encodePassword(password)) || (account.getActivated() != 1))
 		{
 			return AionAuthResponse.INVALID_PASSWORD;
 		}
@@ -231,6 +234,7 @@ public class AccountController
 				aionConnection.closeNow();
 				return AionAuthResponse.ALREADY_LOGGED_IN;
 			}
+			
 			connection.setAccount(account);
 			accountsOnLS.put(account.getId(), connection);
 		}
@@ -239,6 +243,7 @@ public class AccountController
 		
 		// if everything was OK
 		getAccountDAO().updateLastIp(account.getId(), connection.getIP());
+		
 		// last mac is updated after receiving packet from gameserver
 		getAccountDAO().updateMembership(account.getId());
 		
@@ -246,8 +251,10 @@ public class AccountController
 	}
 	
 	/**
-	 * Kicks account from LoginServer and GameServers
-	 * @param accountId account ID to kick
+	 * Disconnects a specific account from the game servers.<br>
+	 * This method sends a kick packet to the active game server.<br>
+	 * It also removes the account from the login server connection map.
+	 * @param accountId The unique identifier of the account to be kicked.
 	 */
 	public static void kickAccount(int accountId)
 	{
@@ -261,6 +268,7 @@ public class AccountController
 					break;
 				}
 			}
+			
 			if (accountsOnLS.containsKey(accountId))
 			{
 				final LoginConnection conn = accountsOnLS.remove(accountId);
@@ -270,10 +278,11 @@ public class AccountController
 	}
 	
 	/**
-	 * Refresh last_mac of account
-	 * @param accountId id of account
-	 * @param address
-	 * @return refreshed or not
+	 * Updates the last known MAC address for a specific account.<br>
+	 * This method calls {@code String)} to save the new data.
+	 * @param accountId The unique identifier of the account.
+	 * @param address The new MAC address string to store.
+	 * @return {@code true} if the update was successful, {@code false} otherwise.
 	 */
 	public static boolean refreshAccountsLastMac(int accountId, String address)
 	{
@@ -281,9 +290,10 @@ public class AccountController
 	}
 	
 	/**
-	 * Loads account from DB and returns it, or returns null if account was not loaded
-	 * @param name acccount name
-	 * @return loaded account or null
+	 * Retrieves an {@link Account} from the database using a name.<br>
+	 * This method also updates the account time if the account exists.
+	 * @param name The unique name of the account to find.
+	 * @return The found {@code Account} object or {@code null} if no match is found.
 	 */
 	public static Account loadAccount(String name)
 	{
@@ -292,9 +302,16 @@ public class AccountController
 		{
 			account.setAccountTime(getAccountTimeDAO().getAccountTime(account.getId()));
 		}
+		
 		return account;
 	}
 	
+	/**
+	 * Retrieves an {@link Account} object from the database using its unique identifier.<br>
+	 * This method also updates the account's time information if the account exists.
+	 * @param id The unique integer ID of the account to load.
+	 * @return The loaded {@link Account} object, or {@code null} if no account is found with that ID.
+	 */
 	public static Account loadAccount(int id)
 	{
 		final Account account = getAccountDAO().getAccount(id);
@@ -302,14 +319,17 @@ public class AccountController
 		{
 			account.setAccountTime(getAccountTimeDAO().getAccountTime(id));
 		}
+		
 		return account;
 	}
 	
 	/**
-	 * Creates new account and stores it in DB. Returns account object in case of success or null if failed
-	 * @param name account name
-	 * @param password account password
-	 * @return account object or null
+	 * Creates a new {@link Account} in the database.<br>
+	 * This method hashes the password and sets default values for the new user.<br>
+	 * It returns the created account or {@code null} if the insertion fails.
+	 * @param name The unique username for the new account.
+	 * @param password The plain text password to be encoded.
+	 * @return The newly created {@link Account} object, or {@code null} if creation failed.
 	 */
 	public static Account createAccount(String name, String password)
 	{
@@ -321,17 +341,21 @@ public class AccountController
 		account.setAccessLevel((byte) 0);
 		account.setMembership((byte) 0);
 		account.setActivated((byte) 1);
+		account.setReturn((byte) 0);
+		account.setReturnEnd(new Timestamp(System.currentTimeMillis()));
 		
 		if (getAccountDAO().insertAccount(account))
 		{
 			return account;
 		}
+		
 		return null;
 	}
 	
 	/**
-	 * Returns {@link com.aionemu.loginserver.dao.AccountDAO}, just a shortcut
-	 * @return {@link com.aionemu.loginserver.dao.AccountDAO}
+	 * Retrieves the {@link AccountDAO} instance from the manager.<br>
+	 * This method provides access to account database operations.
+	 * @return The {@code AccountDAO} instance.
 	 */
 	private static AccountDAO getAccountDAO()
 	{
@@ -339,8 +363,9 @@ public class AccountController
 	}
 	
 	/**
-	 * Returns {@link com.aionemu.loginserver.dao.AccountTimeDAO}, just a shortcut
-	 * @return {@link com.aionemu.loginserver.dao.AccountTimeDAO}
+	 * Retrieves the {@link AccountTimeDAO} instance from the manager.<br>
+	 * This method provides access to database operations for account time data.
+	 * @return The {@code AccountTimeDAO} object.
 	 */
 	private static AccountTimeDAO getAccountTimeDAO()
 	{
@@ -348,7 +373,10 @@ public class AccountController
 	}
 	
 	/**
-	 * @param accountId
+	 * Loads the character counts for a specific account across all game servers.<br>
+	 * This method updates the internal cache and sends the necessary packets to each server.<br>
+	 * It also triggers a server list update if all character counts are successfully retrieved.
+	 * @param accountId The unique identifier of the account to process.
 	 */
 	public static synchronized void loadGSCharactersCount(int accountId)
 	{
@@ -360,7 +388,7 @@ public class AccountController
 			accountsGSCharacterCounts.remove(accountId);
 		}
 		
-		accountsGSCharacterCounts.put(accountId, new HashMap<Integer, Integer>());
+		accountsGSCharacterCounts.put(accountId, new HashMap<>());
 		
 		accountCharacterCount = accountsGSCharacterCounts.get(accountId);
 		
@@ -385,8 +413,10 @@ public class AccountController
 	}
 	
 	/**
-	 * @param accountId
-	 * @return
+	 * Checks if an account has characters on all available game servers.<br>
+	 * It compares the character count for the given {@code accountId} against the total number of game servers.
+	 * @param accountId The unique identifier of the account to check.
+	 * @return {@code true} if the account has characters on every server, otherwise {@code false}.
 	 */
 	public static synchronized boolean hasAllGSCharacterCounts(int accountId)
 	{
@@ -404,8 +434,10 @@ public class AccountController
 	}
 	
 	/**
-	 * SM_SERVER_LIST call
-	 * @param accountId
+	 * Sends the server list packet to a specific account.<br>
+	 * This method checks if the {@code accountId} exists in the active connections.<br>
+	 * If found, it sends an {@link com.aionemu.loginserver.network.aion.serverpackets.SM_SERVER_LIST} packet.
+	 * @param accountId The unique identifier of the account to receive the packet.
 	 */
 	public static void sendServerListFor(int accountId)
 	{
@@ -416,8 +448,10 @@ public class AccountController
 	}
 	
 	/**
-	 * @param accountId
-	 * @return
+	 * Retrieves the count of game server characters for a specific account.<br>
+	 * This method looks up the data using the provided {@code accountId}.
+	 * @param accountId The unique identifier of the account to check.
+	 * @return A {@code Map<Integer, Integer>} containing the character counts.
 	 */
 	public static Map<Integer, Integer> getGSCharacterCountsFor(int accountId)
 	{
@@ -425,15 +459,17 @@ public class AccountController
 	}
 	
 	/**
-	 * @param accountId
-	 * @param gsid
-	 * @param characterCount
+	 * Updates the number of characters for a specific game server.<br>
+	 * This method stores the count in the internal tracking map.
+	 * @param accountId The unique identifier for the user account.
+	 * @param gsid The unique identifier for the game server.
+	 * @param characterCount The number of characters to record for this server.
 	 */
 	public static synchronized void addGSCharacterCountFor(int accountId, int gsid, int characterCount)
 	{
 		if (!accountsGSCharacterCounts.containsKey(accountId))
 		{
-			accountsGSCharacterCounts.put(accountId, new HashMap<Integer, Integer>());
+			accountsGSCharacterCounts.put(accountId, new HashMap<>());
 		}
 		
 		accountsGSCharacterCounts.get(accountId).put(gsid, characterCount);

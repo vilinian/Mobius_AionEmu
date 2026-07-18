@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.instance.handlers;
 
@@ -20,12 +20,16 @@ import com.aionemu.gameserver.model.gameobjects.Creature;
 import com.aionemu.gameserver.model.gameobjects.Gatherable;
 import com.aionemu.gameserver.model.gameobjects.Npc;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
+import com.aionemu.gameserver.model.instance.StageList;
 import com.aionemu.gameserver.model.instance.StageType;
 import com.aionemu.gameserver.model.instance.instancereward.InstanceReward;
+import com.aionemu.gameserver.skillengine.model.SkillTemplate;
 import com.aionemu.gameserver.world.WorldMapInstance;
 import com.aionemu.gameserver.world.zone.ZoneInstance;
 
 /**
+ * This interface defines the core logic for managing game instances.<br>
+ * It provides methods to handle specific behaviors and interactions within a {@link ZoneInstance}.
  * @author ATracer
  */
 public interface InstanceHandler
@@ -60,6 +64,8 @@ public interface InstanceHandler
 	
 	void onPlayMovieEnd(Player player, int movieId);
 	
+	public void onSkillUse(Player player, SkillTemplate template);
+	
 	boolean onReviveEvent(Player player);
 	
 	void onExitInstance(Player player);
@@ -74,15 +80,19 @@ public interface InstanceHandler
 	
 	void onChangeStage(StageType type);
 	
+	void onChangeStageList(StageList list);
+	
 	StageType getStage();
 	
 	void onDropRegistered(Npc npc);
 	
-	void onGather(Player player, Gatherable paramGatherable);
+	void onGather(Player player, Gatherable gatherable);
 	
 	InstanceReward<?> getInstanceReward();
 	
 	boolean onPassFlyingRing(Player player, String flyingRing);
 	
-	void handleUseItemFinish(Player player, Npc npcId);
+	void handleUseItemFinish(Player player, Npc npc);
+	
+	boolean isEnemy(Player attacker, Player target);
 }

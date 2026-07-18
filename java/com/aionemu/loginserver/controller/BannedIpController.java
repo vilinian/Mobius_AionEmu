@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.controller;
 
@@ -29,7 +29,8 @@ import com.aionemu.loginserver.dao.BannedIpDAO;
 import com.aionemu.loginserver.model.BannedIP;
 
 /**
- * Class that controlls all ip banning activity
+ * This class manages all IP banning activities within the login server.<br>
+ * It provides methods to handle requests related to {@link BannedIP} records.
  * @author SoulKeeper
  */
 public class BannedIpController
@@ -43,19 +44,30 @@ public class BannedIpController
 	 */
 	private static Set<BannedIP> banList;
 	
+	/**
+	 * Initializes the IP banning system.<br>
+	 * This method clears existing data and loads new records from the database.<br>
+	 * It prepares the {@code banList} for use by other methods.
+	 */
 	public static void start()
 	{
 		clean();
 		load();
 	}
 	
+	/**
+	 * Removes expired IP bans from the database.<br>
+	 * This method calls {@code getDAO} to perform the cleanup.
+	 */
 	private static void clean()
 	{
 		getDAO().cleanExpiredBans();
 	}
 	
 	/**
-	 * Loads list of banned ips
+	 * Loads the banned IP addresses from the database.<br>
+	 * This method populates the internal {@code banList}.<br>
+	 * It ensures that all current bans are available for checking.
 	 */
 	public static void load()
 	{
@@ -63,7 +75,9 @@ public class BannedIpController
 	}
 	
 	/**
-	 * Loads list of banned ips
+	 * Reloads the list of banned IP addresses from the database.<br>
+	 * This method updates the {@code banList} set with current data.<br>
+	 * It logs the total number of bans loaded to the console.
 	 */
 	public static void reload()
 	{
@@ -73,9 +87,11 @@ public class BannedIpController
 	}
 	
 	/**
-	 * Checks if ip (or mask) is banned
-	 * @param ip ip address to check for ban
-	 * @return is it banned or not
+	 * Checks if a specific IP address is currently banned.<br>
+	 * This method compares the input against the active ban list.<br>
+	 * It returns {@code true} if a match is found.
+	 * @param ip The IP address string to check.
+	 * @return {@code true} if the IP is banned, otherwise {@code false}.
 	 */
 	public static boolean isBanned(String ip)
 	{
@@ -86,13 +102,15 @@ public class BannedIpController
 				return true;
 			}
 		}
+		
 		return false;
 	}
 	
 	/**
-	 * Bans ip or mask for infinite period of time
-	 * @param ip ip to ban
-	 * @return was ip banned or not
+	 * Adds a new IP address to the banned list.<br>
+	 * This method calls {@code java.sql.Timestamp)} with a {@code null} expiration.
+	 * @param ip The IP address string to ban.
+	 * @return {@code true} if the ban was successful, or {@code false} otherwise.
 	 */
 	public static boolean banIp(String ip)
 	{
@@ -100,10 +118,12 @@ public class BannedIpController
 	}
 	
 	/**
-	 * Bans ip (or mask)
-	 * @param ip ip to ban
-	 * @param expireTime ban expiration time, null = never expires
-	 * @return was ip banned or not
+	 * Bans a specific IP address until a certain time.<br>
+	 * This method prevents local addresses like {@code 127.0.0.1} from being blocked.<br>
+	 * It saves the ban to the database using {@link BannedIpDAO}.
+	 * @param ip The IP address string to block.
+	 * @param expireTime The timestamp when the ban should end.
+	 * @return {@code true} if the ban was successful, or {@code false} otherwise.
 	 */
 	public static boolean banIp(String ip, Timestamp expireTime)
 	{
@@ -129,9 +149,12 @@ public class BannedIpController
 	}
 	
 	/**
-	 * Adds or updates ip ban. Changes are reflected in DB
-	 * @param ipBan banned ip to add or change
-	 * @return was it updated or not
+	 * Adds a new ban to the database or updates an existing one.<br>
+	 * It checks if the {@code BannedIP} object has an ID.<br>
+	 * If the ID is {@code null}, it inserts a new record.<br>
+	 * Otherwise, it updates the current record.
+	 * @param ipBan The {@link BannedIP} object to save or update.
+	 * @return {@code true} if the database operation succeeded, {@code false} otherwise.
 	 */
 	public static boolean addOrUpdateBan(BannedIP ipBan)
 	{
@@ -142,15 +165,18 @@ public class BannedIpController
 				banList.add(ipBan);
 				return true;
 			}
+			
 			return false;
 		}
+		
 		return getDAO().update(ipBan);
 	}
 	
 	/**
-	 * Removes ip ban.
-	 * @param ip ip to unban
-	 * @return returns true if ip was successfully unbanned
+	 * Removes a specific IP address from the ban list.<br>
+	 * This method updates both the memory cache and the database.
+	 * @param ip The {@code String} representation of the IP to unban.
+	 * @return {@code true} if the IP was successfully removed, otherwise {@code false}.
 	 */
 	public static boolean unbanIp(String ip)
 	{
@@ -168,12 +194,14 @@ public class BannedIpController
 				break;
 			}
 		}
+		
 		return false;
 	}
 	
 	/**
-	 * Retuns {@link com.aionemu.loginserver.dao.BannedIpDAO} , just a shortcut
-	 * @return {@link com.aionemu.loginserver.dao.BannedIpDAO}
+	 * Retrieves the database access object for banned IP addresses.<br>
+	 * This method uses {@link DAOManager} to fetch the correct instance.
+	 * @return The {@code BannedIpDAO} instance used for database operations.
 	 */
 	private static BannedIpDAO getDAO()
 	{

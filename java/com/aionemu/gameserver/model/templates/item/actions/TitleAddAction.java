@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.item.actions;
 
@@ -30,6 +30,8 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles the logic for adding a title to a {@link Player} when an item is used.<br>
+ * This action processes the title acquisition and sends the appropriate feedback messages.
  * @author Hilgert
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -41,9 +43,14 @@ public class TitleAddAction extends AbstractItemAction
 	@XmlAttribute
 	protected Integer minutes;
 	
-	/*
-	 * (non-Javadoc)
-	 * @see com.aionemu.gameserver.itemengine.actions.AbstractItemAction#canAct(com.aionemu.gameserver.model.gameobjects.player .Player, com.aionemu.gameserver.model.gameobjects.Item, com.aionemu.gameserver.model.gameobjects.Item)
+	/**
+	 * Checks if a {@link Player} can perform this action.<br>
+	 * This method validates the requirements for interacting with items.<br>
+	 * It currently always returns {@code false}.
+	 * @param player The {@link Player} attempting the action.
+	 * @param parentItem The item that triggers the action.
+	 * @param targetItem The item being acted upon.
+	 * @return {@code true} if the action is allowed, otherwise {@code false}.
 	 */
 	@Override
 	public boolean canAct(Player player, Item parentItem, Item targetItem)
@@ -53,17 +60,22 @@ public class TitleAddAction extends AbstractItemAction
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_ITEM_COLOR_ERROR);
 			return false;
 		}
+		
 		if (player.getTitleList().contains(titleid))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_TOOLTIP_LEARNED_TITLE);
 			return false;
 		}
+		
 		return true;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see com.aionemu.gameserver.itemengine.actions.AbstractItemAction#act(com.aionemu.gameserver.model.gameobjects.player .Player, com.aionemu.gameserver.model.gameobjects.Item, com.aionemu.gameserver.model.gameobjects.Item)
+	/**
+	 * Executes the action to add a title to a {@link Player}.<br>
+	 * This method handles the logic when a player uses an item to gain a title.
+	 * @param player The {@code Player} who is performing the action.
+	 * @param parentItem The {@code Item} that triggers this action.
+	 * @param targetItem The {@code Item} being acted upon.
 	 */
 	@Override
 	public void act(Player player, Item parentItem, Item targetItem)

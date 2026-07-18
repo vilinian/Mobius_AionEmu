@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -31,7 +31,6 @@ import com.aionemu.gameserver.model.templates.quest.FinishedQuestCond;
 import com.aionemu.gameserver.model.templates.quest.XMLStartCondition;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_QUEST_ACTION;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_QUEST_COMPLETED_LIST;
-import com.aionemu.gameserver.questEngine.QuestEngine;
 import com.aionemu.gameserver.questEngine.model.QuestEnv;
 import com.aionemu.gameserver.questEngine.model.QuestState;
 import com.aionemu.gameserver.questEngine.model.QuestStatus;
@@ -40,15 +39,28 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 
 /**
+ * Handles administrative commands related to the quest system.<br>
+ * This class allows administrators to manage and modify {@link QuestState} for players.<br>
+ * It provides tools to interact with {@link QuestService} and {@link QuestTemplate} data.
  * @author MrPoke
  */
 public class Quest extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link Quest} class.<br>
+	 * This constructor registers the command with the name {@code quest}.
+	 */
 	public Quest()
 	{
 		super("quest");
 	}
 	
+	/**
+	 * Executes quest management commands for administrators.<br>
+	 * Supports starting, setting, showing, deleting, and identifying quests.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings containing the sub-command and its arguments.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
@@ -57,6 +69,7 @@ public class Quest extends AdminCommand
 			PacketSendUtility.sendMessage(admin, "syntax //quest <start|set|show|delete>");
 			return;
 		}
+		
 		Player target = null;
 		final VisibleObject creature = admin.getTarget();
 		if (admin.getTarget() instanceof Player)
@@ -64,7 +77,8 @@ public class Quest extends AdminCommand
 			target = (Player) creature;
 		}
 		
-		if (target == null)
+		// <mariella> - target isn't required for the command ".quest id <link>"
+		if ((target == null) && !params[0].equals("id"))
 		{
 			PacketSendUtility.sendMessage(admin, "Incorrect target!");
 			return;
@@ -77,6 +91,7 @@ public class Quest extends AdminCommand
 				PacketSendUtility.sendMessage(admin, "syntax //quest start <questId>");
 				return;
 			}
+			
 			int id;
 			try
 			{
@@ -126,6 +141,7 @@ public class Quest extends AdminCommand
 						}
 					}
 				}
+				
 				PacketSendUtility.sendMessage(admin, "Quest not started. Some preconditions failed");
 			}
 		}
@@ -170,6 +186,7 @@ public class Quest extends AdminCommand
 					PacketSendUtility.sendMessage(admin, "<status is one of START, NONE, REWARD, COMPLETE>");
 					return;
 				}
+				
 				var = Integer.valueOf(params[3]);
 				if ((params.length == 5) && (params[4] != null) && (params[4] != ""))
 				{
@@ -181,6 +198,12 @@ public class Quest extends AdminCommand
 				PacketSendUtility.sendMessage(admin, "syntax //quest set <questId status var [varNum]>");
 				return;
 			}
+			
+			if (target == null)
+			{
+				return;
+			}
+			
 			QuestState qs = target.getQuestStateList().getQuestState(questId);
 			if (qs == null)
 			{
@@ -188,6 +211,7 @@ public class Quest extends AdminCommand
 				PacketSendUtility.sendMessage(admin, "<QuestState has been newly initialized.>");
 				return;
 			}
+			
 			qs.setStatus(questStatus);
 			if (varNum != 0)
 			{
@@ -197,15 +221,27 @@ public class Quest extends AdminCommand
 			{
 				qs.setQuestVar(var);
 			}
+			
 			PacketSendUtility.sendPacket(target, new SM_QUEST_ACTION(questId, qs.getStatus(), qs.getQuestVars().getQuestVars()));
-			final QuestEnv env = new QuestEnv(null, target, questId, 0);
-			if (questStatus == QuestStatus.COMPLETE)
+			
+			switch (questStatus)
 			{
-				QuestEngine.getInstance().onLvlUp(env);
-				target.getController().updateNearbyQuests();
-				qs.setCompleteCount(qs.getCompleteCount() + 1);
+				case REWARD:
+				{
+					target.getController().updateNearbyQuests();
+					break;
+				}
+				case COMPLETE:
+				{
+					qs.setCompleteCount(qs.getCompleteCount() + 1);
+					target.getController().updateNearbyQuests();
+					break;
+				}
+				default:
+					break;
 			}
 		}
+		
 		if (params[0].equals("delete"))
 		{
 			if (params.length != 2)
@@ -213,6 +249,7 @@ public class Quest extends AdminCommand
 				PacketSendUtility.sendMessage(admin, "syntax //quest delete <quest id>");
 				return;
 			}
+			
 			int id;
 			try
 			{
@@ -239,6 +276,7 @@ public class Quest extends AdminCommand
 				{
 					qs.setPersistentState(PersistentState.DELETED);
 				}
+				
 				PacketSendUtility.sendPacket(admin, new SM_QUEST_COMPLETED_LIST(admin.getQuestStateList().getAllFinishedQuests()));
 				admin.getController().updateNearbyQuests();
 			}
@@ -250,14 +288,48 @@ public class Quest extends AdminCommand
 				PacketSendUtility.sendMessage(admin, "syntax //quest show <quest id>");
 				return;
 			}
+			
 			ShowQuestInfo(target, admin, params[1]);
+			// <mariella> add sub-command "id" to see the linked questId
+		}
+		else if (params[0].equals("id"))
+		{
+			if (params.length != 2)
+			{
+				PacketSendUtility.sendMessage(admin, "syntax //quest id <quest link>");
+				return;
+			}
+			
+			final String quest = params[1];
+			int questId;
+			final Pattern id = Pattern.compile("\\[quest:([^%]+)]");
+			final Matcher result = id.matcher(quest);
+			if (result.find())
+			{
+				questId = Integer.parseInt(result.group(1));
+			}
+			else
+			{
+				questId = Integer.parseInt(params[1]);
+			}
+			
+			PacketSendUtility.sendMessage(admin, "Quest-ID: " + questId);
+			// </mariella>
 		}
 		else
 		{
-			PacketSendUtility.sendMessage(admin, "syntax //quest <start|set|show|delete>");
+			PacketSendUtility.sendMessage(admin, "syntax //quest <start|set|show|delete|id>"); // <mariella>
 		}
 	}
 	
+	/**
+	 * Displays the quest state information for a specific player.<br>
+	 * This method retrieves variables and status from the {@link QuestStateList}.<br>
+	 * It sends the resulting data to the administrator.
+	 * @param player The {@code Player} whose quest info will be displayed.
+	 * @param admin The {@code Player} who is executing the command.
+	 * @param param The string containing the unique quest ID.
+	 */
 	private void ShowQuestInfo(Player player, Player admin, String param)
 	{
 		int id;
@@ -270,6 +342,7 @@ public class Quest extends AdminCommand
 			PacketSendUtility.sendMessage(admin, "syntax //quest show <quest id>");
 			return;
 		}
+		
 		final QuestState qs = player.getQuestStateList().getQuestState(id);
 		if (qs == null)
 		{
@@ -282,16 +355,22 @@ public class Quest extends AdminCommand
 			{
 				sb.append(Integer.toString(qs.getQuestVarById(i)) + " ");
 			}
+			
 			PacketSendUtility.sendMessage(admin, "Quest state: " + qs.getStatus().toString() + "; vars: " + sb.toString() + qs.getQuestVarById(5));
 			sb.setLength(0);
 			sb = null;
 		}
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{
-		PacketSendUtility.sendMessage(player, "syntax //quest <start|set|show|delete>");
+		PacketSendUtility.sendMessage(player, "syntax //quest <start|set|show|delete|id>");
 	}
-	
 }

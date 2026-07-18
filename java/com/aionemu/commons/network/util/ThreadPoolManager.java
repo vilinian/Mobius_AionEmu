@@ -1,23 +1,26 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.network.util;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -28,13 +31,11 @@ import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.utils.concurrent.PriorityThreadFactory;
 import com.aionemu.commons.utils.concurrent.RunnableWrapper;
-import com.google.common.util.concurrent.JdkFutureAdapters;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 /**
+ * This class manages the lifecycle and execution of thread pools for network operations.<br>
+ * It provides a centralized way to handle concurrent tasks using {@link ThreadPoolExecutor}.<br>
+ * Use this manager to ensure efficient resource allocation across the application.
  * @author -Nemesiss-, Rolandas
  */
 public class ThreadPoolManager implements Executor
@@ -42,10 +43,9 @@ public class ThreadPoolManager implements Executor
 	/**
 	 * PriorityThreadFactory creating new threads for ThreadPoolManager
 	 */
-	@SuppressWarnings("synthetic-access")
+	
 	private static class SingletonHolder
 	{
-		
 		protected static final ThreadPoolManager instance = new ThreadPoolManager();
 	}
 	
@@ -55,7 +55,10 @@ public class ThreadPoolManager implements Executor
 	private static final Logger log = LoggerFactory.getLogger(ThreadPoolManager.class);
 	
 	/**
-	 * @return ThreadPoolManager instance.
+	 * Retrieves the global instance of the {@link ThreadPoolManager}.<br>
+	 * This method uses the singleton pattern to ensure only one manager exists.<br>
+	 * Use this to access shared thread pool services across the application.
+	 * @return The single {@code ThreadPoolManager} instance.
 	 */
 	public static ThreadPoolManager getInstance()
 	{
@@ -66,30 +69,33 @@ public class ThreadPoolManager implements Executor
 	 * STPE for normal scheduled tasks
 	 */
 	private final ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
-	private final ListeningScheduledExecutorService scheduledThreadPool;
+	private final ScheduledExecutorService scheduledThreadPool;
 	/**
 	 * TPE for execution of gameserver client packets
 	 */
 	private final ThreadPoolExecutor generalPacketsThreadPoolExecutor;
-	private final ListeningExecutorService generalPacketsThreadPool;
+	private final ExecutorService generalPacketsThreadPool;
 	
 	/**
-	 * Constructor.
+	 * Private constructor for the {@link ThreadPoolManager} class.<br>
+	 * This constructor initializes the internal thread pools and starts the deadlock detector.<br>
+	 * It prevents other classes from creating new instances of this manager.
 	 */
 	private ThreadPoolManager()
 	{
 		new DeadLockDetector(60, DeadLockDetector.RESTART).start();
 		
 		scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(4, new PriorityThreadFactory("ScheduledThreadPool", Thread.NORM_PRIORITY));
-		scheduledThreadPool = MoreExecutors.listeningDecorator(scheduledThreadPoolExecutor);
+		scheduledThreadPool = scheduledThreadPoolExecutor;
 		
-		generalPacketsThreadPoolExecutor = new ThreadPoolExecutor(1, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
-		generalPacketsThreadPool = MoreExecutors.listeningDecorator(generalPacketsThreadPoolExecutor);
+		generalPacketsThreadPoolExecutor = new ThreadPoolExecutor(1, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+		generalPacketsThreadPool = generalPacketsThreadPoolExecutor;
 	}
 	
 	/**
-	 * Executes Runnable - GameServer Client packet.
-	 * @param pkt
+	 * Executes a given task in the packet thread pool.<br>
+	 * This method wraps the {@code pkt} and submits it for processing.
+	 * @param pkt The {@code Runnable} task to be executed.
 	 */
 	@Override
 	public void execute(Runnable pkt)
@@ -98,22 +104,25 @@ public class ThreadPoolManager implements Executor
 	}
 	
 	/**
-	 * @return the packetsThreadPool
+	 * Retrieves the executor service used for processing network packets.<br>
+	 * This thread pool handles incoming packet tasks.
+	 * @return the {@code ListeningExecutorService} instance.
 	 */
-	public ListeningExecutorService getPacketsThreadPool()
+	public ExecutorService getPacketsThreadPool()
 	{
 		return generalPacketsThreadPool;
 	}
 	
 	/**
-	 * Schedule
-	 * @param <T>
-	 * @param r
-	 * @param delay
-	 * @return ScheduledFuture
+	 * Schedules a task to be executed after a specific delay.<br>
+	 * The delay is measured in milliseconds.<br>
+	 * If the provided {@code delay} is less than {@code 0}, it will be treated as {@code 0}.
+	 * @param r The {@link Runnable} task to execute.
+	 * @param delay The time to wait before running the task in milliseconds.
+	 * @return A {@link ScheduledFuture} representing the pending result of the task, or {@code null} if execution is rejected.
 	 */
-	@SuppressWarnings("unchecked")
-	public <T extends Runnable> ListenableFuture<T> schedule(T r, long delay)
+	
+	public ScheduledFuture<?> schedule(Runnable r, long delay)
 	{
 		try
 		{
@@ -121,25 +130,25 @@ public class ThreadPoolManager implements Executor
 			{
 				delay = 0;
 			}
-			return (ListenableFuture<T>) JdkFutureAdapters.listenInPoolThread(scheduledThreadPool.schedule(r, delay, TimeUnit.MILLISECONDS));
+			
+			return scheduledThreadPool.schedule(r, delay, TimeUnit.MILLISECONDS);
 		}
 		catch (RejectedExecutionException e)
 		{
 			return null; /* shutdown, ignore */
-			
 		}
 	}
 	
 	/**
-	 * Schedule at fixed rate
-	 * @param <T>
-	 * @param r
-	 * @param initial
-	 * @param delay
-	 * @return ScheduledFuture
+	 * Schedules a task to run repeatedly at a fixed rate.<br>
+	 * The first execution starts after the {@code initial} delay.<br>
+	 * Subsequent executions occur every {@code delay} milliseconds.
+	 * @param r The task to be executed.
+	 * @param initial The initial delay in milliseconds before starting.
+	 * @param delay The period between successive executions in milliseconds.
+	 * @return A {@link ScheduledFuture} representing the result of the task, or {@code null} if execution is rejected.
 	 */
-	@SuppressWarnings("unchecked")
-	public <T extends Runnable> ListenableFuture<T> scheduleAtFixedRate(T r, long initial, long delay)
+	public ScheduledFuture<?> scheduleAtFixedRate(Runnable r, long initial, long delay)
 	{
 		try
 		{
@@ -147,11 +156,13 @@ public class ThreadPoolManager implements Executor
 			{
 				delay = 0;
 			}
+			
 			if (initial < 0)
 			{
 				initial = 0;
 			}
-			return (ListenableFuture<T>) JdkFutureAdapters.listenInPoolThread(scheduledThreadPool.scheduleAtFixedRate(r, initial, delay, TimeUnit.MILLISECONDS));
+			
+			return scheduledThreadPool.scheduleAtFixedRate(r, initial, delay, TimeUnit.MILLISECONDS);
 		}
 		catch (RejectedExecutionException e)
 		{
@@ -160,7 +171,9 @@ public class ThreadPoolManager implements Executor
 	}
 	
 	/**
-	 * Shutdown all thread pools.
+	 * Shuts down the internal thread pools.<br>
+	 * This method stops both the {@code scheduledThreadPool} and {@code generalPacketsThreadPool}.<br>
+	 * It waits for up to 2 seconds for all tasks to complete.
 	 */
 	public void shutdown()
 	{

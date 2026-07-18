@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ * <p/>
+ * Aion-Lightning is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
+ * <p/>
+ * Aion-Lightning is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details. *
  * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * along with Aion-Lightning.
+ * If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.pet;
 
@@ -22,7 +22,9 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
 /**
- * @author Rinzler
+ * Represents a single entry in the pet merchandise configuration.<br>
+ * This class stores data used to define how pets are handled within the merchant system.
+ * @author Ace on 01/08/2016
  */
 @XmlType(name = "merch")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -34,11 +36,20 @@ public class PetMerchandEntry
 	@XmlAttribute(name = "rate_price")
 	private int ratePrice;
 	
+	/**
+	 * Returns the unique identifier of this object.
+	 * @return The integer ID.
+	 */
 	public int getId()
 	{
 		return id;
 	}
 	
+	/**
+	 * Retrieves the price for a specific rate.<br>
+	 * This value is stored in the {@code ratePrice} field.
+	 * @return The current rate price as an {@code int}.
+	 */
 	public int getRatePrice()
 	{
 		return ratePrice;

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.quest;
 
@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlType;
 
 /**
+ * Represents the different categories that quests can belong to.<br>
+ * This enum is used to group and organize {@code Quest} types.
  * @author antness
  */
 @XmlType(name = "QuestCategory")
@@ -38,15 +40,27 @@ public enum QuestCategory
 	CHALLENGE_TASK(0),
 	PUBLIC(0),
 	LEGION(0),
-	PRIMARY(0);
+	PRIMARY(0),
+	TUTORIAL(0),
+	GUIDE(0),
+	EPISODE(0);
 	
-	private int id;
+	private final int id;
 	
+	/**
+	 * Creates a new instance of {@link QuestCategory}.<br>
+	 * This constructor assigns the unique identifier to the category.
+	 * @param id The unique integer ID for this quest category.
+	 */
 	private QuestCategory(int id)
 	{
 		this.id = id;
 	}
 	
+	/**
+	 * Returns the unique identifier of this object.
+	 * @return The integer ID.
+	 */
 	public int getId()
 	{
 		return id;

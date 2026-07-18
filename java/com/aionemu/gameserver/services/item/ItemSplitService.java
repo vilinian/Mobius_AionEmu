@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.item;
 
@@ -33,6 +33,8 @@ import com.aionemu.gameserver.services.item.ItemPacketService.ItemUpdateType;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles the logic for splitting items into multiple smaller quantities.<br>
+ * It manages {@link Item} updates and ensures correct synchronization with player storage.
  * @author ATracer
  */
 public class ItemSplitService
@@ -40,14 +42,16 @@ public class ItemSplitService
 	private static final Logger log = LoggerFactory.getLogger(ItemSplitService.class);
 	
 	/**
-	 * Move part of stack into different slot
-	 * @param player
-	 * @param itemObjId
-	 * @param destinationObjId
-	 * @param splitAmount
-	 * @param slotNum
-	 * @param sourceStorageType
-	 * @param destinationStorageType
+	 * Splits a stack of items from one storage location to another.<br>
+	 * This method handles moving quantities between different storage types or slots.<br>
+	 * It validates player status and item restrictions before performing the split.
+	 * @param player The {@link Player} who is performing the action.
+	 * @param itemObjId The unique object ID of the source item to be split.
+	 * @param destinationObjId The unique object ID of the target location or item.
+	 * @param splitAmount The quantity of items to move.
+	 * @param slotNum The specific slot number for the new item if in the same storage.
+	 * @param sourceStorageType The type identifier for the source storage.
+	 * @param destinationStorageType The type identifier for the destination storage.
 	 */
 	public static void splitItem(Player player, int itemObjId, int destinationObjId, long splitAmount, short slotNum, byte sourceStorageType, byte destinationStorageType)
 	{
@@ -55,6 +59,7 @@ public class ItemSplitService
 		{
 			return;
 		}
+		
 		if (player.isTrading())
 		{
 			// You cannot split items in the inventory during a trade.
@@ -69,6 +74,7 @@ public class ItemSplitService
 			log.warn(String.format("storage null playerName sourceStorage destStorage %s %d %d", player.getName(), sourceStorageType, destinationStorageType));
 			return;
 		}
+		
 		Item sourceItem = sourceStorage.getItemByObjId(itemObjId);
 		final Item targetItem = destStorage.getItemByObjId(destinationObjId);
 		
@@ -102,15 +108,18 @@ public class ItemSplitService
 			{
 				return;
 			}
+			
 			if (sourceStorageType != destinationStorageType)
 			{
 				LegionService.getInstance().addWHItemHistory(player, sourceItem.getItemId(), splitAmount, sourceStorage, destStorage);
 			}
+			
 			final Item newItem = ItemFactory.newItem(sourceItem.getItemTemplate().getTemplateId(), splitAmount);
 			if (sourceStorageType == destinationStorageType)
 			{
 				newItem.setEquipmentSlot(slotNum);
 			}
+			
 			sourceStorage.decreaseItemCount(sourceItem, splitAmount, sourceStorageType == destinationStorageType ? ItemUpdateType.DEC_ITEM_SPLIT : ItemUpdateType.DEC_ITEM_SPLIT_MOVE);
 			PacketSendUtility.sendPacket(player, SM_CUBE_UPDATE.cubeSize(sourceStorage.getStorageType(), player));
 			if (destStorage.add(newItem) == null)
@@ -125,17 +134,20 @@ public class ItemSplitService
 			{
 				LegionService.getInstance().addWHItemHistory(player, sourceItem.getItemId(), splitAmount, sourceStorage, destStorage);
 			}
+			
 			mergeStacks(sourceStorage, destStorage, sourceItem, targetItem, splitAmount);
 		}
 	}
 	
 	/**
-	 * Merge 2 stacks with simple validation
-	 * @param sourceStorage
-	 * @param destStorage
-	 * @param sourceItem
-	 * @param targetItem
-	 * @param count
+	 * Merges a specific amount of items from one stack into another.<br>
+	 * This method updates the counts in both {@code sourceStorage} and {@code destStorage}.<br>
+	 * It ensures that the number of moved items does not exceed the available space.
+	 * @param sourceStorage The storage containing the original item stack.
+	 * @param destStorage The storage where the items will be merged into.
+	 * @param sourceItem The {@link Item} being taken from.
+	 * @param targetItem The {@link Item} receiving the additional count.
+	 * @param count The amount of items to move.
 	 */
 	public static void mergeStacks(IStorage sourceStorage, IStorage destStorage, Item sourceItem, Item targetItem, long count)
 	{
@@ -146,15 +158,20 @@ public class ItemSplitService
 			final long leftCount = destStorage.increaseItemCount(targetItem, count, sourceStorage.getStorageType() == destStorage.getStorageType() ? ItemUpdateType.INC_ITEM_MERGE : ItemUpdateType.INC_ITEM_COLLECT);
 			sourceStorage.decreaseItemCount(sourceItem, count - leftCount, sourceStorage.getStorageType() == destStorage.getStorageType() ? ItemUpdateType.DEC_ITEM_SPLIT : ItemUpdateType.DEC_ITEM_SPLIT_MOVE);
 		}
+		
 	}
 	
+	/**
+	 * Moves a specific amount of Kinah between storage types.<br>
+	 * This method handles transfers between the {@code CUBE} and {@code ACCOUNT_WAREHOUSE}.<br>
+	 * It validates the balance before calling {@code long, IStorage)}.
+	 * @param player The {@code Player} performing the action.
+	 * @param source The {@code IStorage} where Kinah is being taken from.
+	 * @param splitAmount The amount of Kinah to move.
+	 */
 	private static void moveKinah(Player player, IStorage source, long splitAmount)
 	{
-		if (source.getKinah() < splitAmount)
-		{
-			return;
-		}
-		if (ExchangeService.getInstance().isPlayerInExchange(player))
+		if ((source.getKinah() < splitAmount) || ExchangeService.getInstance().isPlayerInExchange(player))
 		{
 			return;
 		}
@@ -165,31 +182,42 @@ public class ItemSplitService
 			{
 				final IStorage destination = player.getStorage(StorageType.ACCOUNT_WAREHOUSE.getId());
 				final long chksum = (source.getKinah() - splitAmount) + (destination.getKinah() + splitAmount);
+				
 				if (chksum != (source.getKinah() + destination.getKinah()))
 				{
 					return;
 				}
+				
 				updateKinahCount(source, splitAmount, destination);
 				break;
 			}
+			
 			case ACCOUNT_WAREHOUSE:
 			{
 				final IStorage destination = player.getStorage(StorageType.CUBE.getId());
 				final long chksum = (source.getKinah() - splitAmount) + (destination.getKinah() + splitAmount);
+				
 				if (chksum != (source.getKinah() + destination.getKinah()))
 				{
 					return;
 				}
+				
 				updateKinahCount(source, splitAmount, destination);
 				break;
 			}
 			default:
-			{
 				break;
-			}
 		}
 	}
 	
+	/**
+	 * Updates the Kinah balance between two storage locations.<br>
+	 * This method subtracts a specific amount from the {@code source} and adds it to the {@code destination}.<br>
+	 * It uses internal update types to track these changes correctly.
+	 * @param source The {@link IStorage} where the Kinah will be removed from.
+	 * @param splitAmount The number of Kinah to move between storages.
+	 * @param destination The {@link IStorage} where the Kinah will be added to.
+	 */
 	private static void updateKinahCount(IStorage source, long splitAmount, IStorage destination)
 	{
 		source.decreaseKinah(splitAmount, ItemUpdateType.DEC_ITEM_SPLIT);

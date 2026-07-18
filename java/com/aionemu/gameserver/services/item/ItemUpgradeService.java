@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.item;
 
@@ -31,46 +31,97 @@ import com.aionemu.gameserver.services.abyss.AbyssPointsService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.audit.AuditLogger;
 
-import javolution.util.FastMap;
+import java.util.Map;
 
 /**
- * @author Ranastic (Encom)
+ * This service handles the logic for upgrading items in the game.<br>
+ * It manages the processing of {@link ItemUpgradeTemplate} data and validates requirements.<br>
+ * It also handles the distribution of rewards or results based on upgrade outcomes.
+ * @author Ranastic
  */
 public class ItemUpgradeService
 {
 	private static final Logger log = LoggerFactory.getLogger(ItemUpgradeService.class);
 	
+	/**
+	 * Removes the required materials and currency from a {@link Player}.<br>
+	 * This method checks for sub-materials, Kinah, and Abyss Points.<br>
+	 * It also removes one instance of the {@code baseItem} from the inventory.
+	 * @param player The {@link Player} who will lose the items.
+	 * @param baseItem The {@link Item} being upgraded.
+	 * @param resultItemId The ID of the item being created to determine costs.
+	 * @return {@code true} if all materials were successfully removed, otherwise {@code false}.
+	 */
+	public static boolean decreaseMaterial(Player player, Item baseItem, int resultItemId)
+	{
+		final Map<Integer, UpgradeResultItem> resultItemMap = DataManager.ITEM_UPGRADE_DATA.getResultItemMap(baseItem.getItemId());
+		
+		final UpgradeResultItem resultItem = resultItemMap.get(resultItemId);
+		if (resultItem.getNeed_kinah() == null)
+		{
+			for (SubMaterialItem item : resultItem.getUpgrade_materials().getSubMaterialItem())
+			{
+				if (!player.getInventory().decreaseByItemId(item.getId(), item.getCount()))
+				{
+					AuditLogger.info(player, "try item upgrade without sub material");
+					return false;
+				}
+			}
+		}
+		else
+		{
+			player.getInventory().decreaseKinah(-resultItem.getNeed_kinah().getCount());
+		}
+		
+		if (resultItem.getNeed_abyss_point() != null)
+		{
+			AbyssPointsService.setAp(player, -resultItem.getNeed_abyss_point().getCount());
+		}
+		
+		if (resultItem.getNeed_kinah() != null)
+		{
+			player.getInventory().decreaseKinah(-resultItem.getNeed_kinah().getCount());
+		}
+		
+		player.getInventory().decreaseByObjectId(baseItem.getObjectId(), 1);
+		return true;
+	}
+	
+	/**
+	 * Verifies if a {@link Player} can upgrade a specific {@link Item}.<br>
+	 * This method checks for required materials, abyss points, and enchantment levels.<br>
+	 * It returns {@code false} if any requirements are not met.
+	 * @param player The {@link Player} attempting the upgrade.
+	 * @param baseItem The {@link Item} that is being upgraded.
+	 * @param resultItemId The ID of the item expected as a result.
+	 * @return {@code true} if the upgrade is possible, otherwise {@code false}.
+	 */
 	public static boolean checkItemUpgrade(Player player, Item baseItem, int resultItemId)
 	{
-		final ItemUpgradeTemplate itemUpgardeTemplate = DataManager.ITEM_UPGRADE_DATA.getItemUpgradeTemplate(baseItem.getItemId());
-		if (itemUpgardeTemplate == null)
+		final ItemUpgradeTemplate itemUpgradeTemplate = DataManager.ITEM_UPGRADE_DATA.getItemUpgradeTemplate(baseItem.getItemId());
+		if (itemUpgradeTemplate == null)
 		{
 			log.warn(resultItemId + " item's itemupgrade template is null");
 			return false;
 		}
-		final FastMap<Integer, UpgradeResultItem> resultItemMap = DataManager.ITEM_UPGRADE_DATA.getResultItemMap(baseItem.getItemId());
+		
+		final Map<Integer, UpgradeResultItem> resultItemMap = DataManager.ITEM_UPGRADE_DATA.getResultItemMap(baseItem.getItemId());
 		if (!resultItemMap.containsKey(resultItemId))
 		{
 			AuditLogger.info(player, resultItemId + " item's baseItem and resultItem is not matched (possible client modify)");
 			return false;
 		}
+		
 		final UpgradeResultItem resultItem = resultItemMap.get(resultItemId);
 		if (resultItem.getCheck_enchant_count() > 0)
 		{
-			if (baseItem.getEnchantLevel() < resultItem.getCheck_enchant_count())
+			if (baseItem.getEnchantOrAuthorizeLevel() < resultItem.getCheck_enchant_count())
 			{
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_REGISTER_ITEM_MSG_UPGRADE_CANNOT(new DescriptionId(baseItem.getNameId())));
 				return false;
 			}
 		}
-		if (resultItem.getCheck_authorize_count() > 0)
-		{
-			if (baseItem.getAuthorize() < resultItem.getCheck_authorize_count())
-			{
-				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_REGISTER_ITEM_MSG_UPGRADE_CANNOT_02(new DescriptionId(baseItem.getNameId())));
-				return false;
-			}
-		}
+		
 		if (resultItem.getNeed_abyss_point() != null)
 		{
 			if (player.getAbyssRank().getAp() < resultItem.getNeed_abyss_point().getCount())
@@ -79,6 +130,7 @@ public class ItemUpgradeService
 				return false;
 			}
 		}
+		
 		if (resultItem.getNeed_kinah() == null)
 		{
 			for (SubMaterialItem sub : resultItem.getUpgrade_materials().getSubMaterialItem())
@@ -98,36 +150,7 @@ public class ItemUpgradeService
 				return false;
 			}
 		}
-		return true;
-	}
-	
-	public static boolean decreaseMaterial(Player player, Item baseItem, int resultItemId)
-	{
-		final FastMap<Integer, UpgradeResultItem> resultItemMap = DataManager.ITEM_UPGRADE_DATA.getResultItemMap(baseItem.getItemId());
-		final UpgradeResultItem resultItem = resultItemMap.get(resultItemId);
-		if (resultItem.getNeed_kinah() == null)
-		{
-			for (SubMaterialItem item : resultItem.getUpgrade_materials().getSubMaterialItem())
-			{
-				if (!player.getInventory().decreaseByItemId(item.getId(), item.getCount()))
-				{
-					AuditLogger.info(player, "try item upgrade without sub material");
-					return false;
-				}
-			}
-		}
-		else
-		{
-			player.getInventory().decreaseKinah(-resultItem.getNeed_kinah().getCount());
-		}
-		if (resultItem.getNeed_abyss_point() != null)
-		{
-			AbyssPointsService.setAp(player, -resultItem.getNeed_abyss_point().getCount());
-		}
-		/*
-		 * if (resultItem.getNeed_kinah() != null) { player.getInventory().decreaseKinah(-resultItem.getNeed_kinah().getCount()); }
-		 */
-		player.getInventory().decreaseByObjectId(baseItem.getObjectId(), 1);
+		
 		return true;
 	}
 }

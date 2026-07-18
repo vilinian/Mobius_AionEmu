@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.controller;
 
@@ -25,14 +25,18 @@ import com.aionemu.loginserver.model.Account;
 import com.aionemu.loginserver.model.AccountTime;
 
 /**
- * This class is for account time controlling. When character logins any server, it should get its day online time and rest time. Some aion ingame feautres also depend on player's online time
+ * This class manages account time tracking for players.<br>
+ * It retrieves the daily online and rest time when a character logs into any server.<br>
+ * These values are used to determine various in-game features that depend on player activity.
  * @author EvilSpirit
  */
 public class AccountTimeController
 {
 	/**
-	 * Update account time when character logins. The following field are being updated: - LastLoginTime (set to CurrentTime) - RestTime (set to (RestTime + (CurrentTime-LastLoginTime - SessionDuration))
-	 * @param account
+	 * Updates the time statistics for an {@link Account} when a character logs in.<br>
+	 * This method refreshes the last login timestamp and calculates rest time.<br>
+	 * It also handles daily resets and return status logic.
+	 * @param account The {@code Account} object to be updated.
 	 */
 	public static void updateOnLogin(Account account)
 	{
@@ -48,6 +52,7 @@ public class AccountTimeController
 		
 		final int lastLoginDay = getDays(accountTime.getLastLoginTime().getTime());
 		final int currentDay = getDays(System.currentTimeMillis());
+		final int returnday = getDays(accountTime.getLastLoginTime().getTime() + (+30L * 24 * 60 * 60 * 1000));
 		
 		/**
 		 * The character from that account was online not today, so it's account timings should be nulled.
@@ -69,11 +74,26 @@ public class AccountTimeController
 		
 		DAOManager.getDAO(AccountTimeDAO.class).updateAccountTime(account.getId(), accountTime);
 		account.setAccountTime(accountTime);
+		
+		if ((currentDay >= returnday) && (account.getReturn() == 0))
+		{
+			account.setReturn((byte) 1);
+			account.setReturnEnd(new Timestamp(System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000)));
+		}
+		
+		if (currentDay >= account.getReturnEnd().getTime())
+		{
+			account.setReturn((byte) 0);
+		}
+		
 	}
 	
 	/**
-	 * Update account time when character logouts. The following field are being updated: - SessionTime (set to CurrentTime - LastLoginTime) - AccumulatedOnlineTime (set to AccumulatedOnlineTime + SessionTime)
-	 * @param account
+	 * Updates the online time for an {@link Account}.<br>
+	 * This method calculates the session duration since the last login.<br>
+	 * It adds that duration to the total accumulated online time.<br>
+	 * The updated data is saved to the database via {@link AccountTimeDAO}.
+	 * @param account The {@code Account} object to update.
 	 */
 	public static void updateOnLogout(Account account)
 	{
@@ -86,9 +106,10 @@ public class AccountTimeController
 	}
 	
 	/**
-	 * Checks if account is already expired or not
-	 * @param account
-	 * @return true, if account is expired, false otherwise
+	 * Checks if the provided {@code Account} has passed its expiration date.<br>
+	 * It compares the current system time against the account's expiration timestamp.
+	 * @param account The {@link Account} object to check.
+	 * @return {@code true} if the account is expired, {@code false} otherwise.
 	 */
 	public static boolean isAccountExpired(Account account)
 	{
@@ -98,9 +119,11 @@ public class AccountTimeController
 	}
 	
 	/**
-	 * Checks if account is restricted by penalty or not
-	 * @param account
-	 * @return true, is penalty is active, false otherwise
+	 * Checks if an account currently has an active penalty.<br>
+	 * It verifies the {@code AccountTime} for the given {@link Account}.<br>
+	 * A penalty is considered active if it has not expired or is set to infinity.
+	 * @param account The {@code Account} object to check.
+	 * @return {@code true} if a penalty is active, {@code false} otherwise.
 	 */
 	public static boolean isAccountPenaltyActive(Account account)
 	{
@@ -111,9 +134,10 @@ public class AccountTimeController
 	}
 	
 	/**
-	 * Get days from time presented in milliseconds
-	 * @param millis time in ms
-	 * @return days
+	 * Converts a duration in milliseconds into the total number of days.<br>
+	 * This method performs integer division to find the full days elapsed.
+	 * @param millis The time duration in {@code long} milliseconds.
+	 * @return The total number of days as an {@code int}.
 	 */
 	public static int getDays(long millis)
 	{

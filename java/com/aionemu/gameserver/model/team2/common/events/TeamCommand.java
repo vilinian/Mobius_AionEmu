@@ -1,26 +1,28 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.team2.common.events;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 /**
+ * Represents the various types of commands that can be issued to a team.<br>
+ * This enum is used by {@code TeamEvent} to identify specific actions.
  * @author ATracer
  */
 public enum TeamCommand
@@ -44,6 +46,7 @@ public enum TeamCommand
 	ALLIANCE_CHANGE_GROUP(27),
 	LEAGUE_LEAVE(29),
 	LEAGUE_EXPEL(30);
+	
 	private static TIntObjectHashMap<TeamCommand> teamCommands;
 	
 	static
@@ -57,20 +60,37 @@ public enum TeamCommand
 	
 	private final int commandCode;
 	
+	/**
+	 * Creates a new instance of {@link TeamCommand}.<br>
+	 * This constructor assigns the unique identifier to the object.
+	 * @param commandCode The integer ID representing the specific team action.
+	 */
 	private TeamCommand(int commandCode)
 	{
 		this.commandCode = commandCode;
 	}
 	
+	/**
+	 * Retrieves the unique identifier for this {@link TeamCommand}.<br>
+	 * This ID is used to map commands to their specific numeric codes.
+	 * @return The integer code associated with this command.
+	 */
 	public int getCodeId()
 	{
 		return commandCode;
 	}
 	
+	/**
+	 * Retrieves a {@link TeamCommand} based on its unique integer ID.<br>
+	 * This method looks up the value in the internal command map.<br>
+	 * It throws an exception if the provided code is not found.
+	 * @param commandCode The unique integer identifier for the team command.
+	 * @return The corresponding {@link TeamCommand} object.
+	 */
 	public static TeamCommand getCommand(int commandCode)
 	{
 		final TeamCommand command = teamCommands.get(commandCode);
-		Preconditions.checkNotNull(command, "Invalid team command code " + commandCode);
+		Objects.requireNonNull(command, "Invalid team command code " + commandCode);
 		return command;
 	}
 }

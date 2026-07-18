@@ -1,42 +1,59 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.playercommands;
 
 import com.aionemu.gameserver.model.gameobjects.Item;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
+import com.aionemu.gameserver.model.templates.item.ItemCategory;
 import com.aionemu.gameserver.services.item.ItemPacketService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.PlayerCommand;
+import com.aionemu.gameserver.utils.i18n.CustomMessageId;
+import com.aionemu.gameserver.utils.i18n.LanguageHandler;
 
 /**
- * @author Goong Adm
+ * Handles the {@code /enchant} command for players.<br>
+ * This class processes requests to apply enchantments to items.<br>
+ * It validates player actions and sends the appropriate feedback via {@link ItemPacketService}.
+ * @author Tago modified by Wakizashi and Ney, Maestros, Eloann
  */
 public class cmd_enchant extends PlayerCommand
 {
+	/**
+	 * Registers the {@code enchant} command.<br>
+	 * This allows players to use the enchantment system.<br>
+	 * It initializes the command within the {@link PlayerCommand} class.
+	 */
 	public cmd_enchant()
 	{
 		super("enchant");
 	}
 	
+	/**
+	 * Executes the command to enchant a player's item.<br>
+	 * It parses the first parameter to determine the enchantment level.<br>
+	 * If parsing fails, it calls {@code String)} with a failure message.
+	 * @param player The {@code Player} executing the command.
+	 * @param params Variable arguments where the first value is the enchantment level.
+	 */
 	@Override
 	public void execute(Player player, String... params)
 	{
 		int enchant = 0;
-		
 		try
 		{
 			enchant = params[0] == null ? enchant : Integer.parseInt(params[0]);
@@ -46,40 +63,51 @@ public class cmd_enchant extends PlayerCommand
 			onFail(player, "Fail");
 			return;
 		}
-		if (enchant <= 16)
-		{
-			enchant(player, enchant);
-		}
-		else
-		{
-			PacketSendUtility.sendMessage(player, "You cannot enchant higher than 16 using the command!");
-		}
+		
+		enchant(player, enchant);
 	}
 	
+	/**
+	 * Applies an enchantment to the items worn by a {@link Player}.<br>
+	 * It checks if each item is upgradeable before updating its level.<br>
+	 * The method also updates visual stats and sends a success message.
+	 * @param player The {@code Player} who will receive the enchanted items.
+	 * @param enchant The enchantment level to apply.
+	 */
 	private void enchant(Player player, int enchant)
 	{
-		
 		for (Item targetItem : player.getEquipment().getEquippedItemsWithoutStigma())
 		{
 			if (isUpgradeble(targetItem))
 			{
-				if (targetItem.getEnchantLevel() < enchant)
+				int enchantLevel = 15;
+				final int maxEnchant = targetItem.getItemTemplate().getMaxEnchantLevel();
+				if ((maxEnchant > 0) && (enchantLevel > maxEnchant))
 				{
-					targetItem.setEnchantLevel(enchant);
-					if (targetItem.isEquipped())
-					{
-						player.getGameStats().updateStatsVisually();
-					}
-					ItemPacketService.updateItemAfterInfoChange(player, targetItem);
+					enchantLevel = maxEnchant;
 				}
+				
+				targetItem.setEnchantOrAuthorizeLevel(enchantLevel);
+				
+				if (targetItem.isEquipped())
+				{
+					player.getGameStats().updateStatsVisually();
+				}
+				
+				ItemPacketService.updateItemAfterInfoChange(player, targetItem);
 			}
 		}
+		
+		PacketSendUtility.sendMessage(player, LanguageHandler.translate(CustomMessageId.ENCHANT_SUCCES) + enchant);
 	}
 	
 	/**
-	 * Verify if the item is enchantble and/or socketble
-	 * @param item
-	 * @return
+	 * Checks if a specific {@link Item} can be upgraded.<br>
+	 * This method evaluates the item's template to determine eligibility.<br>
+	 * It returns {@code true} if the item meets the upgrade requirements.<br>
+	 * It returns {@code false} otherwise.
+	 * @param item The {@link Item} to check for upgrade eligibility.
+	 * @return {@code true} if the item can be upgraded, {@code false} if it cannot.
 	 */
 	public static boolean isUpgradeble(Item item)
 	{
@@ -87,34 +115,42 @@ public class cmd_enchant extends PlayerCommand
 		{
 			return false;
 		}
-		if (item.getEnchantLevel() >= 16)
-		{
-			return false;
-		}
+		
 		if (item.getItemTemplate().isWeapon())
 		{
 			return true;
 		}
-		if ((item.getEnchantLevel() > item.getItemTemplate().getMaxEnchantLevel()) && item.isAmplified())
+		
+		if ((item.getItemTemplate().getCategory() == ItemCategory.STIGMA) || (item.getEnchantOrAuthorizeLevel() == 15))
 		{
 			return false;
 		}
+		
 		if (item.getItemTemplate().isArmor())
 		{
 			final int at = item.getItemTemplate().getItemSlot();
-			if ((at == 1) || (/* Main Hand */ at == 2) || (/* Sub Hand */ at == 8) || (/* Jacket */ at == 16) || (/* Gloves */ at == 32) || (/* Boots */ at == 2048) || (/* Shoulder */ at == 4096) || (/* Pants */ at == 131072) || (/* Wings */ at == 32768) || (/* Main Off Hand */ at == 262144))
-			{
+			if ((at == 1) || (/* Main Hand */at == 2) || (/* Sub Hand */at == 8) || (/* Jacket */at == 16) || (/* Gloves */at == 32) || (/* Boots */at == 2048) || (/* Shoulder */at == 4096) || (/* Pants */at == 131072) || /*
+																																																								 * Main Off Hand
+																																																								 */(at == 262144))
+			/*
+			 * Sub Off Hand
+			 */ {
 				return true;
 			}
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{
-		PacketSendUtility.sendMessage(player, " " + "Syntax .enchant : " + " <value>.");
-		// PacketSendUtility.sendMessage(player, "Syntax .enchant : \n" + " Syntax .enchant <value>.\n" + LanguageHandler.translate(CustomMessageId.ENCHANT_INFO) + "\n"
-		// + LanguageHandler.translate(CustomMessageId.ENCHANT_SAMPLE));
+		PacketSendUtility.sendMessage(player, "Syntax .enchant : \n" + "  Syntax .enchant <value>.\n" + LanguageHandler.translate(CustomMessageId.ENCHANT_INFO) + "\n" + LanguageHandler.translate(CustomMessageId.ENCHANT_SAMPLE));
 	}
 }

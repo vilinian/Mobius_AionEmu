@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -26,7 +26,8 @@ import com.aionemu.gameserver.services.NameRestrictionService;
 import com.aionemu.gameserver.services.player.PlayerService;
 
 /**
- * In this packets aion client is asking if given nickname is ok/free?.
+ * This packet handles the request from the {@code aion} client to check if a specific nickname is available.<br>
+ * It verifies whether the provided name is free or violates any server restrictions.
  * @author -Nemesiss-
  * @modified cura
  */
@@ -38,28 +39,23 @@ public class CM_CHECK_NICKNAME extends AionClientPacket
 	private String nick;
 	
 	/**
-	 * Constructs new instance of <tt>CM_CHECK_NICKNAME </tt> packet
-	 * @param opcode
-	 * @param state
-	 * @param restStates
+	 * This method handles the request to check if a nickname is available.<br>
+	 * It initializes the packet with the required network states.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary {@link State} of the connection.
+	 * @param restStates Additional {@link State} objects for the connection.
 	 */
 	public CM_CHECK_NICKNAME(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void readImpl()
 	{
 		nick = readS();
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void runImpl()
 	{
@@ -86,7 +82,7 @@ public class CM_CHECK_NICKNAME extends AionClientPacket
 		}
 		else
 		{
-			client.sendPacket(new SM_NICKNAME_CHECK_RESPONSE(0));
+			client.sendPacket(new SM_NICKNAME_CHECK_RESPONSE(SM_CREATE_CHARACTER.RESPONSE_OK));
 		}
 	}
 }

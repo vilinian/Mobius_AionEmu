@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -20,12 +20,19 @@ import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 
 /**
+ * This packet handles the logic for a player learning a new recipe.<br>
+ * It is sent from the server to the client to confirm successful acquisition of a craftable item.
  * @author lord_rex
  */
 public class SM_LEARN_RECIPE extends AionServerPacket
 {
 	private final int recipeId;
 	
+	/**
+	 * Creates a new {@code SM_LEARN_RECIPE} packet.<br>
+	 * This packet is used to learn a specific recipe.
+	 * @param recipeId The unique identifier for the recipe.
+	 */
 	public SM_LEARN_RECIPE(int recipeId)
 	{
 		this.recipeId = recipeId;
@@ -35,6 +42,5 @@ public class SM_LEARN_RECIPE extends AionServerPacket
 	protected void writeImpl(AionConnection con)
 	{
 		writeD(recipeId);
-		writeC(0);
 	}
 }

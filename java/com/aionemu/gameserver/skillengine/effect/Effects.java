@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
@@ -28,12 +28,20 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 /**
+ * This class serves as a container for various skill effects.<br>
+ * It manages the collection of {@code effect} objects associated with a specific skill.<br>
+ * Use this class to handle multiple visual or functional effects triggered by the {@link com.aionemu.gameserver.skillengine.SkillEngine}.
  * @author ATracer
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Effects")
 public class Effects
 {
+	/**
+	 * This class defines the XML mapping for various effect types.<br>
+	 * It maps specific XML element names to their corresponding {@code Effect} subclasses.<br>
+	 * These mappings allow the system to deserialize different effects into the correct objects.
+	 */
 	@XmlElements(
 	{
 		@XmlElement(name = "root", type = RootEffect.class),
@@ -63,23 +71,21 @@ public class Effects
 		@XmlElement(name = "openaerial", type = OpenAerialEffect.class),
 		@XmlElement(name = "closeaerial", type = CloseAerialEffect.class),
 		@XmlElement(name = "shield", type = ShieldEffect.class),
-		@XmlElement(name = "mpshield", type = MpShieldEffect.class),
 		@XmlElement(name = "bind", type = BindEffect.class),
 		@XmlElement(name = "dispel", type = DispelEffect.class),
 		@XmlElement(name = "skillatk", type = SkillAttackInstantEffect.class),
 		@XmlElement(name = "spellatkinstant", type = SpellAttackInstantEffect.class),
 		@XmlElement(name = "dash", type = DashEffect.class),
 		@XmlElement(name = "backdash", type = BackDashEffect.class),
+		@XmlElement(name = "frontdash", type = FrontDashEffect.class),
 		@XmlElement(name = "delaydamage", type = DelayedSpellAttackInstantEffect.class),
 		@XmlElement(name = "return", type = ReturnEffect.class),
 		@XmlElement(name = "healinstant", type = HealInstantEffect.class),
 		@XmlElement(name = "mphealinstant", type = MPHealInstantEffect.class),
-		@XmlElement(name = "xphealinstant", type = XPHealInstantEffect.class),
 		@XmlElement(name = "dphealinstant", type = DPHealInstantEffect.class),
 		@XmlElement(name = "fphealinstant", type = FPHealInstantEffect.class),
 		@XmlElement(name = "prochealinstant", type = ProcHealInstantEffect.class),
 		@XmlElement(name = "procmphealinstant", type = ProcMPHealInstantEffect.class),
-		@XmlElement(name = "procxphealinstant", type = ProcXPHealInstantEffect.class),
 		@XmlElement(name = "procdphealinstant", type = ProcDPHealInstantEffect.class),
 		@XmlElement(name = "procfphealinstant", type = ProcFPHealInstantEffect.class),
 		@XmlElement(name = "carvesignet", type = CarveSignetEffect.class),
@@ -116,6 +122,7 @@ public class Effects
 		@XmlElement(name = "summongroupgate", type = SummonGroupGateEffect.class),
 		@XmlElement(name = "summonservant", type = SummonServantEffect.class),
 		@XmlElement(name = "skillatkdraininstant", type = SkillAtkDrainInstantEffect.class),
+		@XmlElement(name = "petorderunsummon", type = PetOrderUnSummonEffect.class),
 		@XmlElement(name = "petorderuseultraskill", type = PetOrderUseUltraSkillEffect.class),
 		@XmlElement(name = "boostheal", type = BoostHealEffect.class),
 		@XmlElement(name = "dispelbuff", type = DispelBuffEffect.class),
@@ -137,7 +144,7 @@ public class Effects
 		@XmlElement(name = "fpatk", type = FpAttackEffect.class),
 		@XmlElement(name = "deboostheal", type = DeboostHealEffect.class),
 		@XmlElement(name = "fpatkinstant", type = FpAttackInstantEffect.class),
-		@XmlElement(name = "delayedfpatk", type = DelayedFPAttackInstantEffect.class),
+		@XmlElement(name = "stunalways", type = StunAlwaysEffect.class),
 		@XmlElement(name = "summonskillarea", type = SummonSkillAreaEffect.class),
 		@XmlElement(name = "mpattackinstant", type = MpAttackInstantEffect.class),
 		@XmlElement(name = "onetimeboostskillcritical", type = OneTimeBoostSkillCriticalEffect.class),
@@ -204,56 +211,100 @@ public class Effects
 		@XmlElement(name = "absstatbuff", type = AbsoluteStatToPCBuffEffect.class),
 		@XmlElement(name = "absstatdebuff", type = AbsoluteStatToPCDebuffEffect.class),
 		@XmlElement(name = "doubleboost", type = DoubleBoostEffect.class),
+		@XmlElement(name = "mpshield", type = MpShieldEffect.class),
 		@XmlElement(name = "targetchange", type = TargetChangeEffect.class),
-		@XmlElement(name = "absoluteexppointhealinstant", type = AbsoluteEXPPointHealInstantEffect.class)
+		@XmlElement(name = "xphealinstant", type = XPHealInstantEffect.class),
+		@XmlElement(name = "silverstar", type = SilverStarEffect.class),
+		@XmlElement(name = "worldplaytime", type = WorldPlayTimeEffect.class),
+		@XmlElement(name = "absolutefamepointhealinstant", type = AbsoluteFamePointHealInstantEffect.class)
 	})
 	
 	protected List<EffectTemplate> effects;
 	@XmlTransient
 	protected List<EffectType> effectTypes;
 	
+	/**
+	 * Retrieves the list of all effect templates.<br>
+	 * If the internal list is {@code null}, a new {@code ArrayList<}> is created.
+	 * @return A {@code List} containing {@link EffectTemplate} objects.
+	 */
 	public List<EffectTemplate> getEffects()
 	{
 		if (effects == null)
 		{
 			effects = new ArrayList<>();
 		}
+		
 		return effects;
 	}
 	
+	/**
+	 * Retrieves the list of all registered effect types.<br>
+	 * This method returns a {@code List} containing {@link EffectType} objects.
+	 * @return A {@code List} of {@code EffectType} objects.
+	 */
 	public List<EffectType> getEffectTypes()
 	{
 		return effectTypes;
 	}
 	
+	/**
+	 * Adds a new {@code EffectType} to the list of effects.<br>
+	 * This method initializes the internal list if it is currently {@code null}.
+	 * @param effectType The {@code EffectType} to be added.
+	 */
 	public void addEffectType(EffectType effectType)
 	{
 		if (effectTypes == null)
 		{
 			effectTypes = new ArrayList<>();
 		}
+		
 		effectTypes.add(effectType);
 	}
 	
+	/**
+	 * Checks if a specific {@code EffectType} exists in the current list.<br>
+	 * This method returns {@code false} if the list is {@code null}.
+	 * @param effectType The {@code EffectType} to search for.
+	 * @return {@code true} if the type is found, otherwise {@code false}.
+	 */
 	public boolean isEffectTypePresent(EffectType effectType)
 	{
 		if (effectTypes == null)
 		{
 			return false;
 		}
+		
 		return effectTypes.contains(effectType);
 	}
 	
+	/**
+	 * Checks if the current effect includes a resurrection type.<br>
+	 * It returns {@code true} if either {@code RESURRECT} or {@code RESURRECTPOSITIONAL} is present.
+	 * @return {@code true} if the effect is a resurrection type, otherwise {@code false}.
+	 */
 	public boolean isResurrect()
 	{
-		return isEffectTypePresent(EffectType.RESURRECT) || isEffectTypePresent(EffectType.RESURRECTPOSITIONAL);
+		return (isEffectTypePresent(EffectType.RESURRECT) || isEffectTypePresent(EffectType.RESURRECTPOSITIONAL));
 	}
 	
+	/**
+	 * Checks if the effect includes an instant MP heal.<br>
+	 * This method verifies if {@code EffectType.MPHEALINSTANT} is present in the current effects list.
+	 * @return {@code true} if the effect is an instant MP heal, otherwise {@code false}.
+	 */
 	public boolean isMpHealInstant()
 	{
 		return isEffectTypePresent(EffectType.MPHEALINSTANT);
 	}
 	
+	/**
+	 * This method is called after the XML data has been unmarshalled.<br>
+	 * It populates the effect types using the list of {@link EffectTemplate} objects.
+	 * @param u The {@link Unmarshaller} used to read the data.
+	 * @param parent The parent object of the current element.
+	 */
 	void afterUnmarshal(Unmarshaller u, Object parent)
 	{
 		for (EffectTemplate et : getEffects())

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
@@ -25,6 +25,8 @@ import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.templates.stats.ModifiersTemplate;
 
 /**
+ * This class serves as a base for effects that modify character statistics by an absolute value.<br>
+ * It provides the foundation for handling {@link ModifiersTemplate} changes within the skill engine.
  * @author Rolandas
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -35,7 +37,9 @@ public abstract class AbstractAbsoluteStatEffect extends EffectTemplate
 	private int statSetId;
 	
 	/**
-	 * @return the statSetId
+	 * Retrieves the {@link ModifiersTemplate} associated with this effect.<br>
+	 * It uses the internal {@code statSetId} to fetch data from the {@code DataManager}.
+	 * @return the {@code ModifiersTemplate} for the current stat set.
 	 */
 	public ModifiersTemplate getModifiersSet()
 	{

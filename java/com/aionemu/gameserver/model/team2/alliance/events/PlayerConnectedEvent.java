@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.team2.alliance.events;
 
@@ -26,9 +26,12 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_ALLIANCE_MEMBER_INFO
 import com.aionemu.gameserver.network.aion.serverpackets.SM_INSTANCE_INFO;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SHOW_BRAND;
 import com.aionemu.gameserver.utils.PacketSendUtility;
-import com.google.common.base.Predicate;
+import java.util.function.Predicate;
 
 /**
+ * This event is triggered when a {@link Player} connects to the game server.<br>
+ * It handles the initialization of alliance-related data for the player.<br>
+ * It also serves as a {@code Predicate} to check {@link PlayerAllianceMember} status.
  * @author ATracer
  */
 public class PlayerConnectedEvent extends AlwaysTrueTeamEvent implements Predicate<PlayerAllianceMember>
@@ -37,12 +40,24 @@ public class PlayerConnectedEvent extends AlwaysTrueTeamEvent implements Predica
 	private final Player connected;
 	private PlayerAllianceMember connectedMember;
 	
+	/**
+	 * Creates a new event for when a {@link Player} joins an alliance.<br>
+	 * This event is used to handle connection logic for the {@code PlayerAlliance}.
+	 * @param alliance The {@code PlayerAlliance} that the player is joining.
+	 * @param player The {@code Player} who has just connected.
+	 */
 	public PlayerConnectedEvent(PlayerAlliance alliance, Player player)
 	{
 		this.alliance = alliance;
 		connected = player;
 	}
 	
+	/**
+	 * Processes the connection of a player to an alliance.<br>
+	 * This method updates the {@code PlayerAlliance} member list.<br>
+	 * It sends several network packets to the {@code connected} player.<br>
+	 * Finally, it triggers the logic in {@code apply}.
+	 */
 	@Override
 	public void handleEvent()
 	{
@@ -57,8 +72,14 @@ public class PlayerConnectedEvent extends AlwaysTrueTeamEvent implements Predica
 		alliance.apply(this);
 	}
 	
+	/**
+	 * Sends the necessary network packets to update member information.<br>
+	 * This method notifies the client about group changes for both members.
+	 * @param member The {@code PlayerAllianceMember} receiving the update.
+	 * @return Always returns {@code true}.
+	 */
 	@Override
-	public boolean apply(PlayerAllianceMember member)
+	public boolean test(PlayerAllianceMember member)
 	{
 		final Player player = member.getObject();
 		if (!connected.getObjectId().equals(player.getObjectId()))
@@ -68,6 +89,7 @@ public class PlayerConnectedEvent extends AlwaysTrueTeamEvent implements Predica
 			
 			PacketSendUtility.sendPacket(connected, new SM_ALLIANCE_MEMBER_INFO(member, PlayerAllianceEvent.RECONNECT));
 		}
+		
 		return true;
 	}
 }

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -41,7 +41,8 @@ import com.aionemu.gameserver.world.World;
 import com.aionemu.gameserver.world.WorldMapInstance;
 
 /**
- * Packet for telporting by using relationship crystal
+ * This packet handles the request to teleport a player using a relationship crystal.<br>
+ * It processes the logic for moving a {@link Player} to a specific house location.
  * @author Rolandas
  */
 public class CM_HOUSE_TELEPORT extends AionClientPacket
@@ -50,6 +51,13 @@ public class CM_HOUSE_TELEPORT extends AionClientPacket
 	int playerId1;
 	int playerId2;
 	
+	/**
+	 * This constructor initializes the {@code CM_HOUSE_TELEPORT} packet.<br>
+	 * It sets the required network states for the teleport request.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state of the sender.
+	 * @param restStates Additional connection states associated with the packet.
+	 */
 	public CM_HOUSE_TELEPORT(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -71,6 +79,7 @@ public class CM_HOUSE_TELEPORT extends AionClientPacket
 		{
 			return;
 		}
+		
 		House house = null;
 		if (actionId == 1)
 		{
@@ -81,6 +90,7 @@ public class CM_HOUSE_TELEPORT extends AionClientPacket
 			final List<Integer> relationIds = new ArrayList<>();
 			final Iterator<Friend> friends = player1.getFriendList().iterator();
 			int address = 0;
+			
 			while (friends.hasNext())
 			{
 				final int friendId = friends.next().getOid();
@@ -92,13 +102,16 @@ public class CM_HOUSE_TELEPORT extends AionClientPacket
 					{
 						house = HousingService.getInstance().getHouseByAddress(address);
 					}
+					
 					if ((house.getDoorState() == HousePermissions.DOOR_CLOSED) || (house.getLevelRestrict() > player1.getLevel()))
 					{
-						continue;
+						continue; // closed doors | level restrict
 					}
+					
 					relationIds.add(friendId);
 				}
 			}
+			
 			final Legion legion = player1.getLegion();
 			if (legion != null)
 			{
@@ -112,25 +125,31 @@ public class CM_HOUSE_TELEPORT extends AionClientPacket
 						{
 							house = HousingService.getInstance().getHouseByAddress(address);
 						}
+						
 						if ((house.getDoorState() == HousePermissions.DOOR_CLOSED) || (house.getLevelRestrict() > player1.getLevel()))
 						{
-							continue;
+							continue; // closed doors | level restrict
 						}
+						
 						relationIds.add(memberId);
 					}
 				}
 			}
+			
 			if (relationIds.size() == 0)
 			{
 				PacketSendUtility.sendPacket(player1, SM_SYSTEM_MESSAGE.STR_MSG_NO_RELATIONSHIP_RECENTLY);
 				return;
 			}
+			
 			playerId2 = relationIds.get(Rnd.get(relationIds.size()));
 		}
+		
 		if (playerId2 == 0)
 		{
 			return;
 		}
+		
 		house = HousingService.getInstance().getPlayerStudio(playerId2);
 		HouseAddress address = null;
 		int instanceId = 0;
@@ -142,6 +161,7 @@ public class CM_HOUSE_TELEPORT extends AionClientPacket
 			{
 				instance = InstanceService.getNextAvailableInstance(address.getMapId(), playerId2);
 			}
+			
 			instanceId = instance.getInstanceId();
 			InstanceService.registerPlayerWithInstance(instance, player1);
 		}
@@ -153,14 +173,17 @@ public class CM_HOUSE_TELEPORT extends AionClientPacket
 			{
 				return;
 			}
+			
 			address = house.getAddress();
 			instanceId = house.getInstanceId();
 		}
+		
 		final VisibleObject target = player1.getTarget();
 		if (target != null)
 		{
 			PacketSendUtility.sendPacket(player1, new SM_DIALOG_WINDOW(target.getObjectId(), 0));
 		}
+		
 		TeleportService2.teleportTo(player1, address.getMapId(), instanceId, address.getX(), address.getY(), address.getZ(), (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 	}
 }

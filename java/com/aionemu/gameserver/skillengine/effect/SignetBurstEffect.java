@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
@@ -26,6 +26,8 @@ import com.aionemu.gameserver.skillengine.action.DamageType;
 import com.aionemu.gameserver.skillengine.model.Effect;
 
 /**
+ * Handles the specific logic for the {@code SignetBurst} skill effect.<br>
+ * This class manages how damage is calculated and applied when this effect triggers.
  * @author ATracer, kecimis
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -37,6 +39,12 @@ public class SignetBurstEffect extends DamageEffect
 	@XmlAttribute
 	protected String signet;
 	
+	/**
+	 * Calculates the attributes for a specific {@code Effect}.<br>
+	 * This method updates the {@code effect} to include an AP boost.<br>
+	 * It also links this instance as a success effect.
+	 * @param effect The {@code Effect} object to be updated.
+	 */
 	@Override
 	public void calculate(Effect effect)
 	{
@@ -49,6 +57,7 @@ public class SignetBurstEffect extends DamageEffect
 			}
 			return;
 		}
+		
 		int valueWithDelta = value + (delta * effect.getSkillLevel());
 		final int critAddDmg = critAddDmg2 + (critAddDmg1 * effect.getSkillLevel());
 		
@@ -61,34 +70,30 @@ public class SignetBurstEffect extends DamageEffect
 		else
 		{
 			final int level = signetEffect.getSkillLevel();
+			if (level < 3)
+			{
+				// why is 3 not 5? tmp fix
+				effect.setSubEffectAborted(true);
+			}
+			
 			effect.setSignetBurstedCount(level);
 			switch (level)
 			{
 				case 1:
-				{
 					valueWithDelta *= 0.2f;
 					break;
-				}
 				case 2:
-				{
 					valueWithDelta *= 0.5f;
 					break;
-				}
 				case 3:
-				{
 					valueWithDelta *= 1.0f;
 					break;
-				}
 				case 4:
-				{
 					valueWithDelta *= 1.2f;
 					break;
-				}
 				case 5:
-				{
 					valueWithDelta *= 1.5f;
 					break;
-				}
 			}
 			
 			/**
@@ -99,33 +104,26 @@ public class SignetBurstEffect extends DamageEffect
 			switch (level)
 			{
 				case 1:
-				{
-					accmod = (int) (-0.8f * mAccurancy);
+					accmod = (int) (-10.8f * mAccurancy);
 					break;
-				}
 				case 2:
-				{
-					accmod = (int) (-0.5f * mAccurancy);
+					accmod = (int) (-10.5f * mAccurancy);
 					break;
-				}
 				case 3:
-				{
 					accmod = 0;
 					break;
-				}
 				case 4:
-				{
-					accmod = (int) (0.2f * mAccurancy);
+					accmod = (int) (13.5f * mAccurancy);
 					break;
-				}
 				case 5:
-				{
-					accmod = (int) (0.5f * mAccurancy);
+					accmod = (int) (18.5f * mAccurancy);
 					break;
-				}
 			}
+			
 			effect.setAccModBoost(accmod);
+			
 			AttackUtil.calculateMagicalSkillResult(effect, valueWithDelta, null, getElement(), true, true, false, getMode(), critProbMod2, critAddDmg, shared, false);
+			
 			signetEffect.endEffect();
 		}
 	}

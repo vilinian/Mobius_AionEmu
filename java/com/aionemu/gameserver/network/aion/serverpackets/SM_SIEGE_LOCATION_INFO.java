@@ -1,27 +1,29 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aionemu.gameserver.configs.main.SiegeConfig;
+import com.aionemu.gameserver.configs.network.NetworkConfig;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.siege.SiegeLocation;
 import com.aionemu.gameserver.model.team.legion.LegionEmblem;
@@ -31,27 +33,41 @@ import com.aionemu.gameserver.network.aion.AionServerPacket;
 import com.aionemu.gameserver.services.LegionService;
 import com.aionemu.gameserver.services.SiegeService;
 
-import javolution.util.FastMap;
-
 /**
+ * This packet sends information about siege locations to the client.<br>
+ * It contains data regarding {@link SiegeLocation} and associated legion details.
  * @author Sarynth
  */
 public class SM_SIEGE_LOCATION_INFO extends AionServerPacket
 {
+	/**
+	 * infoType 0 - reset 1 - update
+	 */
 	private final int infoType;
 	private final Map<Integer, SiegeLocation> locations;
 	private static final Logger log = LoggerFactory.getLogger(SM_SIEGE_LOCATION_INFO.class);
 	
+	/**
+	 * Creates a new {@code SM_SIEGE_LOCATION_INFO} packet with default values.<br>
+	 * This constructor initializes the {@code infoType} to {@code 0}.<br>
+	 * It retrieves all current siege locations from the {@link SiegeService}.
+	 */
 	public SM_SIEGE_LOCATION_INFO()
 	{
 		infoType = 0;
 		locations = SiegeService.getInstance().getSiegeLocations();
 	}
 	
+	/**
+	 * Creates a new {@code SM_SIEGE_LOCATION_INFO} packet for a specific location.<br>
+	 * This constructor sets the {@code infoType} to 1.<br>
+	 * It adds the provided {@link SiegeLocation} to the internal locations map.
+	 * @param loc The {@code SiegeLocation} object to include in the packet.
+	 */
 	public SM_SIEGE_LOCATION_INFO(SiegeLocation loc)
 	{
 		infoType = 1;
-		locations = new FastMap<>();
+		locations = new HashMap<>();
 		locations.put(loc.getLocationId(), loc);
 	}
 	
@@ -65,14 +81,18 @@ public class SM_SIEGE_LOCATION_INFO extends AionServerPacket
 			writeH(0);
 			return;
 		}
+		
 		writeC(infoType);
 		writeH(locations.size());
+		
 		for (SiegeLocation loc : locations.values())
 		{
 			LegionEmblem emblem = new LegionEmblem();
 			writeD(loc.getLocationId());
+			
 			final int legionId = loc.getLegionId();
 			writeD(legionId);
+			
 			if (legionId != 0)
 			{
 				if (LegionService.getInstance().getLegion(legionId) == null)
@@ -82,49 +102,72 @@ public class SM_SIEGE_LOCATION_INFO extends AionServerPacket
 				else
 				{
 					emblem = LegionService.getInstance().getLegion(legionId).getLegionEmblem();
+					if (emblem.getEmblemType() == LegionEmblemType.DEFAULT)
+					{
+						writeD(emblem.getEmblemId());
+						writeC(255);
+						writeC(emblem.getColor_r());
+						writeC(emblem.getColor_g());
+						writeC(emblem.getColor_b());
+					}
+					else
+					{
+						writeD(emblem.getCustomEmblemData().length);
+						writeC(255);
+						writeC(emblem.getColor_r());
+						writeC(emblem.getColor_g());
+						writeC(emblem.getColor_b());
+					}
 				}
-			}
-			if (emblem.getEmblemType() == LegionEmblemType.DEFAULT)
-			{
-				writeD(emblem.getEmblemId());
-				writeC(255);
-				writeC(emblem.getColor_r());
-				writeC(emblem.getColor_g());
-				writeC(emblem.getColor_b());
 			}
 			else
 			{
-				writeD(emblem.getCustomEmblemData().length);
-				writeC(255);
-				writeC(emblem.getColor_r());
-				writeC(emblem.getColor_g());
-				writeC(emblem.getColor_b());
+				writeD(0);
+				writeC(0);
+				writeC(0);
+				writeC(0);
+				writeC(0);
 			}
+			
 			writeC(loc.getRace().getRaceId());
+			
+			// is vulnerable (0 - no, 2 - yes)
 			writeC(loc.isVulnerable() ? 2 : 0);
+			
+			// faction can teleport (0 - no, 1 - yes)
 			writeC(loc.isCanTeleport(player) ? 1 : 0);
+			
+			// Next State (0 - invulnerable, 1 - vulnerable)
 			writeC(loc.getNextState());
-			// writeC(loc.getOccupyCount());
-			writeH(0);
-			writeH(1);
-			writeD(0x00);// unk
-			writeD(0x9);// unk dynamic value
+			
+			writeB(new byte[8]); // unk
 			switch (loc.getLocationId())
 			{
-				case 2111: // Veille.
-				case 3111: // Mastarius.
-				{
+				case 2111: // veille timer
+				case 3111: // mastarius timer
 					writeD(SiegeService.getInstance().getRemainingSiegeTimeInSeconds(loc.getLocationId()));
-					writeD(0x00);// unk
+					writeD(0);
 					break;
-				}
 				default:
-				{
-					writeD(10000);
-					writeD(0x00);// unk
+					writeD(0);
+					writeD(0);
 					break;
-				}
 			}
+			
+			writeD(NetworkConfig.GAMESERVER_ID);
+			writeD(1546201199); // Capture Time TODO
+			if (!loc.isVulnerable())
+			{
+				writeD(loc.getOccupyCount()); // Occupy Count
+			}
+			else
+			{
+				writeD(0); // TODO sometimes 0 or other Values
+			}
+			
+			writeH(0);
+			writeD(0);
+			writeB(new byte[6]);
 		}
 	}
 }

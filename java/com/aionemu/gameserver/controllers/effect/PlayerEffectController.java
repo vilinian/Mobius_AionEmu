@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.controllers.effect;
 
@@ -33,15 +33,28 @@ import com.aionemu.gameserver.taskmanager.tasks.TeamEffectUpdater;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * This class manages the application and lifecycle of effects specifically for {@link Player} objects.<br>
+ * It handles how visual or functional effects are triggered, updated, and removed from players in the game world.
  * @author ATracer
  */
 public class PlayerEffectController extends EffectController
 {
+	/**
+	 * Creates a new instance of {@link PlayerEffectController}.<br>
+	 * This constructor initializes the controller for a specific creature.
+	 * @param owner The {@code Creature} that will own these effects.
+	 */
 	public PlayerEffectController(Creature owner)
 	{
 		super(owner);
 	}
 	
+	/**
+	 * Adds a new {@code Effect} to the player.<br>
+	 * This method updates the player icons and group status.<br>
+	 * It skips adding the effect if it fails the duel condition check.
+	 * @param effect The {@code Effect} object to be added.
+	 */
 	@Override
 	public void addEffect(Effect effect)
 	{
@@ -54,6 +67,12 @@ public class PlayerEffectController extends EffectController
 		updatePlayerIconsAndGroup(effect);
 	}
 	
+	/**
+	 * Removes a specific {@code Effect} from the owner.<br>
+	 * This method identifies the correct map using {@code getMapForEffect}.<br>
+	 * It deletes the effect based on its stack and then calls {@code broadCastEffects}.
+	 * @param effect The {@code Effect} object to be removed.
+	 */
 	@Override
 	public void clearEffect(Effect effect)
 	{
@@ -61,6 +80,11 @@ public class PlayerEffectController extends EffectController
 		updatePlayerIconsAndGroup(effect);
 	}
 	
+	/**
+	 * Retrieves the {@link Player} that owns this object.<br>
+	 * This method casts the result of the parent class's owner retrieval to a {@code Player}.
+	 * @return The {@code Player} associated with this object.
+	 */
 	@Override
 	public Player getOwner()
 	{
@@ -68,7 +92,10 @@ public class PlayerEffectController extends EffectController
 	}
 	
 	/**
-	 * @param effect
+	 * Updates the visual icons for a player based on an {@code Effect}.<br>
+	 * This method only runs if the effect is not passive.<br>
+	 * It also starts a team update task if the owner belongs to a team.
+	 * @param effect The {@code Effect} object to process.
 	 */
 	private void updatePlayerIconsAndGroup(Effect effect)
 	{
@@ -82,12 +109,21 @@ public class PlayerEffectController extends EffectController
 		}
 	}
 	
+	/**
+	 * Sends a packet to update the player's effect icons.<br>
+	 * This method adds the {@code UPDATE_PLAYER_EFFECT_ICONS} mask to the owner's broadcast mask.<br>
+	 * It triggers a synchronization of visual status symbols on the client side.
+	 */
 	@Override
 	public void updatePlayerEffectIcons()
 	{
 		getOwner().addPacketBroadcastMask(BroadcastMode.UPDATE_PLAYER_EFFECT_ICONS);
 	}
 	
+	/**
+	 * Updates the visual icons for player effects.<br>
+	 * This method refreshes the displayed status icons on the {@link Player}.
+	 */
 	@Override
 	public void updatePlayerEffectIconsImpl()
 	{
@@ -96,9 +132,11 @@ public class PlayerEffectController extends EffectController
 	}
 	
 	/**
-	 * Effect of DEBUFF should not be added if duel ended (friendly unit)
-	 * @param effect
-	 * @return
+	 * Checks if an {@code Effect} violates duel rules.<br>
+	 * It verifies if a non-enemy player is receiving a debuff.<br>
+	 * This helps prevent illegal status effects during combat.
+	 * @param effect The {@code Effect} to validate.
+	 * @return {@code true} if the condition is met, {@code false} otherwise.
 	 */
 	private boolean checkDuelCondition(Effect effect)
 	{
@@ -115,10 +153,13 @@ public class PlayerEffectController extends EffectController
 	}
 	
 	/**
-	 * @param skillId
-	 * @param skillLvl
-	 * @param remainingTime
-	 * @param endTime
+	 * Adds a new effect to the player based on a skill template.<br>
+	 * This method validates the remaining time before creating the {@code Effect}.<br>
+	 * It also handles specific logic for deity avatars if configured in {@code CustomConfig}.
+	 * @param skillId The unique identifier for the skill.
+	 * @param skillLvl The level of the skill being applied.
+	 * @param remainingTime The duration of the effect in milliseconds.
+	 * @param endTime The timestamp when the effect is scheduled to expire.
 	 */
 	public void addSavedEffect(int skillId, int skillLvl, int remainingTime, long endTime)
 	{
@@ -128,13 +169,14 @@ public class PlayerEffectController extends EffectController
 		{
 			return;
 		}
+		
 		if (CustomConfig.ABYSSXFORM_LOGOUT && template.isDeityAvatar())
 		{
-			
 			if (System.currentTimeMillis() >= endTime)
 			{
 				return;
 			}
+			
 			remainingTime = (int) (endTime - System.currentTimeMillis());
 		}
 		
@@ -147,8 +189,14 @@ public class PlayerEffectController extends EffectController
 		{
 			PacketSendUtility.sendPacket(getOwner(), new SM_ABNORMAL_STATE(Collections.singletonList(effect), abnormals));
 		}
+		
 	}
 	
+	/**
+	 * Sends the current abnormal effects to all nearby clients.<br>
+	 * This method uses {@code getAbnormalEffects} to retrieve the list of active effects.<br>
+	 * It then broadcasts an {@code SM_ABNORMAL_EFFECT} packet to everyone around the {@code owner}.
+	 */
 	@Override
 	public void broadCastEffectsImp()
 	{
@@ -159,5 +207,4 @@ public class PlayerEffectController extends EffectController
 			PacketSendUtility.sendPacket(player, new SM_PLAYER_STANCE(player, 1));
 		}
 	}
-	
 }

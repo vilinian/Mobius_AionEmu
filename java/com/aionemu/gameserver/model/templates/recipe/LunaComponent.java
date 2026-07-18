@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.recipe;
 
@@ -26,7 +26,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 /**
- * @author Rinzler (Encom)
+ * Represents a component used within the {@code Recipe} system for crafting items.<br>
+ * This class defines the data structure for individual ingredients required to complete a recipe.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "LunaComponent")
@@ -35,6 +36,11 @@ public class LunaComponent
 	@XmlElement(name = "luna_component")
 	protected ArrayList<LunaComponentElement> luna_component;
 	
+	/**
+	 * Retrieves the list of components for this {@link LunaComponent}.<br>
+	 * It returns an empty collection if no components exist.
+	 * @return a {@code Collection} of {@code LunaComponentElement} objects.
+	 */
 	public Collection<LunaComponentElement> getComponents()
 	{
 		return luna_component != null ? luna_component : Collections.<LunaComponentElement> emptyList();

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.database.mysql5;
 
@@ -35,12 +35,24 @@ import com.aionemu.gameserver.model.templates.pet.PetDopingBag;
 import com.aionemu.gameserver.services.toypet.PetHungryLevel;
 
 /**
+ * This class provides the database access layer for managing player pets using {@code MySQL5}.<br>
+ * It handles all CRUD operations related to pet data in the database.<br>
+ * It extends {@link PlayerPetsDAO} to implement specific queries for the game server.
  * @author M@xx, xTz, Rolandas
  */
 public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 {
 	private static final Logger log = LoggerFactory.getLogger(MySQL5PlayerPetsDAO.class);
 	
+	/**
+	 * Updates the feeding status of a specific pet in the database.<br>
+	 * This method saves the current hunger level and progress for a {@link Player}.
+	 * @param player The {@code Player} object who owns the pet.
+	 * @param petId The unique identifier for the pet.
+	 * @param hungryLevel The current hunger level of the pet.
+	 * @param feedProgress The progress made during the feeding action.
+	 * @param reuseTime The time remaining until the pet can be fed again.
+	 */
 	@Override
 	public void saveFeedStatus(Player player, int petId, int hungryLevel, int feedProgress, long reuseTime)
 	{
@@ -67,6 +79,14 @@ public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 		}
 	}
 	
+	/**
+	 * Saves the {@code PetDopingBag} data to the database.<br>
+	 * This method updates the doping information for a specific pet owned by a player.<br>
+	 * It combines food, drink, and scroll IDs into a single string for storage.
+	 * @param player The {@link Player} object who owns the pet.
+	 * @param petId The unique identifier of the pet to update.
+	 * @param bag The {@link PetDopingBag} containing the data to be saved.
+	 */
 	@Override
 	public void saveDopingBag(Player player, int petId, PetDopingBag bag)
 	{
@@ -80,6 +100,7 @@ public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 			{
 				itemIds += "," + Integer.toString(itemId);
 			}
+			
 			stmt.setString(1, itemIds);
 			stmt.setInt(2, player.getObjectId());
 			stmt.setInt(3, petId);
@@ -96,6 +117,13 @@ public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 		}
 	}
 	
+	/**
+	 * Updates the reuse time for a specific pet.<br>
+	 * This method modifies the database record for the player's pet.
+	 * @param player The {@link Player} object who owns the pet.
+	 * @param petId The unique identifier of the pet.
+	 * @param time The new value to set for the reuse time.
+	 */
 	@Override
 	public void setTime(Player player, int petId, long time)
 	{
@@ -120,6 +148,12 @@ public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 		}
 	}
 	
+	/**
+	 * Saves a new pet record into the database.<br>
+	 * This method uses {@code PetCommonData} to populate the {@code player_pets} table.<br>
+	 * It handles the SQL execution and closes the connection automatically.
+	 * @param petCommonData The data object containing the pet details to be saved.
+	 */
 	@Override
 	public void insertPlayerPet(PetCommonData petCommonData)
 	{
@@ -147,6 +181,13 @@ public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 		}
 	}
 	
+	/**
+	 * Removes a specific pet from a player's database record.<br>
+	 * This method deletes the entry matching both the {@code Player} ID and the {@code petId}.<br>
+	 * It logs an error if the deletion fails during execution.
+	 * @param player The {@link Player} object who owns the pet.
+	 * @param petId The unique identifier of the pet to be removed.
+	 */
 	@Override
 	public void removePlayerPet(Player player, int petId)
 	{
@@ -170,6 +211,13 @@ public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 		}
 	}
 	
+	/**
+	 * Retrieves all pets belonging to a specific {@link Player}.<br>
+	 * This method queries the database for pet records associated with the player's unique ID.<br>
+	 * It populates a list of {@code PetCommonData} objects with their current status and attributes.
+	 * @param player The {@link Player} whose pets need to be loaded.
+	 * @return A {@code List} containing all {@code PetCommonData} for the specified player, or an empty list if none are found.
+	 */
 	@Override
 	public List<PetCommonData> getPlayerPets(Player player)
 	{
@@ -190,8 +238,9 @@ public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 				{
 					petCommonData.getFeedProgress().setHungryLevel(PetHungryLevel.fromId(rs.getInt("hungry_level")));
 					petCommonData.getFeedProgress().setData(rs.getInt("feed_progress"));
-					petCommonData.setCurentTime(rs.getLong("reuse_time"));
+					petCommonData.setRefeedTime(rs.getLong("reuse_time"));
 				}
+				
 				if (petCommonData.getDopingBag() != null)
 				{
 					final String dopings = rs.getString("dopings");
@@ -204,12 +253,18 @@ public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 						}
 					}
 				}
+				
 				petCommonData.setBirthday(rs.getTimestamp("birthday"));
-				if (petCommonData.getTime() != 0)
+				if (petCommonData.getRefeedDelay() > 0)
 				{
 					petCommonData.setIsFeedingTime(false);
-					petCommonData.setReFoodTime(petCommonData.getTime());
+					petCommonData.scheduleRefeed(petCommonData.getRefeedDelay());
 				}
+				else if (petCommonData.getFeedProgress() != null)
+				{
+					petCommonData.getFeedProgress().setHungryLevel(PetHungryLevel.HUNGRY);
+				}
+				
 				petCommonData.setStartMoodTime(rs.getLong("mood_started"));
 				petCommonData.setShuggleCounter(rs.getInt("counter"));
 				petCommonData.setMoodCdStarted(rs.getLong("mood_cd_started"));
@@ -222,13 +277,16 @@ public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 				catch (Exception e)
 				{
 				}
+				
 				if (ts == null)
 				{
 					ts = new Timestamp(System.currentTimeMillis());
 				}
+				
 				petCommonData.setDespawnTime(ts);
 				pets.add(petCommonData);
 			}
+			
 			stmt.close();
 		}
 		catch (Exception e)
@@ -239,9 +297,16 @@ public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return pets;
 	}
 	
+	/**
+	 * Updates the name of a specific pet in the database.<br>
+	 * This method uses the {@code PetCommonData} object to identify the correct record.<br>
+	 * It updates the entry where the {@code player_id} and {@code pet_id} match.
+	 * @param petCommonData The data object containing the new name and unique identifiers.
+	 */
 	@Override
 	public void updatePetName(PetCommonData petCommonData)
 	{
@@ -266,6 +331,12 @@ public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 		}
 	}
 	
+	/**
+	 * Saves the mood and cooldown data for a specific pet to the database.<br>
+	 * This method updates the {@code player_pets} table with current status values.
+	 * @param petCommonData The {@link PetCommonData} object containing the updated pet information.
+	 * @return {@code true} if the update was successful, or {@code false} if an error occurred.
+	 */
 	@Override
 	public boolean savePetMoodData(PetCommonData petCommonData)
 	{
@@ -293,13 +364,21 @@ public class MySQL5PlayerPetsDAO extends PlayerPetsDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if the current database is compatible with this DAO.<br>
+	 * It uses {@code int, int)} to verify the version.
+	 * @param databaseName The name of the database to check.
+	 * @param majorVersion The major version number of the database.
+	 * @param minorVersion The minor version number of the database.
+	 * @return {@code true} if the database is supported, {@code false} otherwise.
+	 */
 	@Override
 	public boolean supports(String databaseName, int majorVersion, int minorVersion)
 	{
 		return MySQL5DAOUtils.supports(databaseName, majorVersion, minorVersion);
 	}
-	
 }

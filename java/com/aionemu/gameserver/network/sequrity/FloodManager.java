@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.sequrity;
 
@@ -27,6 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * This class manages and prevents network flood attacks on the game server.<br>
+ * It monitors incoming packets to ensure they do not exceed defined limits.<br>
+ * It helps maintain server stability by identifying and blocking malicious traffic.
  * @author NB4L1
  */
 public final class FloodManager
@@ -46,7 +49,7 @@ public final class FloodManager
 		private final int _rejectLimit;
 		private final int _tickLimit;
 		
-		public FloodFilter(int warnLimit, int rejectLimit, int tickLimit)
+		public FloodFilter(final int warnLimit, int rejectLimit, int tickLimit)
 		{
 			_warnLimit = warnLimit;
 			_rejectLimit = rejectLimit;
@@ -72,12 +75,7 @@ public final class FloodManager
 	private final class LogEntry
 	{
 		private final short[] _ticks = new short[_tickAmount];
-		
 		private int _lastTick = getCurrentTick();
-		
-		public LogEntry()
-		{
-		}
 		
 		public int getCurrentTick()
 		{
@@ -170,19 +168,21 @@ public final class FloodManager
 	}
 	
 	public final Logger log = LoggerFactory.getLogger(FloodManager.class);
-	
-	static final long ZERO = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1);
-	
+	private static final long ZERO = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1);
 	private final Map<String, LogEntry> _entries = new HashMap<>();
 	private final ReentrantLock _lock = new ReentrantLock();
+	private final int _tickLength;
+	private final int _tickAmount;
+	private final FloodFilter[] _filters;
 	
-	final int _tickLength;
-	
-	final int _tickAmount;
-	
-	final FloodFilter[] _filters;
-	
-	public FloodManager(int msecPerTick, FloodFilter... filters)
+	/**
+	 * Initializes a new {@link FloodManager} instance.<br>
+	 * This constructor sets up the tick timing and applies all provided filters.<br>
+	 * It also schedules a background task to periodically clear old data.
+	 * @param msecPerTick The number of milliseconds used to calculate one game tick.
+	 * @param filters A variable number of {@code FloodFilter} objects to apply during flood checking.
+	 */
+	public FloodManager(final int msecPerTick, FloodFilter... filters)
 	{
 		_tickLength = msecPerTick;
 		_filters = filters;
@@ -196,10 +196,22 @@ public final class FloodManager
 		
 		_tickAmount = max;
 		
-		NetFlusher.add(() -> flush(), 60000);
+		NetFlusher.add(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				flush();
+			}
+		}, 60000);
 	}
 	
-	void flush()
+	/**
+	 * Clears inactive entries from the internal log map.<br>
+	 * This method removes any {@code LogEntry} that is no longer active.<br>
+	 * It uses a {@code ReentrantLock} to ensure thread safety during the cleanup.
+	 */
+	private void flush()
 	{
 		_lock.lock();
 		try
@@ -220,6 +232,14 @@ public final class FloodManager
 		}
 	}
 	
+	/**
+	 * Checks if a specific action is being performed too frequently.<br>
+	 * It uses the provided {@code key} to identify the unique activity.<br>
+	 * If the activity exceeds limits, it returns a flood status.
+	 * @param key The unique identifier for the action to check.
+	 * @param increment Whether to increase the count of the current activity.
+	 * @return The {@code Result} of the flooding check.
+	 */
 	public Result isFlooding(String key, boolean increment)
 	{
 		if ((key == null) || key.isEmpty())

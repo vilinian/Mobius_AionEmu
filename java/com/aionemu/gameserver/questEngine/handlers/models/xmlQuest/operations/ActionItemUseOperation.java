@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.models.xmlQuest.operations;
 
@@ -31,6 +31,8 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
 
 /**
+ * Handles the logic for when a player uses an item to trigger a quest operation.<br>
+ * This class processes the interaction between a {@link Player} and an object defined in the XML quest files.
  * @author Mr. Poke
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -43,9 +45,11 @@ public class ActionItemUseOperation extends QuestOperation
 	@XmlElement(required = true)
 	protected QuestOperations finish;
 	
-	/*
-	 * (non-Javadoc)
-	 * @seecom.aionemu.gameserver.questEngine.handlers.models.xmlQuest.operations.QuestOperation#doOperate(com.aionemu. gameserver.services.QuestService, com.aionemu.gameserver.questEngine.model.QuestEnv)
+	/**
+	 * Executes the logic for using an item on an {@link Npc}.<br>
+	 * It sends a use packet and plays an emotion for the player.<br>
+	 * The method then schedules the next operation after a delay.
+	 * @param env The quest environment containing the current context.
 	 */
 	@Override
 	public void doOperate(QuestEnv env)
@@ -60,12 +64,12 @@ public class ActionItemUseOperation extends QuestOperation
 		{
 			return;
 		}
+		
 		final int defaultUseTime = 3000;
 		PacketSendUtility.sendPacket(player, new SM_USE_OBJECT(player.getObjectId(), npc.getObjectId(), defaultUseTime, 1));
 		PacketSendUtility.broadcastPacket(player, new SM_EMOTION(player, EmotionType.START_QUESTLOOT, 0, npc.getObjectId()), true);
 		ThreadPoolManager.getInstance().schedule(new Runnable()
 		{
-			
 			@Override
 			public void run()
 			{

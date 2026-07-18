@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting.impl.javacompiler;
 
@@ -34,10 +34,11 @@ import org.slf4j.LoggerFactory;
 import com.aionemu.commons.scripting.CompilationResult;
 import com.aionemu.commons.scripting.ScriptClassLoader;
 import com.aionemu.commons.scripting.ScriptCompiler;
-import com.sun.tools.javac.api.JavacTool;
 
 /**
- * Wrapper for JavaCompiler api
+ * This class serves as a wrapper for the standard {@code getTool} {@code JavaCompiler} API.<br>
+ * It provides functionality to compile script source files into executable bytecode.<br>
+ * It implements the {@link ScriptCompiler} interface to integrate with the project's scripting system.
  * @author SoulKeeper
  */
 public class ScriptCompilerImpl implements ScriptCompiler
@@ -60,25 +61,24 @@ public class ScriptCompilerImpl implements ScriptCompiler
 	protected ScriptClassLoader parentClassLoader;
 	
 	/**
-	 * Creates new instance of JavaCompilerImpl. If system compiler is not available - throws RuntimeExcetion
-	 * @throws RuntimeException if compiler is not available
+	 * Creates a new instance of {@link ScriptCompilerImpl}.<br>
+	 * This constructor initializes the internal {@code javaCompiler}.<br>
+	 * It throws a {@code RuntimeException} if the system compiler is not found.
 	 */
 	public ScriptCompilerImpl()
 	{
-		javaCompiler = JavacTool.create();
+		javaCompiler = ToolProvider.getSystemJavaCompiler();
 		
 		if (javaCompiler == null)
 		{
-			if (ToolProvider.getSystemJavaCompiler() != null)
-			{
-				throw new RuntimeException(new InstantiationException("JavaCompiler is not aviable."));
-			}
+			throw new RuntimeException(new InstantiationException("JavaCompiler is not available. Aion must run on a JDK, not a JRE."));
 		}
 	}
 	
 	/**
-	 * Sets parent classLoader for this JavaCompilerImpl
-	 * @param classLoader parent classloader
+	 * Sets the parent {@link ScriptClassLoader} for this manager.<br>
+	 * This is used to define where the system should look for classes first.
+	 * @param classLoader The {@code ScriptClassLoader} to use as the parent.
 	 */
 	@Override
 	public void setParentClassLoader(ScriptClassLoader classLoader)
@@ -87,8 +87,9 @@ public class ScriptCompilerImpl implements ScriptCompiler
 	}
 	
 	/**
-	 * Sets jar files that should be used for this compiler as libraries
-	 * @param files list of jar files
+	 * Sets the list of library files to be used during compilation.<br>
+	 * This updates the {@code libraries} field with the provided collection.
+	 * @param files The collection of {@link File} objects representing the libraries.
 	 */
 	@Override
 	public void setLibraires(Iterable<File> files)
@@ -97,11 +98,12 @@ public class ScriptCompilerImpl implements ScriptCompiler
 	}
 	
 	/**
-	 * Compiles given class.
-	 * @param className Name of the class
-	 * @param sourceCode source code
-	 * @return CompilationResult with the class
-	 * @throws RuntimeException if compilation failed with errros
+	 * Compiles a single piece of Java source code into a class.<br>
+	 * This method takes the class name and the raw source string as input.<br>
+	 * It returns a {@link CompilationResult} containing the outcome.
+	 * @param className The name of the class to be created.
+	 * @param sourceCode The actual Java source code as a string.
+	 * @return A {@code CompilationResult} object representing the success or failure of the compilation.
 	 */
 	@Override
 	public CompilationResult compile(String className, String sourceCode)
@@ -116,17 +118,17 @@ public class ScriptCompilerImpl implements ScriptCompiler
 	}
 	
 	/**
-	 * Compiles list of classes. Amount of classNames must be equal to amount of sourceCodes
-	 * @param classNames classNames
-	 * @param sourceCode list of source codes
-	 * @return CompilationResult with needed files
-	 * @throws IllegalArgumentException if size of classNames not equals to size of sourceCodes
-	 * @throws RuntimeException if compilation failed with errros
+	 * Compiles multiple source files into classes.<br>
+	 * This method takes arrays of names and code strings.<br>
+	 * It ensures that both arrays have the same length.
+	 * @param classNames An array of class names to be compiled.
+	 * @param sourceCode An array of source code strings corresponding to each class name.
+	 * @return A {@code CompilationResult} containing the outcome of the compilation.
+	 * @throws IllegalArgumentException If the lengths of {@code classNames} and {@code sourceCode} do not match.
 	 */
 	@Override
 	public CompilationResult compile(String[] classNames, String[] sourceCode) throws IllegalArgumentException
 	{
-		
 		if (classNames.length != sourceCode.length)
 		{
 			throw new IllegalArgumentException("Amount of classes is not equal to amount of sources");
@@ -144,10 +146,11 @@ public class ScriptCompilerImpl implements ScriptCompiler
 	}
 	
 	/**
-	 * Compiles given files. Files must be java sources.
-	 * @param compilationUnits files to compile
-	 * @return CompilationResult with classes
-	 * @throws RuntimeException if compilation failed with errros
+	 * Compiles a collection of source files into bytecode.<br>
+	 * This method converts each {@code File} into a {@code JavaFileObject}.<br>
+	 * It then delegates the actual compilation to the internal {@code doCompilation} method.
+	 * @param compilationUnits A collection of {@code File} objects representing the source files to compile.
+	 * @return A {@link CompilationResult} containing the outcome of the compilation process.
 	 */
 	@Override
 	public CompilationResult compile(Iterable<File> compilationUnits)
@@ -163,16 +166,17 @@ public class ScriptCompilerImpl implements ScriptCompiler
 	}
 	
 	/**
-	 * Actually performs compilation. Compiler expects sources in UTF-8 encoding. Also compiler generates full debugging info for classes.
-	 * @param compilationUnits Units that will be compiled
-	 * @return CompilationResult with compiledClasses
-	 * @throws RuntimeException if compilation failed with errros
+	 * Performs the actual compilation of the provided Java files.<br>
+	 * This method sets up the compiler options and manages the compilation task.<br>
+	 * It returns a {@link CompilationResult} containing the compiled classes.
+	 * @param compilationUnits The collection of {@code JavaFileObject} units to compile.
+	 * @return A {@code CompilationResult} object containing the results of the compilation.
 	 */
 	protected CompilationResult doCompilation(Iterable<JavaFileObject> compilationUnits)
 	{
 		final List<String> options = Arrays.asList("-encoding", "UTF-8", "-g");
 		final DiagnosticListener<JavaFileObject> listener = new ErrorListener();
-		final ClassFileManager manager = new ClassFileManager(JavacTool.create(), listener);
+		final ClassFileManager manager = new ClassFileManager(javaCompiler, listener);
 		manager.setParentClassLoader(parentClassLoader);
 		
 		if (libraries != null)
@@ -200,11 +204,12 @@ public class ScriptCompilerImpl implements ScriptCompiler
 	}
 	
 	/**
-	 * Reolves list of classes by their names
-	 * @param classNames names of the classes
-	 * @param cl classLoader to use to resove classes
-	 * @return resolved classes
-	 * @throws RuntimeException if can't find class
+	 * Converts a collection of class names into an array of {@code Class<?>} objects.<br>
+	 * This method uses the provided {@link ScriptClassLoader} to load each class.<br>
+	 * It throws a {@code RuntimeException} if any class cannot be found.
+	 * @param classNames A collection of strings representing the names of the classes to load.
+	 * @param cl The {@link ScriptClassLoader} used to load the classes.
+	 * @return An array containing the loaded {@code Class<?>} objects.
 	 */
 	protected Class<?>[] classNamesToClasses(Collection<String> classNames, ScriptClassLoader cl)
 	{
@@ -222,6 +227,7 @@ public class ScriptCompilerImpl implements ScriptCompiler
 			{
 				throw new RuntimeException(e);
 			}
+			
 			i++;
 		}
 		
@@ -229,8 +235,9 @@ public class ScriptCompilerImpl implements ScriptCompiler
 	}
 	
 	/**
-	 * Only java files are supported by java compiler
-	 * @return "java";
+	 * Returns the list of file extensions supported by this compiler.<br>
+	 * This method identifies which types of source files can be processed.
+	 * @return an array of {@code String} containing the supported file types.
 	 */
 	@Override
 	public String[] getSupportedFileTypes()

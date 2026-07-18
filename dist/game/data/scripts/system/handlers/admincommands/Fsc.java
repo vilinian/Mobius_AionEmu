@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -23,25 +23,29 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 
 /**
- * This server command is used for creating and sending custom packets from server to client. It's used in development purpose.<br>
- * <b>command name: //fsc</b></br>
- * <b>params:</b>
- * <ul>
- * <li>packet id (it's one byte) - maybe in dec format (for example 227), but may be also in hex format (for example 0xE3)</li>
- * <li>package format string - string containing with letters: d (represents writeD()), h (represents writeH()), c (represents writeC()), f (represents writeF()), e (represents write DF()), q (represents writeQ()), s (represents writeS())</li>
- * <li>list of data - here goes all data for corresponding to proper format parts.</li>
- * </ul>
- * Example:<br>
- * //fsc 0xD8 cdds 8 50 80 someText - will send packet with id 0xD8 (subids will be added automaticaly) then will be sent one byte - 8, later two ints -50 and 80 and at the end a String - someText
+ * This class handles the {@code //fsc} admin command used for development purposes.<br>
+ * It allows administrators to manually create and send custom packets from the server to the client using a specific format string.<br>
+ * The command takes a packet ID, a format definition (e.g., {@code d}, {@code h}, {@code s}), and a list of corresponding data values.
  * @author Luno
  */
 public class Fsc extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link Fsc} class.<br>
+	 * This constructor sets up the command for sending custom packets.
+	 */
 	public Fsc()
 	{
 		super("fsc");
 	}
 	
+	/**
+	 * Executes the custom packet sending command.<br>
+	 * It parses the provided parameters to create a {@code SM_CUSTOM_PACKET}.<br>
+	 * The method sends the constructed packet to the specified {@link Player}.
+	 * @param player The admin player who executes the command.
+	 * @param params Variable arguments containing the packet ID, format string, and data values.
+	 */
 	@Override
 	public void execute(Player player, String... params)
 	{
@@ -67,9 +71,16 @@ public class Fsc extends AdminCommand
 			packet.addElement(PacketElementType.getByCode(c), params[i + 2]);
 			i++;
 		}
+		
 		PacketSendUtility.sendPacket(player, packet);
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{

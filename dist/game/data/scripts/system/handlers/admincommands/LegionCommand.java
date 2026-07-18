@@ -1,21 +1,22 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.aionemu.commons.database.dao.DAOManager;
@@ -33,28 +34,44 @@ import com.aionemu.gameserver.utils.Util;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 import com.aionemu.gameserver.world.World;
 
-import javolution.util.FastList;
-
 /**
+ * Handles administrative commands related to {@link Legion} management.<br>
+ * This class allows administrators to perform actions such as updating members or managing territories.
  * @author KID
  */
 public class LegionCommand extends AdminCommand
 {
 	private final LegionService service;
 	
+	/**
+	 * Initializes a new instance of the {@link LegionCommand} class.<br>
+	 * This constructor registers the command name as {@code legion}.<br>
+	 * It also sets up the required {@link LegionService} instance.
+	 */
 	public LegionCommand()
 	{
 		super("legion");
 		service = LegionService.getInstance();
 	}
 	
+	/**
+	 * Executes various administrative commands related to legions.<br>
+	 * It supports actions like disbanding, setting levels, and managing members.
+	 * @param player The admin {@link Player} executing the command.
+	 * @param params Variable arguments containing the specific command details.
+	 */
 	@Override
 	public void execute(Player player, String... params)
 	{
+		if (params.length == 0)
+		{
+			onFail(player, null);
+			return;
+		}
 		
 		if (params[0].equalsIgnoreCase("disband"))
 		{
-			if (!verifyLenght(player, 2, params))
+			if (!verifyLenght(player, 2, params)) // legion disband NAME
 			{
 				return;
 			}
@@ -70,7 +87,7 @@ public class LegionCommand extends AdminCommand
 		}
 		else if (params[0].equalsIgnoreCase("setlevel"))
 		{
-			if (!verifyLenght(player, 3, params))
+			if (!verifyLenght(player, 3, params)) // legion setlevel NAME level
 			{
 				return;
 			}
@@ -107,7 +124,7 @@ public class LegionCommand extends AdminCommand
 		}
 		else if (params[0].equalsIgnoreCase("setpoints"))
 		{
-			if (!verifyLenght(player, 3, params))
+			if (!verifyLenght(player, 3, params)) // legion setpoints NAME points
 			{
 				return;
 			}
@@ -139,7 +156,7 @@ public class LegionCommand extends AdminCommand
 		}
 		else if (params[0].equalsIgnoreCase("setname"))
 		{
-			if (!verifyLenght(player, 3, params))
+			if (!verifyLenght(player, 3, params)) // legion setname NAME NEWNAME
 			{
 				return;
 			}
@@ -155,13 +172,14 @@ public class LegionCommand extends AdminCommand
 				PacketSendUtility.sendMessage(player, params[2] + " is incorrect for legion name!");
 				return;
 			}
+			
 			final String old = legion.getLegionName();
 			service.setLegionName(legion, params[2], true);
 			PacketSendUtility.sendMessage(player, "legion " + old + " has changed name from " + old + " to " + params[2] + ".");
 		}
 		else if (params[0].equalsIgnoreCase("info"))
 		{
-			if (!verifyLenght(player, 2, params))
+			if (!verifyLenght(player, 2, params)) // legion info NAME
 			{
 				return;
 			}
@@ -172,7 +190,7 @@ public class LegionCommand extends AdminCommand
 				return;
 			}
 			
-			final FastList<String> message = FastList.newInstance(), online = FastList.newInstance(), offline = FastList.newInstance();
+			final List<String> message = new ArrayList<>(), online = new ArrayList<>(), offline = new ArrayList<>();
 			message.add("name: " + legion.getLegionName());
 			message.add("contrib points: " + legion.getContributionPoints());
 			message.add("level: " + legion.getLegionLevel());
@@ -202,21 +220,17 @@ public class LegionCommand extends AdminCommand
 			
 			message.add("--ONLINE-------- " + online.size());
 			message.addAll(online);
-			FastList.recycle(online);
 			message.add("--OFFLINE-------- " + offline.size());
 			message.addAll(offline);
-			FastList.recycle(offline);
 			
 			for (String msg : message)
 			{
 				PacketSendUtility.sendMessage(player, msg);
 			}
-			
-			FastList.recycle(message);
 		}
 		else if (params[0].equalsIgnoreCase("kick"))
 		{
-			if (!verifyLenght(player, 2, params))
+			if (!verifyLenght(player, 2, params)) // legion kick PLAYER
 			{
 				return;
 			}
@@ -244,7 +258,7 @@ public class LegionCommand extends AdminCommand
 		}
 		else if (params[0].equalsIgnoreCase("invite"))
 		{
-			if (!verifyLenght(player, 3, params))
+			if (!verifyLenght(player, 3, params)) // legion invite NAME PLAYER
 			{
 				return;
 			}
@@ -279,7 +293,7 @@ public class LegionCommand extends AdminCommand
 		}
 		else if (params[0].equalsIgnoreCase("bg"))
 		{
-			if (!verifyLenght(player, 3, params))
+			if (!verifyLenght(player, 3, params)) // legion bg NAME PLAYER
 			{
 				return;
 			}
@@ -317,8 +331,10 @@ public class LegionCommand extends AdminCommand
 					}
 				}
 			}
+			
 			if (bgplayer == null)
 			{
+				// TODO
 				PacketSendUtility.sendMessage(player, "You can't assign a new general while old is offline.");
 				return;
 			}
@@ -336,7 +352,7 @@ public class LegionCommand extends AdminCommand
 		}
 		else if (params[0].equalsIgnoreCase("setrank"))
 		{
-			if (!verifyLenght(player, 3, params))
+			if (!verifyLenght(player, 3, params)) // legion setrank PLAYER RANK
 			{
 				return;
 			}
@@ -390,6 +406,7 @@ public class LegionCommand extends AdminCommand
 				PacketSendUtility.sendMessage(player, "You are not in a Legion !");
 				return;
 			}
+			
 			if (params[1].equalsIgnoreCase("list"))
 			{
 				for (LegionTerritory territory : TerritoryService.getInstance().getTerritories())
@@ -415,26 +432,46 @@ public class LegionCommand extends AdminCommand
 					onFail(player, "Missing territoryId parameter !");
 					return;
 				}
+				
 				TerritoryService.getInstance().onConquerTerritory(player.getLegion(), Integer.parseInt(params[2]));
 			}
 		}
 	}
 	
+	/**
+	 * Checks if a {@link Legion} with the given name exists in the system.<br>
+	 * It cleans the input by replacing underscores with spaces.<br>
+	 * If the legion is not found, it sends an error message to the {@code player}.
+	 * @param player The {@code Player} who is performing the action.
+	 * @param name The name of the legion to search for.
+	 * @return The {@link Legion} object if found, or {@code null} if it does not exist.
+	 */
 	private Legion verifyLegionExists(Player player, String name)
 	{
 		if (name.contains("_"))
 		{
 			name = name.replaceAll("_", " ");
 		}
+		
 		final Legion legion = service.getLegion(name.toLowerCase());
 		if (legion == null)
 		{
 			PacketSendUtility.sendMessage(player, "legion " + name + " not exists.");
 			return null;
 		}
+		
 		return legion;
 	}
 	
+	/**
+	 * Checks if the provided command arguments meet the minimum length.<br>
+	 * It compares the number of elements in {@code cmd} against {@code size}.<br>
+	 * If the count is too low, it notifies the {@link Player} via {@code onFail}.
+	 * @param player The {@link Player} who executed the command.
+	 * @param size The required number of arguments.
+	 * @param cmd The array of command arguments provided by the user.
+	 * @return {@code true} if the length is sufficient, otherwise {@code false}.
+	 */
 	private boolean verifyLenght(Player player, int size, String... cmd)
 	{
 		final boolean ok = cmd.length >= size;
@@ -446,6 +483,12 @@ public class LegionCommand extends AdminCommand
 		return ok;
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{
@@ -456,7 +499,7 @@ public class LegionCommand extends AdminCommand
 		
 		PacketSendUtility.sendMessage(player, "//legion info <legion name> : get list of legion members");
 		PacketSendUtility.sendMessage(player, "//legion bg <legion name> <new bg name> : set a new brigade general to the legion");
-		PacketSendUtility.sendMessage(player, "//legion kick <player name> : kick player to this legion");
+		PacketSendUtility.sendMessage(player, "//legion kick <player name> : kick player from this legion");
 		PacketSendUtility.sendMessage(player, "//legion invite <legion name> <player name> : add player to legion");
 		PacketSendUtility.sendMessage(player, "//legion disband <legion name> : disbands legion");
 		PacketSendUtility.sendMessage(player, "//legion setlevel <legion name> <level> : sets legion level");

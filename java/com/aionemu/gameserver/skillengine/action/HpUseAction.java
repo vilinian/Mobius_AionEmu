@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.action;
 
@@ -22,9 +22,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
 import com.aionemu.gameserver.model.gameobjects.Creature;
+import com.aionemu.gameserver.model.gameobjects.player.Player;
+import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.skillengine.model.Skill;
+import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles the logic for actions that consume a creature's {@code HP}.<br>
+ * This class is used by the skill engine to process effects requiring health as a resource.
  * @author ATracer
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -33,23 +38,39 @@ public class HpUseAction extends Action
 {
 	@XmlAttribute(required = true)
 	protected int value;
-	
 	@XmlAttribute
 	protected int delta;
-	
 	@XmlAttribute
 	protected boolean ratio;
 	
+	/**
+	 * Executes the action for a specific {@link Skill}.<br>
+	 * It checks if the target has enough HP to perform the skill.<br>
+	 * If successful, it subtracts the required amount from the target's HP.
+	 * @param skill The {@code Skill} object to be processed.
+	 * @return {@code true} if the action was successful, or {@code false} otherwise.
+	 */
 	@Override
-	public void act(Skill skill)
+	public boolean act(Skill skill)
 	{
 		final Creature effector = skill.getEffector();
 		int valueWithDelta = value + (delta * skill.getSkillLevel());
+		final int currentHp = effector.getLifeStats().getCurrentHp();
 		if (ratio)
 		{
 			valueWithDelta = (int) ((valueWithDelta / 100f) * skill.getEffector().getLifeStats().getMaxHp());
 		}
 		
+		if (effector instanceof Player)
+		{
+			if ((currentHp <= 0) || (currentHp < valueWithDelta))
+			{
+				PacketSendUtility.sendPacket((Player) effector, SM_SYSTEM_MESSAGE.STR_SKILL_NOT_ENOUGH_HP);
+				return false;
+			}
+		}
+		
 		effector.getLifeStats().reduceHp(valueWithDelta, effector);
+		return true;
 	}
 }

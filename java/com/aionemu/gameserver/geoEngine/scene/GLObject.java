@@ -1,23 +1,24 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.scene;
 
 /**
- * Describes a GL object. An encapsulation of a certain object on the native side of the graphics library. This class is used to track
+ * Represents an abstraction of a native graphics library object.<br>
+ * This class tracks and manages objects on the native side of the {@code scene} engine.
  */
 public abstract class GLObject implements Cloneable
 {
@@ -40,7 +41,6 @@ public abstract class GLObject implements Cloneable
 	
 	public static enum Type
 	{
-		
 		/**
 		 * Vertex buffers are used to describe geometry data and it's attributes.
 		 */
@@ -55,6 +55,12 @@ public abstract class GLObject implements Cloneable
 		Shader,
 	}
 	
+	/**
+	 * Creates a new instance of a {@link GLObject}.<br>
+	 * This constructor initializes the object with a specific {@code Type}.<br>
+	 * It also creates a new internal handle reference.
+	 * @param type The category of the graphics object to create.
+	 */
 	public GLObject(Type type)
 	{
 		this.type = type;
@@ -62,9 +68,10 @@ public abstract class GLObject implements Cloneable
 	}
 	
 	/**
-	 * Protected constructor that doesn't allocate handle ref. This is used in subclasses for the createDestructableClone().
-	 * @param type
-	 * @param id
+	 * Creates a new instance of a {@link GLObject} with a specific type and ID.<br>
+	 * This constructor is used to initialize the internal state of the object.
+	 * @param type The {@code Type} of the graphics object.
+	 * @param id The unique identifier for the object.
 	 */
 	protected GLObject(Type type, int id)
 	{
@@ -73,8 +80,10 @@ public abstract class GLObject implements Cloneable
 	}
 	
 	/**
-	 * Sets the ID of the GLObject. This method is used in Renderer and must not be called by the user.
-	 * @param id The ID to set
+	 * Sets the unique identifier for this {@link GLObject}.<br>
+	 * This method ensures that an ID is only assigned once.<br>
+	 * It will throw an {@code IllegalStateException} if the ID is already set.
+	 * @param id The new integer value to assign as the object's ID.
 	 */
 	public void setId(int id)
 	{
@@ -87,31 +96,49 @@ public abstract class GLObject implements Cloneable
 	}
 	
 	/**
-	 * @return The ID of the object. Should not be used by user code in most cases.
+	 * Returns the unique identifier of this object.
+	 * @return The integer ID.
 	 */
 	public int getId()
 	{
 		return id;
 	}
 	
+	/**
+	 * Marks the object as needing an update.<br>
+	 * This sets the {@code updateNeeded} flag to {@code true}.<br>
+	 * Use this when the underlying data has changed.
+	 */
 	public void setUpdateNeeded()
 	{
 		updateNeeded = true;
 	}
 	
 	/**
-	 *
+	 * Resets the {@code updateNeeded} flag to {@code false}.<br>
+	 * This tells the system that the object data is current.<br>
+	 * Use this after you have finished modifying the object.
 	 */
 	public void clearUpdateNeeded()
 	{
 		updateNeeded = false;
 	}
 	
+	/**
+	 * Checks if the object data has changed.<br>
+	 * This determines if an update is required before use.
+	 * @return {@code true} if an update is needed, {@code false} otherwise.
+	 */
 	public boolean isUpdateNeeded()
 	{
 		return updateNeeded;
 	}
 	
+	/**
+	 * Returns a string representation of this {@code GLObject}.<br>
+	 * It combines the object type name and its hash code.
+	 * @return A formatted string containing the type and hex hash.
+	 */
 	@Override
 	public String toString()
 	{
@@ -119,8 +146,10 @@ public abstract class GLObject implements Cloneable
 	}
 	
 	/**
-	 * This should create a deep clone. For a shallow clone, use createDestructableClone().
-	 * @return
+	 * Creates a copy of this {@code GLObject}.<br>
+	 * The new object is initialized with a fresh {@code handleRef}.<br>
+	 * It resets the {@code id} to -1 and sets {@code updateNeeded} to {@code true}.
+	 * @return A new instance of {@code GLObject}.
 	 */
 	@Override
 	protected GLObject clone()
@@ -139,8 +168,7 @@ public abstract class GLObject implements Cloneable
 		}
 	}
 	
-	// @Override
-	// public boolean equals(Object other){
+	// Overrides the equals method to compare objects.
 	// if (this == other)
 	// return true;
 	// if (!(other instanceof GLObject))

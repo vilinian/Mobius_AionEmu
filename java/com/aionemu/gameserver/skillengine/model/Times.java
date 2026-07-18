@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.model;
 
@@ -28,6 +28,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.aionemu.gameserver.model.templates.item.WeaponType;
 
 /**
+ * This class represents the timing and duration data for skills.<br>
+ * It holds various time-related values used by the {@link com.aionemu.gameserver.skillengine.SkillEngine}.
  * @author kecims
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -36,25 +38,47 @@ public class Times
 {
 	@XmlAttribute(required = true)
 	protected String times;
-	
 	@XmlTransient
 	private final HashMap<WeaponTypeWrapper, Integer> timeForWeaponType = new HashMap<>();
 	
+	/**
+	 * Retrieves the current {@code times} value.<br>
+	 * This method returns the string stored in the {@code times} field.
+	 * @return The {@code String} value of the times.
+	 */
 	public String getTimes()
 	{
 		return times;
 	}
 	
+	/**
+	 * Sets the {@code times} value for this object.<br>
+	 * This method updates the internal string field.
+	 * @param times The new string value to set.
+	 */
 	public void setTimes(String times)
 	{
 		this.times = times;
 	}
 	
+	/**
+	 * Retrieves the specific time value associated with a given weapon type.<br>
+	 * This method looks up the {@code WeaponTypeWrapper} in the internal map.
+	 * @param weapon The {@link WeaponTypeWrapper} to look up.
+	 * @return The integer time value for the specified weapon.
+	 */
 	public int getTimeForWeapon(WeaponTypeWrapper weapon)
 	{
 		return timeForWeaponType.get(weapon);
 	}
 	
+	/**
+	 * This method is called after the XML data has been unmarshalled.<br>
+	 * It parses the {@code times} string into the {@code timeForWeaponType} map.<br>
+	 * Each value in the comma-separated list is assigned to a specific {@link WeaponTypeWrapper}.
+	 * @param u The {@link Unmarshaller} used to read the data.
+	 * @param parent The parent object of the current element.
+	 */
 	void afterUnmarshal(Unmarshaller u, Object parent)
 	{
 		final String[] tokens = times.split(",");
@@ -68,11 +92,18 @@ public class Times
 		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.SWORD_1H, null), Integer.parseInt(tokens[7]));
 		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.SWORD_2H, null), Integer.parseInt(tokens[8]));
 		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.SWORD_1H, WeaponType.SWORD_1H), Integer.parseInt(tokens[9]));
-		// 4.3
-		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.GUN_1H, null), Integer.parseInt(tokens[10]));
-		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.CANNON_2H, null), Integer.parseInt(tokens[11]));
-		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.HARP_2H, null), Integer.parseInt(tokens[12]));
-		// 4.5
-		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.KEYBLADE_2H, null), Integer.parseInt(tokens[13]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.DAGGER_1H, WeaponType.DAGGER_1H), Integer.parseInt(tokens[10]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.GUN_1H, null), Integer.parseInt(tokens[11]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.GUN_1H, WeaponType.GUN_1H), Integer.parseInt(tokens[12]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.TOOLHOE_1H, null), Integer.parseInt(tokens[13]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.TOOLHOE_1H, WeaponType.TOOLHOE_1H), Integer.parseInt(tokens[14]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.TOOLPICK_2H, null), Integer.parseInt(tokens[15]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.TOOLROD_2H, null), Integer.parseInt(tokens[16]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.CANNON_2H, null), Integer.parseInt(tokens[17]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.HARP_2H, null), Integer.parseInt(tokens[18]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.GUN_2H, null), Integer.parseInt(tokens[19]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.KEYBLADE_2H, null), Integer.parseInt(tokens[20]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.KEYHAMMER_2H, null), Integer.parseInt(tokens[21]));
+		timeForWeaponType.put(new WeaponTypeWrapper(WeaponType.SPRAY_2H, null), Integer.parseInt(tokens[22]));
 	}
 }

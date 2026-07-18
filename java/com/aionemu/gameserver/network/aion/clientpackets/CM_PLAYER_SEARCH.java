@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -27,17 +27,20 @@ import com.aionemu.gameserver.network.aion.AionClientPacket;
 import com.aionemu.gameserver.network.aion.AionConnection.State;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_PLAYER_SEARCH;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
-import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.Util;
 import com.aionemu.gameserver.world.World;
 
 /**
- * Received when a player searches using the social search panel
+ * This packet is received from the client when a player performs a search using the social search panel.<br>
+ * It handles requests to find other players based on specific criteria.
  * @author Ben
  */
 public class CM_PLAYER_SEARCH extends AionClientPacket
 {
-	public static final int MAX_RESULTS = 104;
+	/**
+	 * The max number of players to return as results
+	 */
+	public static final int MAX_RESULTS = 104; // 3.0
 	private String name;
 	private int region;
 	private int classMask;
@@ -45,6 +48,13 @@ public class CM_PLAYER_SEARCH extends AionClientPacket
 	private int maxLevel;
 	private int lfgOnly;
 	
+	/**
+	 * This method initializes a new {@code CM_PLAYER_SEARCH} packet.<br>
+	 * It sets the required network states for the request.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state.
+	 * @param restStates Additional connection states if needed.
+	 */
 	public CM_PLAYER_SEARCH(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -58,24 +68,27 @@ public class CM_PLAYER_SEARCH extends AionClientPacket
 		{
 			name = Util.convertName(name);
 		}
+		
 		region = readD();
 		classMask = readD();
 		minLevel = readC();
 		maxLevel = readC();
 		lfgOnly = readC();
-		readC();
+		readC(); // 0x00 in search pane 0x30 in /who?
 	}
 	
 	@Override
 	protected void runImpl()
 	{
 		final Player activePlayer = getConnection().getActivePlayer();
+		
 		final Iterator<Player> it = World.getInstance().getPlayersIterator();
+		
 		final List<Player> matches = new ArrayList<>(MAX_RESULTS);
-		if (activePlayer.getLevel() < 10)
+		
+		if (activePlayer.getLevel() < CustomConfig.LEVEL_TO_SEARCH)
 		{
-			// Characters under level 10 cannot use the search function.
-			PacketSendUtility.sendPacket(activePlayer, SM_SYSTEM_MESSAGE.STR_CANT_WHO_LEVEL("10"));
+			sendPacket(SM_SYSTEM_MESSAGE.STR_CANT_WHO_LEVEL(String.valueOf(CustomConfig.LEVEL_TO_SEARCH)));
 			return;
 		}
 		while (it.hasNext() && (matches.size() < MAX_RESULTS))
@@ -117,15 +130,20 @@ public class CM_PLAYER_SEARCH extends AionClientPacket
 			{
 				continue;
 			}
-			else if ((player.getRace() != activePlayer.getRace()) && (CustomConfig.FACTIONS_SEARCH_MODE == false))
+			else if ((player.getRace() != activePlayer.getRace()) && !CustomConfig.FACTIONS_SEARCH_MODE)
 			{
 				continue;
 			}
-			else
+			else if (player.getName() == activePlayer.getName())
+			{
+				continue;
+			}
+			else // This player matches criteria
 			{
 				matches.add(player);
 			}
 		}
+		
 		sendPacket(new SM_PLAYER_SEARCH(matches, region));
 	}
 }

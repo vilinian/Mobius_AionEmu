@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.toypet;
 
@@ -21,10 +21,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 
-import javax.annotation.Nonnull;
-
-import org.apache.commons.lang.ArrayUtils;
-
 import com.aionemu.commons.utils.Rnd;
 import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.templates.pet.PetFeedResult;
@@ -32,25 +28,9 @@ import com.aionemu.gameserver.model.templates.pet.PetFlavour;
 import com.aionemu.gameserver.model.templates.pet.PetRewards;
 
 /**
+ * This class handles the calculation of experience points gained from feeding toy pets.<br>
+ * It determines the correct point values based on the pet's level and the quantity of feed items used.
  * @author Rolandas
- */
-/**
- * <b>Current pre-calculated values multiplied by 4; in packet 14 bits. Max value: 17600 / 4 is 13 bits; feed points as in retail packets.</b><br>
- * static final byte[][] pointValues = new byte[][] {<br>
- * // 10 25 40 50 100 200 -- feed max count<br>
- * { 0, 0, 0, 0, 0, 0 }, // level 1~5 items (feed points 0)<br>
- * { 80, 200, 320, 400, 800, 1600 }, // level 6~10 items (feed points 8)<br>
- * { 160, 400, 640, 800, 1600, 3200 }, // level 11~15 items (feed points 16)<br>
- * { 240, 600, 960, 1200, 2400, 4800 }, // level 16~20 items (feed points 24)<br>
- * { 320, 800, 1280, 1600, 3200, 6400 }, // level 21~25 items (feed points 32)<br>
- * { 400, 1000, 1600, 2000, 4000, 8000 }, // level 26~30 items (feed points 40)<br>
- * { 480, 1200, 1920, 2400, 4800, 9600 }, // level 31~35 items (feed points 48)<br>
- * { 560, 1400, 2240, 2800, 5600, 11200 }, // level 36~40 items (feed points 56)<br>
- * { 640, 1600, 2560, 3200, 6400, 12800 }, // level 41~45 items (feed points 64)<br>
- * { 720, 1800, 2880, 3600, 7200, 14400 }, // level 46~50 items (feed points 72)<br>
- * { 800, 2000, 3200, 4000, 8000, 16000 }, // level 51~55 items (feed points 80)<br>
- * { 880, 2200, 3520, 4400, 8800, 17600 } // level 56~60 items (feed points 88)<br>
- * };
  */
 public final class PetFeedCalculator
 {
@@ -90,7 +70,9 @@ public final class PetFeedCalculator
 	}
 	
 	/**
-	 * Calculate point values for each item levels and each max feed count
+	 * This method pre-calculates the pet feed points for various levels and counts.<br>
+	 * It populates the {@code pointValues} array based on item levels and full counts.<br>
+	 * The logic ensures compatibility with retail packet requirements.
 	 */
 	static void calculate()
 	{
@@ -101,6 +83,7 @@ public final class PetFeedCalculator
 			{
 				continue;
 			}
+			
 			int countIndex = 0;
 			for (short countByte : fullCounts)
 			{
@@ -110,7 +93,8 @@ public final class PetFeedCalculator
 				{
 					finalLevel--;
 				}
-				final int pointLevel = itemLevels[finalLevel / 5];
+				
+				final int pointLevel = itemLevels[(finalLevel / 5)];
 				final int feedPoints = (Math.max(0, pointLevel - 5) / 5) * 8;
 				// System.out.println("ITEM LEVEL: " + level + ", COUNT: " + count + ", STEP: " + feedPoints);
 				pointValues[finalLevel / 5][countIndex++] = getPoints(feedPoints, count);
@@ -119,10 +103,11 @@ public final class PetFeedCalculator
 	}
 	
 	/**
-	 * Formula to calculate pointValues array
-	 * @param feedPoints - feed points for item
-	 * @param maxFeedCount - max feeding count
-	 * @return byte increment count after all items are fed
+	 * Calculates the total points gained from feeding a pet.<br>
+	 * This method simulates point accumulation based on feed limits and state transitions.
+	 * @param feedPoints The number of points provided by a single feed item.
+	 * @param maxFeedCount The maximum number of items that can be fed in one session.
+	 * @return The total calculated points as an {@code int}.
 	 */
 	static int getPoints(int feedPoints, int maxFeedCount)
 	{
@@ -137,6 +122,7 @@ public final class PetFeedCalculator
 			{
 				needSwitch = true;
 			}
+			
 			points += feedPoints;
 			if (needSwitch)
 			{
@@ -147,12 +133,22 @@ public final class PetFeedCalculator
 					points = oldPoints;
 				}
 			}
+			
 			consumed++;
 		}
+		
 		return points;
 	}
 	
-	public static void updatePetFeedProgress(@Nonnull PetFeedProgress progress, int itemLevel, int maxFeedCount)
+	/**
+	 * Updates the progress of a pet's feeding status.<br>
+	 * This method calculates points based on the item level and updates the hungry level.<br>
+	 * It handles special logic for loved food and checks if a hunger level transition is required.
+	 * @param progress The {@code PetFeedProgress} object to update.
+	 * @param itemLevel The level of the feed item used.
+	 * @param maxFeedCount The maximum number of feeds allowed for the current stage.
+	 */
+	public static void updatePetFeedProgress(PetFeedProgress progress, int itemLevel, int maxFeedCount)
 	{
 		final PetHungryLevel currHungryLevel = progress.getHungryLevel();
 		if (progress.isLovedFeeded())
@@ -162,6 +158,7 @@ public final class PetFeedCalculator
 			{
 				return;
 			}
+			
 			progress.setHungryLevel(PetHungryLevel.FULL);
 			progress.incrementCount(true);
 			return;
@@ -183,7 +180,7 @@ public final class PetFeedCalculator
 				finalLevel--;
 			}
 			
-			final byte pointLevel = itemLevels[finalLevel / 5];
+			final byte pointLevel = itemLevels[(finalLevel / 5)];
 			final byte pointsEarned = (byte) ((Math.max(0, pointLevel - 5) / 5) * 8);
 			final int feedProgress = progress.getTotalPoints() + pointsEarned;
 			progress.setTotalPoints(feedProgress);
@@ -202,9 +199,20 @@ public final class PetFeedCalculator
 				progress.setHungryLevel(nextLevel);
 			}
 		}
+		
 		progress.incrementCount(false);
 	}
 	
+	/**
+	 * Calculates the reward for a pet based on feeding progress.<br>
+	 * This method checks if the pet is full and determines which {@link PetFeedResult} to give.<br>
+	 * It considers the player level and total points accumulated.
+	 * @param fullCount The number of full feeds completed.
+	 * @param rewardGroup The group of possible rewards for this progress step.
+	 * @param progress The current feeding progress of the pet.
+	 * @param playerLevel The current level of the player.
+	 * @return The resulting {@link PetFeedResult} or {@code null} if no reward is available.
+	 */
 	public static PetFeedResult getReward(int fullCount, PetRewards rewardGroup, PetFeedProgress progress, int playerLevel)
 	{
 		if ((progress.getHungryLevel() != PetHungryLevel.FULL) || (rewardGroup.getResults().size() == 0))
@@ -212,8 +220,8 @@ public final class PetFeedCalculator
 			return null;
 		}
 		
-		final int pointsIndex = ArrayUtils.indexOf(fullCounts, (short) fullCount);
-		if (pointsIndex == ArrayUtils.INDEX_NOT_FOUND)
+		final int pointsIndex = indexOf(fullCounts, (short) fullCount);
+		if (pointsIndex == -1)
 		{
 			return null;
 		}
@@ -225,6 +233,7 @@ public final class PetFeedCalculator
 			{
 				return rewardGroup.getResults().get(0);
 			}
+			
 			final List<PetFeedResult> validRewards = new ArrayList<>();
 			int maxLevel = 0;
 			for (PetFeedResult result : rewardGroup.getResults())
@@ -234,21 +243,26 @@ public final class PetFeedCalculator
 				{
 					continue;
 				}
+				
 				if (resultLevel > maxLevel)
 				{
 					maxLevel = resultLevel;
 					validRewards.clear();
 				}
+				
 				validRewards.add(result);
 			}
+			
 			if (validRewards.size() == 0)
 			{
 				return null;
 			}
+			
 			if (validRewards.size() == 1)
 			{
 				return validRewards.get(0);
 			}
+			
 			return validRewards.get(Rnd.get(validRewards.size()));
 		}
 		
@@ -274,5 +288,24 @@ public final class PetFeedCalculator
 		}
 		
 		return rewardGroup.getResults().get(rewardIndex);
+	}
+	
+	/**
+	 * Returns the index of the first occurrence of a value in a {@code short} array.
+	 * @param array the array to search
+	 * @param value the value to find
+	 * @return the zero-based index of the first match, or {@code -1} if not present
+	 */
+	private static int indexOf(short[] array, short value)
+	{
+		for (int i = 0; i < array.length; i++)
+		{
+			if (array[i] == value)
+			{
+				return i;
+			}
+		}
+		
+		return -1;
 	}
 }

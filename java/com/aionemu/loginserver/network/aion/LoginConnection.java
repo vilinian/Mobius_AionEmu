@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.aion;
 
@@ -40,7 +40,8 @@ import com.aionemu.loginserver.network.ncrypt.EncryptedRSAKeyPair;
 import com.aionemu.loginserver.network.ncrypt.KeyGen;
 
 /**
- * Object representing connection between LoginServer and Aion Client.
+ * Represents a network connection between the {@code LoginServer} and an Aion client.<br>
+ * It handles communication, packet processing, and encryption for authenticated sessions.
  * @author -Nemesiss-
  */
 public class LoginConnection extends AConnection
@@ -52,7 +53,7 @@ public class LoginConnection extends AConnection
 	/**
 	 * PacketProcessor for executing packets.
 	 */
-	private static final PacketProcessor<LoginConnection> processor = new PacketProcessor<>(1, 8, 50, 3);
+	private final static PacketProcessor<LoginConnection> processor = new PacketProcessor<>(1, 8, 50, 3);
 	/**
 	 * Server Packet "to send" Queue
 	 */
@@ -91,7 +92,6 @@ public class LoginConnection extends AConnection
 	 */
 	public static enum State
 	{
-		
 		/**
 		 * Means that client just connects
 		 */
@@ -107,9 +107,10 @@ public class LoginConnection extends AConnection
 	}
 	
 	/**
-	 * Constructor
-	 * @param sc
-	 * @param d
+	 * Creates a new {@link LoginConnection} instance.<br>
+	 * This constructor initializes the connection with specific buffer sizes.
+	 * @param sc The {@code SocketChannel} used for network communication.
+	 * @param d The {@code Dispatcher} used to handle incoming data.
 	 */
 	public LoginConnection(SocketChannel sc, Dispatcher d)
 	{
@@ -117,12 +118,14 @@ public class LoginConnection extends AConnection
 	}
 	
 	/**
-	 * Called by Dispatcher. ByteBuffer data contains one packet that should be processed.
-	 * @param data
-	 * @return True if data was processed correctly, False if some error occurred and connection should be closed NOW.
+	 * Decrypts and processes incoming data from the client.<br>
+	 * It validates the packet structure and checks for flooding.<br>
+	 * If the packet is valid, it executes the corresponding logic.
+	 * @param data The {@code ByteBuffer} containing the raw packet data.
+	 * @return {@code true} if the data was processed successfully or skipped due to decryption failure; {@code false} otherwise.
 	 */
 	@Override
-	protected final boolean processData(ByteBuffer data)
+	protected boolean processData(ByteBuffer data)
 	{
 		if (!decrypt(data))
 		{
@@ -143,12 +146,14 @@ public class LoginConnection extends AConnection
 	}
 	
 	/**
-	 * This method will be called by Dispatcher, and will be repeated till return false.
-	 * @param data
-	 * @return True if data was written to buffer, False indicating that there are not any more data to write.
+	 * Writes data to the outgoing message queue.<br>
+	 * This method retrieves the next packet from {@code sendMsgQueue}.<br>
+	 * It assigns the provided buffer to that packet and writes it.
+	 * @param data The {@code ByteBuffer} containing the information to write.
+	 * @return {@code true} if a packet was successfully processed, or {@code false} if the queue is empty.
 	 */
 	@Override
-	protected final synchronized boolean writeData(ByteBuffer data)
+	protected synchronized boolean writeData(ByteBuffer data)
 	{
 		final AionServerPacket packet = sendMsgQueue.pollFirst();
 		
@@ -164,20 +169,24 @@ public class LoginConnection extends AConnection
 	}
 	
 	/**
-	 * This method is called by Dispatcher when connection is ready to be closed.
-	 * @return time in ms after witch onDisconnect() method will be called. Always return 0.
+	 * Retrieves the delay before a disconnection occurs.<br>
+	 * This method returns the current timeout value in milliseconds.
+	 * @return The disconnection delay as a {@code long}.
 	 */
 	@Override
-	protected final long getDisconnectionDelay()
+	protected long getDisconnectionDelay()
 	{
 		return 0;
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Handles the cleanup logic when a client disconnects.<br>
+	 * Stops the {@code pingChecker}.<br>
+	 * Notifies the {@code LoginServer} if an account is logged in.<br>
+	 * Triggers the world leave process for the active player.
 	 */
 	@Override
-	protected final void onDisconnect()
+	protected void onDisconnect()
 	{
 		/**
 		 * Remove account only if not joined GameServer yet.
@@ -190,19 +199,23 @@ public class LoginConnection extends AConnection
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Handles the logic when the server is shutting down.<br>
+	 * This method forces the connection to close immediately.<br>
+	 * It calls {@code boolean)} with a {@code true} flag.
 	 */
 	@Override
-	protected final void onServerClose()
+	protected void onServerClose()
 	{
 		// TODO mb some packet should be send to client before closing?
 		close( /* packet, */true);
 	}
 	
 	/**
-	 * Decrypt packet.
-	 * @param buf
-	 * @return true if success
+	 * Decrypts the data provided in the {@code ByteBuffer}.<br>
+	 * It uses the internal {@code cryptEngine} to perform the decryption.<br>
+	 * If the checksum is incorrect, a warning is logged.
+	 * @param buf The {@code ByteBuffer} containing the encrypted data to be decrypted.
+	 * @return {@code true} if decryption was successful, or {@code false} otherwise.
 	 */
 	private boolean decrypt(ByteBuffer buf)
 	{
@@ -219,11 +232,12 @@ public class LoginConnection extends AConnection
 	}
 	
 	/**
-	 * Encrypt packet.
-	 * @param buf
-	 * @return encrypted packet size.
+	 * Encrypts the data contained in the provided {@code ByteBuffer}.<br>
+	 * This method uses the internal {@code CryptEngine} to process the buffer.
+	 * @param buf The {@code ByteBuffer} containing the raw data to be encrypted.
+	 * @return The new size of the encrypted data.
 	 */
-	public final int encrypt(ByteBuffer buf)
+	public int encrypt(ByteBuffer buf)
 	{
 		int size = buf.limit() - 2;
 		final int offset = buf.arrayOffset() + buf.position();
@@ -234,10 +248,12 @@ public class LoginConnection extends AConnection
 	}
 	
 	/**
-	 * Sends AionServerPacket to this client.
-	 * @param bp AionServerPacket to be sent.
+	 * Sends a server packet to the connected client.<br>
+	 * This method adds the {@code AionServerPacket} to the outgoing queue.<br>
+	 * It ensures that the connection is active before attempting to send data.
+	 * @param bp The {@code AionServerPacket} object to be sent.
 	 */
-	public final synchronized void sendPacket(AionServerPacket bp)
+	public synchronized void sendPacket(AionServerPacket bp)
 	{
 		/**
 		 * Connection is already closed or waiting for last (close packet) to be sent
@@ -253,12 +269,12 @@ public class LoginConnection extends AConnection
 	}
 	
 	/**
-	 * Its guaranted that closePacket will be sent before closing connection, but all past and future packets wont. Connection will be closed [by Dispatcher Thread], and onDisconnect() method will be called to clear all other things. forced means that server shouldn't wait with removing this
-	 * connection.
-	 * @param closePacket Packet that will be send before closing.
-	 * @param forced have no effect in this implementation.
+	 * Closes the connection and sends a final packet to the client.<br>
+	 * This method clears the pending message queue before closing.
+	 * @param closePacket The {@code AionServerPacket} to send before disconnecting.
+	 * @param forced Set to {@code true} if the connection should be closed immediately.
 	 */
-	public final synchronized void close(AionServerPacket closePacket, boolean forced)
+	public synchronized void close(AionServerPacket closePacket, boolean forced)
 	{
 		if (isWriteDisabled())
 		{
@@ -275,96 +291,109 @@ public class LoginConnection extends AConnection
 	}
 	
 	/**
-	 * Return Scrambled modulus
-	 * @return Scrambled modulus
+	 * Retrieves the encrypted modulus from the RSA key pair.<br>
+	 * This value is used for secure communication between the server and client.
+	 * @return a {@code byte[]} containing the encrypted modulus.
 	 */
-	public final byte[] getEncryptedModulus()
+	public byte[] getEncryptedModulus()
 	{
 		return encryptedRSAKeyPair.getEncryptedModulus();
 	}
 	
 	/**
-	 * Return RSA private key
-	 * @return rsa private key
+	 * Retrieves the private RSA key for this connection.<br>
+	 * This key is used for secure communication with the client.
+	 * @return the {@code RSAPrivateKey} associated with this session.
 	 */
-	public final RSAPrivateKey getRSAPrivateKey()
+	public RSAPrivateKey getRSAPrivateKey()
 	{
 		return (RSAPrivateKey) encryptedRSAKeyPair.getRSAKeyPair().getPrivate();
 	}
 	
 	/**
-	 * Returns unique sessionId of this connection.
-	 * @return SessionId
+	 * Retrieves the unique session identifier for this connection.<br>
+	 * This ID is generated based on the {@code hashCode()} of the object.
+	 * @return The unique {@code int} session ID.
 	 */
-	public final int getSessionId()
+	public int getSessionId()
 	{
 		return sessionId;
 	}
 	
 	/**
-	 * Current state of this connection
-	 * @return state
+	 * Retrieves the current connection status.<br>
+	 * This method returns the {@code State} of the current connection.
+	 * @return The current {@code State} of this connection.
 	 */
-	public final State getState()
+	public State getState()
 	{
 		return state;
 	}
 	
 	/**
-	 * Set current state of this connection
-	 * @param state
+	 * Updates the current connection state.<br>
+	 * This method sets the {@code state} field to the provided value.
+	 * @param state The new {@code State} to apply to this connection.
 	 */
-	public final void setState(State state)
+	public void setState(State state)
 	{
 		this.state = state;
 	}
 	
 	/**
-	 * Returns Account object that this client logged in or null
-	 * @return Account
+	 * Retrieves the {@link Account} associated with this connection.
+	 * @return The current {@code Account} object.
 	 */
-	public final Account getAccount()
+	public Account getAccount()
 	{
 		return account;
 	}
 	
 	/**
-	 * Set Account object for this connection.
-	 * @param account
+	 * Sets the {@link Account} associated with this connection.<br>
+	 * This method updates the internal account reference.<br>
+	 * The provided {@code account} parameter must not be {@code null}.
+	 * @param account The {@link Account} object to set.
 	 */
-	public final void setAccount(Account account)
+	public void setAccount(Account account)
 	{
 		this.account = account;
 	}
 	
 	/**
-	 * Returns Session Key of this connection
-	 * @return SessionKey
+	 * Retrieves the current {@code SessionKey} for this connection.<br>
+	 * This key is used to secure communication between the server and the client.
+	 * @return The {@code SessionKey} associated with this session.
 	 */
-	public final SessionKey getSessionKey()
+	public SessionKey getSessionKey()
 	{
 		return sessionKey;
 	}
 	
 	/**
-	 * Set Session Key for this connection
-	 * @param sessionKey
+	 * Updates the current {@code SessionKey} for this connection.<br>
+	 * This key is used to secure communication between the server and client.
+	 * @param sessionKey The new {@link SessionKey} to assign.
 	 */
-	public final void setSessionKey(SessionKey sessionKey)
+	public void setSessionKey(SessionKey sessionKey)
 	{
 		this.sessionKey = sessionKey;
 	}
 	
 	/**
-	 * Set joinedGs value to true
+	 * Updates the connection state to indicate that the user has joined a Game Server.<br>
+	 * This sets the {@code joinedGs} flag to {@code true}.
 	 */
-	public final void setJoinedGs()
+	public void setJoinedGs()
 	{
 		joinedGs = true;
 	}
 	
 	/**
-	 * @return String info about this connection
+	 * Returns a string representation of the current connection.<br>
+	 * It displays the {@link Account} information and the IP address.<br>
+	 * If no account is logged in, it shows a default message with the IP.
+	 * @return A string describing the login status and IP address.
 	 */
 	@Override
 	public String toString()
@@ -373,8 +402,10 @@ public class LoginConnection extends AConnection
 	}
 	
 	/**
-	 * This method should no be modified, hashcode in this class is used to ensure that each connection hash unique id
-	 * @return unique identifier
+	 * Returns a hash code value for this {@link LoginConnection} object.<br>
+	 * This value is used to identify the object in collections like {@code HashSet}.<br>
+	 * It is calculated based on the properties of the parent class.
+	 * @return The integer hash code of this object.
 	 */
 	@Override
 	public int hashCode()
@@ -382,11 +413,19 @@ public class LoginConnection extends AConnection
 		return super.hashCode();
 	}
 	
+	/**
+	 * Closes the current connection immediately.<br>
+	 * This method calls {@code boolean)} with a {@code false} value for the forced parameter.
+	 */
 	public void closeNow()
 	{
-		close(false);
+		this.close(false);
 	}
 	
+	/**
+	 * This method performs the initial setup for the connection.<br>
+	 * It sends the {@code SM_KEY} packet to the client.
+	 */
 	@Override
 	protected void initialized()
 	{

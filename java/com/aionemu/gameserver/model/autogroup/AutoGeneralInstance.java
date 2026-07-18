@@ -1,27 +1,23 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.autogroup;
 
-import static ch.lambdaj.Lambda.having;
-import static ch.lambdaj.Lambda.on;
-import static ch.lambdaj.Lambda.select;
-import static org.hamcrest.Matchers.equalTo;
-
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.PlayerClass;
@@ -34,10 +30,20 @@ import com.aionemu.gameserver.model.templates.portal.PortalPath;
 import com.aionemu.gameserver.services.teleport.TeleportService2;
 
 /**
+ * Represents a general instance for the auto-grouping system.<br>
+ * It handles logic for players who are not part of specific specialized groups. This class extends {@link AutoInstance} to provide shared functionality.
  * @author xTz
  */
 public class AutoGeneralInstance extends AutoInstance
 {
+	/**
+	 * Adds a {@link Player} to the current instance.<br>
+	 * This method checks if the player meets all requirements for entry.<br>
+	 * It handles both individual and group entry logic.
+	 * @param player The {@link Player} attempting to join.
+	 * @param searchInstance The {@link SearchInstance} containing the request details.
+	 * @return An {@link AGQuestion} representing the result of the addition.
+	 */
 	@Override
 	public AGQuestion addPlayer(Player player, SearchInstance searchInstance)
 	{
@@ -48,29 +54,13 @@ public class AutoGeneralInstance extends AutoInstance
 			{
 				return AGQuestion.FAILED;
 			}
+			
 			final PlayerClass playerClass = player.getPlayerClass();
 			final int clericSize = getPlayersByClass(PlayerClass.CLERIC).size();
-			final int chanterSize = getPlayersByClass(PlayerClass.CHANTER).size();
-			final int songweaverSize = getPlayersByClass(PlayerClass.SONGWEAVER).size();
 			final int templarSize = getPlayersByClass(PlayerClass.TEMPLAR).size();
-			final int aethertechSize = getPlayersByClass(PlayerClass.AETHERTECH).size();
 			if (playerClass.equals(PlayerClass.CLERIC))
 			{
 				if (clericSize > 0)
-				{
-					return AGQuestion.FAILED;
-				}
-			}
-			else if (playerClass.equals(PlayerClass.CHANTER))
-			{
-				if (chanterSize > 0)
-				{
-					return AGQuestion.FAILED;
-				}
-			}
-			else if (playerClass.equals(PlayerClass.SONGWEAVER))
-			{
-				if (songweaverSize > 0)
 				{
 					return AGQuestion.FAILED;
 				}
@@ -82,26 +72,17 @@ public class AutoGeneralInstance extends AutoInstance
 					return AGQuestion.FAILED;
 				}
 			}
-			else if (playerClass.equals(PlayerClass.AETHERTECH))
-			{
-				if (aethertechSize > 0)
-				{
-					return AGQuestion.FAILED;
-				}
-			}
 			else
 			{
 				int size = players.size();
 				size -= clericSize;
-				size -= chanterSize;
 				size -= templarSize;
-				size -= songweaverSize;
-				size -= aethertechSize;
-				if (size >= 2)
+				if (size >= 4)
 				{
 					return AGQuestion.FAILED;
 				}
 			}
+			
 			players.put(player.getObjectId(), new AGPlayer(player));
 			return instance != null ? AGQuestion.ADDED : (players.size() == agt.getPlayerSize() ? AGQuestion.READY : AGQuestion.ADDED);
 		}
@@ -111,6 +92,12 @@ public class AutoGeneralInstance extends AutoInstance
 		}
 	}
 	
+	/**
+	 * This method is called when a {@link Player} enters the instance.<br>
+	 * It handles group logic for players entering alone or with others.<br>
+	 * It ensures the player is registered within the current instance.
+	 * @param player The {@link Player} object who entered the instance.
+	 */
 	@Override
 	public void onEnterInstance(Player player)
 	{
@@ -129,6 +116,7 @@ public class AutoGeneralInstance extends AutoInstance
 		{
 			PlayerGroupService.addPlayer(playersByRace.get(0).getPlayerGroup2(), player);
 		}
+		
 		final Integer object = player.getObjectId();
 		if (!instance.isRegistered(object))
 		{
@@ -136,6 +124,12 @@ public class AutoGeneralInstance extends AutoInstance
 		}
 	}
 	
+	/**
+	 * Handles the logic when a {@link Player} presses enter to join the instance.<br>
+	 * It triggers the cooldown for the player.<br>
+	 * It also moves the player to the correct starting position.
+	 * @param player The {@code Player} who is entering the instance.
+	 */
 	@Override
 	public void onPressEnter(Player player)
 	{
@@ -146,12 +140,15 @@ public class AutoGeneralInstance extends AutoInstance
 		{
 			return;
 		}
+		
 		final PortalLoc loc = DataManager.PORTAL_LOC_DATA.getPortalLoc(portal.getLocId());
 		if (loc == null)
 		{
 			return;
 		}
+		
 		TeleportService2.teleportTo(player, worldId, instance.getInstanceId(), loc.getX(), loc.getY(), loc.getZ(), loc.getH());
+		
 		if (player.getPortalCooldownList().getPortalCooldownItem(loc.getWorldId()) != null)
 		{
 			player.getPortalCooldownList().addPortalCooldown(loc.getWorldId(), 1, DataManager.INSTANCE_COOLTIME_DATA.getInstanceEntranceCooltime(player, worldId));
@@ -162,6 +159,11 @@ public class AutoGeneralInstance extends AutoInstance
 		}
 	}
 	
+	/**
+	 * Handles the logic when a {@link Player} leaves this instance.<br>
+	 * This method is called to clean up any specific data for the player.
+	 * @param player The {@code Player} object who is leaving the instance.
+	 */
 	@Override
 	public void onLeaveInstance(Player player)
 	{
@@ -169,8 +171,14 @@ public class AutoGeneralInstance extends AutoInstance
 		PlayerGroupService.removePlayer(player);
 	}
 	
+	/**
+	 * Retrieves a list of {@link AGPlayer} objects based on their class.<br>
+	 * It filters the current players to match the provided {@code playerClass}.
+	 * @param playerClass The specific {@code PlayerClass} to filter by.
+	 * @return A {@code List} containing all matching {@link AGPlayer} objects.
+	 */
 	private List<AGPlayer> getPlayersByClass(PlayerClass playerClass)
 	{
-		return select(players, having(on(AGPlayer.class).getPlayerClass(), equalTo(playerClass)));
+		return players.values().stream().filter(p -> p.getPlayerClass() == playerClass).collect(Collectors.toList());
 	}
 }

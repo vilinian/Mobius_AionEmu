@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -22,7 +22,8 @@ import com.aionemu.gameserver.network.aion.AionConnection.State;
 import com.aionemu.gameserver.utils.audit.AuditLogger;
 
 /**
- * Received when a player reports another player with /ReportAutoHunting
+ * This packet is received when a player reports another player using the {@code /ReportAutoHunting} command.<br>
+ * It handles the initial request to flag a user for automated hunting behavior.
  * @author Jego
  */
 public class CM_REPORT_PLAYER extends AionClientPacket
@@ -30,10 +31,11 @@ public class CM_REPORT_PLAYER extends AionClientPacket
 	private String player;
 	
 	/**
-	 * A player gets reported.
-	 * @param opcode
-	 * @param state
-	 * @param restStates
+	 * This method creates a new {@link CM_REPORT_PLAYER} packet.<br>
+	 * It handles reports sent when a player uses the /ReportAutoHunting command.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary status of the report.
+	 * @param restStates Additional status states associated with the report.
 	 */
 	public CM_REPORT_PLAYER(int opcode, State state, State... restStates)
 	{
@@ -53,5 +55,4 @@ public class CM_REPORT_PLAYER extends AionClientPacket
 		final Player p = getConnection().getActivePlayer();
 		AuditLogger.info(p, "Reports the player: " + player);
 	}
-	
 }

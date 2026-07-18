@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -37,15 +37,27 @@ import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * Handles administrative commands related to the {@link AI2Engine} system.<br>
+ * This class allows administrators to manage and interact with {@link NpcAI2} behaviors via chat commands.
  * @author ATracer
  */
 public class Ai2Command extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link Ai2Command} class.<br>
+	 * This constructor sets up the command for use in the admin console.
+	 */
 	public Ai2Command()
 	{
 		super("ai2");
 	}
 	
+	/**
+	 * Executes various AI2 management commands.<br>
+	 * These commands can toggle debug logs or modify the state of a targeted {@link Npc}.
+	 * @param player The admin player executing the command.
+	 * @param params Variable arguments containing the command name and specific values.
+	 */
 	@Override
 	public void execute(Player player, String... params)
 	{
@@ -93,6 +105,7 @@ public class Ai2Command extends AdminCommand
 			PacketSendUtility.sendMessage(player, "Select target first (Npc only)");
 			return;
 		}
+		
 		final Npc npc = (Npc) target;
 		
 		if (param0.equals("info"))
@@ -157,10 +170,15 @@ public class Ai2Command extends AdminCommand
 		}
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{
 		PacketSendUtility.sendMessage(player, "syntax //ai2 <set|event|event2|info|log|print|createlog|eventlog|movelog>");
 	}
-	
 }

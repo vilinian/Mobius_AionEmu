@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.network;
 
@@ -28,9 +28,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.network.util.ThreadPoolManager;
+import com.aionemu.commons.options.Assertion;
 
 /**
- * NioServer instance that handle connections on specified addresses.
+ * This class manages a {@code NIO} server instance to handle network connections.<br>
+ * It listens for incoming traffic on specified addresses and processes them using non-blocking I/O.
  * @author -Nemesiss-
  */
 public class NioServer
@@ -64,43 +66,57 @@ public class NioServer
 	private final Executor dcPool;
 	
 	/**
-	 *
+	 * 
 	 */
 	private final int readWriteThreads;
 	/**
-	 *
+	 * 
 	 */
 	private final ServerCfg[] cfgs;
 	
 	/**
-	 * Constructor.
-	 * @param readWriteThreads - number of threads that will be used for handling read and write.
-	 * @param cfgs - Server Configurations
+	 * Creates a new instance of {@link NioServer}.<br>
+	 * This constructor initializes the server with specific thread counts and configurations.<br>
+	 * It also validates if assertions are enabled for unstable builds.
+	 * @param readWriteThreads The number of threads used to handle network read and write operations.
+	 * @param cfgs A variable number of {@link ServerCfg} objects containing server settings.
 	 */
 	public NioServer(int readWriteThreads, ServerCfg... cfgs)
 	{
+		/**
+		 * Test if this build should use assertion and enforce it. If NetworkAssertion == false javac will remove this code block
+		 */
+		if (Assertion.NetworkAssertion)
+		{
+			if (!NioServer.class.desiredAssertionStatus())
+			{
+				throw new RuntimeException("This is unstable build. Assertion must be enabled! Add -ea to your start script or consider using stable build instead.");
+			}
+		}
+		
 		dcPool = ThreadPoolManager.getInstance();
 		this.readWriteThreads = readWriteThreads;
 		this.cfgs = cfgs;
 	}
 	
+	/**
+	 * Initializes the server and starts listening for incoming connections.<br>
+	 * This method sets up the internal dispatchers and binds to the configured addresses.<br>
+	 * It will throw an {@code Error} if any part of the initialization fails.
+	 */
 	public void connect()
 	{
 		try
 		{
 			initDispatchers(readWriteThreads, dcPool);
 			
-			/**
-			 * Create a new non-blocking server socket channel for clients
-			 */
+			/** Create a new non-blocking server socket channel for clients */
 			for (ServerCfg cfg : cfgs)
 			{
 				final ServerSocketChannel serverChannel = ServerSocketChannel.open();
 				serverChannel.configureBlocking(false);
 				
-				/**
-				 * Bind the server socket to the specified address and port
-				 */
+				/** Bind the server socket to the specified address and port */
 				InetSocketAddress isa;
 				if ("*".equals(cfg.hostName))
 				{
@@ -112,6 +128,7 @@ public class NioServer
 					isa = new InetSocketAddress(cfg.hostName, cfg.port);
 					log.info("Server listening on IP: " + cfg.hostName + " Port " + cfg.port + " for " + cfg.connectionName);
 				}
+				
 				serverChannel.socket().bind(isa);
 				
 				/**
@@ -129,17 +146,22 @@ public class NioServer
 	}
 	
 	/**
-	 * @return Accept Dispatcher.
+	 * Retrieves the dispatcher responsible for accepting new connections.<br>
+	 * This is used to manage incoming network requests.
+	 * @return the {@code Dispatcher} instance that handles connection acceptance.
 	 */
-	public final Dispatcher getAcceptDispatcher()
+	public Dispatcher getAcceptDispatcher()
 	{
 		return acceptDispatcher;
 	}
 	
 	/**
-	 * @return one of ReadWrite Dispatcher or Accept Dispatcher if readWriteThreads was set to 0.
+	 * Retrieves the next available {@link Dispatcher} for handling read and write operations.<br>
+	 * This method uses a round-robin approach to balance the load between multiple dispatchers.<br>
+	 * If no specific read-write dispatchers are configured, it returns the {@code acceptDispatcher}.
+	 * @return The next {@code Dispatcher} in the rotation.
 	 */
-	public final Dispatcher getReadWriteDispatcher()
+	public Dispatcher getReadWriteDispatcher()
 	{
 		if (readWriteDispatchers == null)
 		{
@@ -155,14 +177,16 @@ public class NioServer
 		{
 			currentReadWriteDispatcher = 0;
 		}
+		
 		return readWriteDispatchers[currentReadWriteDispatcher++];
 	}
 	
 	/**
-	 * Initialize Dispatchers.
-	 * @param readWriteThreads
-	 * @param dcPool
-	 * @throws IOException
+	 * Initializes the network dispatchers for the server.<br>
+	 * It sets up either a single or multiple {@code Dispatcher} instances based on the thread count.
+	 * @param readWriteThreads The number of threads to use for handling read and write operations.
+	 * @param dcPool The {@code Executor} used for disconnection tasks.
+	 * @throws IOException If an error occurs during dispatcher initialization.
 	 */
 	private void initDispatchers(int readWriteThreads, Executor dcPool) throws IOException
 	{
@@ -186,9 +210,11 @@ public class NioServer
 	}
 	
 	/**
-	 * @return Number of active connections.
+	 * Returns the total number of active network connections.<br>
+	 * This method calculates the sum of keys from all {@link Dispatcher} selectors.
+	 * @return The current count of active connections.
 	 */
-	public final int getActiveConnections()
+	public int getActiveConnections()
 	{
 		int count = 0;
 		if (readWriteDispatchers != null)
@@ -202,13 +228,16 @@ public class NioServer
 		{
 			count = acceptDispatcher.selector().keys().size() - serverChannelKeys.size();
 		}
+		
 		return count;
 	}
 	
 	/**
-	 * Shutdown.
+	 * Shuts down the server and closes all active connections.<br>
+	 * This method cancels all {@code SelectionKey} objects in the {@code serverChannelKeys} list.<br>
+	 * It also calls {@code closeAll} to force disconnect all remaining users.
 	 */
-	public final void shutdown()
+	public void shutdown()
 	{
 		log.info("Closing ServerChannels...");
 		try
@@ -217,6 +246,7 @@ public class NioServer
 			{
 				key.cancel();
 			}
+			
 			log.info("ServerChannel closed.");
 		}
 		catch (Exception e)
@@ -225,9 +255,7 @@ public class NioServer
 		}
 		
 		notifyServerClose();
-		/**
-		 * Wait 5s
-		 */
+		/** Wait 5s */
 		try
 		{
 			Thread.sleep(1000);
@@ -239,19 +267,14 @@ public class NioServer
 		
 		log.info(" Active connections: " + getActiveConnections());
 		
-		/**
-		 * DC all
-		 */
+		/** DC all */
 		log.info("Forced Disconnecting all connections...");
 		closeAll();
 		log.info(" Active connections: " + getActiveConnections());
 		
-		/**
-		 * dcPool.waitForDisconnectionTasks();
-		 */
-		/**
-		 * Wait 5s
-		 */
+		// dcPool.waitForDisconnectionTasks();
+		
+		/** Wait 5s */
 		try
 		{
 			Thread.sleep(1000);
@@ -263,7 +286,9 @@ public class NioServer
 	}
 	
 	/**
-	 * Calls onServerClose method for all active connections.
+	 * Sends a close notification to all active connections.<br>
+	 * It iterates through the {@code readWriteDispatchers} or the {@code acceptDispatcher}.<br>
+	 * Each {@link AConnection} found in the selection keys is notified via its {@code onServerClose()} method.
 	 */
 	private void notifyServerClose()
 	{
@@ -293,7 +318,9 @@ public class NioServer
 	}
 	
 	/**
-	 * Close all active connections.
+	 * Closes all active connections.<br>
+	 * This method iterates through the {@code readWriteDispatchers} or the {@code acceptDispatcher}.<br>
+	 * It identifies every {@code AConnection} and calls its {@code close(true)} method.
 	 */
 	private void closeAll()
 	{

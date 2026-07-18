@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.dataholders;
 
@@ -31,6 +31,9 @@ import com.aionemu.gameserver.model.templates.stats.SummonStatsTemplate;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 /**
+ * This class serves as a data holder for {@link SummonStatsTemplate} objects.<br>
+ * It manages the collection of summon statistics loaded from XML configuration files.<br>
+ * Use this class to access global summon data within the game server.
  * @author ATracer
  */
 @XmlRootElement(name = "summon_stats_templates")
@@ -38,10 +41,16 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 public class SummonStatsData
 {
 	@XmlElement(name = "summon_stats", required = true)
-	private final List<SummonStatsType> summonTemplatesList = new ArrayList<>();
-	
+	private List<SummonStatsType> summonTemplatesList = new ArrayList<>();
 	private final TIntObjectHashMap<SummonStatsTemplate> summonTemplates = new TIntObjectHashMap<>();
 	
+	/**
+	 * This method is called after the XML data has been unmarshalled.<br>
+	 * It populates the {@code summonTemplates} map using the list of {@code SummonStatsType} templates.<br>
+	 * The {@code summonTemplates} map is rebuilt from the loaded list.
+	 * @param u The {@link Unmarshaller} used to read the data.
+	 * @param parent The parent object of the current element.
+	 */
 	void afterUnmarshal(Unmarshaller u, Object parent)
 	{
 		for (SummonStatsType st : summonTemplatesList)
@@ -53,6 +62,14 @@ public class SummonStatsData
 		}
 	}
 	
+	/**
+	 * Retrieves the {@link SummonStatsTemplate} for a specific NPC and level.<br>
+	 * This method searches for a matching template based on the provided IDs.<br>
+	 * If no direct match is found, it attempts to find a fallback template from predefined lists.
+	 * @param npcId The unique identifier of the NPC.
+	 * @param level The level of the summon.
+	 * @return The matching {@link SummonStatsTemplate} or {@code null} if no template exists.
+	 */
 	public SummonStatsTemplate getSummonTemplate(int npcId, int level)
 	{
 		SummonStatsTemplate template = summonTemplates.get(makeHash(npcId, level));
@@ -79,6 +96,7 @@ public class SummonStatsData
 			template = summonTemplates.get(makeHash(833322, 59));
 			template = summonTemplates.get(makeHash(833255, 64));
 			template = summonTemplates.get(makeHash(833256, 64));
+			
 			// Fire Spirit 4.8
 			template = summonTemplates.get(makeHash(833343, 10));
 			template = summonTemplates.get(makeHash(833344, 10));
@@ -104,6 +122,7 @@ public class SummonStatsData
 			template = summonTemplates.get(makeHash(833364, 60));
 			template = summonTemplates.get(makeHash(833259, 65));
 			template = summonTemplates.get(makeHash(833260, 65));
+			
 			// Earth Spirit 4.8
 			template = summonTemplates.get(makeHash(833287, 16));
 			template = summonTemplates.get(makeHash(833288, 16));
@@ -125,6 +144,7 @@ public class SummonStatsData
 			template = summonTemplates.get(makeHash(833304, 56));
 			template = summonTemplates.get(makeHash(833253, 61));
 			template = summonTemplates.get(makeHash(833254, 61));
+			
 			// Wind Spirit 4.8
 			template = summonTemplates.get(makeHash(833323, 13));
 			template = summonTemplates.get(makeHash(833324, 13));
@@ -148,28 +168,38 @@ public class SummonStatsData
 			template = summonTemplates.get(makeHash(833342, 58));
 			template = summonTemplates.get(makeHash(833257, 63));
 			template = summonTemplates.get(makeHash(833258, 63));
+			
 			// Magma Spirit 4.8
 			template = summonTemplates.get(makeHash(833366, 50));
 			template = summonTemplates.get(makeHash(833368, 55));
 			template = summonTemplates.get(makeHash(833370, 60));
 			template = summonTemplates.get(makeHash(833262, 65));
+			
 			// Tempest Spirit 4.8
 			template = summonTemplates.get(makeHash(833365, 50));
 			template = summonTemplates.get(makeHash(833367, 55));
 			template = summonTemplates.get(makeHash(833369, 60));
 			template = summonTemplates.get(makeHash(833261, 65));
+			
 			// Siege Weapon
 			template = summonTemplates.get(makeHash(201054, 40));
 			template = summonTemplates.get(makeHash(201055, 40));
+			
 			// Quality Siege Weapon
 			template = summonTemplates.get(makeHash(201056, 56));
 			template = summonTemplates.get(makeHash(201057, 56));
 			template = summonTemplates.get(makeHash(201058, 60));
 			template = summonTemplates.get(makeHash(201059, 60));
 		}
+		
 		return template;
 	}
 	
+	/**
+	 * Returns the number of elements in this set.<br>
+	 * This method calls {@code size} to get the count.
+	 * @return The total number of items currently stored in the collection.
+	 */
 	public int size()
 	{
 		return summonTemplates.size();
@@ -180,13 +210,10 @@ public class SummonStatsData
 	{
 		@XmlAttribute(name = "npc_id_dark", required = true)
 		private int npcIdDark;
-		
 		@XmlAttribute(name = "npc_id_light", required = true)
 		private int npcIdLight;
-		
 		@XmlAttribute(name = "level", required = true)
 		private int requiredLevel;
-		
 		@XmlElement(name = "stats_template")
 		private SummonStatsTemplate template;
 		
@@ -211,6 +238,13 @@ public class SummonStatsData
 		}
 	}
 	
+	/**
+	 * Generates a unique hash key for a specific summon. <br>
+	 * This value is used to identify templates in the {@code summonTemplates} map.
+	 * @param npcId The unique identifier of the NPC.
+	 * @param level The level of the summon.
+	 * @return A combined integer hash representing the NPC and its level.
+	 */
 	private static int makeHash(int npcId, int level)
 	{
 		return (npcId << 10) | level;

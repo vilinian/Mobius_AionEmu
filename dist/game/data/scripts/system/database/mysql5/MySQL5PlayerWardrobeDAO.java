@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.database.mysql5;
 
@@ -34,7 +34,9 @@ import com.aionemu.gameserver.model.gameobjects.PersistentState;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 
 /**
- * @author Ranastic
+ * This class provides the {@code MySQL5} database implementation for managing player wardrobes.<br>
+ * It handles data persistence operations for {@link PlayerWardrobeEntry} objects using {@code MySQL5DAOUtils}.<br>
+ * It extends the base {@link PlayerWardrobeDAO} to provide specific queries for the wardrobe system.
  */
 public class MySQL5PlayerWardrobeDAO extends PlayerWardrobeDAO
 {
@@ -44,12 +46,13 @@ public class MySQL5PlayerWardrobeDAO extends PlayerWardrobeDAO
 	public static final String SELECT_QUERY = "SELECT `item_id`,`slot`,`reskin_count` FROM `player_wardrobe` WHERE `player_id`=?";
 	public static final String DELETE_QUERY = "DELETE FROM `player_wardrobe` WHERE `player_id`=? AND `item_id`=?";
 	
-	@Override
-	public boolean supports(String databaseName, int majorVersion, int minorVersion)
-	{
-		return MySQL5DAOUtils.supports(databaseName, majorVersion, minorVersion);
-	}
-	
+	/**
+	 * Retrieves the wardrobe data for a specific player from the database.<br>
+	 * This method fetches all entries associated with the {@code Player} object ID.<br>
+	 * It returns a new {@link PlayerWardrobeList} containing the loaded items.
+	 * @param player The {@code Player} whose wardrobe needs to be loaded.
+	 * @return A {@link PlayerWardrobeList} containing the player's wardrobe entries.
+	 */
 	@Override
 	public PlayerWardrobeList load(Player player)
 	{
@@ -68,6 +71,7 @@ public class MySQL5PlayerWardrobeDAO extends PlayerWardrobeDAO
 				final int reskin = rset.getInt("slot");
 				w.add(new PlayerWardrobeEntry(itemId, slot, reskin, PersistentState.UPDATED));
 			}
+			
 			rset.close();
 			stmt.close();
 		}
@@ -79,9 +83,19 @@ public class MySQL5PlayerWardrobeDAO extends PlayerWardrobeDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return new PlayerWardrobeList(w);
 	}
 	
+	/**
+	 * Saves a wardrobe entry into the database.<br>
+	 * This method updates existing records or inserts new ones based on the provided data.
+	 * @param objectId The unique identifier for the player.
+	 * @param itemId The unique identifier for the item.
+	 * @param slot The specific slot index where the item is stored.
+	 * @param reskin The number of reskins applied to the item.
+	 * @return {@code true} if the operation succeeded, or {@code false} if an error occurred.
+	 */
 	@Override
 	public boolean store(int objectId, int itemId, int slot, int reskin)
 	{
@@ -106,9 +120,17 @@ public class MySQL5PlayerWardrobeDAO extends PlayerWardrobeDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Removes a specific item from the player's wardrobe in the database.<br>
+	 * This method uses the {@code DELETE_QUERY} to find the record matching both IDs.
+	 * @param objectId The unique identifier of the player.
+	 * @param itemId The unique identifier of the item to remove.
+	 * @return {@code true} if the deletion was successful, or {@code false} if an error occurred.
+	 */
 	@Override
 	public boolean delete(int objectId, int itemId)
 	{
@@ -131,9 +153,17 @@ public class MySQL5PlayerWardrobeDAO extends PlayerWardrobeDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Calculates the total number of items in a player's wardrobe.<br>
+	 * This method queries the database for the count associated with a specific ID.<br>
+	 * It returns {@code 0} if an error occurs during the database operation.
+	 * @param playerObjId The unique identifier of the player to check.
+	 * @return The total number of items in the wardrobe.
+	 */
 	@Override
 	public int getItemSize(int playerObjId)
 	{
@@ -158,9 +188,18 @@ public class MySQL5PlayerWardrobeDAO extends PlayerWardrobeDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return size;
 	}
 	
+	/**
+	 * Retrieves the item ID from a specific slot for a given player.<br>
+	 * This method queries the database using the {@code obj} and {@code slot} parameters.<br>
+	 * It returns 0 if no item is found or an error occurs.
+	 * @param obj The unique identifier of the player.
+	 * @param slot The specific wardrobe slot to check.
+	 * @return The integer ID of the wardrobe item, or 0 if not found.
+	 */
 	@Override
 	public int getWardrobeItemBySlot(int obj, int slot)
 	{
@@ -186,9 +225,18 @@ public class MySQL5PlayerWardrobeDAO extends PlayerWardrobeDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return wardrobeItemId;
 	}
 	
+	/**
+	 * Retrieves the current reskin count for a specific wardrobe slot.<br>
+	 * This method queries the database using the provided player ID and slot index.<br>
+	 * It returns 0 if no record is found or an error occurs.
+	 * @param obj The unique identifier of the player object.
+	 * @param slot The specific wardrobe slot to check.
+	 * @return The integer value of the reskin count from the database.
+	 */
 	@Override
 	public int getReskinCountBySlot(int obj, int slot)
 	{
@@ -214,9 +262,18 @@ public class MySQL5PlayerWardrobeDAO extends PlayerWardrobeDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return reskinCount;
 	}
 	
+	/**
+	 * Updates the reskin count for a specific slot of a player.<br>
+	 * This method modifies the database record associated with the provided {@code obj} and {@code slot}.
+	 * @param obj The unique identifier for the player.
+	 * @param slot The specific wardrobe slot to update.
+	 * @param reskin_count The new count value to assign to the slot.
+	 * @return {@code true} if the database update was successful, or {@code false} if an error occurred.
+	 */
 	@Override
 	public boolean setReskinCountBySlot(int obj, int slot, int reskin_count)
 	{
@@ -239,7 +296,21 @@ public class MySQL5PlayerWardrobeDAO extends PlayerWardrobeDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if the current database is compatible with this DAO.<br>
+	 * It uses {@code int, int)} to verify the version.
+	 * @param databaseName The name of the database to check.
+	 * @param majorVersion The major version number of the database.
+	 * @param minorVersion The minor version number of the database.
+	 * @return {@code true} if the database is supported, {@code false} otherwise.
+	 */
+	@Override
+	public boolean supports(String databaseName, int majorVersion, int minorVersion)
+	{
+		return MySQL5DAOUtils.supports(databaseName, majorVersion, minorVersion);
+	}
 }

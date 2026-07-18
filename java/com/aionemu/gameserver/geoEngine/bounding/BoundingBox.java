@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.bounding;
 
@@ -33,34 +33,35 @@ import com.aionemu.gameserver.geoEngine.math.Vector3f;
 import com.aionemu.gameserver.geoEngine.scene.Mesh;
 import com.aionemu.gameserver.geoEngine.utils.BufferUtils;
 
-//import com.jme.scene.TriMesh;
+// import com.jme.scene.TriMesh;
 
 /**
- * <code>BoundingBox</code> defines an axis-aligned cube that defines a container for a group of vertices of a particular piece of geometry. This box defines a center and extents from that center along the x, y and z axis. <br>
- * <br>
- * A typical usage is to allow the class define the center and radius by calling either <code>containAABB</code> or <code>averagePoints</code>. A call to <code>computeFramePoint</code> in turn calls <code>containAABB</code>.
+ * This class defines an axis-aligned cube that acts as a container for a group of geometry vertices.<br>
+ * It represents the volume using a center point and extents along the x, y, and z axes.<br>
+ * You can define these dimensions by calling {@code com.aionemu.gameserver.geoEngine.math.Vector3f)} or {@code averagePoints}.
  * @author Joshua Slack
- * @version $Id: BoundingBox.java,v 1.50 2007/09/22 16:46:35 irrisor Exp $
  */
 public class BoundingBox extends BoundingVolume
 {
 	float xExtent, yExtent, zExtent;
 	
 	/**
-	 * Default constructor instantiates a new <code>BoundingBox</code> object.
+	 * Creates a new instance of the {@link BoundingBox} class.<br>
+	 * This constructor initializes a default bounding box object.
 	 */
 	public BoundingBox()
 	{
 	}
 	
 	/**
-	 * Contstructor instantiates a new <code>BoundingBox</code> object with given specs.
-	 * @param c
-	 * @param x
-	 * @param y
-	 * @param z
+	 * Creates a new {@code BoundingBox} with a specific center and extents.<br>
+	 * The box is defined by its position in 3D space and its size along each axis.
+	 * @param c The center point of the box as a {@code Vector3f}.
+	 * @param x The extent of the box along the x-axis.
+	 * @param y The extent of the box along the y-axis.
+	 * @param z The extent of the box along the z-axis.
 	 */
-	public BoundingBox(Vector3f c, float x, float y, float z)
+	public BoundingBox(@SuppressWarnings("javadoc") Vector3f c, @SuppressWarnings("javadoc") float x, @SuppressWarnings("javadoc") float y, @SuppressWarnings("javadoc") float z)
 	{
 		center.set(c);
 		xExtent = x;
@@ -68,6 +69,11 @@ public class BoundingBox extends BoundingVolume
 		zExtent = z;
 	}
 	
+	/**
+	 * Creates a new {@code BoundingBox} by copying the data from an existing one.<br>
+	 * This method copies the center and all extents from the {@code source}.
+	 * @param source The {@link BoundingBox} to copy from.
+	 */
 	public BoundingBox(BoundingBox source)
 	{
 		center.set(source.center);
@@ -76,11 +82,22 @@ public class BoundingBox extends BoundingVolume
 		zExtent = source.zExtent;
 	}
 	
+	/**
+	 * Creates a new {@code BoundingBox} using minimum and maximum coordinates.<br>
+	 * This defines the boundaries of the box in 3D space.
+	 * @param min The minimum corner of the box as a {@code Vector3f}.
+	 * @param max The maximum corner of the box as a {@code Vector3f}.
+	 */
 	public BoundingBox(Vector3f min, Vector3f max)
 	{
 		setMinMax(min, max);
 	}
 	
+	/**
+	 * Retrieves the type of this bounding volume.<br>
+	 * This method returns the {@code AABB} constant.
+	 * @return The {@code Type} representing an axis-aligned bounding box.
+	 */
 	@Override
 	public Type getType()
 	{
@@ -88,8 +105,9 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * <code>computeFromPoints</code> creates a new Bounding Box from a given set of points. It uses the <code>containAABB</code> method as default.
-	 * @param points the points to contain.
+	 * Calculates the bounding box dimensions based on a set of points.<br>
+	 * This method updates the internal extents by calling {@code containAABB}.
+	 * @param points The {@code FloatBuffer} containing the vertex data.
 	 */
 	@Override
 	public void computeFromPoints(FloatBuffer points)
@@ -98,10 +116,11 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * <code>computeFromTris</code> creates a new Bounding Box from a given set of triangles. It is used in OBBTree calculations.
-	 * @param tris
-	 * @param start
-	 * @param end
+	 * Calculates the bounding box dimensions based on a range of triangles.<br>
+	 * This method updates the {@code center} and extents using the vertices from the provided array.
+	 * @param tris The array of {@link Triangle} objects to process.
+	 * @param start The starting index in the triangle array.
+	 * @param end The ending index (exclusive) in the triangle array.
 	 */
 	public void computeFromTris(Triangle[] tris, int start, int end)
 	{
@@ -109,6 +128,7 @@ public class BoundingBox extends BoundingVolume
 		{
 			return;
 		}
+		
 		final Vector3f min = Vector3f.newInstance();
 		final Vector3f max = Vector3f.newInstance();
 		min.set(new Vector3f(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY));
@@ -135,12 +155,22 @@ public class BoundingBox extends BoundingVolume
 		Vector3f.recycle(max);
 	}
 	
+	/**
+	 * Calculates the bounding box dimensions based on a range of triangles in a mesh.<br>
+	 * This method iterates through indices to find the minimum and maximum coordinates.<br>
+	 * It then updates the center and extents of this {@code BoundingBox}.
+	 * @param indices The array of triangle indices to process.
+	 * @param mesh The {@link Mesh} containing the geometry data.
+	 * @param start The starting index in the {@code indices} array.
+	 * @param end The ending index in the {@code indices} array.
+	 */
 	public void computeFromTris(int[] indices, Mesh mesh, int start, int end)
 	{
 		if ((end - start) <= 0)
 		{
 			return;
 		}
+		
 		final Vector3f vect1 = Vector3f.newInstance();
 		final Vector3f vect2 = Vector3f.newInstance();
 		final Triangle triangle = Triangle.newInstance();
@@ -171,28 +201,41 @@ public class BoundingBox extends BoundingVolume
 		Triangle.recycle(triangle);
 	}
 	
+	/**
+	 * Updates the boundaries of a bounding box to include a new point.<br>
+	 * This method checks if {@code point} is outside the current range defined by {@code min} and {@code max}.<br>
+	 * If it is outside, the corresponding coordinates in {@code min} or {@code max} are updated.
+	 * @param min The minimum corner of the bounding box.
+	 * @param max The maximum corner of the bounding box.
+	 * @param point The new point to check against the boundaries.
+	 */
 	public static void checkMinMax(Vector3f min, Vector3f max, Vector3f point)
 	{
 		if (point.x < min.x)
 		{
 			min.x = point.x;
 		}
+		
 		if (point.x > max.x)
 		{
 			max.x = point.x;
 		}
+		
 		if (point.y < min.y)
 		{
 			min.y = point.y;
 		}
+		
 		if (point.y > max.y)
 		{
 			max.y = point.y;
 		}
+		
 		if (point.z < min.z)
 		{
 			min.z = point.z;
 		}
+		
 		if (point.z > max.z)
 		{
 			max.z = point.z;
@@ -200,8 +243,10 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * <code>containAABB</code> creates a minimum-volume axis-aligned bounding box of the points, then selects the smallest enclosing sphere of the box with the sphere centered at the boxes center.
-	 * @param points the list of points.
+	 * Updates the bounding box dimensions based on a set of points.<br>
+	 * This method calculates the new center and extents from the provided {@code FloatBuffer}.<br>
+	 * It ignores the input if it is {@code null} or contains fewer than three floats.
+	 * @param points The buffer containing the 3D coordinates to process.
 	 */
 	public void containAABB(FloatBuffer points)
 	{
@@ -251,6 +296,7 @@ public class BoundingBox extends BoundingVolume
 				maxZ = vect1.z;
 			}
 		}
+		
 		Vector3f.recycle(vect1);
 		
 		center.set(minX + maxX, minY + maxY, minZ + maxZ);
@@ -261,6 +307,14 @@ public class BoundingBox extends BoundingVolume
 		zExtent = maxZ - center.z;
 	}
 	
+	/**
+	 * Applies a transformation to a {@link BoundingVolume}.<br>
+	 * This method calculates the new center and extents based on the provided matrix.<br>
+	 * It uses the {@code store} object as a template for the result.
+	 * @param trans The {@code Matrix4f} transformation to apply.
+	 * @param store The {@link BoundingVolume} to use as a base for the result. If null or not an AABB, a new one is created.
+	 * @return The transformed {@link BoundingVolume}.
+	 */
 	@Override
 	public BoundingVolume transform(Matrix4f trans, BoundingVolume store)
 	{
@@ -297,8 +351,10 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * <code>whichSide</code> takes a plane (typically provided by a view frustum) to determine which side this bound is on.
-	 * @param plane the plane to check against.
+	 * Determines which side of a {@link Plane} this bounding box is on.<br>
+	 * It compares the distance from the center to the plane against the box extents.
+	 * @param plane The {@link Plane} used for the calculation.
+	 * @return The {@code Side} representing Positive, Negative, or None.
 	 */
 	@Override
 	public Plane.Side whichSide(Plane plane)
@@ -323,9 +379,11 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * <code>merge</code> combines this sphere with a second bounding sphere. This new sphere contains both bounding spheres and is returned.
-	 * @param volume the sphere to combine with this sphere.
-	 * @return the new sphere
+	 * Combines the current bounding volume with another <link Javadoc>BoundingVolume</link>.<br>
+	 * This method creates a new volume that encompasses both objects.<br>
+	 * It returns {@code null} if the provided volume type is not supported.
+	 * @param volume The <link Javadoc>BoundingVolume</link to merge with this one.
+	 * @return A new <link Javadoc>BoundingVolume</link containing both volumes, or {@code null}.
 	 */
 	@Override
 	public BoundingVolume merge(BoundingVolume volume)
@@ -342,22 +400,23 @@ public class BoundingBox extends BoundingVolume
 				final BoundingBox vBox = (BoundingBox) volume;
 				return merge(vBox.center, vBox.xExtent, vBox.yExtent, vBox.zExtent, new BoundingBox(new Vector3f(0, 0, 0), 0, 0, 0));
 			}
+			
 			// case OBB: {
 			// OrientedBoundingBox box = (OrientedBoundingBox) volume;
 			// BoundingBox rVal = (BoundingBox) this.clone(null);
 			// return rVal.mergeOBB(box);
 			// }
 			default:
-			{
 				return null;
-			}
 		}
 	}
 	
 	/**
-	 * <code>mergeLocal</code> combines this sphere with a second bounding sphere locally. Altering this sphere to contain both the original and the additional sphere volumes;
-	 * @param volume the sphere to combine with this sphere.
-	 * @return this
+	 * Merges the current bounding volume with another local volume.<br>
+	 * This method combines the dimensions of two {@code AABB} types.<br>
+	 * It returns {@code null} if the provided volume type is not supported.
+	 * @param volume The {@link BoundingVolume} to merge into this one.
+	 * @return A new {@link BoundingVolume} representing the merged area, or {@code null}.
 	 */
 	@Override
 	public BoundingVolume mergeLocal(BoundingVolume volume)
@@ -374,13 +433,12 @@ public class BoundingBox extends BoundingVolume
 				final BoundingBox vBox = (BoundingBox) volume;
 				return merge(vBox.center, vBox.xExtent, vBox.yExtent, vBox.zExtent, this);
 			}
+			
 			// case OBB: {
 			// return mergeOBB((OrientedBoundingBox) volume);
 			// }
 			default:
-			{
 				return null;
-			}
 		}
 	}
 	
@@ -427,13 +485,15 @@ public class BoundingBox extends BoundingVolume
 	// }
 	
 	/**
-	 * <code>merge</code> combines this bounding box with another box which is defined by the center, x, y, z extents.
-	 * @param boxCenter the center of the box to merge with
-	 * @param boxX the x extent of the box to merge with.
-	 * @param boxY the y extent of the box to merge with.
-	 * @param boxZ the z extent of the box to merge with.
-	 * @param rVal the resulting merged box.
-	 * @return the resulting merged box.
+	 * Merges the current bounding box with another box defined by a center and extents.<br>
+	 * This method updates the internal dimensions to encompass both volumes.<br>
+	 * It modifies the provided {@code BoundingBox} object directly.
+	 * @param boxCenter The center point of the second box.
+	 * @param boxX The x-axis extent of the second box.
+	 * @param boxY The y-axis extent of the second box.
+	 * @param boxZ The z-axis extent of the second box.
+	 * @param rVal The {@code BoundingBox} instance to be updated and returned.
+	 * @return The modified {@code BoundingBox} object.
 	 */
 	private BoundingBox merge(Vector3f boxCenter, float boxX, float boxY, float boxZ, BoundingBox rVal)
 	{
@@ -445,11 +505,13 @@ public class BoundingBox extends BoundingVolume
 		{
 			vect1.x = boxCenter.x - boxX;
 		}
+		
 		vect1.y = center.y - yExtent;
 		if (vect1.y > (boxCenter.y - boxY))
 		{
 			vect1.y = boxCenter.y - boxY;
 		}
+		
 		vect1.z = center.z - zExtent;
 		if (vect1.z > (boxCenter.z - boxZ))
 		{
@@ -461,11 +523,13 @@ public class BoundingBox extends BoundingVolume
 		{
 			vect2.x = boxCenter.x + boxX;
 		}
+		
 		vect2.y = center.y + yExtent;
 		if (vect2.y < (boxCenter.y + boxY))
 		{
 			vect2.y = boxCenter.y + boxY;
 		}
+		
 		vect2.z = center.z + zExtent;
 		if (vect2.z < (boxCenter.z + boxZ))
 		{
@@ -484,9 +548,11 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * <code>clone</code> creates a new BoundingBox object containing the same data as this one.
-	 * @param store where to store the cloned information. if null or wrong class, a new store is created.
-	 * @return the new BoundingBox
+	 * Creates a copy of this {@code BoundingBox}.<br>
+	 * It attempts to reuse the provided {@code store} if it is an AABB.<br>
+	 * Otherwise, it creates and returns a new instance.
+	 * @param store The volume to use as a template for cloning.
+	 * @return A new or reused {@code BoundingBox} instance.
 	 */
 	@Override
 	public BoundingBox clone(BoundingVolume store)
@@ -507,8 +573,9 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * <code>toString</code> returns the string representation of this object. The form is: "Radius: RRR.SSSS Center: <Vector>".
-	 * @return the string representation of this.
+	 * Returns a string representation of the {@code BoundingBox}.<br>
+	 * This includes the class name and its dimensions.
+	 * @return A formatted string containing the center and extents.
 	 */
 	@Override
 	public String toString()
@@ -517,8 +584,12 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * determines if this bounding box intersects a given bounding sphere.
+	 * Checks if this {@code BoundingBox} overlaps with a given {@code BoundingSphere}.<br>
+	 * This method uses the center and extents of the box to determine collision.
+	 * @param bs The {@code BoundingSphere} to check against.
+	 * @return {@code true} if the objects intersect, otherwise {@code false}.
 	 */
+	@SuppressWarnings("javadoc")
 	@Override
 	public boolean intersectsSphere(BoundingSphere bs)
 	{
@@ -526,8 +597,12 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * intersects determines if this Bounding Box intersects with another given bounding volume. If so, true is returned, otherwise, false is returned.
+	 * Checks if this bounding box overlaps with another volume.<br>
+	 * It delegates the calculation to the {@code intersectsBoundingBox} method of the provided object.
+	 * @param bv The {@link BoundingVolume} to check against.
+	 * @return {@code true} if the volumes intersect, {@code false} otherwise.
 	 */
+	@SuppressWarnings("javadoc")
 	@Override
 	public boolean intersects(BoundingVolume bv)
 	{
@@ -535,8 +610,12 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * determines if this bounding box intersects a given bounding box. If the two boxes intersect in any way, true is returned. Otherwise, false is returned.
+	 * Checks if this bounding box overlaps with another <code class="BoundingBox">.<br>
+	 * It compares the extents of both boxes to see if they occupy the same space.
+	 * @param bb The other <code class="BoundingBox"> to check against.
+	 * @return {@code true} if the boxes intersect, otherwise {@code false}.
 	 */
+	@SuppressWarnings("javadoc")
 	@Override
 	public boolean intersectsBoundingBox(BoundingBox bb)
 	{
@@ -569,8 +648,12 @@ public class BoundingBox extends BoundingVolume
 	// }
 	
 	/**
-	 * determines if this bounding box intersects with a given ray object. If an intersection has occurred, true is returned, otherwise false is returned.
+	 * Checks if the given {@code Ray} intersects with this bounding box.<br>
+	 * This method uses axis-aligned calculations to determine collision.
+	 * @param ray The {@code Ray} to test against the box.
+	 * @return {@code true} if the ray hits the box, otherwise {@code false}.
 	 */
+	@SuppressWarnings("javadoc")
 	@Override
 	public boolean intersects(Ray ray)
 	{
@@ -679,6 +762,7 @@ public class BoundingBox extends BoundingVolume
 			Array3f.recycle(fAWxDdU);
 			return false;
 		}
+		
 		Vector3f.recycle(vect1);
 		Vector3f.recycle(vect2);
 		Array3f.recycle(fWdU);
@@ -690,11 +774,14 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * @param ray
-	 * @param results
-	 * @return
+	 * Checks if the given {@code Ray} intersects with this bounding box.<br>
+	 * It updates the {@code CollisionResults} object with any hit points found.
+	 * @param ray The {@code Ray} used to test for collision.
+	 * @param results The {@code CollisionResults} container where hits are stored.
+	 * @return The number of intersection points found, which can be 0, 1, or 2.
 	 */
-	private int collideWithRay(Ray ray, CollisionResults results)
+	@SuppressWarnings("javadoc")
+	private int collideWithRay(@SuppressWarnings("javadoc") Ray ray, @SuppressWarnings("javadoc") CollisionResults results)
 	{
 		final Vector3f diff = Vector3f.newInstance().set(ray.origin).subtractLocal(center);
 		final Vector3f direction = Vector3f.newInstance().set(ray.direction);
@@ -733,9 +820,18 @@ public class BoundingBox extends BoundingVolume
 			results.addCollision(result);
 			return 1;
 		}
+		
 		return 0;
 	}
 	
+	/**
+	 * Checks if this bounding box collides with another object.<br>
+	 * This method handles collisions with {@link Ray} and {@link Triangle} types.<br>
+	 * It updates the provided {@code results} object if a collision occurs.
+	 * @param other The {@link Collidable} object to check against.
+	 * @param results The {@link CollisionResults} container to store any detected hits.
+	 * @return Returns 1 if a collision occurred, or 0 if no collision was found.
+	 */
 	@Override
 	public int collideWith(Collidable other, CollisionResults results)
 	{
@@ -753,6 +849,7 @@ public class BoundingBox extends BoundingVolume
 				results.addCollision(r);
 				return 1;
 			}
+			
 			return 0;
 		}
 		else
@@ -762,29 +859,48 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * C code ported from http://www.cs.lth.se/home/Tomas_Akenine_Moller/code/tribox3.txt
-	 * @param v1
-	 * @param v2
-	 * @param v3
-	 * @return
+	 * Checks if this bounding box intersects with a triangle.<br>
+	 * The triangle is defined by three vertices.
+	 * @param v1 The first vertex of the triangle.
+	 * @param v2 The second vertex of the triangle.
+	 * @param v3 The third vertex of the triangle.
+	 * @return {@code true} if an intersection occurs, otherwise {@code false}.
 	 */
 	public boolean intersects(Vector3f v1, Vector3f v2, Vector3f v3)
 	{
 		return Intersection.intersect(this, v1, v2, v3);
 	}
 	
+	/**
+	 * Checks if a specific point is inside this bounding box.<br>
+	 * It compares the coordinates of the {@code point} against the center and extents.
+	 * @param point The {@link Vector3f} position to check.
+	 * @return {@code true} if the point is within the boundaries, {@code false} otherwise.
+	 */
 	@Override
 	public boolean contains(Vector3f point)
 	{
 		return (FastMath.abs(center.x - point.x) < xExtent) && (FastMath.abs(center.y - point.y) < yExtent) && (FastMath.abs(center.z - point.z) < zExtent);
 	}
 	
+	/**
+	 * Checks if a specific point is inside this bounding box.<br>
+	 * It compares the coordinates of the {@code point} against the center and extents.
+	 * @param point The {@link Vector3f} position to check.
+	 * @return {@code true} if the point is within the bounds, otherwise {@code false}.
+	 */
 	@Override
 	public boolean intersects(Vector3f point)
 	{
 		return (FastMath.abs(center.x - point.x) <= xExtent) && (FastMath.abs(center.y - point.y) <= yExtent) && (FastMath.abs(center.z - point.z) <= zExtent);
 	}
 	
+	/**
+	 * Calculates the shortest distance from a given point to the edge of this box.<br>
+	 * This method determines how far the {@code point} is from the nearest surface.
+	 * @param point The {@link Vector3f} position to check.
+	 * @return The distance as a {@code float}.
+	 */
 	@Override
 	public float distanceToEdge(Vector3f point)
 	{
@@ -838,27 +954,29 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * <code>clip</code> determines if a line segment intersects the current test plane.
-	 * @param denom the denominator of the line segment.
-	 * @param numer the numerator of the line segment.
-	 * @param t test values of the plane.
-	 * @return true if the line segment intersects the plane, false otherwise.
+	 * Determines if a line segment intersects the current test plane.<br>
+	 * Updates the {@code t} array with the intersection point if it occurs.<br>
+	 * Returns {@code false} if the segment is entirely clipped.
+	 * @param denom The denominator used in the clipping calculation.
+	 * @param numer The numerator used in the clipping calculation.
+	 * @param t A float array containing the start and end points of the segment.
+	 * @return {@code true} if the segment intersects or touches the plane, {@code false} otherwise.
 	 */
 	private boolean clip(float denom, float numer, float[] t)
 	{
-		// Return value is 'true' if line segment intersects the current test
-		// plane. Otherwise 'false' is returned in which case the line segment
-		// is entirely clipped.
+		// Return true if the line segment intersects the current test plane; otherwise, return false as the line segment is entirely clipped.
 		if (denom > 0.0f)
 		{
 			if (numer > (denom * t[1]))
 			{
 				return false;
 			}
+			
 			if (numer > (denom * t[0]))
 			{
 				t[0] = numer / denom;
 			}
+			
 			return true;
 		}
 		else if (denom < 0.0f)
@@ -867,10 +985,12 @@ public class BoundingBox extends BoundingVolume
 			{
 				return false;
 			}
+			
 			if (numer > (denom * t[1]))
 			{
 				t[1] = numer / denom;
 			}
+			
 			return true;
 		}
 		else
@@ -880,9 +1000,11 @@ public class BoundingBox extends BoundingVolume
 	}
 	
 	/**
-	 * Query extent.
-	 * @param store where extent gets stored - null to return a new vector
-	 * @return store / new vector
+	 * Retrieves the dimensions of this bounding box.<br>
+	 * The values are set into a {@code Vector3f} object.<br>
+	 * If the provided {@code store} is {@code null}, a new instance is created.
+	 * @param store The {@code Vector3f} to store the extent values in.
+	 * @return The populated {@code Vector3f} containing x, y, and z extents.
 	 */
 	public Vector3f getExtent(Vector3f store)
 	{
@@ -890,25 +1012,46 @@ public class BoundingBox extends BoundingVolume
 		{
 			store = new Vector3f();
 		}
+		
 		store.set(xExtent, yExtent, zExtent);
 		return store;
 	}
 	
+	/**
+	 * Gets the size of the bounding box along the x-axis.<br>
+	 * This value represents the distance from the center to the edge.
+	 * @return The {@code float} extent of the box on the x-axis.
+	 */
 	public float getXExtent()
 	{
 		return xExtent;
 	}
 	
+	/**
+	 * Gets the size of the bounding box along the Y axis.<br>
+	 * This value represents the distance from the center to the edge.
+	 * @return The {@code float} value of the Y extent.
+	 */
 	public float getYExtent()
 	{
 		return yExtent;
 	}
 	
+	/**
+	 * Retrieves the size of the bounding box along the {@code z} axis.<br>
+	 * This value represents the distance from the center to the edge.
+	 * @return The {@code z} extent as a {@code float}.
+	 */
 	public float getZExtent()
 	{
 		return zExtent;
 	}
 	
+	/**
+	 * Sets the size of the bounding box along the {@code x} axis.<br>
+	 * The value must be a non-negative number.
+	 * @param xExtent The new extent for the {@code x} axis.
+	 */
 	public void setXExtent(float xExtent)
 	{
 		if (xExtent < 0)
@@ -919,6 +1062,12 @@ public class BoundingBox extends BoundingVolume
 		this.xExtent = xExtent;
 	}
 	
+	/**
+	 * Sets the vertical extent of the bounding box.<br>
+	 * This value represents the distance from the center along the y-axis.<br>
+	 * The provided value must be non-negative.
+	 * @param yExtent The new y-extent value to set.
+	 */
 	public void setYExtent(float yExtent)
 	{
 		if (yExtent < 0)
@@ -929,6 +1078,11 @@ public class BoundingBox extends BoundingVolume
 		this.yExtent = yExtent;
 	}
 	
+	/**
+	 * Sets the size of the bounding box along the {@code z} axis.<br>
+	 * This value must be a non-negative number.
+	 * @param zExtent The size to set for the {@code z} extent.
+	 */
 	public void setZExtent(float zExtent)
 	{
 		if (zExtent < 0)
@@ -939,26 +1093,48 @@ public class BoundingBox extends BoundingVolume
 		this.zExtent = zExtent;
 	}
 	
+	/**
+	 * Calculates the minimum corner of the bounding box.<br>
+	 * This method subtracts the extents from the center point.<br>
+	 * It updates and returns a {@code Vector3f} object.
+	 * @param store The {@code Vector3f} to store the result in. If {@code null}, a new instance is created.
+	 * @return The resulting minimum corner as a {@code Vector3f}.
+	 */
 	public Vector3f getMin(Vector3f store)
 	{
 		if (store == null)
 		{
 			store = new Vector3f();
 		}
+		
 		store.set(center).subtractLocal(xExtent, yExtent, zExtent);
 		return store;
 	}
 	
+	/**
+	 * Calculates the maximum corner of this bounding box.<br>
+	 * This method adds the extents to the center point.<br>
+	 * It updates and returns the provided {@code Vector3f} object.
+	 * @param store The {@code Vector3f} to store the result in. If {@code null}, a new instance is created.
+	 * @return The updated {@code Vector3f} representing the maximum corner.
+	 */
 	public Vector3f getMax(Vector3f store)
 	{
 		if (store == null)
 		{
 			store = new Vector3f();
 		}
+		
 		store.set(center).addLocal(xExtent, yExtent, zExtent);
 		return store;
 	}
 	
+	/**
+	 * Sets the boundaries of the bounding box using minimum and maximum coordinates.<br>
+	 * This method updates the internal center and extents based on the provided {@code Vector3f} values.
+	 * @param min The minimum corner of the bounding box.
+	 * @param max The maximum corner of the bounding box.
+	 */
 	public void setMinMax(Vector3f min, Vector3f max)
 	{
 		center.set(max).addLocal(min).multLocal(0.5f);
@@ -967,6 +1143,11 @@ public class BoundingBox extends BoundingVolume
 		zExtent = FastMath.abs(max.z - center.z);
 	}
 	
+	/**
+	 * Calculates the total volume of this {@code BoundingBox}.<br>
+	 * The result is based on the current {@code xExtent}, {@code yExtent}, and {@code zExtent}.
+	 * @return The calculated volume as a {@code float}.
+	 */
 	@Override
 	public float getVolume()
 	{

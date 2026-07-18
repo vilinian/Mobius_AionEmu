@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.utils.xml;
 
@@ -38,20 +38,26 @@ import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
 /**
- * Unfortunately JAXP seems to be working wrong in multithreaded enviroment.<br>
- * Even in case of creating new document builder factory per document.<br>
- * Using aggressive synchronization here :(
+ * Provides utility methods for handling {@code XML} parsing and transformation.<br>
+ * This class uses aggressive synchronization to ensure thread safety with {@code JAXP}.<br>
+ * It simplifies common tasks like converting strings to {@link Document} objects.
  */
 public abstract class XmlUtils
 {
 	private static final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 	private static final TransformerFactory tf = TransformerFactory.newInstance();
-	
 	static
 	{
 		dbf.setNamespaceAware(true);
 	}
 	
+	/**
+	 * Converts an XML string into a {@code Document} object.<br>
+	 * This method handles the parsing logic internally.<br>
+	 * It returns {@code null} if the input is {@code null}.
+	 * @param xmlSource The raw XML string to be parsed.
+	 * @return A {@code Document} object representing the XML content.
+	 */
 	public static Document getDocument(String xmlSource)
 	{
 		synchronized (XmlUtils.class)
@@ -75,6 +81,13 @@ public abstract class XmlUtils
 		}
 	}
 	
+	/**
+	 * Converts a {@code Document} object into its string representation.<br>
+	 * This method uses a {@link Transformer} to perform the conversion.<br>
+	 * It handles synchronization internally to ensure thread safety.
+	 * @param document The {@code Document} to convert.
+	 * @return The resulting string content of the {@code Document}.
+	 */
 	public static String getString(Document document)
 	{
 		synchronized (XmlUtils.class)
@@ -95,6 +108,13 @@ public abstract class XmlUtils
 		}
 	}
 	
+	/**
+	 * Creates a {@link Schema} object from a provided XML string.<br>
+	 * This method uses the W3C XML Schema namespace to parse the input.<br>
+	 * It returns {@code null} if the input string is {@code null}.
+	 * @param schemaString The XML string representing the schema.
+	 * @return The generated {@link Schema} object or {@code null}.
+	 */
 	public static Schema getSchema(String schemaString)
 	{
 		Schema schema = null;
@@ -110,11 +130,19 @@ public abstract class XmlUtils
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException("Failed to create schemma from string: " + schemaString, e);
+			throw new RuntimeException("Failed to create schema from string: " + schemaString, e);
 		}
+		
 		return schema;
 	}
 	
+	/**
+	 * Creates a {@link Schema} object from a provided web address.<br>
+	 * This method uses the standard W3C XML Schema namespace.<br>
+	 * It returns {@code null} if the input URL is {@code null}.
+	 * @param schemaURL The {@link URL} pointing to the schema file.
+	 * @return The created {@link Schema} object or {@code null}.
+	 */
 	public static Schema getSchema(URL schemaURL)
 	{
 		Schema schema = null;
@@ -128,14 +156,20 @@ public abstract class XmlUtils
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException("Failed to create shcemma from URL " + schemaURL, e);
+			throw new RuntimeException("Failed to create schema from URL " + schemaURL, e);
 		}
+		
 		return schema;
 	}
 	
+	/**
+	 * Checks if a {@code Document} follows the rules of a specific {@link Schema}.<br>
+	 * This method will throw a {@code RuntimeException} if the validation fails.
+	 * @param schema The {@link Schema} used to define the rules.
+	 * @param document The {@code Document} that needs to be checked.
+	 */
 	public static void validate(Schema schema, Document document)
 	{
-		
 		final Validator validator = schema.newValidator();
 		try
 		{

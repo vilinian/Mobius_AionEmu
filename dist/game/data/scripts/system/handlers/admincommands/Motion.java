@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -29,18 +29,26 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 
 /**
+ * Handles administrative commands related to character movement and motion.<br>
+ * This class allows administrators to manipulate or monitor {@link Player} movement data.
  * @author kecimis
  */
 public class Motion extends AdminCommand implements StatOwner
 {
+	/**
+	 * Creates a new instance of the {@link Motion} command.<br>
+	 * This class handles motion-related admin commands.
+	 */
 	public Motion()
 	{
 		super("motion");
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see com.aionemu.gameserver.utils.chathandlers.AdminCommand#execute(com.aionemu.gameserver.model.gameobjects.player.Player, java.lang.String[])
+	/**
+	 * Executes the motion logging and analysis commands.<br>
+	 * This method handles starting services, saving data, and adjusting attack speeds.
+	 * @param player The admin player executing the command.
+	 * @param params Variable arguments containing the specific command to run.
 	 */
 	@Override
 	public void execute(Player player, String... params)
@@ -50,6 +58,7 @@ public class Motion extends AdminCommand implements StatOwner
 			onFail(player, "");
 			return;
 		}
+		
 		if (params[0].equalsIgnoreCase("help"))
 		{
 			onFail(player, "");
@@ -100,6 +109,7 @@ public class Motion extends AdminCommand implements StatOwner
 					return;
 				}
 			}
+			
 			addAttackSpeed(player, -parameter);
 			PacketSendUtility.sendMessage(player, "Attack Speed updated");
 		}
@@ -109,6 +119,13 @@ public class Motion extends AdminCommand implements StatOwner
 		}
 	}
 	
+	/**
+	 * Updates the attack speed for a specific {@link Player}.<br>
+	 * If the value is {@code 0}, it removes existing effects.<br>
+	 * Otherwise, it adds a new {@code StatAddFunction} to the player's stats.
+	 * @param player The {@link Player} object to modify.
+	 * @param i The amount of attack speed to add or remove.
+	 */
 	private void addAttackSpeed(Player player, int i)
 	{
 		if (i == 0)
@@ -124,6 +141,12 @@ public class Motion extends AdminCommand implements StatOwner
 		}
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{

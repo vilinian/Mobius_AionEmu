@@ -1,20 +1,23 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.toypet;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.gameobjects.player.PetCommonData;
@@ -25,26 +28,49 @@ import com.aionemu.gameserver.taskmanager.tasks.ExpireTimerTask;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles the logic for adopting and managing toy pets within the game.<br>
+ * This service manages pet data, lifecycle events, and interactions between {@link Player} objects and their pets.
  * @author ATracer
  */
 public class PetAdoptionService
 {
+	private static final Logger log = LoggerFactory.getLogger(PetAdoptionService.class);
+	
+	/**
+	 * This method allows a {@link Player} to hatch a new pet from an egg.<br>
+	 * It validates the action and removes one instance of the egg from the inventory.<br>
+	 * If successful, it creates the pet using the provided details.
+	 * @param player The {@link Player} who is adopting the pet.
+	 * @param eggObjId The unique object ID of the egg in the player's inventory.
+	 * @param petId The unique identifier for the type of pet to be created.
+	 * @param name The custom name given to the new pet.
+	 * @param decorationId The ID of the decoration applied to the pet.
+	 */
 	public static void adoptPet(Player player, int eggObjId, int petId, String name, int decorationId)
 	{
 		final int eggId = player.getInventory().getItemByObjId(eggObjId).getItemId();
 		final ItemTemplate template = DataManager.ITEM_DATA.getItemTemplate(eggId);
-		if (!validateAdoption(player, template, petId))
+		
+		if (!validateAdoption(player, template, petId) || !player.getInventory().decreaseByObjectId(eggObjId, 1))
 		{
 			return;
 		}
-		if (!player.getInventory().decreaseByObjectId(eggObjId, 1))
-		{
-			return;
-		}
+		
 		final int expireTime = template.getActions().getAdoptPetAction().getExpireMinutes() != 0 ? (int) ((System.currentTimeMillis() / 1000) + (template.getActions().getAdoptPetAction().getExpireMinutes() * 60)) : 0;
+		
 		addPet(player, petId, name, decorationId, expireTime);
 	}
 	
+	/**
+	 * Adds a new pet to the specified {@link Player}.<br>
+	 * This method handles the creation and packet synchronization.<br>
+	 * It also schedules an expiration task if required.
+	 * @param player The {@code Player} receiving the pet.
+	 * @param petId The unique identifier for the pet type.
+	 * @param name The custom name given to the pet.
+	 * @param decorationId The ID of the visual decoration.
+	 * @param expireTime The time in seconds until the pet expires. Use 0 for permanent pets.
+	 */
 	public static void addPet(Player player, int petId, String name, int decorationId, int expireTime)
 	{
 		final PetCommonData petCommonData = player.getPetList().addPet(player, petId, decorationId, name, expireTime);
@@ -58,23 +84,44 @@ public class PetAdoptionService
 		}
 	}
 	
+	/**
+	 * Checks if a player is allowed to adopt a specific pet.<br>
+	 * This method verifies the {@code ItemTemplate} data and ensures the player does not already own the pet.<br>
+	 * It also confirms that the pet exists in the global data manager.
+	 * @param player The {@link Player} attempting the adoption.
+	 * @param template The {@link ItemTemplate} associated with the adoption action.
+	 * @param petId The unique identifier for the pet being adopted.
+	 * @return {@code true} if all validation checks pass, otherwise {@code false}.
+	 */
 	private static boolean validateAdoption(Player player, ItemTemplate template, int petId)
 	{
 		if ((template == null) || (template.getActions() == null) || (template.getActions().getAdoptPetAction() == null) || (template.getActions().getAdoptPetAction().getPetId() != petId))
 		{
 			return false;
 		}
+		
 		if (player.getPetList().hasPet(petId))
 		{
+			log.warn("Duplicate pet adoption");
 			return false;
 		}
+		
 		if (DataManager.PET_DATA.getPetTemplate(petId) == null)
 		{
+			log.warn("Trying adopt pet without template. PetId:" + petId);
 			return false;
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Removes a specific pet from the {@link Player}.<br>
+	 * This method handles canceling active feeding and dismissing the pet if it is currently active.<br>
+	 * It then deletes the pet from the player's list and sends an {@code SM_PET} packet.
+	 * @param player The {@link Player} who owns the pet.
+	 * @param petId The unique identifier of the pet to be surrendered.
+	 */
 	public static void surrenderPet(Player player, int petId)
 	{
 		final PetCommonData petCommonData = player.getPetList().getPet(petId);
@@ -84,8 +131,10 @@ public class PetAdoptionService
 			{
 				petCommonData.setCancelFeed(true);
 			}
+			
 			PetSpawnService.dismissPet(player, false);
 		}
+		
 		player.getPetList().deletePet(petCommonData.getPetId());
 		PacketSendUtility.sendPacket(player, new SM_PET(2, petCommonData));
 	}

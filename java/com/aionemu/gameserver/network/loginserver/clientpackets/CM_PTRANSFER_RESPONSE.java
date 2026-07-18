@@ -1,0 +1,103 @@
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.aionemu.gameserver.network.loginserver.clientpackets;
+
+import com.aionemu.gameserver.configs.network.NetworkConfig;
+import com.aionemu.gameserver.network.loginserver.LsClientPacket;
+import com.aionemu.gameserver.services.transfers.PlayerTransferService;
+
+/**
+ * This packet handles the response for a player transfer request.<br>
+ * It communicates the result of a transfer attempt to the client.<br>
+ * It interacts with the {@link PlayerTransferService} to process the logic.
+ * @author KID
+ */
+public class CM_PTRANSFER_RESPONSE extends LsClientPacket
+{
+	/**
+	 * This constructor initializes a new {@code CM_PTRANSFER_RESPONSE} packet.<br>
+	 * It sets the operation code for the network communication.
+	 * @param opCode The unique identifier for this specific operation.
+	 */
+	public CM_PTRANSFER_RESPONSE(int opCode)
+	{
+		super(opCode);
+	}
+	
+	@Override
+	protected void readImpl()
+	{
+		final int actionId = readD();
+		switch (actionId)
+		{
+			case 20: // send info
+			{
+				final int targetAccount = readD();
+				final int taskId = readD();
+				final String name = readS();
+				final String account = readS();
+				final int len = readD();
+				final byte[] db = this.readB(len);
+				PlayerTransferService.getInstance().cloneCharacter(taskId, targetAccount, name, account, db);
+			}
+				break;
+			case 21:// ok
+			{
+				final int taskId = readD();
+				PlayerTransferService.getInstance().onOk(taskId);
+			}
+				break;
+			case 22:// error
+			{
+				final int taskId = readD();
+				final String reason = readS();
+				PlayerTransferService.getInstance().onError(taskId, reason);
+			}
+				break;
+			case 23:
+			{
+				final byte serverId = readSC();
+				if (NetworkConfig.GAMESERVER_ID != serverId)
+				{
+					try
+					{
+						throw new Exception("Requesting player transfer for server id " + serverId + " but this is " + NetworkConfig.GAMESERVER_ID + " omgshit!");
+					}
+					catch (Exception e)
+					{
+						e.printStackTrace();
+					}
+				}
+				else
+				{
+					final byte targetServerId = readSC();
+					final int account = readD();
+					final int targetAccount = readD();
+					final int playerId = readD();
+					final int taskId = readD();
+					PlayerTransferService.getInstance().startTransfer(account, targetAccount, playerId, targetServerId, taskId);
+				}
+			}
+				break;
+		}
+	}
+	
+	@Override
+	protected void runImpl()
+	{
+	}
+}

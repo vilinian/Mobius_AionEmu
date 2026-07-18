@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.database.mysql5;
 
@@ -31,40 +31,39 @@ import com.aionemu.gameserver.dao.HouseBidsDAO;
 import com.aionemu.gameserver.dao.MySQL5DAOUtils;
 import com.aionemu.gameserver.model.house.PlayerHouseBid;
 
-/*
- * This file is part of aion-lightning <aion-lightning.com>.
- *
- *  aion-lightning is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  aion-lightning is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with aion-lightning.  If not, see <http://www.gnu.org/licenses/>.
- */
 /**
+ * This class provides the {@code MySQL5} database implementation for handling house bids.<br>
+ * It extends {@link HouseBidsDAO} to perform specific data access operations using SQL queries.
  * @author Rolandas
  */
 public class MySQL5HouseBidsDAO extends HouseBidsDAO
 {
 	private static final Logger log = LoggerFactory.getLogger(MySQL5HouseBidsDAO.class);
-	
 	public static final String LOAD_QUERY = "SELECT * FROM `house_bids`";
 	public static final String INSERT_QUERY = "INSERT INTO `house_bids` (`player_id`,`house_id`, `bid`, `bid_time`) VALUES (?, ?, ?, ?)";
 	public static final String DELETE_QUERY = "DELETE FROM `house_bids` WHERE `house_id` = ?";
 	public static final String UPDATE_QUERY = "UPDATE `house_bids` SET bid = ?, bid_time = ? WHERE player_id = ? AND house_id = ?";
 	
+	/**
+	 * Checks if the current database is compatible with this DAO.<br>
+	 * It uses {@code int, int)} to verify the version.
+	 * @param databaseName The name of the database to check.
+	 * @param majorVersion The major version number of the database.
+	 * @param minorVersion The minor version number of the database.
+	 * @return {@code true} if the database is supported, {@code false} otherwise.
+	 */
 	@Override
 	public boolean supports(String databaseName, int majorVersion, int minorVersion)
 	{
 		return MySQL5DAOUtils.supports(databaseName, majorVersion, minorVersion);
 	}
 	
+	/**
+	 * Retrieves all house bids from the database.<br>
+	 * This method executes a {@code SELECT} query to fetch every record.<br>
+	 * It returns a {@link Set} containing all {@link PlayerHouseBid} objects.
+	 * @return A {@code Set} of all loaded {@link PlayerHouseBid} objects.
+	 */
 	@Override
 	public Set<PlayerHouseBid> loadBids()
 	{
@@ -84,6 +83,7 @@ public class MySQL5HouseBidsDAO extends HouseBidsDAO
 				final PlayerHouseBid bid = new PlayerHouseBid(playerId, houseId, bidOffer, time);
 				results.add(bid);
 			}
+			
 			stmt.close();
 		}
 		catch (Exception e)
@@ -94,9 +94,19 @@ public class MySQL5HouseBidsDAO extends HouseBidsDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return results;
 	}
 	
+	/**
+	 * Adds a new bid to the database for a specific house.<br>
+	 * This method saves the player's offer and the time it was made.
+	 * @param playerId The unique identifier of the player making the bid.
+	 * @param houseId The unique identifier of the house being bid on.
+	 * @param bidOffer The amount of the bid offered by the player.
+	 * @param time The timestamp when the bid was submitted.
+	 * @return {@code true} if the bid was successfully saved, or {@code false} if an error occurred.
+	 */
 	@Override
 	public boolean addBid(int playerId, int houseId, long bidOffer, Timestamp time)
 	{
@@ -121,9 +131,18 @@ public class MySQL5HouseBidsDAO extends HouseBidsDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Updates an existing bid in the database.<br>
+	 * This method modifies the offer amount and timestamp for a specific house.
+	 * @param playerId The unique identifier of the player making the bid.
+	 * @param houseId The unique identifier of the house being bid on.
+	 * @param newBidOffer The new amount offered by the player.
+	 * @param time The timestamp when the new bid was placed.
+	 */
 	@Override
 	public void changeBid(int playerId, int houseId, long newBidOffer, Timestamp time)
 	{
@@ -147,8 +166,15 @@ public class MySQL5HouseBidsDAO extends HouseBidsDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 	}
 	
+	/**
+	 * Removes all bidding records associated with a specific house.<br>
+	 * This method executes the {@code DELETE_QUERY} using the provided ID.<br>
+	 * If an error occurs, it logs the exception to the logger.
+	 * @param houseId The unique identifier of the house whose bids should be removed.
+	 */
 	@Override
 	public void deleteHouseBids(int houseId)
 	{
@@ -169,6 +195,6 @@ public class MySQL5HouseBidsDAO extends HouseBidsDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 	}
-	
 }

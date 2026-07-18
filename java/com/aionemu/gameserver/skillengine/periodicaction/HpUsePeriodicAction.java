@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.periodicaction;
 
@@ -22,6 +22,8 @@ import com.aionemu.gameserver.model.gameobjects.Creature;
 import com.aionemu.gameserver.skillengine.model.Effect;
 
 /**
+ * Handles periodic actions that affect the {@code HP} of a {@link Creature}.<br>
+ * It manages repeated effects over time as defined by the skill engine.
  * @author antness
  */
 public class HpUsePeriodicAction extends PeriodicAction
@@ -30,17 +32,32 @@ public class HpUsePeriodicAction extends PeriodicAction
 	protected int value;
 	@XmlAttribute(name = "delta")
 	protected int delta;
+	@XmlAttribute(name = "ratio")
+	protected boolean ratio;
 	
+	/**
+	 * Applies a health reduction to the target of an {@link Effect}.<br>
+	 * It checks if the target has enough health before applying the change.<br>
+	 * The amount can be a fixed value or a percentage of maximum health.
+	 * @param effect The {@code Effect} object containing the target and details.
+	 */
 	@Override
 	public void act(Effect effect)
 	{
 		final Creature effected = effect.getEffected();
-		if (effected.getLifeStats().getCurrentHp() < value)
+		int requiredHp = value;
+		if (effected.getLifeStats().getCurrentHp() < requiredHp)
 		{
 			effect.endEffect();
 			return;
 		}
-		effected.getLifeStats().reduceHp(value, effected);
+		
+		if (ratio)
+		{
+			final int maxHp = effected.getGameStats().getMaxHp().getCurrent();
+			requiredHp = (int) (maxHp * (value / 100f));
+		}
+		
+		effected.getLifeStats().reduceHp(requiredHp, effected);
 	}
-	
 }

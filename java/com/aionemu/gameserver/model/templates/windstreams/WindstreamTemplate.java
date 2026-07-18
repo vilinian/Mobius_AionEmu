@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.windstreams;
 
@@ -23,6 +23,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 /**
+ * This class serves as a data template for {@link com.aionemu.gameserver.model.templates.windstreams.WindstreamTemplate} objects.<br>
+ * It defines the properties and configuration for wind streams within the game world.
  * @author LokiReborn
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -35,8 +37,9 @@ public class WindstreamTemplate
 	protected int mapid;
 	
 	/**
-	 * Gets the value of the locations property.
-	 * @return
+	 * Retrieves the {@code StreamLocations} for this template.<br>
+	 * This method returns the current location data stored in the object.
+	 * @return The {@link StreamLocations} object containing the stream coordinates.
 	 */
 	public StreamLocations getLocations()
 	{
@@ -44,8 +47,9 @@ public class WindstreamTemplate
 	}
 	
 	/**
-	 * Gets the value of the mapid property.
-	 * @return
+	 * Retrieves the unique identifier for the map.<br>
+	 * Returns {@code 0} if no map is assigned.
+	 * @return The {@code int} ID of the map.
 	 */
 	public int getMapid()
 	{

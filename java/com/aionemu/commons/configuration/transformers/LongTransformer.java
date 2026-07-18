@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.configuration.transformers;
 
@@ -22,7 +22,8 @@ import com.aionemu.commons.configuration.PropertyTransformer;
 import com.aionemu.commons.configuration.TransformationException;
 
 /**
- * Transforms value that represents long to long. Value can be in decimal or hex format.
+ * This class transforms a configuration string into a {@code Long} value.<br>
+ * It supports values provided in both decimal and hex formats.
  */
 public class LongTransformer implements PropertyTransformer<Long>
 {
@@ -32,11 +33,13 @@ public class LongTransformer implements PropertyTransformer<Long>
 	public static final LongTransformer SHARED_INSTANCE = new LongTransformer();
 	
 	/**
-	 * Transforms value to long
-	 * @param value value that will be transformed
-	 * @param field value will be assigned to this field
-	 * @return Long that represents value
-	 * @throws TransformationException if something went wrong
+	 * Converts a {@code String} value into a {@code Long}.<br>
+	 * This method supports both decimal and hexadecimal formats.<br>
+	 * It uses {@code decode} to perform the conversion.
+	 * @param value The string representation of the number to convert.
+	 * @param field The {@code Field} where the resulting value will be assigned.
+	 * @return The converted {@code Long} value.
+	 * @throws TransformationException If the string cannot be parsed into a valid number.
 	 */
 	@Override
 	public Long transform(String value, Field field) throws TransformationException

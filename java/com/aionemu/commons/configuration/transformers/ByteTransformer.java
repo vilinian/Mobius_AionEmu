@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.configuration.transformers;
 
@@ -22,7 +22,9 @@ import com.aionemu.commons.configuration.PropertyTransformer;
 import com.aionemu.commons.configuration.TransformationException;
 
 /**
- * Transforms String to Byte. String can be in decimal or hex format. {@link com.aionemu.commons.configuration.TransformationException} will be thrown if something goes wrong
+ * This class transforms a {@code String} into a {@code Byte}.<br>
+ * It supports input strings in both decimal and hex formats.<br>
+ * A {@link com.aionemu.commons.configuration.TransformationException} is thrown if the transformation fails.
  * @author SoulKeeper
  */
 public class ByteTransformer implements PropertyTransformer<Byte>
@@ -33,11 +35,13 @@ public class ByteTransformer implements PropertyTransformer<Byte>
 	public static final ByteTransformer SHARED_INSTANCE = new ByteTransformer();
 	
 	/**
-	 * Tansforms string to byte
-	 * @param value value that will be transformed
-	 * @param field value will be assigned to this field
-	 * @return Byte object that represents value
-	 * @throws TransformationException if something went wrong
+	 * Converts a {@code String} value into a {@code Byte}.<br>
+	 * The input string can be in decimal or hex format.<br>
+	 * This method is used by the configuration system to map values to fields.
+	 * @param value The string value to convert.
+	 * @param field The {@code Field} where the result will be assigned.
+	 * @return The converted {@code Byte} object.
+	 * @throws TransformationException If the conversion fails for any reason.
 	 */
 	@Override
 	public Byte transform(String value, Field field) throws TransformationException

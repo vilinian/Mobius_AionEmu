@@ -1,24 +1,28 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
-package system.database.mysql5;
+
+
+package mysql5;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,96 +31,95 @@ import com.aionemu.commons.database.DB;
 import com.aionemu.commons.database.DatabaseFactory;
 import com.aionemu.loginserver.dao.PremiumDAO;
 
-import javolution.util.FastList;
-
 /**
+ * This class provides the data access object for handling premium user information.<br>
+ * It implements specific {@code mysql5} database queries to interact with the premium system.
+ * It extends {@link PremiumDAO} to provide MySQL 5 compatible functionality.
  * @author KID
  */
-public class MySQL5PremiumDAO extends PremiumDAO
-{
+public class MySQL5PremiumDAO extends PremiumDAO {
 	private final Logger log = LoggerFactory.getLogger("PREMIUM_CTRL");
-	
+
+	/**
+	 * Retrieves the total points for a specific account.<br>
+	 * This method sums the base toll and any pending rewards.<br>
+	 * It also marks rewarded items as processed in the database.
+	 * @param accountId The unique identifier of the account.
+	 * @return The total number of points available to the user.
+	 */
 	@Override
-	public long getPoints(int accountId)
-	{
+	public long getPoints(int accountId) {
 		long points = 0;
 		PreparedStatement st = DB.prepareStatement("SELECT toll FROM account_data WHERE id=?");
-		try
-		{
+		try {
 			st.setInt(1, accountId);
 			ResultSet rs = st.executeQuery();
-			if (rs.next())
-			{
+			if (rs.next()) {
 				points = rs.getLong("toll");
 			}
 		}
-		catch (Exception e)
-		{
-			log.error("getPoints [select points] " + accountId, e);
+		catch (Exception e) {
+			log.error("getPoints [select points] "+accountId, e);
 		}
-		finally
-		{
+		finally {
 			DB.close(st);
 		}
 		
-		FastList<Integer> rewarded = FastList.newInstance();
+		List<Integer> rewarded = new ArrayList<>();
 		st = DB.prepareStatement("SELECT uniqId,points FROM account_rewards WHERE accountId=? AND rewarded=0");
-		try
-		{
+		try {
 			st.setInt(1, accountId);
 			ResultSet rs = st.executeQuery();
-			if (rs.next())
-			{
+			if (rs.next()) {
 				int uniqId = rs.getInt("uniqId");
 				points += rs.getLong("points");
-				log.info("Account " + accountId + " has received uniqId #" + uniqId);
+				log.info("Account "+accountId+" has received uniqId #"+uniqId);
 				rewarded.add(uniqId);
 			}
 		}
-		catch (Exception e)
-		{
-			log.error("getPoints [get rewards] " + accountId, e);
+		catch (Exception e) {
+			log.error("getPoints [get rewards] "+accountId, e);
 		}
-		finally
-		{
+		finally {
 			DB.close(st);
 		}
 		
-		if (rewarded.size() > 0)
-		{
+		if(rewarded.size() > 0) {
 			Connection con = null;
-			try
-			{
+			try {
 				con = DatabaseFactory.getConnection();
 				PreparedStatement stmt;
-				for (int uniqid : rewarded)
-				{
+				for(int uniqid : rewarded) {
 					stmt = con.prepareStatement("UPDATE account_rewards SET rewarded=1,received=NOW() WHERE uniqId=?");
 					stmt.setInt(1, uniqid);
 					stmt.execute();
 					stmt.close();
 				}
 			}
-			catch (Exception e)
-			{
-				log.error("getPoints [update uniq] " + accountId, e);
+			catch (Exception e) {
+				log.error("getPoints [update uniq] "+accountId, e);
 			}
-			finally
-			{
+			finally {
 				DatabaseFactory.close(con);
 			}
 		}
 		
 		return points;
 	}
-	
+
+	/**
+	 * Updates the point balance for a specific account.<br>
+	 * It subtracts the {@code required} amount from the current points.
+	 * @param accountId The unique identifier of the account to update.
+	 * @param points The current total points of the account.
+	 * @param required The amount of points to be deducted.
+	 * @return {@code true} if the database update was successful, or {@code false} if an error occurred.
+	 */
 	@Override
-	public boolean updatePoints(int accountId, long points, long required)
-	{
+	public boolean updatePoints(int accountId, long points, long required) {
 		Connection con = null;
 		boolean s = true;
-		try
-		{
+		try {
 			con = DatabaseFactory.getConnection();
 			PreparedStatement stmt = con.prepareStatement("UPDATE account_data SET toll=? WHERE id=?");
 			stmt.setLong(1, points - required);
@@ -124,22 +127,86 @@ public class MySQL5PremiumDAO extends PremiumDAO
 			stmt.execute();
 			stmt.close();
 		}
-		catch (Exception e)
-		{
-			log.error("updatePoints " + accountId, e);
+		catch (Exception e) {
+			log.error("updatePoints "+accountId, e);
 			s = false;
 		}
-		finally
-		{
+		finally {
 			DatabaseFactory.close(con);
 		}
 		
 		return s;
 	}
 	
+	/**
+	 * Retrieves the current amount of Luna for a specific account.<br>
+	 * This method queries the database using the provided {@code accountId}.<br>
+	 * It returns 0 if no data is found or an error occurs.
+	 * @param accountId The unique identifier of the account to check.
+	 * @return The total amount of Luna as a {@code long}.
+	 */
 	@Override
-	public boolean supports(String database, int majorVersion, int minorVersion)
-	{
+	public long getLuna(int accountId) {
+		long luna = 0;
+		PreparedStatement st = DB.prepareStatement("SELECT luna FROM account_data WHERE id=?");
+		try {
+			st.setInt(1, accountId);
+			ResultSet rs = st.executeQuery();
+			if (rs.next()) {
+				luna = rs.getLong("luna");
+			}
+		}
+		catch (Exception e) {
+			log.error("getLuna [select Luna] "+accountId, e);
+		}
+		finally {
+			DB.close(st);
+		}
+		
+		return luna;
+	}
+		
+	
+	/**
+	 * Updates the Luna balance for a specific account.<br>
+	 * This method modifies the {@code luna} value in the database.
+	 * @param accountId The unique identifier of the account to update.
+	 * @param luna The new Luna amount to set for the account.
+	 * @return {@code true} if the update was successful, or {@code false} if an error occurred.
+	 */
+	@Override
+	public boolean updateLuna(int accountId, long luna) {
+		Connection con = null;
+		boolean s = true;
+		try {
+			con = DatabaseFactory.getConnection();
+			PreparedStatement stmt = con.prepareStatement("UPDATE account_data SET luna = ? WHERE id = ?");
+			stmt.setLong(1, luna);
+			stmt.setInt(2, accountId);
+			stmt.execute();
+			stmt.close();
+		}
+		catch (Exception e) {
+			log.error("updateLuna "+accountId, e);
+			s = false;
+		}
+		finally {
+			DatabaseFactory.close(con);
+		}
+		
+		return s;
+	}
+
+	/**
+	 * Checks if the current system supports a specific database version.<br>
+	 * It uses {@code int, int)} to verify compatibility.
+	 * @param database The name of the database to check.
+	 * @param majorVersion The major version number of the database.
+	 * @param minorVersion The minor version number of the database.
+	 * @return {@code true} if the database is supported, otherwise {@code false}.
+	 */
+	@Override
+	public boolean supports(String database, int majorVersion, int minorVersion) {
 		return MySQL5DAOUtils.supports(database, majorVersion, minorVersion);
 	}
 }

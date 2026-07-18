@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.controller;
 
@@ -23,9 +23,11 @@ import com.aionemu.commons.database.dao.DAOManager;
 import com.aionemu.loginserver.GameServerInfo;
 import com.aionemu.loginserver.GameServerTable;
 import com.aionemu.loginserver.dao.PremiumDAO;
-import com.aionemu.loginserver.network.gs.serverpackets.SM_PREMIUM_RESPONSE;
+import com.aionemu.loginserver.network.gameserver.serverpackets.SM_PREMIUM_RESPONSE;
 
 /**
+ * This class handles premium-related requests for the login server.<br>
+ * It manages interactions between users and the {@link PremiumDAO} to verify subscription statuses.
  * @author KID
  */
 public class PremiumController
@@ -33,6 +35,11 @@ public class PremiumController
 	private final Logger log = LoggerFactory.getLogger("PREMIUM_CTRL");
 	private static PremiumController controller = new PremiumController();
 	
+	/**
+	 * Provides the singleton instance of the {@link PremiumController}.<br>
+	 * Use this method to access the main controller for premium operations.
+	 * @return The global {@code PremiumController} instance.
+	 */
 	public static PremiumController getController()
 	{
 		return controller;
@@ -44,12 +51,26 @@ public class PremiumController
 	public static byte RESULT_ADD = 4;
 	private final PremiumDAO dao;
 	
+	/**
+	 * Initializes the {@code PremiumController}.<br>
+	 * It sets up the required database connections.<br>
+	 * This method prepares the controller to handle premium requests.
+	 */
 	public PremiumController()
 	{
 		dao = DAOManager.getDAO(PremiumDAO.class);
 		log.info("PremiumController is ready for requests.");
 	}
 	
+	/**
+	 * Processes a request to purchase an item or service.<br>
+	 * It checks the account balance and updates points if the transaction is valid.<br>
+	 * The result is sent back to the game server via {@code SM_PREMIUM_RESPONSE}.
+	 * @param accountId The unique identifier for the user account.
+	 * @param requestId The specific ID of the request being processed.
+	 * @param cost The amount of points to deduct from the account.
+	 * @param serverId The ID of the game server where the request originated.
+	 */
 	public void requestBuy(int accountId, int requestId, long cost, byte serverId)
 	{
 		long points = dao.getPoints(accountId);

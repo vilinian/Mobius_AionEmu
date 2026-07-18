@@ -1,31 +1,32 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.template;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.aionemu.gameserver.model.DialogAction;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.rift.RiftLocation;
 import com.aionemu.gameserver.model.vortex.VortexLocation;
 import com.aionemu.gameserver.questEngine.handlers.QuestHandler;
 import com.aionemu.gameserver.questEngine.handlers.models.Monster;
-import com.aionemu.gameserver.questEngine.model.QuestDialog;
 import com.aionemu.gameserver.questEngine.model.QuestEnv;
 import com.aionemu.gameserver.questEngine.model.QuestState;
 import com.aionemu.gameserver.questEngine.model.QuestStatus;
@@ -33,9 +34,9 @@ import com.aionemu.gameserver.services.QuestService;
 import com.aionemu.gameserver.services.RiftService;
 import com.aionemu.gameserver.services.VortexService;
 
-import javolution.util.FastMap;
-
 /**
+ * This class handles quest objectives that require a player to defeat a specific number of monsters.<br>
+ * It tracks the progress of the hunt and updates the {@link QuestState} as targets are killed.
  * @author MrPoke
  * @reworked vlog, Bobobear
  */
@@ -44,13 +45,25 @@ public class MonsterHunt extends QuestHandler
 	private final int questId;
 	private final Set<Integer> startNpcs = new HashSet<>();
 	private final Set<Integer> endNpcs = new HashSet<>();
-	private final FastMap<Monster, Set<Integer>> monsters;
+	private final Map<Monster, Set<Integer>> monsters;
 	private final int startDialog;
 	private final int endDialog;
 	private final Set<Integer> aggroNpcs = new HashSet<>();
 	private final int invasionWorldId;
 	
-	public MonsterHunt(int questId, List<Integer> startNpcIds, List<Integer> endNpcIds, FastMap<Monster, Set<Integer>> monsters, int startDialog, int endDialog, List<Integer> aggroNpcs, int invasionWorld)
+	/**
+	 * Initializes a new {@link MonsterHunt} quest handler.<br>
+	 * This constructor sets up the required NPCs, monsters, and dialog IDs for the hunt.
+	 * @param questId The unique identifier for the quest.
+	 * @param startNpcIds A list of NPC IDs that trigger the start of the quest.
+	 * @param endNpcIds A list of NPC IDs that complete the quest.
+	 * @param monsters A {@link Map} linking {@link Monster} types to their required kill counts.
+	 * @param startDialog The ID of the dialog shown when starting the quest.
+	 * @param endDialog The ID of the dialog shown when finishing the quest.
+	 * @param aggroNpcs A list of NPC IDs that should become aggressive during the hunt.
+	 * @param invasionWorld The ID of the world where the invasion occurs.
+	 */
+	public MonsterHunt(int questId, List<Integer> startNpcIds, List<Integer> endNpcIds, Map<Monster, Set<Integer>> monsters, int startDialog, int endDialog, List<Integer> aggroNpcs, int invasionWorld)
 	{
 		super(questId);
 		this.questId = questId;
@@ -65,6 +78,7 @@ public class MonsterHunt extends QuestHandler
 			endNpcs.addAll(endNpcIds);
 			endNpcs.remove(0);
 		}
+		
 		this.monsters = monsters;
 		this.startDialog = startDialog;
 		this.endDialog = endDialog;
@@ -73,9 +87,15 @@ public class MonsterHunt extends QuestHandler
 			this.aggroNpcs.addAll(aggroNpcs);
 			this.aggroNpcs.remove(0);
 		}
+		
 		invasionWorldId = invasionWorld;
 	}
 	
+	/**
+	 * Registers the required quest events.<br>
+	 * This method tells the system which actions to listen for.<br>
+	 * You should add your specific event listeners inside this method.
+	 */
 	@Override
 	public void register()
 	{
@@ -84,6 +104,7 @@ public class MonsterHunt extends QuestHandler
 			qe.registerQuestNpc(startNpc).addOnQuestStart(getQuestId());
 			qe.registerQuestNpc(startNpc).addOnTalkEvent(getQuestId());
 		}
+		
 		for (Set<Integer> monsterIds : monsters.values())
 		{
 			for (Integer monsterId : monsterIds)
@@ -91,34 +112,46 @@ public class MonsterHunt extends QuestHandler
 				qe.registerQuestNpc(monsterId).addOnKillEvent(questId);
 			}
 		}
+		
 		for (Integer endNpc : endNpcs)
 		{
 			qe.registerQuestNpc(endNpc).addOnTalkEvent(getQuestId());
 		}
+		
 		for (Integer aggroNpc : aggroNpcs)
 		{
 			qe.registerQuestNpc(aggroNpc).addOnAddAggroListEvent(getQuestId());
 		}
+		
 		if (invasionWorldId != 0)
 		{
 			qe.registerOnEnterWorld(questId);
 		}
 	}
 	
+	/**
+	 * Handles dialog events for the quest.<br>
+	 * This method checks the current {@link QuestState} and {@code targetId}.<br>
+	 * It determines which dialog to send based on the {@link DialogAction}.
+	 * @param env The environment containing player data and current quest context.
+	 * @return {@code true} if the event was handled, otherwise {@code false}.
+	 */
 	@Override
 	public boolean onDialogEvent(QuestEnv env)
 	{
 		final Player player = env.getPlayer();
 		final int targetId = env.getTargetId();
 		final QuestState qs = player.getQuestStateList().getQuestState(questId);
+		final DialogAction dialog = env.getDialog();
 		if ((qs == null) || (qs.getStatus() == QuestStatus.NONE) || qs.canRepeat())
 		{
 			if (startNpcs.isEmpty() || startNpcs.contains(targetId))
 			{
-				if (env.getDialog() == QuestDialog.START_DIALOG)
+				if (dialog == DialogAction.QUEST_SELECT)
 				{
 					return sendQuestDialog(env, startDialog != 0 ? startDialog : 1011);
 				}
+				
 				return sendQuestStartDialog(env);
 			}
 		}
@@ -142,47 +175,46 @@ public class MonsterHunt extends QuestHandler
 					return false;
 				}
 			}
+			
 			if (endNpcs.contains(targetId))
 			{
 				if (endDialog != 0)
 				{
-					switch (env.getDialog())
+					// Workaround for Quest's with select_success for this Quests you have to add end_dialog_id="10002" after end_npc_ids="" (only for Monster Hunt)
+					switch (dialog)
 					{
 						case USE_OBJECT:
 						{
 							return sendQuestDialog(env, endDialog);
 						}
-						case SELECT_REWARD:
+						case SELECT_QUEST_REWARD:
 						{
 							qs.setStatus(QuestStatus.REWARD);
 							updateQuestStatus(env);
 							return sendQuestDialog(env, 5);
 						}
 						default:
-						{
 							break;
-						}
 					}
 				}
 				else
 				{
-					switch (env.getDialog())
+					switch (dialog)
 					{
-						case START_DIALOG:
+						case QUEST_SELECT:
 						{
 							return sendQuestDialog(env, 1352);
 						}
-						case SELECT_REWARD:
+						case SELECT_QUEST_REWARD:
 						{
 							qs.setStatus(QuestStatus.REWARD);
 							updateQuestStatus(env);
 							return sendQuestDialog(env, 5);
 						}
 						default:
-						{
 							break;
-						}
 					}
+					
 				}
 			}
 		}
@@ -192,29 +224,36 @@ public class MonsterHunt extends QuestHandler
 			{
 				if (!aggroNpcs.isEmpty())
 				{
-					switch (env.getDialog())
+					return sendQuestStartDialog(env);
+				}
+				
+				if (endDialog != 0)
+				{
+					switch (dialog)
 					{
-						case START_DIALOG:
 						case USE_OBJECT:
-						{
 							return sendQuestDialog(env, 10002);
-						}
-						case SELECT_REWARD:
-						{
+						case SELECT_QUEST_REWARD:
 							return sendQuestDialog(env, 5);
-						}
 						default:
-						{
 							return sendQuestEndDialog(env);
-						}
 					}
 				}
+				
 				return sendQuestEndDialog(env);
 			}
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * This method is triggered when a player kills a target.<br>
+	 * It checks if the kill meets the requirements for the quest.<br>
+	 * Use this to progress the quest state.
+	 * @param env The {@link QuestEnv} object containing current quest data.
+	 * @return {@code true} if the event was handled successfully, otherwise {@code false}.
+	 */
 	@Override
 	public boolean onKillEvent(QuestEnv env)
 	{
@@ -253,6 +292,7 @@ public class MonsterHunt extends QuestHandler
 								total >>= 6;
 								qs.setQuestVarById(varsUsed, value);
 							}
+							
 							final int var = qs.getQuestVarById(0);
 							final int var1 = qs.getQuestVarById(1);
 							if ((var == 0) && (m.getVar() == 1) && (varId == 2) && (var1 == m.getEndVar()))
@@ -266,14 +306,23 @@ public class MonsterHunt extends QuestHandler
 								updateQuestStatus(env);
 							}
 						}
+						
 						return true;
 					}
 				}
 			}
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * This method handles the event when a player is added to an aggro list.<br>
+	 * It checks if the quest should be started based on the current {@code QuestState}.<br>
+	 * If the quest is not active or can be repeated, it starts the quest via {@code startQuest}.
+	 * @param env The environment containing player and quest data.
+	 * @return {@code true} if the quest was started, otherwise {@code false}.
+	 */
 	@Override
 	public boolean onAddAggroListEvent(QuestEnv env)
 	{
@@ -284,9 +333,17 @@ public class MonsterHunt extends QuestHandler
 			QuestService.startQuest(env);
 			return true;
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * Checks if a player should start the quest when entering a specific world.<br>
+	 * This method triggers for players who do not have the quest active.<br>
+	 * It uses {@code startQuest} to begin the quest.
+	 * @param env The current quest environment containing player data.
+	 * @return {@code true} if the quest was successfully started, otherwise {@code false}.
+	 */
 	@Override
 	public boolean onEnterWorldEvent(QuestEnv env)
 	{
@@ -303,9 +360,17 @@ public class MonsterHunt extends QuestHandler
 				}
 			}
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * Checks if there is an active rift in the specified world.<br>
+	 * It iterates through all locations provided by {@link RiftService}.<br>
+	 * Returns {@code true} if a matching open rift is found.<br>
+	 * Otherwise, it returns {@code false}.
+	 * @return {@code true} if an open rift exists in the invasion world, {@code false} otherwise.
+	 */
 	private boolean searchOpenRift()
 	{
 		for (RiftLocation loc : RiftService.getInstance().getRiftLocations().values())
@@ -315,6 +380,7 @@ public class MonsterHunt extends QuestHandler
 				return true;
 			}
 		}
+		
 		return false;
 	}
 }

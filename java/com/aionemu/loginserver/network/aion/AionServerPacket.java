@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.aion;
 
@@ -21,14 +21,16 @@ import java.nio.ByteBuffer;
 import com.aionemu.commons.network.packet.BaseServerPacket;
 
 /**
- * Base class for every LS -> Aion Server Packet.
+ * This class serves as the base class for all packets sent from the Login Server to the Aion Server.<br>
+ * It extends {@link BaseServerPacket} to provide common functionality for network communication.
  * @author -Nemesiss-
  */
 public abstract class AionServerPacket extends BaseServerPacket
 {
 	/**
-	 * Constructs a new server packet with specified id.
-	 * @param opcode packet opcode.
+	 * Creates a new instance of an {@link AionServerPacket}.<br>
+	 * This constructor initializes the packet with a specific opcode.
+	 * @param opcode The unique identifier for this packet type.
 	 */
 	protected AionServerPacket(int opcode)
 	{
@@ -36,10 +38,11 @@ public abstract class AionServerPacket extends BaseServerPacket
 	}
 	
 	/**
-	 * Write and encrypt this packet data for given connection, to given buffer.
-	 * @param con
+	 * This method writes the packet data to the network connection.<br>
+	 * It handles the necessary byte buffer operations and encryption.
+	 * @param con The {@link LoginConnection} used to send the data.
 	 */
-	public final void write(LoginConnection con)
+	public void write(LoginConnection con)
 	{
 		buf.putShort((short) 0);
 		buf.put((byte) getOpcode());

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -22,6 +22,8 @@ import com.aionemu.gameserver.network.aion.AionConnection.State;
 import com.aionemu.gameserver.services.item.ItemMoveService;
 
 /**
+ * Handles the client request to move an item between different containers.<br>
+ * This packet triggers the {@link ItemMoveService} to process the movement logic.
  * @author alexa026, kosyachok
  */
 public class CM_MOVE_ITEM extends AionClientPacket
@@ -34,6 +36,14 @@ public class CM_MOVE_ITEM extends AionClientPacket
 	private byte destination;
 	private short slot;
 	
+	/**
+	 * This method creates a new {@link CM_MOVE_ITEM} packet.<br>
+	 * It initializes the packet with the required network states.<br>
+	 * Use this constructor to prepare an item movement request.
+	 * @param opcode The unique identifier for the packet type.
+	 * @param state The primary state of the connection.
+	 * @param restStates Additional states associated with the packet.
+	 */
 	public CM_MOVE_ITEM(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -42,9 +52,10 @@ public class CM_MOVE_ITEM extends AionClientPacket
 	@Override
 	protected void readImpl()
 	{
-		targetObjectId = readD();// empty
+		targetObjectId = readD(); // empty
 		source = readSC(); // FROM (0 - player inventory, 1 - regular warehouse, 2 - account warehouse, 3 - legion
-							// warehouse)
+		
+		// warehouse)
 		destination = readSC(); // TO
 		slot = readSH();
 	}

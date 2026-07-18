@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
@@ -34,6 +34,7 @@ import com.aionemu.gameserver.geoEngine.collision.CollisionIntention;
 import com.aionemu.gameserver.geoEngine.math.Vector3f;
 import com.aionemu.gameserver.model.gameobjects.Creature;
 import com.aionemu.gameserver.model.gameobjects.Npc;
+import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.stats.container.StatEnum;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_TARGET_IMMOBILIZE;
 import com.aionemu.gameserver.skillengine.model.Effect;
@@ -44,6 +45,9 @@ import com.aionemu.gameserver.utils.ThreadPoolManager;
 import com.aionemu.gameserver.world.geo.GeoService;
 
 /**
+ * Handles the logic for applying a fear status effect to a {@link Creature}.<br>
+ * It prevents the target from moving or performing actions for a specified duration.<br>
+ * This class manages the state transitions and notifications required for the fear mechanic.
  * @author Sarynth
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -51,13 +55,14 @@ import com.aionemu.gameserver.world.geo.GeoService;
 public class FearEffect extends EffectTemplate
 {
 	@XmlAttribute
-	protected int resistchance;
+	protected int resistchance = 100;
 	
-	public FearEffect()
-	{
-		resistchance = 100;
-	}
-	
+	/**
+	 * Applies a specific {@code Effect} to a target.<br>
+	 * This method checks if the target is an instance of {@link Player}.<br>
+	 * It processes the logic required for the effect to take place.
+	 * @param effect The {@code Effect} object to be applied.
+	 */
 	@Override
 	public void applyEffect(Effect effect)
 	{
@@ -65,12 +70,24 @@ public class FearEffect extends EffectTemplate
 		effect.addToEffectedController();
 	}
 	
+	/**
+	 * Calculates the attributes for a specific {@code Effect}.<br>
+	 * This method updates the {@code effect} to include an AP boost.<br>
+	 * It also links this instance as a success effect.
+	 * @param effect The {@code Effect} object to be updated.
+	 */
 	@Override
 	public void calculate(Effect effect)
 	{
 		super.calculate(effect, StatEnum.FEAR_RESISTANCE, null);
 	}
 	
+	/**
+	 * Starts the {@link Effect} and applies it to the target.<br>
+	 * This method handles state changes like stopping movement and setting AI states.<br>
+	 * It also schedules periodic tasks if fear is enabled in the configuration.
+	 * @param effect The {@code Effect} object to be started.
+	 */
 	@Override
 	public void startEffect(Effect effect)
 	{
@@ -79,25 +96,26 @@ public class FearEffect extends EffectTemplate
 		effected.getController().cancelCurrentSkill();
 		effect.setAbnormal(AbnormalState.FEAR.getId());
 		effected.getEffectController().setAbnormal(AbnormalState.FEAR.getId());
+		
+		// PacketSendUtility.broadcastPacketAndReceive(effected, new SM_TARGET_IMMOBILIZE(effected));
 		effected.getController().stopMoving();
 		
 		if (effected instanceof Npc)
 		{
 			((NpcAI2) effected.getAi2()).setStateIfNot(AIState.FEAR);
 		}
+		
 		if (GeoDataConfig.FEAR_ENABLE)
 		{
 			final ScheduledFuture<?> fearTask = ThreadPoolManager.getInstance().scheduleAtFixedRate(new FearTask(effector, effected), 0, 1000);
 			effect.setPeriodicTask(fearTask, position);
 		}
 		
-		// resistchance of fear effect to damage, if value is lower than 100, fear can be interrupted bz damage
-		// example skillId: 540 Terrible howl
+		// If the resistance chance against the fear effect from damage is lower than 100, the fear can be interrupted by damage, such as with skill ID 540 (Terrible Howl).
 		if (resistchance < 100)
 		{
 			final ActionObserver observer = new ActionObserver(ObserverType.ATTACKED)
 			{
-				
 				@Override
 				public void attacked(Creature creature)
 				{
@@ -112,6 +130,12 @@ public class FearEffect extends EffectTemplate
 		}
 	}
 	
+	/**
+	 * Stops a specific {@code Effect} from being active.<br>
+	 * This method removes the associated observers from the target controller.<br>
+	 * Use this to clean up effects when they expire or are removed.
+	 * @param effect The {@code Effect} object to stop.
+	 */
 	@Override
 	public void endEffect(Effect effect)
 	{
@@ -120,12 +144,14 @@ public class FearEffect extends EffectTemplate
 		// for now we support only players
 		if (GeoDataConfig.FEAR_ENABLE)
 		{
-			effect.getEffected().getMoveController().abortMove();// TODO impl stopMoving?
+			effect.getEffected().getMoveController().abortMove(); // TODO impl stopMoving?
 		}
+		
 		if (effect.getEffected() instanceof Npc)
 		{
 			((NpcAI2) effect.getEffected().getAi2()).onCreatureEvent(AIEventType.ATTACK, effect.getEffector());
 		}
+		
 		PacketSendUtility.broadcastPacketAndReceive(effect.getEffected(), new SM_TARGET_IMMOBILIZE(effect.getEffected()));
 		
 		if (resistchance < 100)
@@ -140,7 +166,6 @@ public class FearEffect extends EffectTemplate
 	
 	class FearTask implements Runnable
 	{
-		
 		private final Creature effector;
 		private final Creature effected;
 		
@@ -161,6 +186,7 @@ public class FearEffect extends EffectTemplate
 				{
 					return;
 				}
+				
 				final byte moveAwayHeading = PositionUtil.getMoveAwayHeading(effector, effected);
 				final double radian = Math.toRadians(MathUtil.convertHeadingToDegree(moveAwayHeading));
 				final float maxDistance = effected.getGameStats().getMovementSpeedFloat();
@@ -172,6 +198,7 @@ public class FearEffect extends EffectTemplate
 				{
 					closestCollision.setZ(effected.getZ());
 				}
+				
 				if (effected instanceof Npc)
 				{
 					((Npc) effected).getMoveController().resetMove();

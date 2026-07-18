@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services;
 
@@ -22,13 +22,12 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.database.dao.DAOManager;
-import com.aionemu.gameserver.configs.main.BrokerConfig;
 import com.aionemu.gameserver.configs.main.LoggingConfig;
 import com.aionemu.gameserver.configs.main.SecurityConfig;
 import com.aionemu.gameserver.dao.BrokerDAO;
@@ -47,7 +46,6 @@ import com.aionemu.gameserver.model.gameobjects.player.PlayerCommonData;
 import com.aionemu.gameserver.model.items.ManaStone;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_BROKER_SERVICE;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_DELETE_ITEM;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_QUIT_RESPONSE;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.restrictions.RestrictionsManager;
 import com.aionemu.gameserver.services.item.ItemFactory;
@@ -58,40 +56,56 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
 import com.aionemu.gameserver.world.World;
 
-import javolution.util.FastMap;
-
 /**
+ * Manages the broker system for handling item trading and listing.<br>
+ * This service handles requests from {@link Player} objects to interact with brokers.<br>
+ * It coordinates data between {@link BrokerDAO}, {@link InventoryDAO}, and various game world objects.
  * @author kosyachok
  * @author ATracer
  * @author Antraxx
  */
 public class BrokerService
 {
-	private final Map<Integer, BrokerItem> elyosBrokerItems = new FastMap<Integer, BrokerItem>().shared();
-	private final Map<Integer, BrokerItem> elyosSettledItems = new FastMap<Integer, BrokerItem>().shared();
-	private final Map<Integer, BrokerItem> asmodianBrokerItems = new FastMap<Integer, BrokerItem>().shared();
-	private final Map<Integer, BrokerItem> asmodianSettledItems = new FastMap<Integer, BrokerItem>().shared();
+	private final Map<Integer, BrokerItem> elyosBrokerItems = new ConcurrentHashMap<>();
+	private final Map<Integer, BrokerItem> elyosSettledItems = new ConcurrentHashMap<>();
+	private final Map<Integer, BrokerItem> asmodianBrokerItems = new ConcurrentHashMap<>();
+	private final Map<Integer, BrokerItem> asmodianSettledItems = new ConcurrentHashMap<>();
 	private static final Logger log = LoggerFactory.getLogger("EXCHANGE_LOG");
-	private final int DELAY_BROKER_SAVE = (BrokerConfig.SAVE_MANAGER_INTERVAL * 1000) >= 6000 ? (BrokerConfig.SAVE_MANAGER_INTERVAL * 1000) : 6000;
-	private final int DELAY_BROKER_CHECK = (BrokerConfig.CHECK_EXPIRED_ITEMS_INTERVAL * 1000) >= 60000 ? (BrokerConfig.CHECK_EXPIRED_ITEMS_INTERVAL * 1000) : 60000;
 	private final BrokerPeriodicTaskManager saveManager;
-	private final Map<Integer, BrokerPlayerCache> playerBrokerCache = new FastMap<Integer, BrokerPlayerCache>().shared();
+	private final Map<Integer, BrokerPlayerCache> playerBrokerCache = new ConcurrentHashMap<>();
 	
+	/**
+	 * Retrieves the singleton instance of the {@link BrokerService}.<br>
+	 * This method provides a global access point to the broker service.
+	 * @return The active {@code BrokerService} instance.
+	 */
 	public static BrokerService getInstance()
 	{
 		return SingletonHolder.instance;
 	}
 	
+	/**
+	 * Initializes a new instance of the {@link BrokerService}.<br>
+	 * This constructor calls {@code initBrokerService} to set up core components.<br>
+	 * It also starts periodic tasks for saving and checking expired items.
+	 */
 	public BrokerService()
 	{
 		initBrokerService();
+		final int DELAY_BROKER_SAVE = 6000;
 		saveManager = new BrokerPeriodicTaskManager(DELAY_BROKER_SAVE);
+		final int DELAY_BROKER_CHECK = 60000;
 		ThreadPoolManager.getInstance().scheduleAtFixedRate(() -> checkExpiredItems(), DELAY_BROKER_CHECK, DELAY_BROKER_CHECK);
 	}
 	
+	/**
+	 * Initializes the broker service by loading data from the database.<br>
+	 * This method populates the item caches for both {@code ASMODIAN} and {@code ELYOS} races.<br>
+	 * It distinguishes between active broker items and settled items during the loading process.
+	 */
 	private void initBrokerService()
 	{
-		log.info("Loading broker...");
+		log.debug("Loading broker...");
 		int loadedBrokerItemsCount = 0;
 		int loadedSettledItemsCount = 0;
 		
@@ -127,15 +141,19 @@ public class BrokerService
 			}
 		}
 		
-		log.info("Broker loaded with " + loadedBrokerItemsCount + " broker items, " + loadedSettledItemsCount + " settled items.");
+		log.info("[BrokerService] Broker loaded with " + loadedBrokerItemsCount + " broker items and " + loadedSettledItemsCount + " settled items.");
 	}
 	
 	/**
-	 * @param player
-	 * @param clientMask
-	 * @param sortType
-	 * @param startPage
-	 * @param itemList
+	 * Displays the requested broker items to a specific player.<br>
+	 * This method filters and sorts items based on the provided mask and page.<br>
+	 * It updates the player cache with the current search results.<br>
+	 * Finally, it sends the {@code SM_BROKER_SERVICE} packet to the client.
+	 * @param player The {@link Player} who is viewing the broker items.
+	 * @param clientMask The bitmask used to filter which items are visible.
+	 * @param sortType The integer value defining how the items should be sorted.
+	 * @param startPage The page number to display from the results list.
+	 * @param itemList A {@link List} of item IDs to include, or {@code null} for all items.
 	 */
 	public void showRequestedItems(Player player, int clientMask, int sortType, int startPage, List<Integer> itemList)
 	{
@@ -150,6 +168,7 @@ public class BrokerService
 			{
 				return;
 			}
+			
 			searchItems = brokerItems.values().toArray(new BrokerItem[brokerItems.values().size()]);
 		}
 		else if (((getFilteredItems(player).length == 0) || !isChidrenMask) && (clientMask != 0))
@@ -185,6 +204,7 @@ public class BrokerService
 					itemsFound.add(item);
 				}
 			}
+			
 			getPlayerCache(player).setSearchItemsList(itemList);
 			searchItems = itemsFound.toArray(new BrokerItem[itemsFound.size()]);
 			totalSearchItemsCount = searchItems.length;
@@ -202,10 +222,13 @@ public class BrokerService
 	}
 	
 	/**
-	 * @param player
-	 * @param clientMask
-	 * @param cached
-	 * @return
+	 * Retrieves a list of {@code BrokerItem} objects filtered by a specific mask.<br>
+	 * This method handles both cached and non-cached data sources based on the provided flag.<br>
+	 * It updates the player's cache with the resulting items and the current mask.
+	 * @param player The {@link Player} requesting the items.
+	 * @param clientMask The bitmask used to filter which items are visible to the client.
+	 * @param cached A boolean indicating whether to use the player's local cache.
+	 * @return An array of {@code BrokerItem} objects that match the mask, or {@code null} if no data is found.
 	 */
 	private BrokerItem[] getItemsByMask(Player player, int clientMask, boolean cached)
 	{
@@ -218,12 +241,14 @@ public class BrokerService
 			{
 				return null;
 			}
+			
 			for (BrokerItem item : brokerItems)
 			{
 				if ((item == null) || (item.getItem() == null))
 				{
 					continue;
 				}
+				
 				if (brokerMask.isMatches(item.getItem()))
 				{
 					searchItems.add(item);
@@ -237,12 +262,14 @@ public class BrokerService
 			{
 				return null;
 			}
+			
 			for (BrokerItem item : brokerItems.values())
 			{
 				if ((item == null) || (item.getItem() == null))
 				{
 					continue;
 				}
+				
 				if (brokerMask.isMatches(item.getItem()))
 				{
 					searchItems.add(item);
@@ -258,9 +285,10 @@ public class BrokerService
 	}
 	
 	/**
-	 * Perform sorting according to sort type
-	 * @param brokerItems
-	 * @param sortType
+	 * Sorts an array of {@code BrokerItem} objects based on a specific type.<br>
+	 * This method uses the provided {@code sortType} to determine the sorting logic.
+	 * @param brokerItems The array of items to be sorted.
+	 * @param sortType The integer value representing the sorting criteria.
 	 */
 	private void sortBrokerItems(BrokerItem[] brokerItems, int sortType)
 	{
@@ -268,9 +296,12 @@ public class BrokerService
 	}
 	
 	/**
-	 * @param brokerItems
-	 * @param startPage
-	 * @return
+	 * Retrieves a specific page of items from the provided array.<br>
+	 * This method calculates the starting index based on the {@code startPage}.<br>
+	 * It returns an array containing up to 45 items for the requested page.
+	 * @param brokerItems The full array of {@link BrokerItem} objects to filter.
+	 * @param startPage The zero-based index of the page to retrieve.
+	 * @return An array of {@link BrokerItem} objects belonging to the requested page.
 	 */
 	private BrokerItem[] getRequestedPage(BrokerItem[] brokerItems, int startPage)
 	{
@@ -280,108 +311,99 @@ public class BrokerService
 		{
 			page.add(brokerItems[i]);
 		}
+		
 		return page.toArray(new BrokerItem[page.size()]);
 	}
 	
 	/**
-	 * @param race
-	 * @return
+	 * Retrieves the broker items associated with a specific {@link Race}.<br>
+	 * This method returns a map of items based on the race type.
+	 * @param race The {@code Race} to filter the broker items by.
+	 * @return A {@code Map} containing the items for the specified race, or {@code null} if not found.
 	 */
 	private Map<Integer, BrokerItem> getRaceBrokerItems(Race race)
 	{
 		switch (race)
 		{
 			case ELYOS:
-			{
 				return elyosBrokerItems;
-			}
 			case ASMODIANS:
-			{
 				return asmodianBrokerItems;
-			}
 			default:
-			{
 				return null;
-			}
 		}
 	}
 	
 	/**
-	 * @param race
-	 * @return
+	 * Retrieves the list of settled broker items for a specific race.<br>
+	 * This method returns a map where the key is the unique ID and the value is the {@code BrokerItem}.<br>
+	 * It handles different races like {@code ELYOS} and {@code ASMODIANS}.
+	 * @param race The {@code Race} type to check for settled items.
+	 * @return A {@code Map} of unique IDs to {@code BrokerItem} objects, or {@code null} if the race is not supported.
 	 */
 	private Map<Integer, BrokerItem> getRaceBrokerSettledItems(Race race)
 	{
 		switch (race)
 		{
 			case ELYOS:
-			{
 				return elyosSettledItems;
-			}
 			case ASMODIANS:
-			{
 				return asmodianSettledItems;
-			}
 			default:
-			{
 				return null;
-			}
 		}
 	}
 	
 	/**
-	 * @param player
-	 * @param itemUniqueId
-	 * @param itemCount
+	 * Processes the purchase of an item from the broker for a specific player.<br>
+	 * This method validates the price, inventory space, and item availability before completing the trade.<br>
+	 * It handles both full and partial purchases of listed items.
+	 * @param player The {@link Player} who is attempting to buy the item.
+	 * @param itemUniqueId The unique identifier for the specific broker listing.
+	 * @param itemCount The number of items the player wants to purchase.
 	 */
 	public void buyBrokerItem(Player player, int itemUniqueId, long itemCount)
 	{
-		final boolean isEmptyCache = getFilteredItems(player).length == 0;
 		final Race playerRace = player.getRace();
+		
 		final BrokerItem buyingItem = getRaceBrokerItems(playerRace).get(itemUniqueId);
-		if (!RestrictionsManager.canTrade(player))
+		
+		if (!RestrictionsManager.canTrade(player) || (buyingItem == null))
 		{
 			return;
 		}
-		if (buyingItem == null)
-		{
-			return;
-		}
+		
 		final long price = buyingItem.getPrice();
-		final float PricePerItem = (float) price / (float) buyingItem.getItemCount();
-		final long TotalBuyPrice = (long) (PricePerItem * itemCount);
+		final float unitPrice = (float) price / buyingItem.getItemCount();
+		final long allPrice = ((long) unitPrice * itemCount);
+		
 		if (itemCount > buyingItem.getItemCount())
 		{
-			if (BrokerConfig.ANTI_HACK_PUNISHMENT == 0)
-			{
-				PacketSendUtility.sendMessage(player, "Sorry, you can not buy items more than total count! are you hacking!");
-			}
-			else if (BrokerConfig.ANTI_HACK_PUNISHMENT == 1)
-			{
-				PacketSendUtility.sendMessage(player, "Sorry, you can not buy items more than total count! are you hacking! you have been kicked from game due to malfunction data.");
-				player.getClientConnection().close(new SM_QUIT_RESPONSE(), false);
-			}
-			log.info("[BROKER EXCHANGE] > Malfunction data is received from packet [CM_BUY_BROKER_ITEM]. Buy items count are more than total item count." + " [Player: " + player.getName() + "] bought [Item: " + buyingItem.getItemId() + "] " + "[Total Item Count: " + (buyingItem.getItemCount() + itemCount) + "] " + "[Buy Count: " + itemCount + "]" + (LoggingConfig.ENABLE_ADVANCED_LOGGING ? " [Item Name: " + buyingItem.getItem().getItemName() : "]") + " from [Player: " + buyingItem.getSeller() + "] for [Price: " + TotalBuyPrice + "]");
 			return;
 		}
+		
 		if ((buyingItem.isSold() || buyingItem.isSettled()) && (buyingItem.getItem() != null))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_VENDOR_SOLD_OUT(buyingItem.getItem().getNameId()));
 			return;
 		}
+		
 		if (SecurityConfig.BROKER_PREBUY_CHECK)
 		{
+			// wtf?
 			if (!(DAOManager.getDAO(BrokerDAO.class).preBuyCheck(itemUniqueId)))
 			{
 				PacketSendUtility.sendMessage(player, "Sorry, but this item already sold");
 				return;
 			}
 		}
+		
 		if (buyingItem.getSellerId() == player.getObjectId())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_VENDOR_CAN_NOT_BUY_MY_REGISTER_ITEM);
 			return;
 		}
+		
 		synchronized (this)
 		{
 			if (buyingItem.isSold() || buyingItem.isCanceled())
@@ -389,21 +411,24 @@ public class BrokerService
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_VENDOR_SOLD_OUT(buyingItem.getItem().getNameId()));
 				return;
 			}
+			
 			final Item item = buyingItem.getItem();
 			if (player.getInventory().isFull(item.getItemTemplate().getExtraInventoryId()))
 			{
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_FULL_INVENTORY);
 				return;
 			}
-			if (player.getInventory().getKinah() < TotalBuyPrice)
+			
+			if (player.getInventory().getKinah() < allPrice)
 			{
 				return;
 			}
-			boolean isBuyWholeItem = false;
-			Item newItem = null;
+			
+			int type = 0;
+			Item partSaleItem = null;
 			if (itemCount == buyingItem.getItemCount())
 			{
-				isBuyWholeItem = true;
+				type = 1;
 				getRaceBrokerItems(playerRace).remove(itemUniqueId);
 				putToSettled(playerRace, buyingItem, true);
 			}
@@ -411,146 +436,147 @@ public class BrokerService
 			{
 				item.setItemCount(buyingItem.getItemCount() - itemCount);
 				buyingItem.setItemCount(buyingItem.getItemCount() - itemCount);
-				buyingItem.setPrice(price - TotalBuyPrice);
-				isBuyWholeItem = false;
+				buyingItem.setPrice(price - allPrice);
+				type = 0;
 				buyingItem.setPersistentState(PersistentState.UPDATE_ITEM_BROKER);
 				saveManager.add(new BrokerOpSaveTask(buyingItem, item, null, buyingItem.getSellerId()));
-				newItem = BuySplitSell(playerRace, buyingItem, TotalBuyPrice, itemCount);
+				partSaleItem = buyPart(playerRace, buyingItem, allPrice, itemCount);
 			}
-			if (!isEmptyCache)
+			
+			player.getInventory().decreaseKinah(allPrice);
+			final Item boughtItem = player.getInventory().add(type != 0 ? item : partSaleItem);
+			
+			if (LoggingConfig.LOG_BROKER_EXCHANGE)
 			{
-				BrokerItem[] newCache;
-				if (isBuyWholeItem)
-				{
-					newCache = (BrokerItem[]) ArrayUtils.removeElement(getFilteredItems(player), buyingItem);
-				}
-				else
-				{
-					final int buyingItemIndex = ArrayUtils.indexOf(getFilteredItems(player), buyingItem);
-					newCache = (BrokerItem[]) ArrayUtils.removeElement(getFilteredItems(player), buyingItem);
-					newCache = (BrokerItem[]) ArrayUtils.add(newCache, buyingItemIndex, buyingItem);
-				}
-				getPlayerCache(player).setBrokerListCache(newCache);
+				log.info("[BROKER EXCHANGE] > [Player: " + player.getName() + "] bought [Item: " + buyingItem.getItemId() + "] " + "[Count: " + (type != 0 ? buyingItem.getItemCount() : (partSaleItem == null ? 0 : partSaleItem.getItemCount())) + (LoggingConfig.ENABLE_ADVANCED_LOGGING ? "] [Item Name: " + item.getItemName() : "]") + " from [Player: " + buyingItem.getSeller() + "] for [Price: " + allPrice + "]");
 			}
-			player.getInventory().decreaseKinah(TotalBuyPrice);
-			final Item boughtItem = player.getInventory().add(isBuyWholeItem ? item : newItem);
-			final BrokerOpSaveTask bost = new BrokerOpSaveTask(null, boughtItem, player.getInventory().getKinahItem(), player.getObjectId());
+			
+			// create save task
+			final BrokerOpSaveTask bost = new BrokerOpSaveTask(buyingItem, boughtItem, player.getInventory().getKinahItem(), player.getObjectId());
 			saveManager.add(bost);
 		}
+		
 		showRequestedItems(player, getPlayerCache(player).getBrokerMaskCache(), getPlayerCache(player).getBrokerSortTypeCache(), getPlayerCache(player).getBrokerStartPageCache(), getPlayerCache(player).getSearchItemList());
 	}
 	
 	/**
-	 * @param race
-	 * @param brokerItem
-	 * @param TotalBuyPrice
-	 * @param BuyItemCount
-	 * @return
+	 * Processes the purchase of a specific item part from the broker.<br>
+	 * This method creates a new {@code Item}, copies its information, and updates the broker records.<br>
+	 * It also notifies the seller that an item has been sold.
+	 * @param playerRace The race of the player making the purchase.
+	 * @param buyingItem The {@code BrokerItem} being purchased.
+	 * @param price The price of the item.
+	 * @param itemCount The quantity of the item to be purchased.
+	 * @return The newly created {@code Item} object.
 	 */
-	private Item BuySplitSell(Race race, BrokerItem brokerItem, long TotalBuyPrice, long BuyItemCount)
+	private Item buyPart(Race playerRace, BrokerItem buyingItem, long price, long itemCount)
 	{
-		final Item item = brokerItem.getItem();
-		final int itemNameId = item.getNameId();
-		BrokerRace brRace;
-		if (race == Race.ASMODIANS)
+		final Item item = buyingItem.getItem();
+		final int nameId = item.getNameId();
+		BrokerRace brokerRace;
+		if (playerRace == Race.ASMODIANS)
 		{
-			brRace = BrokerRace.ASMODIAN;
+			brokerRace = BrokerRace.ASMODIAN;
 		}
-		else if (race == Race.ELYOS)
+		else if (playerRace == Race.ELYOS)
 		{
-			brRace = BrokerRace.ELYOS;
+			brokerRace = BrokerRace.ELYOS;
 		}
 		else
 		{
 			return item;
 		}
-		final Item newItem = ItemFactory.newItem(item.getItemId(), BuyItemCount);
+		
+		final Item newItem = ItemFactory.newItem(item.getItemId(), itemCount);
 		copyItemInfo(item, newItem);
-		final BrokerItem newBrokerItem = new BrokerItem(newItem, TotalBuyPrice, brokerItem.getSeller(), brokerItem.getSellerId(), brRace, brokerItem.isSplitSell());
-		newBrokerItem.setItemCount(BuyItemCount);
-		newBrokerItem.removeItem();
-		newBrokerItem.setPersistentState(PersistentState.NEW);
-		saveManager.add(new BrokerOpSaveTask(newBrokerItem));
-		switch (race)
+		final BrokerItem brokerItem = new BrokerItem(newItem, price, buyingItem.getSeller(), buyingItem.getSellerId(), brokerRace, buyingItem.isPartSale());
+		brokerItem.setItemCount(itemCount);
+		brokerItem.removeItem();
+		brokerItem.setPersistentState(PersistentState.NEW);
+		saveManager.add(new BrokerOpSaveTask(brokerItem));
+		switch (playerRace)
 		{
 			case ASMODIANS:
-			{
-				asmodianBrokerItems.put(brokerItem.getItemUniqueId(), brokerItem);
-				asmodianSettledItems.put(newBrokerItem.getItemUniqueId(), newBrokerItem);
+				asmodianBrokerItems.put(buyingItem.getItemUniqueId(), buyingItem);
+				asmodianSettledItems.put(brokerItem.getItemUniqueId(), brokerItem);
 				break;
-			}
 			case ELYOS:
-			{
-				elyosBrokerItems.put(brokerItem.getItemUniqueId(), brokerItem);
-				elyosSettledItems.put(newBrokerItem.getItemUniqueId(), newBrokerItem);
+				elyosBrokerItems.put(buyingItem.getItemUniqueId(), buyingItem);
+				elyosSettledItems.put(brokerItem.getItemUniqueId(), brokerItem);
 				break;
-			}
 			default:
-			{
 				break;
-			}
 		}
-		final Player seller = World.getInstance().findPlayer(brokerItem.getSellerId());
-		if (seller != null)
+		
+		final Player player = World.getInstance().findPlayer(buyingItem.getSellerId());
+		if (player != null)
 		{
-			PacketSendUtility.sendPacket(seller, new SM_BROKER_SERVICE(true, getTotalSettledKinah(seller)));
-			PacketSendUtility.sendPacket(seller, SM_SYSTEM_MESSAGE.STR_VENDOR_REGISTER_SOLD_OUT(itemNameId));
+			PacketSendUtility.sendPacket(player, new SM_BROKER_SERVICE(true, getTotalSettledKinah(player)));
+			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_VENDOR_REGISTER_SOLD_OUT(nameId));
 		}
+		
 		return newItem;
 	}
 	
 	/**
-	 * Copy some item values like item stones and enchant level
-	 * @param sourceItem
-	 * @param newItem
+	 * Copies all properties from an existing item to a new one.<br>
+	 * This includes sockets, stones, stats, and visual attributes.<br>
+	 * It ensures the {@code newItem} matches the state of the {@code oldItem}.
+	 * @param oldItem The source item containing the data to copy.
+	 * @param newItem The target item that will receive the copied data.
 	 */
-	private static void copyItemInfo(Item sourceItem, Item newItem)
+	private static void copyItemInfo(Item oldItem, Item newItem)
 	{
-		newItem.setOptionalSocket(sourceItem.getOptionalSocket());
-		newItem.setItemCreator(sourceItem.getItemCreator());
-		if (sourceItem.hasManaStones())
+		newItem.setOptionalSocket(oldItem.getOptionalSocket());
+		newItem.setItemCreator(oldItem.getItemCreator());
+		if (oldItem.hasManaStones())
 		{
-			for (ManaStone manaStone : sourceItem.getItemStones())
+			for (ManaStone stone : oldItem.getItemStones())
 			{
-				ItemSocketService.addManaStone(newItem, manaStone.getItemId());
+				ItemSocketService.addManaStone(newItem, stone.getItemId());
 			}
 		}
-		if (sourceItem.getGodStone() != null)
+		
+		if (oldItem.getGodStone() != null)
 		{
-			newItem.addGodStone(sourceItem.getGodStone().getItemId());
+			newItem.addGodStone(oldItem.getGodStone().getItemId());
 		}
-		if (sourceItem.getEnchantLevel() > 0)
-		{
-			newItem.setEnchantLevel(sourceItem.getEnchantLevel());
-		}
-		if (sourceItem.isSoulBound())
+		
+		newItem.setEnchantOrAuthorizeLevel(oldItem.getItemTemplate().getMaxAuthorize() > 0 ? 0 : oldItem.getEnchantOrAuthorizeLevel());
+		if (oldItem.isSoulBound())
 		{
 			newItem.setSoulBound(true);
 		}
-		newItem.setBonusNumber(sourceItem.getBonusNumber());
-		newItem.setRandomStats(sourceItem.getRandomStats());
-		newItem.setRandomCount(sourceItem.getRandomCount());
-		newItem.setIdianStone(sourceItem.getIdianStone());
-		newItem.setItemColor(sourceItem.getItemColor());
-		newItem.setItemSkinTemplate(sourceItem.getItemSkinTemplate());
-		newItem.setColorExpireTime(sourceItem.getColorExpireTime());
-		newItem.setExpireTime(sourceItem.getExpireTime());
-		newItem.setActivationCount(sourceItem.getActivationCount());
-		newItem.setEquipped(sourceItem.isEquipped());
-		newItem.setEquipmentSlot(sourceItem.getEquipmentSlot());
-		newItem.setItemLocation(sourceItem.getItemLocation());
-		newItem.setFusionedItem(sourceItem.getFusionedItemTemplate());
-		newItem.setOptionalFusionSocket(sourceItem.getOptionalFusionSocket());
-		newItem.setWrappableCount(sourceItem.getWrappableCount());
-		newItem.setAuthorize(sourceItem.getAuthorize());
-		newItem.setPacked(sourceItem.isPacked());
-		newItem.setAmplification(sourceItem.isAmplified());
+		
+		newItem.setBonusNumber(oldItem.getBonusNumber());
+		newItem.setRandomStats(oldItem.getRandomStats());
+		newItem.setRandomCount(oldItem.getRandomCount());
+		newItem.setIdianStone(oldItem.getIdianStone());
+		newItem.setItemColor(oldItem.getItemColor());
+		newItem.setItemSkinTemplate(oldItem.getItemSkinTemplate());
+		newItem.setColorExpireTime(oldItem.getColorExpireTime());
+		
+		// Set the expiration time of the new item to match that of the old item.
+		newItem.setActivationCount(oldItem.getActivationCount());
+		newItem.setEquipped(oldItem.isEquipped());
+		newItem.setEquipmentSlot(oldItem.getEquipmentSlot());
+		newItem.setItemLocation(oldItem.getItemLocation());
+		newItem.setFusionedItem(oldItem.getFusionedItemTemplate());
+		newItem.setOptionalFusionSocket(oldItem.getOptionalFusionSocket());
+		newItem.setPackCount(oldItem.getPackCount());
+		newItem.setEnchantOrAuthorizeLevel(oldItem.getItemTemplate().getMaxAuthorize() > 0 ? oldItem.getEnchantOrAuthorizeLevel() : 0);
+		newItem.setPacked(oldItem.isPacked());
+		newItem.setAmplified(oldItem.isAmplified());
+		newItem.setAmplificationSkill(oldItem.getAmplificationSkill());
 	}
 	
 	/**
-	 * @param race
-	 * @param brokerItem
-	 * @param isSold
+	 * Updates the status of a {@code BrokerItem} and moves it to the settled collection.<br>
+	 * This method handles both sold items and items that have been marked as settled.<br>
+	 * It also updates the seller's information and triggers necessary database saves.
+	 * @param race The {@link Race} category of the broker item.
+	 * @param brokerItem The {@code BrokerItem} being updated.
+	 * @param isSold A boolean indicating if the item was sold or just settled.
 	 */
 	private void putToSettled(Race race, BrokerItem brokerItem, boolean isSold)
 	{
@@ -570,19 +596,13 @@ public class BrokerService
 		switch (race)
 		{
 			case ASMODIANS:
-			{
 				asmodianSettledItems.put(brokerItem.getItemUniqueId(), brokerItem);
 				break;
-			}
 			case ELYOS:
-			{
 				elyosSettledItems.put(brokerItem.getItemUniqueId(), brokerItem);
 				break;
-			}
 			default:
-			{
 				break;
-			}
 		}
 		
 		final Player seller = World.getInstance().findPlayer(brokerItem.getSellerId());
@@ -599,6 +619,12 @@ public class BrokerService
 		}
 	}
 	
+	/**
+	 * Calculates the total number of items registered by a specific player.<br>
+	 * It checks all broker items for the player's race and counts those belonging to the {@code Player}.
+	 * @param player The {@link Player} whose registration count is being retrieved.
+	 * @return The total count of registered items as an {@code int}.
+	 */
 	private int getRegisteredItemsCount(Player player)
 	{
 		final int playerId = player.getObjectId();
@@ -610,39 +636,33 @@ public class BrokerService
 				c++;
 			}
 		}
+		
 		return c;
 	}
 	
 	/**
-	 * @param player
-	 * @param itemUniqueId
-	 * @param count
-	 * @param PricePerItem
-	 * @param isSplitSell
+	 * Registers an item from a player's inventory into the broker system.<br>
+	 * This method validates the item properties and checks if the player has enough Kinah for the commission.<br>
+	 * If successful, it removes the item from the player and adds it to the public broker list.
+	 * @param player The {@link Player} who is registering the item.
+	 * @param itemUniqueId The unique identifier of the item in the inventory.
+	 * @param count The number of items to register.
+	 * @param price The price per single unit of the item.
+	 * @param partSale A boolean indicating if the item can be sold in parts.
 	 */
-	public void registerItem(Player player, int itemUniqueId, long count, long PricePerItem, boolean isSplitSell)
+	public void registerItem(Player player, int itemUniqueId, long count, long price, boolean partSale)
 	{
-		final long TotalItemPrice = PricePerItem * count;
 		Item itemToRegister = player.getInventory().getItemByObjId(itemUniqueId);
 		final Race playerRace = player.getRace();
 		
-		if ((itemToRegister == null) || (count > itemToRegister.getItemCount()))
-		{
-			return;
-		}
-		
-		if (!RestrictionsManager.canTrade(player))
-		{
-			return;
-		}
-		
-		if (PricePerItem <= 0)
+		final long totalPrice = price * count;
+		if ((itemToRegister == null) || (count > itemToRegister.getItemCount()) || !RestrictionsManager.canTrade(player) || (price <= 0))
 		{
 			return;
 		}
 		
 		// check max price for 1 item in stack
-		if (PricePerItem > 999999999)
+		if ((totalPrice / count) > 999999999)
 		{
 			return;
 		}
@@ -655,12 +675,7 @@ public class BrokerService
 		}
 		
 		// Check Trade Hack
-		if (!itemToRegister.isTradeable(player))
-		{
-			return;
-		}
-		
-		if (!AdminService.getInstance().canOperate(player, null, itemToRegister, "broker"))
+		if (!itemToRegister.isTradeable(player) || !AdminService.getInstance().canOperate(player, null, itemToRegister, "broker"))
 		{
 			return;
 		}
@@ -689,11 +704,11 @@ public class BrokerService
 		}
 		else if (registeredItemsCount > 9)
 		{
-			registrationCommition = Math.round(TotalItemPrice * 0.04f);
+			registrationCommition = Math.round(totalPrice * 0.04f);
 		}
 		else
 		{
-			registrationCommition = Math.round(TotalItemPrice * 0.02f);
+			registrationCommition = Math.round(totalPrice * 0.02f);
 		}
 		
 		if (registrationCommition < 10)
@@ -722,20 +737,16 @@ public class BrokerService
 		
 		itemToRegister.setItemLocation(126);
 		
-		final BrokerItem newBrokerItem = new BrokerItem(itemToRegister, TotalItemPrice, player.getName(), player.getObjectId(), brRace, isSplitSell);
+		final BrokerItem newBrokerItem = new BrokerItem(itemToRegister, totalPrice, player.getName(), player.getObjectId(), brRace, partSale);
 		
 		switch (brRace)
 		{
 			case ASMODIAN:
-			{
 				asmodianBrokerItems.put(newBrokerItem.getItemUniqueId(), newBrokerItem);
 				break;
-			}
 			case ELYOS:
-			{
 				elyosBrokerItems.put(newBrokerItem.getItemUniqueId(), newBrokerItem);
 				break;
-			}
 		}
 		
 		final BrokerOpSaveTask bost = new BrokerOpSaveTask(newBrokerItem, itemToRegister, player.getInventory().getKinahItem(), player.getObjectId());
@@ -745,97 +756,11 @@ public class BrokerService
 	}
 	
 	/**
-	 * @param player
-	 * @param sortType
-	 * @param itemUniqueId
-	 * @return
-	 */
-	public long GetItemAveLowHigh(Player player, int sortType, int itemUniqueId)
-	{
-		BrokerItem[] searchItems = null;
-		long AveItemPrice = 0; // 7-day item's price average
-		
-		final Map<Integer, BrokerItem> brokerItems = getRaceBrokerItems(player.getRace());
-		searchItems = brokerItems.values().toArray(new BrokerItem[brokerItems.values().size()]);
-		
-		if ((searchItems == null) || (searchItems.length <= 0))
-		{
-			return 0;
-		}
-		final Item TargetItem = player.getInventory().getItemByObjId(itemUniqueId);
-		if (TargetItem == null)
-		{
-			return 0;
-		}
-		
-		final List<BrokerItem> itemsFound = new ArrayList<>();
-		for (BrokerItem item : searchItems)
-		{
-			if (TargetItem.getItemId() == item.getItemId())
-			{
-				itemsFound.add(item);
-				AveItemPrice += item.getPiecePrice();
-			}
-		}
-		if (itemsFound.size() <= 0)
-		{
-			return 0;
-		}
-		AveItemPrice = (AveItemPrice / itemsFound.size());
-		
-		searchItems = itemsFound.toArray(new BrokerItem[itemsFound.size()]);
-		
-		if (sortType == 1) // Current Low
-		{
-			if (searchItems.length > 1)
-			{
-				sortBrokerItems(searchItems, 6); // PIECE_PRICE_SORT_ASC
-			}
-			return searchItems[0].getPiecePrice();
-			
-		}
-		else if (sortType == 2) // Current High
-		{
-			if (searchItems.length > 1)
-			{
-				sortBrokerItems(searchItems, 7); // PIECE_PRICE_SORT_DESC
-			}
-			return searchItems[0].getPiecePrice();
-			
-		}
-		else if (sortType == 3) // 7-day Average
-		{
-			return AveItemPrice;
-			
-		}
-		else
-		{
-			return 0;
-		}
-	}
-	
-	/**
-	 * @param player
-	 * @param itemUniqueId
-	 */
-	public void CalcItemAveLowHigh(Player player, int itemUniqueId)
-	{
-		
-		long Ave7day = 0;
-		boolean IsLowHighSame;
-		long CurrentLow = 0;
-		long CurrentHigh = 0;
-		
-		CurrentLow = GetItemAveLowHigh(player, 1, itemUniqueId); // items's lowest price
-		CurrentHigh = GetItemAveLowHigh(player, 2, itemUniqueId); // items's highest price
-		Ave7day = GetItemAveLowHigh(player, 3, itemUniqueId); // 7-day item's price average
-		IsLowHighSame = (CurrentLow == CurrentHigh ? true : false); // Calculate "IsLowHighSame"
-		
-		PacketSendUtility.sendPacket(player, new SM_BROKER_SERVICE(itemUniqueId, Ave7day, CurrentLow, CurrentHigh, IsLowHighSame));
-	}
-	
-	/**
-	 * @param player
+	 * Displays the items registered by a specific player in the broker.<br>
+	 * This method finds all {@link BrokerItem} objects belonging to the player's race.<br>
+	 * It filters for items where the seller ID matches the {@code Player} object ID.<br>
+	 * Finally, it sends an {@link SM_BROKER_SERVICE} packet to the player.
+	 * @param player The {@code Player} who will receive the list of registered items.
 	 */
 	public void showRegisteredItems(Player player)
 	{
@@ -855,6 +780,12 @@ public class BrokerService
 		PacketSendUtility.sendPacket(player, new SM_BROKER_SERVICE(registeredItems.toArray(new BrokerItem[registeredItems.size()])));
 	}
 	
+	/**
+	 * Checks if the specified {@link Player} has any items registered in the broker.<br>
+	 * This method looks for items where the player is listed as the seller.
+	 * @param player The {@code Player} to check.
+	 * @return {@code true} if the player has registered items, otherwise {@code false}.
+	 */
 	public boolean hasRegisteredItems(Player player)
 	{
 		final Map<Integer, BrokerItem> brokerItems = getRaceBrokerItems(player.getRace());
@@ -865,12 +796,89 @@ public class BrokerService
 				return true;
 			}
 		}
+		
 		return false;
 	}
 	
 	/**
-	 * @param player
-	 * @param brokerItemId
+	 * Displays the broker window for a specific item to the player.<br>
+	 * This method calculates and sends the average price data based on the item's race.<br>
+	 * If no items are found, it sends a default service packet.
+	 * @param player The {@link Player} who will view the window.
+	 * @param itemObjectId The unique identifier of the item to display.
+	 */
+	public void showAddItemWindow(Player player, int itemObjectId)
+	{
+		final Map<Integer, BrokerItem> brokerItems = getRaceBrokerItems(player.getRace());
+		final List<BrokerItem> items = new ArrayList<>();
+		final int itemId = player.getInventory().getItemByObjId(itemObjectId).getItemId();
+		for (BrokerItem item : brokerItems.values())
+		{
+			if (item.getItemId() == itemId)
+			{
+				items.add(item);
+			}
+		}
+		
+		if (items.size() < 1)
+		{
+			PacketSendUtility.sendPacket(player, new SM_BROKER_SERVICE(itemObjectId, 1, 1, 1, true));
+		}
+		else
+		{
+			final long[] avgMaxMin = getAvgMaxMinPrice(items);
+			PacketSendUtility.sendPacket(player, new SM_BROKER_SERVICE(itemObjectId, avgMaxMin[0], avgMaxMin[1], avgMaxMin[2], avgMaxMin[1] == avgMaxMin[2]));
+		}
+	}
+	
+	/**
+	 * Calculates the average, maximum, and minimum prices from a list of {@link BrokerItem} objects.<br>
+	 * The method iterates through all provided items to aggregate price data.<br>
+	 * It returns an array containing these three values in order.
+	 * @param items The list of {@link BrokerItem} objects to process.
+	 * @return A {@code long[]} where index 0 is the average, index 1 is the maximum, and index 2 is the minimum price.
+	 */
+	public long[] getAvgMaxMinPrice(List<BrokerItem> items)
+	{
+		final long[] avgMaxMin = new long[]
+		{
+			0,
+			0,
+			0
+		};
+		
+		for (BrokerItem item : items)
+		{
+			final long price = item.getPrice();
+			avgMaxMin[0] += price;
+			
+			if (price > avgMaxMin[1])
+			{
+				avgMaxMin[1] = price;
+			}
+			
+			if (avgMaxMin[2] == 0)
+			{
+				avgMaxMin[2] = price;
+			}
+			
+			if (price < avgMaxMin[2])
+			{
+				avgMaxMin[2] = price;
+			}
+		}
+		
+		avgMaxMin[0] = avgMaxMin[0] / items.size();
+		return avgMaxMin;
+	}
+	
+	/**
+	 * Removes a specific item from the broker and returns it to the player.<br>
+	 * This method checks if the {@code player} owns the item before processing.<br>
+	 * It also verifies that the player has enough inventory space.<br>
+	 * If successful, the item is added back to the player's inventory and removed from the broker list.
+	 * @param player The {@link Player} who is canceling the item registration.
+	 * @param brokerItemId The unique identifier of the item in the broker.
 	 */
 	public void cancelRegisteredItem(Player player, int brokerItemId)
 	{
@@ -884,11 +892,13 @@ public class BrokerService
 				log.info("[AUDIT] Player: {} try get from broker not own item", player.getName());
 				return;
 			}
+			
 			if (player.getInventory().isFull(brokerItem.getItem().getItemTemplate().getExtraInventoryId()))
 			{
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_VENDOR_FULL_INVENTORY);
 				return;
 			}
+			
 			synchronized (this)
 			{
 				player.getInventory().add(brokerItem.getItem());
@@ -898,11 +908,16 @@ public class BrokerService
 				brokerItems.remove(brokerItemId);
 			}
 		}
+		
 		showRegisteredItems(player);
 	}
 	
 	/**
-	 * @param player
+	 * Displays the settled items for a specific player.<br>
+	 * This method retrieves all broker items associated with the {@code Player}'s race.<br>
+	 * It filters these items to find those belonging to the current player.<br>
+	 * Finally, it sends the list and total Kinah to the client using {@link SM_BROKER_SERVICE}.
+	 * @param player The {@code Player} object for whom to display settled items.
 	 */
 	public void showSettledItems(Player player)
 	{
@@ -921,18 +936,22 @@ public class BrokerService
 				}
 			}
 		}
+		
 		PacketSendUtility.sendPacket(player, new SM_BROKER_SERVICE(settledItems.toArray(new BrokerItem[settledItems.size()]), totalKinah));
 	}
 	
 	/**
-	 * @param playerCommonData
-	 * @return
+	 * Calculates the total amount of money collected by a player.<br>
+	 * This method sums up the prices of all sold items belonging to the player.<br>
+	 * It checks the settled broker items for the player's specific race.
+	 * @param playerCommonData The data object containing information about the player.
+	 * @return The total sum of money collected as an {@code int}.
 	 */
-	public long getCollectedMoney(PlayerCommonData playerCommonData)
+	public int getCollectedMoney(PlayerCommonData playerCommonData)
 	{
 		final Map<Integer, BrokerItem> brokerSettledItems = getRaceBrokerSettledItems(playerCommonData.getRace());
 		final int playerId = playerCommonData.getPlayerObjId();
-		long totalKinah = 0;
+		int totalKinah = 0;
 		for (BrokerItem item : brokerSettledItems.values())
 		{
 			if ((item != null) && (playerId == item.getSellerId()))
@@ -943,9 +962,17 @@ public class BrokerService
 				}
 			}
 		}
+		
 		return totalKinah;
 	}
 	
+	/**
+	 * Calculates the total amount of Kinah earned by a player from sold items.<br>
+	 * It checks all settled broker items for the player's race.<br>
+	 * Only items sold by this specific {@code Player} are included in the sum.
+	 * @param player The {@link Player} whose total earnings need to be calculated.
+	 * @return The total sum of Kinah from successfully sold items as a {@code long}.
+	 */
 	private long getTotalSettledKinah(Player player)
 	{
 		long totalKinah = 0;
@@ -960,11 +987,16 @@ public class BrokerService
 				}
 			}
 		}
+		
 		return totalKinah;
 	}
 	
 	/**
-	 * @param player
+	 * Processes the settlement of broker items for a specific player.<br>
+	 * This method distributes sold items to the player's inventory and adds kinah.<br>
+	 * It also removes settled items from the active broker list.<br>
+	 * Finally, it updates the player's UI with the new status.
+	 * @param player The {@code Player} object for whom the account is being settled.
 	 */
 	public void settleAccount(Player player)
 	{
@@ -991,19 +1023,13 @@ public class BrokerService
 				switch (playerRace)
 				{
 					case ASMODIANS:
-					{
 						result = asmodianSettledItems.remove(item.getItemUniqueId()) != null;
 						break;
-					}
 					case ELYOS:
-					{
 						result = elyosSettledItems.remove(item.getItemUniqueId()) != null;
 						break;
-					}
 					default:
-					{
 						break;
-					}
 				}
 				
 				if (result)
@@ -1024,20 +1050,15 @@ public class BrokerService
 						switch (playerRace)
 						{
 							case ASMODIANS:
-							{
 								result = asmodianSettledItems.remove(item.getItemUniqueId()) != null;
 								break;
-							}
 							case ELYOS:
-							{
 								result = elyosSettledItems.remove(item.getItemUniqueId()) != null;
 								break;
-							}
 							default:
-							{
 								break;
-							}
 						}
+						
 						if (result)
 						{
 							item.setPersistentState(PersistentState.DELETED);
@@ -1066,7 +1087,12 @@ public class BrokerService
 		}
 	}
 	
-	void checkExpiredItems()
+	/**
+	 * Checks for items in the broker that have passed their expiration time.<br>
+	 * It processes items for both {@code ASMODIANS} and {@code ELYOS} races.<br>
+	 * Expired items are moved to settled status or removed from the active list.
+	 */
+	private void checkExpiredItems()
 	{
 		final Map<Integer, BrokerItem> asmoBrokerItems = getRaceBrokerItems(Race.ASMODIANS);
 		final Map<Integer, BrokerItem> elyosBrokerItems = getRaceBrokerItems(Race.ELYOS);
@@ -1077,8 +1103,9 @@ public class BrokerService
 		{
 			if ((item != null) && (item.getExpireTime().getTime() <= currentTime.getTime()))
 			{
-				// putToSettled(Race.ASMODIANS, item, false);
-				expireItem(Race.ASMODIANS, item);
+				putToSettled(Race.ASMODIANS, item, false);
+				
+				// this.expireItem(Race.ASMODIANS, item);
 				asmodianBrokerItems.remove(item.getItemUniqueId());
 			}
 		}
@@ -1094,6 +1121,14 @@ public class BrokerService
 		}
 	}
 	
+	/**
+	 * Handles the expiration of a {@code BrokerItem}.<br>
+	 * It attempts to send a system mail to the seller.<br>
+	 * If the mail is sent, the item is marked as deleted and saved.<br>
+	 * Otherwise, it moves the item to the settled list for the given {@code Race}.
+	 * @param race The {@link Race} associated with the broker items.
+	 * @param item The {@link BrokerItem} that needs to be expired.
+	 */
 	private void expireItem(Race race, BrokerItem item)
 	{
 		if (SystemMailService.getInstance().sendSystemMail("$$VENDOR_RETURN_MAIL", "", "", item.getSeller(), item.getItem(), 0, LetterType.NORMAL))
@@ -1108,7 +1143,9 @@ public class BrokerService
 	}
 	
 	/**
-	 * @param player
+	 * This method is called when a {@link Player} logs into the instance.<br>
+	 * It handles any initialization logic required for the player's session.
+	 * @param player The {@code Player} object that just logged in.
 	 */
 	public void onPlayerLogin(Player player)
 	{
@@ -1125,8 +1162,10 @@ public class BrokerService
 	}
 	
 	/**
-	 * @param player
-	 * @return
+	 * Retrieves the {@code BrokerPlayerCache} for a specific player.<br>
+	 * If no cache exists, it creates a new one and stores it in the map.
+	 * @param player The {@link Player} object to look up.
+	 * @return The {@code BrokerPlayerCache} associated with the player.
 	 */
 	private BrokerPlayerCache getPlayerCache(Player player)
 	{
@@ -1136,17 +1175,25 @@ public class BrokerService
 			cacheEntry = new BrokerPlayerCache();
 			playerBrokerCache.put(player.getObjectId(), cacheEntry);
 		}
+		
 		return cacheEntry;
 	}
 	
+	/**
+	 * Removes the broker cache data for a specific {@link Player}.<br>
+	 * This method clears the cached items associated with the player's unique ID.
+	 * @param player The {@code Player} whose cache needs to be removed.
+	 */
 	public void removePlayerCache(Player player)
 	{
 		playerBrokerCache.remove(player.getObjectId());
 	}
 	
 	/**
-	 * @param player
-	 * @return
+	 * Retrieves the broker mask cache for a specific {@link Player}.<br>
+	 * This value is used to filter items shown in the broker service.
+	 * @param player The {@code Player} object to retrieve the mask from.
+	 * @return The integer mask associated with the player's broker cache.
 	 */
 	private int getPlayerMask(Player player)
 	{
@@ -1154,8 +1201,10 @@ public class BrokerService
 	}
 	
 	/**
-	 * @param player
-	 * @return
+	 * Retrieves the list of broker items for a specific {@code Player}.<br>
+	 * This method fetches the cached items from the {@link BrokerPlayerCache}.
+	 * @param player The {@code Player} object to retrieve items for.
+	 * @return An array of {@code BrokerItem} objects belonging to the player.
 	 */
 	private BrokerItem[] getFilteredItems(Player player)
 	{
@@ -1167,7 +1216,6 @@ public class BrokerService
 	 */
 	public static final class BrokerPeriodicTaskManager extends AbstractFIFOPeriodicTaskManager<BrokerOpSaveTask>
 	{
-		
 		private static final String CALLED_METHOD_NAME = "brokerOperation()";
 		
 		/**
@@ -1196,7 +1244,6 @@ public class BrokerService
 	 */
 	public static final class BrokerOpSaveTask implements Runnable
 	{
-		
 		private final BrokerItem brokerItem;
 		private Item item;
 		private Item kinahItem;
@@ -1208,7 +1255,7 @@ public class BrokerService
 		 * @param kinahItem
 		 * @param playerId
 		 */
-		BrokerOpSaveTask(BrokerItem brokerItem, Item item, Item kinahItem, int playerId)
+		private BrokerOpSaveTask(BrokerItem brokerItem, Item item, Item kinahItem, int playerId)
 		{
 			this.brokerItem = brokerItem;
 			this.item = item;
@@ -1232,10 +1279,12 @@ public class BrokerService
 			{
 				DAOManager.getDAO(InventoryDAO.class).store(item, playerId);
 			}
+			
 			if (brokerItem != null)
 			{
 				DAOManager.getDAO(BrokerDAO.class).store(brokerItem);
 			}
+			
 			if (kinahItem != null)
 			{
 				DAOManager.getDAO(InventoryDAO.class).store(kinahItem, playerId);

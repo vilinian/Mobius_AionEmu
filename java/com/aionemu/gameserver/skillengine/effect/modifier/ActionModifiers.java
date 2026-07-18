@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect.modifier;
 
@@ -26,6 +26,8 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 /**
+ * This class manages the various modifiers applied to actions within the skill engine.<br>
+ * It serves as a container for effects that alter action behavior or properties.
  * @author ATracer
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -43,10 +45,9 @@ public class ActionModifiers
 	protected List<ActionModifier> actionModifiers;
 	
 	/**
-	 * Gets the value of the actionModifiers property.
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link FrontDamageModifier } {@link BackDamageModifier } {@link TargetRaceDamageModifier }
-	 * @return
+	 * Retrieves the list of {@link ActionModifier} objects.<br>
+	 * If the list is currently {@code null}, a new empty {@code ArrayList} is created.
+	 * @return A {@code List} containing all active action modifiers.
 	 */
 	public List<ActionModifier> getActionModifiers()
 	{
@@ -54,6 +55,7 @@ public class ActionModifiers
 		{
 			actionModifiers = new ArrayList<>();
 		}
+		
 		return actionModifiers;
 	}
 }

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.controllers;
 
@@ -26,20 +26,30 @@ import com.aionemu.gameserver.services.ShieldService;
 import com.aionemu.gameserver.services.SiegeService;
 import com.aionemu.gameserver.world.World;
 
-import javolution.util.FastMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Manages the logic and behavior for {@link Shield} objects in the game world.<br>
+ * This controller handles interactions related to siege mechanics and shield placement.
  * @author Source
  */
 public class ShieldController extends VisibleObjectController<Shield>
 {
-	FastMap<Integer, ActionObserver> observed = new FastMap<Integer, ActionObserver>().shared();
+	Map<Integer, ActionObserver> observed = new ConcurrentHashMap<>();
 	
+	/**
+	 * This method registers a {@link Player} as an observer.<br>
+	 * It creates a new {@code FlyRingObserver} for the target.<br>
+	 * The observer is added to the player's observation controller.
+	 * @param object The {@code VisibleObject} representing the player to observe.
+	 */
 	@Override
 	public void see(VisibleObject object)
 	{
 		final FortressLocation loc = SiegeService.getInstance().getFortress(getOwner().getId());
 		final Player player = (Player) object;
+		
 		if (loc.isUnderShield())
 		{
 			if (loc.getRace() != SiegeRace.getByRace(player.getRace()))
@@ -54,11 +64,18 @@ public class ShieldController extends VisibleObjectController<Shield>
 		}
 	}
 	
+	/**
+	 * Updates the visibility status of a specific object.<br>
+	 * This method also clears the target if the object is the current target.
+	 * @param object The {@code VisibleObject} that is no longer seen.
+	 * @param isOutOfRange Whether the object is outside of the visible range.
+	 */
 	@Override
 	public void notSee(VisibleObject object, boolean isOutOfRange)
 	{
 		final FortressLocation loc = SiegeService.getInstance().getFortress(getOwner().getId());
 		final Player player = (Player) object;
+		
 		if (loc.isUnderShield())
 		{
 			if (loc.getRace() != SiegeRace.getByRace(player.getRace()))
@@ -70,15 +87,21 @@ public class ShieldController extends VisibleObjectController<Shield>
 					{
 						observer.moved();
 					}
+					
 					player.getObserveController().removeObserver(observer);
 				}
 			}
 		}
 	}
 	
+	/**
+	 * Stops all active observations for this controller.<br>
+	 * It removes all {@link ActionObserver} entries from the internal map.<br>
+	 * Any associated {@link Player} will have their observer removed.
+	 */
 	public void disable()
 	{
-		for (FastMap.Entry<Integer, ActionObserver> e = observed.head(), mapEnd = observed.tail(); (e = e.getNext()) != mapEnd;)
+		for (Map.Entry<Integer, ActionObserver> e : observed.entrySet())
 		{
 			final ActionObserver observer = observed.remove(e.getKey());
 			final Player player = World.getInstance().findPlayer(e.getKey());

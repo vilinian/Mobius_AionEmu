@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.models;
 
@@ -27,6 +27,8 @@ import com.aionemu.gameserver.questEngine.QuestEngine;
 import com.aionemu.gameserver.questEngine.handlers.template.FountainRewards;
 
 /**
+ * This class represents the data structure for rewards granted by fountains.<br>
+ * It holds information used by the {@link FountainRewards} template to process quest rewards.
  * @author Bobobear
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -36,6 +38,12 @@ public class FountainRewardsData extends XMLQuest
 	@XmlAttribute(name = "start_npc_ids", required = true)
 	protected List<Integer> startNpcIds;
 	
+	/**
+	 * Registers this data as a quest handler.<br>
+	 * It creates a new {@link FountainRewards} instance.<br>
+	 * The instance is then added to the provided {@code QuestEngine}.
+	 * @param questEngine The engine where the quest handler will be registered.
+	 */
 	@Override
 	public void register(QuestEngine questEngine)
 	{

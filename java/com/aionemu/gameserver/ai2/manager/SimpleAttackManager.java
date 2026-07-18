@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.ai2.manager;
 
@@ -28,13 +28,18 @@ import com.aionemu.gameserver.utils.ThreadPoolManager;
 import com.aionemu.gameserver.world.geo.GeoService;
 
 /**
+ * Manages basic attack logic for {@link Npc} entities.<br>
+ * It handles the execution of combat actions and coordinates interactions between creatures.
  * @author ATracer
  */
 public class SimpleAttackManager
 {
 	/**
-	 * @param npcAI
-	 * @param delay
+	 * Executes an attack for a specific {@link NpcAI2} instance.<br>
+	 * This method checks if the target is in range before scheduling the action.<br>
+	 * It handles both immediate attacks and delayed actions based on the provided time.
+	 * @param npcAI The AI instance that will perform the attack.
+	 * @param delay The amount of time in milliseconds to wait before attacking.
 	 */
 	public static void performAttack(NpcAI2 npcAI, int delay)
 	{
@@ -42,12 +47,14 @@ public class SimpleAttackManager
 		{
 			AI2Logger.info(npcAI, "performAttack");
 		}
+		
 		if (npcAI.getOwner().getGameStats().isNextAttackScheduled())
 		{
 			if (npcAI.isLogging())
 			{
 				AI2Logger.info(npcAI, "Attack already scheduled");
 			}
+			
 			scheduleCheckedAttackAction(npcAI, delay);
 			return;
 		}
@@ -58,9 +65,11 @@ public class SimpleAttackManager
 			{
 				AI2Logger.info(npcAI, "Attack will not be scheduled because of range");
 			}
+			
 			npcAI.onGeneralEvent(AIEventType.TARGET_TOOFAR);
 			return;
 		}
+		
 		npcAI.getOwner().getGameStats().setNextAttackTime(System.currentTimeMillis() + delay);
 		if (delay > 0)
 		{
@@ -73,8 +82,11 @@ public class SimpleAttackManager
 	}
 	
 	/**
-	 * @param npcAI
-	 * @param delay
+	 * Schedules a checked attack action for an {@link NpcAI2} instance.<br>
+	 * This method ensures the {@code delay} is at least {@code 2000} milliseconds.<br>
+	 * It uses the {@link ThreadPoolManager} to execute the task after the specified time.
+	 * @param npcAI The NPC AI instance that will perform the action.
+	 * @param delay The time in milliseconds to wait before starting the attack.
 	 */
 	private static void scheduleCheckedAttackAction(NpcAI2 npcAI, int delay)
 	{
@@ -82,13 +94,21 @@ public class SimpleAttackManager
 		{
 			delay = 2000;
 		}
+		
 		if (npcAI.isLogging())
 		{
 			AI2Logger.info(npcAI, "Scheduling checked attack " + delay);
 		}
+		
 		ThreadPoolManager.getInstance().schedule(new SimpleCheckedAttackAction(npcAI), delay);
 	}
 	
+	/**
+	 * Checks if the target of an {@link Npc} is within its current attack range.<br>
+	 * This method returns {@code false} if there is no valid target.
+	 * @param npc The {@link Npc} object to check.
+	 * @return {@code true} if the target is reachable, otherwise {@code false}.
+	 */
 	public static boolean isTargetInAttackRange(Npc npc)
 	{
 		if (npc.getAi2().isLogging())
@@ -96,16 +116,22 @@ public class SimpleAttackManager
 			final float distance = npc.getDistanceToTarget();
 			AI2Logger.info((AbstractAI) npc.getAi2(), "isTargetInAttackRange: " + distance);
 		}
+		
 		if ((npc.getTarget() == null) || !(npc.getTarget() instanceof Creature))
 		{
 			return false;
 		}
+		
 		return MathUtil.isInAttackRange(npc, (Creature) npc.getTarget(), npc.getGameStats().getAttackRange().getCurrent() / 1000f);
 		// return distance <= npc.getController().getAttackDistanceToTarget() + NpcMoveController.MOVE_CHECK_OFFSET;
 	}
 	
 	/**
-	 * @param npcAI
+	 * Executes the attack logic for a specific NPC.<br>
+	 * It checks if the NPC is in a fight state and can see its target.<br>
+	 * If the target is within range, it triggers an attack action.<br>
+	 * Otherwise, it updates the AI state based on visibility or distance.
+	 * @param npcAI The {@link NpcAI2} instance to process the attack for.
 	 */
 	protected static void attackAction(NpcAI2 npcAI)
 	{
@@ -113,26 +139,31 @@ public class SimpleAttackManager
 		{
 			return;
 		}
+		
 		if (npcAI.isLogging())
 		{
 			AI2Logger.info(npcAI, "attackAction");
 		}
+		
 		final Npc npc = npcAI.getOwner();
 		final Creature target = (Creature) npc.getTarget();
 		if ((target != null) && !target.getLifeStats().isAlreadyDead())
 		{
-			if (!npc.canSee(target) || !GeoService.getInstance().canSee(npc, target)) // delete check geo when the Path Finding
+			if (!npc.canSee(target) || !GeoService.getInstance().canSee(npc, target))
 			{
+				// delete check geo when the Path Finding
 				npc.getController().cancelCurrentSkill();
 				npcAI.onGeneralEvent(AIEventType.TARGET_GIVEUP);
 				return;
 			}
+			
 			if (isTargetInAttackRange(npc))
 			{
-				npc.getController().attackTarget(target, 0);
+				npc.getController().attackTarget(target, 0, 0, 0);
 				npcAI.onGeneralEvent(AIEventType.ATTACK_COMPLETE);
 				return;
 			}
+			
 			npcAI.onGeneralEvent(AIEventType.TARGET_TOOFAR);
 		}
 		else
@@ -141,9 +172,8 @@ public class SimpleAttackManager
 		}
 	}
 	
-	private static final class SimpleAttackAction implements Runnable
+	private final static class SimpleAttackAction implements Runnable
 	{
-		
 		private NpcAI2 npcAI;
 		
 		SimpleAttackAction(NpcAI2 npcAI)
@@ -159,9 +189,8 @@ public class SimpleAttackManager
 		}
 	}
 	
-	private static final class SimpleCheckedAttackAction implements Runnable
+	private final static class SimpleCheckedAttackAction implements Runnable
 	{
-		
 		private NpcAI2 npcAI;
 		
 		SimpleCheckedAttackAction(NpcAI2 npcAI)
@@ -183,8 +212,8 @@ public class SimpleAttackManager
 					AI2Logger.info(npcAI, "Scheduled checked attacked confirmed");
 				}
 			}
+			
 			npcAI = null;
 		}
 	}
-	
 }

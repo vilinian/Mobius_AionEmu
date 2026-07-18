@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.ai2;
 
@@ -25,12 +25,20 @@ import com.aionemu.commons.scripting.classlistener.ClassListener;
 import com.aionemu.commons.utils.ClassUtils;
 
 /**
+ * This class acts as a listener for {@link ClassListener} events related to the {@code ai2} handler.<br>
+ * It allows the system to react to specific class loading or registration activities within the AI engine.
  * @author ATracer
  */
 public class AI2HandlerClassListener implements ClassListener
 {
 	private static final Logger log = LoggerFactory.getLogger(AI2HandlerClassListener.class);
 	
+	/**
+	 * This method registers the provided classes as AI entities.<br>
+	 * It checks each class using {@code isValidClass} before processing.<br>
+	 * If a class is a subclass of {@code AbstractAI}, it calls {@code registerAI}.
+	 * @param classes An array of {@code Class} objects to be processed.
+	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	public void postLoad(Class<?>[] classes)
@@ -58,6 +66,11 @@ public class AI2HandlerClassListener implements ClassListener
 		}
 	}
 	
+	/**
+	 * Logs the intent to unload specific classes.<br>
+	 * This method iterates through the provided array and logs each class name if debug logging is enabled.
+	 * @param classes The array of {@code Class<?>} objects to be logged for unloading.
+	 */
 	@Override
 	public void preUnload(Class<?>[] classes)
 	{
@@ -70,16 +83,18 @@ public class AI2HandlerClassListener implements ClassListener
 		}
 	}
 	
+	/**
+	 * Checks if a class is valid for use.<br>
+	 * It verifies that the class is public.<br>
+	 * The class must not be abstract or an interface.
+	 * @param clazz The class to validate.
+	 * @return {@code true} if the class meets the requirements, otherwise {@code false}.
+	 */
 	public boolean isValidClass(Class<?> clazz)
 	{
 		final int modifiers = clazz.getModifiers();
 		
-		if (Modifier.isAbstract(modifiers) || Modifier.isInterface(modifiers))
-		{
-			return false;
-		}
-		
-		if (!Modifier.isPublic(modifiers))
+		if (Modifier.isAbstract(modifiers) || Modifier.isInterface(modifiers) || !Modifier.isPublic(modifiers))
 		{
 			return false;
 		}

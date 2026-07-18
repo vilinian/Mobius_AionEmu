@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.configuration;
 
@@ -23,9 +23,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation is used to mark field that should be processed by {@link com.aionemu.commons.configuration.ConfigurableProcessor}<br>
- * <br>
- * This annotation is Documented, all definitions with it will appear in javadoc
+ * Marks a field to be processed by the {@link com.aionemu.commons.configuration.ConfigurableProcessor}.<br>
+ * This annotation ensures that the annotated fields are included in the generated Javadoc documentation.
  */
 @Documented
 @Target(ElementType.FIELD)
@@ -41,7 +40,7 @@ public @interface Property
 	 * Property name in configuration
 	 * @return name of the property that will be used
 	 */
-	String key();
+	public String key();
 	
 	/**
 	 * PropertyTransformer to use.<br>
@@ -57,20 +56,20 @@ public @interface Property
 	 * <li>{@link Double} and double by {@link com.aionemu.commons.configuration.transformers.DoubleTransformer}</li>
 	 * <li>{@link String} by {@link com.aionemu.commons.configuration.transformers.StringTransformer}</li>
 	 * <li>{@link Enum} and enum by {@link com.aionemu.commons.configuration.transformers.EnumTransformer}</li>
-	 * <li>{@link java.io.File} by {@link com.aionemu.commons.configuration.transformers.FileTransformer}</li>
-	 * <li>{@link java.net.InetSocketAddress} by {@link com.aionemu.commons.configuration.transformers.InetSocketAddressTransformer}</li>
-	 * <li>{@link java.util.regex.Pattern} by {@link com.aionemu.commons.configuration.transformers.PatternTransformer}
+	 * <li>{@code File} by {@link com.aionemu.commons.configuration.transformers.FileTransformer}</li>
+	 * <li>{@code InetSocketAddress} by {@link com.aionemu.commons.configuration.transformers.InetSocketAddressTransformer}</li>
+	 * <li>{@code Pattern} by {@link com.aionemu.commons.configuration.transformers.PatternTransformer}
 	 * </ul>
 	 * <p/>
 	 * If your value is one of this types - just leave this field empty
 	 * @return returns class that will be used to transform value
 	 */
 	@SuppressWarnings("rawtypes")
-	Class<? extends PropertyTransformer> propertyTransformer() default PropertyTransformer.class;
+	public Class<? extends PropertyTransformer> propertyTransformer() default PropertyTransformer.class;
 	
 	/**
-	 * Represents default value that will be parsed if key not found. If this key equals(default) {@link #DEFAULT_VALUE} init value of the object won't be overriden
+	 * Represents default value that will be parsed if key not found. If this key equals(default) {@code DEFAULT_VALUE} init value of the object won't be overriden
 	 * @return default value of the property
 	 */
-	String defaultValue() default DEFAULT_VALUE;
+	public String defaultValue() default DEFAULT_VALUE;
 }

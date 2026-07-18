@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.npcshout;
 
@@ -26,13 +26,11 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 /**
- * @author Rolandas
- */
-/**
- * <p>
+ * <p/>
  * Java class for ShoutGroup complex type.
- * <p>
+ * <p/>
  * The following schema fragment specifies the expected content contained within this class.
+ * <p/>
  * 
  * <pre>
  * &lt;complexType name="ShoutGroup">
@@ -46,6 +44,8 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
+ * 
+ * @author Rolandas
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "ShoutGroup", propOrder =
@@ -56,23 +56,14 @@ public class ShoutGroup
 {
 	@XmlElement(name = "shout_npcs", required = true)
 	protected List<ShoutList> shoutNpcs;
-	
 	@XmlAttribute(name = "client_ai")
 	protected String clientAi;
 	
 	/**
-	 * Gets the value of the shoutNpcs property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the shoutNpcs property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getShoutNpcs().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link ShoutList }
-	 * @return
+	 * Retrieves the list of {@link ShoutList} objects associated with this group.<br>
+	 * If the internal list is {@code null}, a new {@code ArrayList} is created.<br>
+	 * This method returns a reference to the live list rather than a copy.
+	 * @return A {@code List} containing all {@code ShoutList} entries.
 	 */
 	public List<ShoutList> getShoutNpcs()
 	{
@@ -80,18 +71,24 @@ public class ShoutGroup
 		{
 			shoutNpcs = new ArrayList<>();
 		}
+		
 		return shoutNpcs;
 	}
 	
 	/**
-	 * Gets the value of the clientAi property.
-	 * @return possible object is {@link String }
+	 * Retrieves the AI identifier for the client.<br>
+	 * This value is stored as a {@code String}.
+	 * @return The {@code client_ai} attribute value.
 	 */
 	public String getClientAi()
 	{
 		return clientAi;
 	}
 	
+	/**
+	 * This method resets the object properties.<br>
+	 * It sets both {@code shoutNpcs} and {@code clientAi} to {@code null}.
+	 */
 	public void makeNull()
 	{
 		shoutNpcs = null;

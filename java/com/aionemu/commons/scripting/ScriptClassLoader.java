@@ -1,24 +1,25 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandlerFactory;
@@ -33,7 +34,8 @@ import com.aionemu.commons.scripting.url.VirtualClassURLStreamHandler;
 import com.aionemu.commons.utils.ClassUtils;
 
 /**
- * Abstract class loader that should be extended by child classloaders. If needed, this class should wrap another classloader.
+ * This is an abstract class loader designed to be extended by specific script-related class loaders.<br>
+ * It can optionally wrap another {@code ClassLoader} instance to manage nested dependencies.
  * @author SoulKeeper
  */
 public abstract class ScriptClassLoader extends URLClassLoader
@@ -44,7 +46,7 @@ public abstract class ScriptClassLoader extends URLClassLoader
 	private static final Logger log = LoggerFactory.getLogger(ScriptClassLoader.class);
 	
 	/**
-	 * URL Stream handler to allow valid url generation by {@link #getResource(String)}
+	 * URL Stream handler to allow valid url generation by {@code getResource}
 	 */
 	private final VirtualClassURLStreamHandler urlStreamHandler = new VirtualClassURLStreamHandler(this);
 	
@@ -59,9 +61,11 @@ public abstract class ScriptClassLoader extends URLClassLoader
 	private final Set<File> loadedLibraries = new HashSet<>();
 	
 	/**
-	 * Just for compatibility with {@link URLClassLoader}
-	 * @param urls list of urls
-	 * @param parent parent classloader
+	 * Creates a new instance of {@link ScriptClassLoader}.<br>
+	 * This constructor initializes the loader with specific URLs and a parent classloader.<br>
+	 * It is used to set up the classpath for script loading.
+	 * @param urls An array of {@code URL} objects to search for classes.
+	 * @param parent The {@code ClassLoader} to use as the parent.
 	 */
 	public ScriptClassLoader(URL[] urls, ClassLoader parent)
 	{
@@ -69,8 +73,10 @@ public abstract class ScriptClassLoader extends URLClassLoader
 	}
 	
 	/**
-	 * Just for compatibility with {@link URLClassLoader}
-	 * @param urls list of urls
+	 * Creates a new {@link ScriptClassLoader} using the provided URLs.<br>
+	 * This constructor initializes the classloader with the specified search paths.<br>
+	 * It uses the system class loader as the parent by default.
+	 * @param urls An array of {@code URL} objects to be searched for classes.
 	 */
 	public ScriptClassLoader(URL[] urls)
 	{
@@ -78,10 +84,12 @@ public abstract class ScriptClassLoader extends URLClassLoader
 	}
 	
 	/**
-	 * Just for compatibility with {@link URLClassLoader}
-	 * @param urls list of urls
-	 * @param parent parent classloader
-	 * @param factory {@link java.net.URLStreamHandlerFactory}
+	 * Creates a new {@link ScriptClassLoader} with specific configuration.<br>
+	 * This constructor initializes the loader using provided URLs and a custom factory.<br>
+	 * It allows for fine-grained control over how classes are loaded from resources.
+	 * @param urls The array of {@code URL} objects to search for classes.
+	 * @param parent The {@code ClassLoader} used as the parent.
+	 * @param factory The {@code URLStreamHandlerFactory} to use for creating new URLs.
 	 */
 	public ScriptClassLoader(URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory)
 	{
@@ -89,9 +97,11 @@ public abstract class ScriptClassLoader extends URLClassLoader
 	}
 	
 	/**
-	 * Adds library to this classloader, it shuould be jar file
-	 * @param file jar file
-	 * @throws IOException if can't add library
+	 * Adds a new {@code .jar} file to the list of loaded libraries.<br>
+	 * This method scans the file for class names and registers them.<br>
+	 * It ensures that each unique file is only processed once.
+	 * @param file The {@code File} object representing the jar to add.
+	 * @throws IOException If an error occurs while reading the file.
 	 */
 	public void addJarFile(File file) throws IOException
 	{
@@ -104,7 +114,11 @@ public abstract class ScriptClassLoader extends URLClassLoader
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Retrieves a {@code URL} for the specified resource.<br>
+	 * This method handles special logic for files ending in {@code .class}.<br>
+	 * It attempts to map compiled classes to virtual URLs if they exist.
+	 * @param name The name of the resource to locate.
+	 * @return The {@code URL} of the requested resource, or {@code null} if not found.
 	 */
 	@Override
 	public URL getResource(String name)
@@ -113,13 +127,14 @@ public abstract class ScriptClassLoader extends URLClassLoader
 		{
 			return super.getResource(name);
 		}
+		
 		String newName = name.substring(0, name.length() - 6);
 		newName = newName.replace('/', '.');
 		if (getCompiledClasses().contains(newName))
 		{
 			try
 			{
-				return new URL(null, VirtualClassURLStreamHandler.HANDLER_PROTOCOL + newName, urlStreamHandler);
+				return URL.of(URI.create(VirtualClassURLStreamHandler.HANDLER_PROTOCOL + newName), urlStreamHandler);
 			}
 			catch (MalformedURLException e)
 			{
@@ -131,10 +146,12 @@ public abstract class ScriptClassLoader extends URLClassLoader
 	}
 	
 	/**
-	 * Loads class from library, parent or compiled
-	 * @param name class to load
-	 * @return loaded class
-	 * @throws ClassNotFoundException if class not found
+	 * Loads a class by its fully qualified name.<br>
+	 * This method checks if the class is already compiled or defined.<br>
+	 * It uses {@code getCompiledClasses} to determine the loading strategy.
+	 * @param name The fully qualified name of the class to load.
+	 * @return The {@code Class} object corresponding to the provided name.
+	 * @throws ClassNotFoundException If the class cannot be found or loaded.
 	 */
 	@Override
 	public Class<?> loadClass(String name) throws ClassNotFoundException
@@ -152,9 +169,15 @@ public abstract class ScriptClassLoader extends URLClassLoader
 			c = super.defineClass(name, b, 0, b.length);
 			setDefinedClass(name, c);
 		}
+		
 		return c;
 	}
 	
+	/**
+	 * Retrieves the names of classes loaded from libraries.<br>
+	 * These classes are required for valid compilation by the {@code JavaCompiler}.
+	 * @return a {@code Set} containing the class names.
+	 */
 	protected Set<String> getLibraryClassNames()
 	{
 		return Collections.unmodifiableSet(libraryClassNames);

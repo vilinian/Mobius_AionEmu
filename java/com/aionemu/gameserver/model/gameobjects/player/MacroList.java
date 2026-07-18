@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.gameobjects.player;
 
@@ -24,9 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Player macrosses collection, contains all player macrosses.
- * <p/>
- * Created on: 13.07.2009 16:28:23
+ * This class manages the collection of all macros for a player.<br>
+ * It serves as a container to store and retrieve macro data associated with a {@link com.aionemu.gameserver.model.gameobjects.player.Player}.
  * @author Aquanox, nrg
  */
 public class MacroList
@@ -35,14 +34,14 @@ public class MacroList
 	 * Class logger
 	 */
 	private static final Logger logger = LoggerFactory.getLogger(MacroList.class);
-	
 	/**
 	 * Container of macrosses, position to xml.
 	 */
 	private final Map<Integer, String> macrosses;
 	
 	/**
-	 * Creates an empty macro list
+	 * Creates a new instance of {@link MacroList}.<br>
+	 * This initializes an empty collection for macrosses.
 	 */
 	public MacroList()
 	{
@@ -50,8 +49,9 @@ public class MacroList
 	}
 	
 	/**
-	 * Create new instance of <tt>MacroList</tt>.
-	 * @param arg
+	 * Creates a new {@link MacroList} using the provided map.<br>
+	 * This constructor initializes the internal collection of macrosses.
+	 * @param arg The map containing macro positions and their XML strings.
 	 */
 	public MacroList(Map<Integer, String> arg)
 	{
@@ -59,8 +59,10 @@ public class MacroList
 	}
 	
 	/**
-	 * Returns map with all macrosses
-	 * @return all macrosses
+	 * Retrieves the collection of all player macrosses.<br>
+	 * The map uses an {@code Integer} key for the position and a {@code String} value for the XML data.<br>
+	 * This method returns an unmodifiable view of the internal map.
+	 * @return A {@link Map} containing the macro positions and their corresponding XML strings.
 	 */
 	public Map<Integer, String> getMacrosses()
 	{
@@ -68,10 +70,11 @@ public class MacroList
 	}
 	
 	/**
-	 * Add macro to the collection.
-	 * @param macroPosition Macro order.
-	 * @param macroXML Macro Xml contents.
-	 * @return <tt>true</tt> if macro addition was successful, and it can be stored into database. Otherwise <tt>false</tt>.
+	 * Adds a new macro to the list at a specific position.<br>
+	 * This method updates the entry if it already exists.
+	 * @param macroPosition The unique index for the macro.
+	 * @param macroXML The XML string content of the macro.
+	 * @return {@code true} if a new macro was added, or {@code false} if an existing one was overwritten.
 	 */
 	public synchronized boolean addMacro(int macroPosition, String macroXML)
 	{
@@ -87,9 +90,11 @@ public class MacroList
 	}
 	
 	/**
-	 * Remove macro from the list.
-	 * @param macroPosition
-	 * @return <tt>true</tt> if macro deletion was successful, and changes can be stored into database. Otherwise <tt>false</tt>.
+	 * Removes a macro from the list based on its position.<br>
+	 * This method is thread-safe because it is {@code synchronized}.<br>
+	 * It returns {@code false} if no macro exists at the given position.
+	 * @param macroPosition The index of the macro to remove.
+	 * @return {@code true} if the removal was successful, or {@code false} otherwise.
 	 */
 	public synchronized boolean removeMacro(int macroPosition)
 	{
@@ -99,12 +104,14 @@ public class MacroList
 			logger.warn("Trying to remove non existing macro.");
 			return false;
 		}
+		
 		return true;
 	}
 	
 	/**
-	 * Returns count of available macrosses.
-	 * @return count of available macrosses.
+	 * Returns the total number of macrosses in the list.<br>
+	 * This value corresponds to the size of the internal {@code macrosses} map.
+	 * @return The count of macrosses as an {@code int}.
 	 */
 	public int getSize()
 	{
@@ -112,9 +119,10 @@ public class MacroList
 	}
 	
 	/**
-	 * Returns an unmodifiable map of macro id to macro contents. NOTE: Retail sends only 7 macros per packet, that's why we have to split macros
-	 * @param secondPart
-	 * @return
+	 * Retrieves a specific subset of macros from the collection.<br>
+	 * This method returns either the first or second part of the macro list.
+	 * @param secondPart Set to {@code true} to get the second part, or {@code false} for the first part.
+	 * @return An unmodifiable {@link Map} containing the requested macros.
 	 */
 	public Map<Integer, String> getMarcosPart(boolean secondPart)
 	{
@@ -126,6 +134,7 @@ public class MacroList
 		{
 			macrosPart.put(currentIndex, macrosses.get(currentIndex));
 		}
+		
 		return Collections.unmodifiableMap(macrosPart);
 	}
 }

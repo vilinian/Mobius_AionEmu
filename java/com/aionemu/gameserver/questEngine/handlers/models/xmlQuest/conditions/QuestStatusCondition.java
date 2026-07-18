@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.models.xmlQuest.conditions;
 
@@ -27,6 +27,8 @@ import com.aionemu.gameserver.questEngine.model.QuestState;
 import com.aionemu.gameserver.questEngine.model.QuestStatus;
 
 /**
+ * Represents a condition that checks the current status of a quest.<br>
+ * It verifies if a {@link QuestState} matches a specific {@link QuestStatus}.
  * @author Mr. Poke
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -38,9 +40,12 @@ public class QuestStatusCondition extends QuestCondition
 	@XmlAttribute(name = "quest_id")
 	protected Integer questId;
 	
-	/*
-	 * (non-Javadoc)
-	 * @see com.aionemu.gameserver.questEngine.handlers.template.xmlQuest.condition.QuestCondition#doCheck(com.aionemu.gameserver .questEngine.model.QuestEnv)
+	/**
+	 * Checks if the player's quest status meets the required condition.<br>
+	 * This method compares the status of a specific quest against the stored {@code value}.<br>
+	 * It supports various comparison operations like equality and inequality.
+	 * @param env The environment containing the current quest data.
+	 * @return {@code true} if the condition is met, otherwise {@code false}.
 	 */
 	@Override
 	public boolean doCheck(QuestEnv env)
@@ -52,6 +57,7 @@ public class QuestStatusCondition extends QuestCondition
 		{
 			id = questId;
 		}
+		
 		final QuestState qs = player.getQuestStateList().getQuestState(id);
 		if (qs != null)
 		{
@@ -61,33 +67,19 @@ public class QuestStatusCondition extends QuestCondition
 		switch (getOp())
 		{
 			case EQUAL:
-			{
 				return qstatus == value.value();
-			}
 			case GREATER:
-			{
 				return qstatus > value.value();
-			}
 			case GREATER_EQUAL:
-			{
 				return qstatus >= value.value();
-			}
 			case LESSER:
-			{
 				return qstatus < value.value();
-			}
 			case LESSER_EQUAL:
-			{
 				return qstatus <= value.value();
-			}
 			case NOT_EQUAL:
-			{
 				return qstatus != value.value();
-			}
 			default:
-			{
 				return false;
-			}
 		}
 	}
 }

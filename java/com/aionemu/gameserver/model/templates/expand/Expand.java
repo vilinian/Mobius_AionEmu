@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.expand;
 
@@ -22,6 +22,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
 /**
+ * Represents the data model for an expansion object within the game world.<br>
+ * This class is used to define properties and attributes for expandable entities.
  * @author Simple
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -34,7 +36,9 @@ public class Expand
 	protected int price;
 	
 	/**
-	 * @return the level
+	 * Retrieves the current level of the {@code MCEntry}.<br>
+	 * This value represents the progression stage.
+	 * @return The integer value of the level.
 	 */
 	public int getLevel()
 	{
@@ -42,7 +46,9 @@ public class Expand
 	}
 	
 	/**
-	 * @return the price
+	 * Retrieves the cost of this bind point.<br>
+	 * This value is stored as an {@code int}.
+	 * @return The current price of the template.
 	 */
 	public int getPrice()
 	{

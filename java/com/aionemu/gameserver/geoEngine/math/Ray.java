@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.math;
 
@@ -23,7 +23,8 @@ import com.aionemu.gameserver.geoEngine.collision.CollisionResults;
 import com.aionemu.gameserver.geoEngine.collision.UnsupportedCollisionException;
 
 /**
- * <code>Ray</code> defines a line segment which has an origin and a direction. That is, a point and an infinite ray is cast from this point. The ray is defined by the following equation: R(t) = origin + t*direction for t >= 0.
+ * Represents a geometric ray starting from an {@code origin} point and extending infinitely in a specific {@code direction}.<br>
+ * It is defined by the equation {@code R(t) = origin + t*direction} where {@code t >= 0}.
  * @author Mark Powell
  * @author Joshua Slack
  */
@@ -45,7 +46,9 @@ public final class Ray implements Cloneable, Collidable
 	// protected static final Vector3f tempVd=new Vector3f();
 	
 	/**
-	 * Constructor instantiates a new <code>Ray</code> object. As default, the origin is (0,0,0) and the direction is (0,0,0).
+	 * Creates a new instance of the {@link Ray} class.<br>
+	 * The {@code origin} is initialized to {@code (0,0,0)}.<br>
+	 * The {@code direction} is initialized to {@code (0,0,0)}.
 	 */
 	public Ray()
 	{
@@ -54,9 +57,10 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * Constructor instantiates a new <code>Ray</code> object. The origin and direction are given.
-	 * @param origin the origin of the ray.
-	 * @param direction the direction the ray travels in.
+	 * Creates a new {@link Ray} instance.<br>
+	 * This constructor sets the starting point and the heading of the ray.
+	 * @param origin The starting position of the ray as a {@code Vector3f}.
+	 * @param direction The direction vector of the ray as a {@code Vector3f}.
 	 */
 	public Ray(Vector3f origin, Vector3f direction)
 	{
@@ -84,10 +88,11 @@ public final class Ray implements Cloneable, Collidable
 	// }
 	
 	/**
-	 * <code>intersectWhere</code> determines if the Ray intersects a triangle. It then stores the point of intersection in the given loc vector
-	 * @param t the Triangle to test against.
-	 * @param loc storage vector to save the collision point in (if the ray collides)
-	 * @return true if the ray collides.
+	 * Checks if this ray intersects a specific {@link Triangle} at a given location.<br>
+	 * This method uses the vertices of the triangle to perform the calculation.
+	 * @param t The {@link Triangle} to check against.
+	 * @param loc The {@link Vector3f} location where the intersection should occur.
+	 * @return {@code true} if the ray intersects the triangle at the location, otherwise {@code false}.
 	 */
 	public boolean intersectWhere(Triangle t, Vector3f loc)
 	{
@@ -95,12 +100,13 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * <code>intersectWhere</code> determines if the Ray intersects a triangle defined by the specified points and if so it stores the point of intersection in the given loc vector.
-	 * @param v0 first point of the triangle.
-	 * @param v1 second point of the triangle.
-	 * @param v2 third point of the triangle.
-	 * @param loc storage vector to save the collision point in (if the ray collides) if null, only boolean is calculated.
-	 * @return true if the ray collides.
+	 * Checks if the ray intersects a triangle defined by three vertices.<br>
+	 * This method uses the specific coordinates of the triangle to calculate the hit.
+	 * @param v0 The first vertex of the triangle.
+	 * @param v1 The second vertex of the triangle.
+	 * @param v2 The third vertex of the triangle.
+	 * @param loc The location point to check for intersection.
+	 * @return {@code true} if an intersection occurs, otherwise {@code false}.
 	 */
 	public boolean intersectWhere(Vector3f v0, Vector3f v1, Vector3f v2, Vector3f loc)
 	{
@@ -108,10 +114,12 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * <code>intersectWherePlanar</code> determines if the Ray intersects a triangle and if so it stores the point of intersection in the given loc vector as t, u, v where t is the distance from the origin to the point of intersection and u,v is the intersection point in terms of the triangle plane.
-	 * @param t the Triangle to test against.
-	 * @param loc storage vector to save the collision point in (if the ray collides) as t, u, v
-	 * @return true if the ray collides.
+	 * Checks if the ray intersects a triangle on its infinite plane.<br>
+	 * This method uses the vertices of the {@code Triangle} object.<br>
+	 * It determines if the intersection point matches the provided location.
+	 * @param t The {@link Triangle} to check against.
+	 * @param loc The specific {@code Vector3f} location to verify.
+	 * @return {@code true} if the ray intersects the plane at the specified location, otherwise {@code false}.
 	 */
 	public boolean intersectWherePlanar(Triangle t, Vector3f loc)
 	{
@@ -119,13 +127,14 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * <code>intersectWherePlanar</code> determines if the Ray intersects a triangle defined by the specified points and if so it stores the point of intersection in the given loc vector as t, u, v where t is the distance from the origin to the point of intersection and u,v is the intersection point
-	 * in terms of the triangle plane.
-	 * @param v0 first point of the triangle.
-	 * @param v1 second point of the triangle.
-	 * @param v2 third point of the triangle.
-	 * @param loc storage vector to save the collision point in (if the ray collides) as t, u, v
-	 * @return true if the ray collides.
+	 * Checks if the ray intersects a plane defined by three vertices.<br>
+	 * This method uses the {@code loc} parameter to determine the specific point of intersection.<br>
+	 * It returns {@code true} if an intersection occurs and {@code false} otherwise.
+	 * @param v0 The first vertex of the triangle defining the plane.
+	 * @param v1 The second vertex of the triangle defining the plane.
+	 * @param v2 The third vertex of the triangle defining the plane.
+	 * @param loc The location point to check for intersection.
+	 * @return {@code true} if the ray intersects the plane at the specified location, otherwise {@code false}.
 	 */
 	public boolean intersectWherePlanar(Vector3f v0, Vector3f v1, Vector3f v2, Vector3f loc)
 	{
@@ -133,18 +142,18 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * <code>intersects</code> does the actual intersection work.
-	 * @param v0 first point of the triangle.
-	 * @param v1 second point of the triangle.
-	 * @param v2 third point of the triangle.
-	 * @param store storage vector - if null, no intersection is calc'd
-	 * @param doPlanar true if we are calcing planar results.
-	 * @param quad
-	 * @return true if ray intersects triangle
+	 * Checks if this ray intersects a triangle or quad defined by three vertices.<br>
+	 * It calculates the intersection point and optional barycentric weights.
+	 * @param v0 The first vertex of the triangle or quad.
+	 * @param v1 The second vertex of the triangle or quad.
+	 * @param v2 The third vertex of the triangle or quad.
+	 * @param store A {@code Vector3f} to store the intersection result.
+	 * @param doPlanar If {@code true}, stores barycentric weights in the {@code store} vector.
+	 * @param quad If {@code false}, treats the shape as a triangle; if {@code true}, treats it as a quad.
+	 * @return {@code true} if an intersection occurs, otherwise {@code false}.
 	 */
 	private boolean intersects(Vector3f v0, Vector3f v1, Vector3f v2, Vector3f store, boolean doPlanar, boolean quad)
 	{
-		
 		final Vector3f tempVa = Vector3f.newInstance(), tempVb = Vector3f.newInstance(), tempVc = Vector3f.newInstance(), tempVd = Vector3f.newInstance();
 		
 		final Vector3f diff = origin.subtract(v0, tempVa);
@@ -187,8 +196,7 @@ public final class Ray implements Cloneable, Collidable
 						Vector3f.recycle(tempVc);
 						Vector3f.recycle(tempVd);
 						
-						// ray intersects triangle
-						// if storage vector is null, just return true,
+						// Return true if the storage vector is null when checking if a ray intersects a triangle.
 						if (store == null)
 						{
 							return true;
@@ -203,21 +211,23 @@ public final class Ray implements Cloneable, Collidable
 						}
 						else
 						{
-							// these weights can be used to determine
-							// interpolated values, such as texture coord.
+							// These weights can be used to determine interpolated values, such as texture coordinates.
 							// eg. texcoord s,t at intersection point:
 							// s = w0*s0 + w1*s1 + w2*s2;
 							// t = w0*t0 + w1*t1 + w2*t2;
 							final float w1 = dirDotDiffxEdge2 * inv;
 							final float w2 = dirDotEdge1xDiff * inv;
+							
 							// float w0 = 1.0f - w1 - w2;
 							store.set(t, w1, w2);
 						}
+						
 						return true;
 					}
 				}
 			}
 		}
+		
 		Vector3f.recycle(tempVa);
 		Vector3f.recycle(tempVb);
 		Vector3f.recycle(tempVc);
@@ -225,6 +235,15 @@ public final class Ray implements Cloneable, Collidable
 		return false;
 	}
 	
+	/**
+	 * Calculates the intersection distance between this ray and a triangle.<br>
+	 * The method uses the vertices of the triangle to determine the hit point.<br>
+	 * If no intersection occurs, it returns {@code Float.POSITIVE_INFINITY}.
+	 * @param v0 The first vertex of the triangle.
+	 * @param v1 The second vertex of the triangle.
+	 * @param v2 The third vertex of the triangle.
+	 * @return The distance from the ray origin to the intersection point, or {@code Float.POSITIVE_INFINITY} if no hit is found.
+	 */
 	public float intersects(Vector3f v0, Vector3f v1, Vector3f v2)
 	{
 		final float edge1X = v1.x - v0.x;
@@ -282,8 +301,7 @@ public final class Ray implements Cloneable, Collidable
 					final float diffDotNorm = -sign * ((diffX * normX) + (diffY * normY) + (diffZ * normZ));
 					if (diffDotNorm >= 0.0f)
 					{
-						// ray intersects triangle
-						// fill in.
+						// Fill in the ray intersection with the triangle.
 						final float inv = 1f / dirDotNorm;
 						final float t = diffDotNorm * inv;
 						return t;
@@ -296,13 +314,14 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * <code>intersectWherePlanar</code> determines if the Ray intersects a quad defined by the specified points and if so it stores the point of intersection in the given loc vector as t, u, v where t is the distance from the origin to the point of intersection and u,v is the intersection point in
-	 * terms of the quad plane. One edge of the quad is [v0,v1], another one [v0,v2]. The behaviour thus is like {@link #intersectWherePlanar(Vector3f, Vector3f, Vector3f, Vector3f)} except for the extended area, which is equivalent to the union of the triangles [v0,v1,v2] and [-v0+v1+v2,v1,v2].
-	 * @param v0 top left point of the quad.
-	 * @param v1 top right point of the quad.
-	 * @param v2 bottom left point of the quad.
-	 * @param loc storage vector to save the collision point in (if the ray collides) as t, u, v
-	 * @return true if the ray collides with the quad.
+	 * Checks if this ray intersects a planar quadrilateral.<br>
+	 * The quadrilateral is defined by four vertices.<br>
+	 * This method uses the internal {@code intersects} logic for planar quad shapes.
+	 * @param v0 The first vertex of the quadrilateral.
+	 * @param v1 The second vertex of the quadrilateral.
+	 * @param v2 The third vertex of the quadrilateral.
+	 * @param loc The location point to check against.
+	 * @return {@code true} if an intersection occurs, {@code false} otherwise.
 	 */
 	public boolean intersectWherePlanarQuad(Vector3f v0, Vector3f v1, Vector3f v2, Vector3f loc)
 	{
@@ -310,9 +329,12 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * @param p
-	 * @param loc
-	 * @return true if the ray collides with the given Plane
+	 * Checks if this ray intersects with a given {@link Plane}.<br>
+	 * The intersection point is stored in the provided {@code loc} vector.<br>
+	 * This method returns {@code false} if the ray is parallel to the plane or points away from it.
+	 * @param p The {@link Plane} to check against.
+	 * @param loc The {@link Vector3f} where the intersection point will be stored.
+	 * @return {@code true} if an intersection occurs, otherwise {@code false}.
 	 */
 	public boolean intersectsWherePlane(Plane p, Vector3f loc)
 	{
@@ -322,6 +344,7 @@ public final class Ray implements Cloneable, Collidable
 		{
 			return false; // coplanar
 		}
+		
 		final float numerator = -(p.getNormal().dot(origin) - p.getConstant());
 		final float ratio = numerator / denominator;
 		
@@ -329,11 +352,20 @@ public final class Ray implements Cloneable, Collidable
 		{
 			return false; // intersects behind origin
 		}
+		
 		loc.set(direction).multLocal(ratio).addLocal(origin);
 		
 		return true;
 	}
 	
+	/**
+	 * Checks if this ray collides with another {@link Collidable} object.<br>
+	 * This method handles collisions with {@link BoundingVolume} and {@link AbstractTriangle} types.<br>
+	 * It updates the provided {@code results} object if a collision occurs.
+	 * @param other The {@link Collidable} object to check against.
+	 * @param results The {@link CollisionResults} container to store any detected hits.
+	 * @return Returns 1 if a collision occurred, or 0 if no collision was found.
+	 */
 	@Override
 	public int collideWith(Collidable other, CollisionResults results)
 	{
@@ -361,9 +393,14 @@ public final class Ray implements Cloneable, Collidable
 		}
 	}
 	
+	/**
+	 * Calculates the squared distance from this ray to a given point.<br>
+	 * This method is useful for performance as it avoids a square root operation.
+	 * @param point The {@code Vector3f} position to measure from.
+	 * @return The squared distance as a {@code float}.
+	 */
 	public float distanceSquared(Vector3f point)
 	{
-		
 		final Vector3f tempVa = Vector3f.newInstance(), tempVb = Vector3f.newInstance();
 		
 		point.subtract(origin, tempVa);
@@ -386,8 +423,9 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * <code>getOrigin</code> retrieves the origin point of the ray.
-	 * @return the origin of the ray.
+	 * Retrieves the starting point of the ray.<br>
+	 * This returns the {@code origin} field of this <code class="Ray"></code> object.
+	 * @return The {@code Vector3f} representing the ray's origin.
 	 */
 	public Vector3f getOrigin()
 	{
@@ -395,8 +433,9 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * <code>setOrigin</code> sets the origin of the ray.
-	 * @param origin the origin of the ray.
+	 * Sets the starting point of the ray.<br>
+	 * This method updates the {@code origin} field with the values from the provided vector.
+	 * @param origin The new {@code Vector3f} position for the ray's start.
 	 */
 	public void setOrigin(Vector3f origin)
 	{
@@ -404,9 +443,9 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * <code>getLimit</code> returns the limit or the ray, aka the length. If the limit is not infinity, then this ray is a line with length <code>
-	 * limit</code>.
-	 * @return
+	 * Retrieves the maximum length of the ray.<br>
+	 * This value determines how far the ray extends from its origin.
+	 * @return The current {@code float} limit of the ray.
 	 */
 	public float getLimit()
 	{
@@ -414,9 +453,9 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * <code>setLimit</code> sets the limit of the ray.
-	 * @param limit the limit of the ray.
-	 * @see Ray#getLimit()
+	 * Sets the maximum length of the ray.<br>
+	 * This updates the {@code limit} field.
+	 * @param limit The new length for the ray.
 	 */
 	public void setLimit(float limit)
 	{
@@ -424,8 +463,8 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * <code>getDirection</code> retrieves the direction vector of the ray.
-	 * @return the direction of the ray.
+	 * Retrieves the current direction of the {@code Ray}.
+	 * @return The {@code Vector3f} representing the ray's direction.
 	 */
 	public Vector3f getDirection()
 	{
@@ -433,8 +472,9 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * <code>setDirection</code> sets the direction vector of the ray.
-	 * @param direction the direction of the ray.
+	 * Sets the direction of this {@code Ray}.<br>
+	 * This method updates the internal {@code direction} vector.
+	 * @param direction The new {@code Vector3f} to use as the ray's direction.
 	 */
 	public void setDirection(Vector3f direction)
 	{
@@ -442,8 +482,9 @@ public final class Ray implements Cloneable, Collidable
 	}
 	
 	/**
-	 * Copies information from a source ray into this ray.
-	 * @param source the ray to copy information from
+	 * Updates this ray's properties using another ray.<br>
+	 * This method copies the origin and direction from the {@code source}.
+	 * @param source The {@link Ray} to copy values from.
 	 */
 	public void set(Ray source)
 	{
@@ -451,17 +492,32 @@ public final class Ray implements Cloneable, Collidable
 		direction.set(source.getDirection());
 	}
 	
+	/**
+	 * Returns a string representation of this {@code Ray}.<br>
+	 * It includes the class name, the {@code origin}, and the {@code direction}.
+	 * @return A formatted string describing the ray.
+	 */
 	@Override
 	public String toString()
 	{
 		return getClass().getSimpleName() + " [Origin: " + origin + ", Direction: " + direction + "]";
 	}
 	
+	/**
+	 * Retrieves the specific class type of this {@link Ray} instance.<br>
+	 * This is useful for identifying the exact subclass being used at runtime.
+	 * @return The {@code Class} object representing the current instance's type.
+	 */
 	public Class<? extends Ray> getClassTag()
 	{
-		return getClass();
+		return this.getClass();
 	}
 	
+	/**
+	 * Creates a deep copy of this {@code Ray} object.<br>
+	 * This method clones both the {@code origin} and {@code direction} vectors.
+	 * @return A new {@code Ray} instance with the same values as the original.
+	 */
 	@Override
 	public Ray clone()
 	{

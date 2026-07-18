@@ -1,22 +1,24 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.team.legion;
 
 /**
+ * Defines the different types of history records for a {@link com.aionemu.gameserver.model.team.legion.Legion}.<br>
+ * This enum is used to categorize various historical events or actions associated with a legion.
  * @author Simple
  */
 public enum LegionHistoryType
@@ -33,16 +35,22 @@ public enum LegionHistoryType
 	KINAH_DEPOSIT(17), // Parameter: name
 	KINAH_WITHDRAW(18); // Parameter: name
 	
-	private byte historyType;
+	private final byte historyType;
 	
+	/**
+	 * Creates a new instance of {@link LegionHistoryType}.<br>
+	 * This constructor maps an integer ID to a specific history type.
+	 * @param historyType The unique identifier for the history event.
+	 */
 	private LegionHistoryType(int historyType)
 	{
 		this.historyType = (byte) historyType;
 	}
 	
 	/**
-	 * Returns client-side id for this
-	 * @return byte
+	 * Retrieves the unique identifier for this {@link LegionHistoryType}.<br>
+	 * This value is used to identify different types of legion actions.
+	 * @return The {@code byte} ID associated with the history type.
 	 */
 	public byte getHistoryId()
 	{

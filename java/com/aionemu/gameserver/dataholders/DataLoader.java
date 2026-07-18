@@ -1,56 +1,59 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.dataholders;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collection;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
-import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.apache.commons.io.filefilter.HiddenFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is responsible for loading data from static .txt files.<br>
- * It's used as base class of {@link NpcData} and {@link SpawnsData2}.<br>
- * <br>
- * <font color="red">NOTICE: </font> This class is used temporarily and later will be removed and npc and spawn data will be loaded with xml loader.<br>
- * <br>
- * <font color="red"><b>Do not use this class for anything else than <tt>NpcData</tt> or <tt>SpawnData</tt></b></font>
+ * This class is responsible for loading data from static {@code .txt} files.<br>
+ * It serves as the base class for {@link NpcData} and {@code SpawnData}.<br>
+ * Please do not use this class for any purpose other than these two specific types.
  * @author Luno
  */
 abstract class DataLoader
 {
-	/** The logger used for <tt>DataLoader</tt> and its subclasses */
+	/**
+	 * The logger used for <tt>DataLoader</tt> and its subclasses
+	 */
 	protected Logger log = LoggerFactory.getLogger(getClass().getName());
-	
-	/** Relative path to directory containing .txt files with static data */
+	/**
+	 * Relative path to directory containing .txt files with static data
+	 */
 	private static final String PATH = "./data/static_data/";
-	
-	/** File containing data to load ( may be file or directory ) */
+	/**
+	 * File containing data to load ( may be file or directory )
+	 */
 	private final File dataFile;
 	
 	/**
-	 * Constructor that is supposed to be called from subclass.
-	 * @param file file or directory in the static data directory, containing data that will be loaded
+	 * Initializes the data loader with a specific file path.<br>
+	 * This constructor sets the {@code dataFile} field using the {@code PATH} constant.
+	 * @param file The relative path to the file or directory containing the data.
 	 */
 	DataLoader(String file)
 	{
@@ -58,24 +61,32 @@ abstract class DataLoader
 	}
 	
 	/**
-	 * This method is supposed to be called from subclass to initialize data loading process.<br>
-	 * <br>
-	 * This method is using file given in the constructor to load the data and there are two possibilities:
-	 * <ul>
-	 * <li>Given file is file is in deed the <b>file</b> then it's forwarded to {@link #loadFile(File)} method</li>
-	 * <li>Given file is a <b>directory</b>, then this method is obtaining list of all visible .txt files in this directory and subdirectiores ( except hidden ones and those named "new" ) and call {@link #loadFile(File)} for each of these files.
-	 * </ul>
+	 * Loads data from the specified {@code dataFile}.<br>
+	 * It checks if the file is a directory or a single file.<br>
+	 * If it is a directory, it processes all valid {@code .txt} files inside.<br>
+	 * It calls the private {@code loadFile} method for each item.
 	 */
 	protected void loadData()
 	{
 		if (dataFile.isDirectory())
 		{
-			@SuppressWarnings("deprecation")
-			final Collection<?> files = FileUtils.listFiles(dataFile, FileFilterUtils.andFileFilter(FileFilterUtils.andFileFilter(FileFilterUtils.notFileFilter(FileFilterUtils.nameFileFilter("new")), FileFilterUtils.suffixFileFilter(".txt")), HiddenFileFilter.VISIBLE), HiddenFileFilter.VISIBLE);
-			
-			for (Object file1 : files)
+			final List<File> files;
+			try (Stream<Path> stream = Files.walk(dataFile.toPath()))
 			{
-				final File f = (File) file1;
+				files = stream.filter(Files::isRegularFile).filter(p ->
+				{
+					final String n = p.getFileName().toString();
+					return n.endsWith(".txt") && !n.equals("new") && !p.toFile().isHidden();
+				}).map(Path::toFile).collect(Collectors.toList());
+			}
+			catch (IOException e)
+			{
+				log.error("Error while listing " + getClass().getSimpleName() + ", dir: " + dataFile.getPath(), e);
+				return;
+			}
+			
+			for (File f : files)
+			{
 				loadFile(f);
 			}
 		}
@@ -86,34 +97,28 @@ abstract class DataLoader
 	}
 	
 	/**
-	 * This method is loading data from particular .txt file.
-	 * @param file a file which the data is loaded from.<br>
-	 *            The method is loading the file row by row, omitting those started with "#" sign.<br>
-	 *            Every read row is then forwarded to {@link #parse(String)} method, which should be overriden in subclcass.
+	 * Reads the content of a {@code File} line by line.<br>
+	 * It skips empty lines and comments starting with {@code #}.<br>
+	 * Each valid line is processed by the {@code parse} method.
+	 * @param file The {@code File} object to be read.
 	 */
 	private void loadFile(File file)
 	{
-		LineIterator it = null;
 		try
 		{
-			it = FileUtils.lineIterator(file);
-			while (it.hasNext())
+			for (String line : Files.readAllLines(file.toPath(), Charset.defaultCharset()))
 			{
-				final String line = it.nextLine();
 				if (line.isEmpty() || line.startsWith("#"))
 				{
 					continue;
 				}
+				
 				parse(line);
 			}
 		}
 		catch (IOException e)
 		{
 			log.error("Error while loading " + getClass().getSimpleName() + ", file: " + file.getPath(), e);
-		}
-		finally
-		{
-			LineIterator.closeQuietly(it);
 		}
 	}
 	
@@ -124,8 +129,10 @@ abstract class DataLoader
 	protected abstract void parse(String dataEntry);
 	
 	/**
-	 * Saves data to the file. Used only by {@link SpawnsData2}.
-	 * @return true if the data was successfully saved, false - if some error occurred.
+	 * Saves the current data to a static file.<br>
+	 * This method uses {@code saveEntries} to write the content.<br>
+	 * It logs an info message before starting and an error if it fails.
+	 * @return {@code true} if the save was successful, or {@code false} if an exception occurred.
 	 */
 	public boolean saveData()
 	{
@@ -167,14 +174,15 @@ abstract class DataLoader
 	
 	/**
 	 * Name of the file which is used to store data in.<br>
-	 * This method must be overriden in sublass if we want to be able to store its data. It's used only in {@link SpawnsData2} and should not be used anywhere else.
+	 * This method must be overriden in sublass if we want to be able to store its data. It's used only in SpawnData and should not be used anywhere else.
 	 * @return name of the file
 	 */
 	protected abstract String getSaveFile();
 	
 	/**
-	 * This method must be overriden in subclass which we want to be able to save data. It's responsibility is basicly to put data into given FileWriter instance.
-	 * @param fileWriter
+	 * Saves the current data entries to a file.<br>
+	 * This method uses the provided {@code FileWriter} to write information.
+	 * @param fileWriter The {@code FileWriter} used to save the data.
 	 */
 	protected void saveEntries(FileWriter fileWriter)
 	{

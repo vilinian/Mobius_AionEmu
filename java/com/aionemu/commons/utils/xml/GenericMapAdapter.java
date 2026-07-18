@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.utils.xml;
 
@@ -31,12 +31,22 @@ import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
+ * This class provides a way to map {@code java.util.Map} objects to XML format.<br>
+ * It acts as an {@link XmlAdapter} to handle generic key-value pairs during serialization.<br>
+ * Use this when you need to convert a {@code Map<K, V>} into a structured XML element.
+ * @author Oleh_Faizulin
  * @param <K> Map Key
  * @param <V> Map Value
- * @author Oleh_Faizulin
  */
-public class GenericMapAdapter<K, V>extends XmlAdapter<GenericMapAdapter.KeyValuePairContainer<K, V>, Map<K, V>>
+public class GenericMapAdapter<K, V> extends XmlAdapter<GenericMapAdapter.KeyValuePairContainer<K, V>, Map<K, V>>
 {
+	/**
+	 * Converts a {@code Map} into a {@code KeyValuePairContainer}.<br>
+	 * This method is used to prepare data for XML serialization.<br>
+	 * It returns {@code null} if the input map is {@code null}.
+	 * @param v The source {@code Map} to convert.
+	 * @return A new {@code KeyValuePairContainer} containing the map entries.
+	 */
 	@Override
 	public KeyValuePairContainer<K, V> marshal(Map<K, V> v)
 	{
@@ -50,9 +60,17 @@ public class GenericMapAdapter<K, V>extends XmlAdapter<GenericMapAdapter.KeyValu
 		{
 			result.addElement(entry);
 		}
+		
 		return result;
 	}
 	
+	/**
+	 * Converts a {@code KeyValuePairContainer} into a {@code Map}.<br>
+	 * This method extracts values from the container to build the final map.<br>
+	 * It handles cases where values might be stored in different internal fields.
+	 * @param v The container object to convert.
+	 * @return A new {@code Map} containing the extracted keys and values.
+	 */
 	@Override
 	@SuppressWarnings(
 	{
@@ -76,6 +94,7 @@ public class GenericMapAdapter<K, V>extends XmlAdapter<GenericMapAdapter.KeyValu
 				result.put(kvp.getKey(), kvp.getValue());
 			}
 		}
+		
 		return result;
 	}
 	
@@ -83,7 +102,6 @@ public class GenericMapAdapter<K, V>extends XmlAdapter<GenericMapAdapter.KeyValu
 	@XmlAccessorType(XmlAccessType.NONE)
 	public static class KeyValuePairContainer<K, V>
 	{
-		
 		@XmlElement(name = "mapEntry")
 		private List<KeyValuePair<K, V>> values;
 		
@@ -93,6 +111,7 @@ public class GenericMapAdapter<K, V>extends XmlAdapter<GenericMapAdapter.KeyValu
 			{
 				values = new ArrayList<>();
 			}
+			
 			values.add(new KeyValuePair<>(entry));
 		}
 		
@@ -102,6 +121,7 @@ public class GenericMapAdapter<K, V>extends XmlAdapter<GenericMapAdapter.KeyValu
 			{
 				return Collections.emptyList();
 			}
+			
 			return values;
 		}
 	}
@@ -110,7 +130,6 @@ public class GenericMapAdapter<K, V>extends XmlAdapter<GenericMapAdapter.KeyValu
 	@XmlAccessorType(XmlAccessType.NONE)
 	public static class KeyValuePair<K, V>
 	{
-		
 		public KeyValuePair()
 		{
 			
@@ -128,11 +147,11 @@ public class GenericMapAdapter<K, V>extends XmlAdapter<GenericMapAdapter.KeyValu
 			
 			if (value instanceof Collection)
 			{
-				this.collectionValue = (Collection) value;
+				collectionValue = (Collection) value;
 			}
 			else if (value instanceof Map)
 			{
-				this.mapValue = (Map) value;
+				mapValue = (Map) value;
 			}
 			else
 			{

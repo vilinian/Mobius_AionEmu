@@ -1,58 +1,211 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 package com.aionemu.gameserver.services;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.services.CronService;
 import com.aionemu.gameserver.configs.main.CustomConfig;
 import com.aionemu.gameserver.configs.schedule.RiftSchedule;
-import com.aionemu.gameserver.configs.schedule.RiftSchedule.Rift;
 import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.TaskId;
 import com.aionemu.gameserver.model.gameobjects.Npc;
 import com.aionemu.gameserver.model.gameobjects.VisibleObject;
 import com.aionemu.gameserver.model.rift.RiftLocation;
+import com.aionemu.gameserver.model.templates.rift.OpenRift;
+import com.aionemu.gameserver.model.templates.spawns.SpawnGroup2;
+import com.aionemu.gameserver.model.templates.spawns.SpawnTemplate;
+import com.aionemu.gameserver.model.templates.spawns.riftspawns.RiftSpawnTemplate;
 import com.aionemu.gameserver.services.rift.RiftInformer;
 import com.aionemu.gameserver.services.rift.RiftManager;
 import com.aionemu.gameserver.services.rift.RiftOpenRunnable;
-import com.aionemu.gameserver.utils.ThreadPoolManager;
-
-import javolution.util.FastMap;
+import com.aionemu.gameserver.services.rift.RiftStatistics;
+import com.aionemu.gameserver.spawnengine.SpawnEngine;
 
 /**
+ * Manages the lifecycle and logic of Rifts within the game world.<br>
+ * This service handles spawning, updates, and general maintenance for {@link RiftLocation} objects.
  * @author Source
+ * @modified CoolyT
  */
 public class RiftService
 {
-	private RiftSchedule riftSchedule;
+	private static final Logger log = LoggerFactory.getLogger(RiftService.class);
+	private static final int duration = CustomConfig.RIFT_DURATION;
+	
 	private Map<Integer, RiftLocation> locations;
 	private final Lock closing = new ReentrantLock();
-	private static final int duration = CustomConfig.RIFT_DURATION;
-	private final FastMap<Integer, RiftLocation> activeRifts = new FastMap<>();
+	private final Map<Integer, RiftLocation> activeRifts = new ConcurrentHashMap<>();
 	
+	/**
+	 * Provides the global instance of the {@link RiftService}.<br>
+	 * This method follows the singleton pattern.<br>
+	 * Use this to access rift management features throughout the application.
+	 * @return The single shared instance of {@code RiftService}.
+	 */
+	public static RiftService getInstance()
+	{
+		return RiftServiceHolder.INSTANCE;
+	}
+	
+	private static class RiftServiceHolder
+	{
+		private static final RiftService INSTANCE = new RiftService();
+	}
+	
+	/**
+	 * Opens a rift at the specified location.<br>
+	 * This method updates the {@code RiftLocation} status to opened.<br>
+	 * It optionally spawns NPC guards if requested.
+	 * @param location The {@code RiftLocation} where the rift will be opened.
+	 * @param guards Set to {@code true} to spawn guards at the location, or {@code false} to skip them.
+	 * @return The {@code RiftStatistics} for the newly opened rift.
+	 */
+	public RiftStatistics openRifts(RiftLocation location, boolean guards)
+	{
+		location.setOpened(true);
+		
+		// Spawn NPC guards
+		if (guards)
+		{
+			final List<SpawnGroup2> locSpawns = DataManager.SPAWNS_DATA2.getRiftSpawnsByLocId(location.getId());
+			for (SpawnGroup2 group : locSpawns)
+			{
+				for (SpawnTemplate st : group.getSpawnTemplates())
+				{
+					final RiftSpawnTemplate template = (RiftSpawnTemplate) st;
+					location.getSpawned().add(SpawnEngine.spawnObject(template, 1));
+				}
+			}
+		}
+		
+		// Spawn rifts
+		activeRifts.put(location.getId(), location);
+		return RiftManager.getInstance().spawnRift(location);
+	}
+	
+	/**
+	 * Closes a rift at the specified location.<br>
+	 * This method sets the {@code opened} status to {@code false}.<br>
+	 * It also despawns all NPCs and clears the spawned list for that location.
+	 * @param location The {@link RiftLocation} to be closed.
+	 */
+	public void closeRift(RiftLocation location)
+	{
+		location.setOpened(false);
+		
+		if (location.getSpawned() == null)
+		{
+			return;
+		}
+		
+		// Despawn NPC
+		for (VisibleObject obj : location.getSpawned())
+		{
+			final Npc spawned = (Npc) obj;
+			spawned.setDespawnDelayed(true);
+			if (spawned.getAggroList().getList().isEmpty())
+			{
+				spawned.getController().cancelTask(TaskId.RESPAWN);
+				obj.getController().onDelete();
+			}
+		}
+		
+		// Clear spawned list
+		location.getSpawned().clear();
+	}
+	
+	/**
+	 * Closes all currently active rifts in the game.<br>
+	 * This method iterates through every {@code RiftLocation} in the {@code activeRifts} map.<br>
+	 * It calls {@code closeRift} for each one and then clears the list.
+	 */
+	public void closeRifts()
+	{
+		closing.lock();
+		
+		try
+		{
+			for (RiftLocation rift : activeRifts.values())
+			{
+				closeRift(rift);
+			}
+			
+			activeRifts.clear();
+		}
+		finally
+		{
+			closing.unlock();
+		}
+	}
+	
+	/**
+	 * Retrieves the total duration for a dynamic portal.<br>
+	 * This value is fetched from {@code CustomConfig}.
+	 * @return The duration as an {@code int}.
+	 */
+	public int getDuration()
+	{
+		return duration;
+	}
+	
+	/**
+	 * Retrieves a {@link RiftLocation} based on its unique identifier.<br>
+	 * This method looks up the location in the internal map.<br>
+	 * It returns {@code null} if no location is found for the given ID.
+	 * @param id The unique integer ID of the rift location.
+	 * @return The {@link RiftLocation} object, or {@code null} if not found.
+	 */
+	public RiftLocation getRiftLocation(int id)
+	{
+		return locations.get(id);
+	}
+	
+	/**
+	 * Retrieves all registered rift locations.<br>
+	 * The map uses the unique ID as the key.
+	 * @return A {@code Map<Integer, RiftLocation>} containing all locations.
+	 */
+	public Map<Integer, RiftLocation> getRiftLocations()
+	{
+		return locations;
+	}
+	
+	/**
+	 * Initializes the list of available rift locations.<br>
+	 * This method checks if rifts are enabled in {@code CustomConfig}.<br>
+	 * It loads data from {@code RIFT_DATA} into the local map.
+	 */
 	public void initRiftLocations()
 	{
 		if (CustomConfig.RIFT_ENABLED)
 		{
 			locations = DataManager.RIFT_DATA.getRiftLocations();
+			log.info("[RiftService] Loaded " + locations.size() + " rift locations");
 		}
 		else
 		{
@@ -60,43 +213,37 @@ public class RiftService
 		}
 	}
 	
+	/**
+	 * Initializes the rift scheduling system.<br>
+	 * This method checks if rifts are enabled in {@code CustomConfig}.<br>
+	 * It loads the {@link RiftSchedule} and schedules each rift using {@link CronService}.
+	 */
 	public void initRifts()
 	{
 		if (CustomConfig.RIFT_ENABLED)
 		{
-			riftSchedule = RiftSchedule.load();
-			for (Rift rift : riftSchedule.getRiftsList())
+			log.debug("[RiftService] Init Rifts...");
+			final RiftSchedule schedule = RiftSchedule.load();
+			for (RiftSchedule.Rift rift : schedule.getRiftsList())
 			{
-				for (String openTimes : rift.getOpenTime())
+				for (OpenRift open : rift.getRift())
 				{
-					CronService.getInstance().schedule(new RiftOpenRunnable(rift.getWorldId()), openTimes);
+					log.debug("[RiftService] Sheduling rift by cron : " + open.getSchedule());
+					CronService.getInstance().schedule(new RiftOpenRunnable(rift.getWorldId(), open.spawnGuards()), open.getSchedule());
 				}
 			}
 		}
 	}
 	
-	public boolean isValidId(int id)
-	{
-		if (isRift(id))
-		{
-			return RiftService.getInstance().getRiftLocations().keySet().contains(id);
-		}
-		for (RiftLocation loc : RiftService.getInstance().getRiftLocations().values())
-		{
-			if (loc.getWorldId() == id)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private boolean isRift(int id)
-	{
-		return id < 10000;
-	}
-	
-	public boolean openRifts(int id)
+	/**
+	 * Opens a rift based on the provided unique identifier.<br>
+	 * This method checks if the ID is valid and opens all matching rifts.<br>
+	 * It also triggers a broadcast to inform players of the new rifts.
+	 * @param id The unique identifier for the rift or world.
+	 * @param guards Whether to enable guards when opening the rift.
+	 * @return {@code true} if at least one rift was successfully opened, otherwise {@code false}.
+	 */
+	public boolean openRifts(int id, boolean guards)
 	{
 		if (isValidId(id))
 		{
@@ -105,7 +252,9 @@ public class RiftService
 				final RiftLocation rift = getRiftLocation(id);
 				if (rift.getSpawned().isEmpty())
 				{
-					openRifts(rift);
+					openRifts(rift, guards);
+					
+					// Broadcast rift spawn on map
 					RiftInformer.sendRiftsInfo(rift.getWorldId());
 					return true;
 				}
@@ -117,17 +266,27 @@ public class RiftService
 				{
 					if ((rift.getWorldId() == id) && rift.getSpawned().isEmpty())
 					{
-						openRifts(rift);
+						openRifts(rift, guards);
 						opened = true;
 					}
 				}
+				
+				// Broadcast rift spawn on map
 				RiftInformer.sendRiftsInfo(id);
 				return opened;
 			}
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * Closes all active rifts associated with a specific ID.<br>
+	 * This method checks if the {@code id} is valid and identifies relevant rifts to close.<br>
+	 * It returns {@code true} if any rifts were successfully closed.
+	 * @param id The unique identifier for the rift or world.
+	 * @return {@code true} if at least one rift was closed, otherwise {@code false}.
+	 */
 	public boolean closeRifts(int id)
 	{
 		if (isValidId(id))
@@ -152,70 +311,46 @@ public class RiftService
 						opened = true;
 					}
 				}
+				
 				return opened;
 			}
 		}
+		
 		return false;
 	}
 	
-	public void openRifts(RiftLocation location)
+	/**
+	 * Checks if the provided {@code id} is a valid identifier.<br>
+	 * It verifies if the ID belongs to a known rift or a world.
+	 * @param id The unique identifier to check.
+	 * @return {@code true} if the ID is valid, otherwise {@code false}.
+	 */
+	public boolean isValidId(int id)
 	{
-		location.setOpened(true);
-		RiftManager.getInstance().spawnRift(location);
-		activeRifts.putEntry(location.getId(), location);
-		ThreadPoolManager.getInstance().schedule(() -> closeRifts(), duration * 3600 * 1000);
-	}
-	
-	public void closeRift(RiftLocation location)
-	{
-		location.setOpened(false);
-		for (VisibleObject npc : location.getSpawned())
+		if (isRift(id))
 		{
-			((Npc) npc).getController().cancelTask(TaskId.RESPAWN);
-			npc.getController().onDelete();
+			return RiftService.getInstance().getRiftLocations().keySet().contains(id);
 		}
-		location.getSpawned().clear();
-	}
-	
-	public void closeRifts()
-	{
-		closing.lock();
-		try
+		
+		for (RiftLocation loc : RiftService.getInstance().getRiftLocations().values())
 		{
-			for (RiftLocation rift : activeRifts.values())
+			if (loc.getWorldId() == id)
 			{
-				closeRift(rift);
+				return true;
 			}
-			activeRifts.clear();
 		}
-		finally
-		{
-			closing.unlock();
-		}
+		
+		return false;
 	}
 	
-	public int getDuration()
+	/**
+	 * Checks if the given {@code id} belongs to a rift.<br>
+	 * This method returns {@code true} if the {@code id} is less than {@code 10000}.
+	 * @param id The unique identifier to check.
+	 * @return {@code true} if the ID is valid for a rift, otherwise {@code false}.
+	 */
+	private boolean isRift(int id)
 	{
-		return duration;
-	}
-	
-	public RiftLocation getRiftLocation(int id)
-	{
-		return locations.get(id);
-	}
-	
-	public Map<Integer, RiftLocation> getRiftLocations()
-	{
-		return locations;
-	}
-	
-	public static RiftService getInstance()
-	{
-		return RiftServiceHolder.INSTANCE;
-	}
-	
-	private static class RiftServiceHolder
-	{
-		static final RiftService INSTANCE = new RiftService();
+		return id < 10000;
 	}
 }

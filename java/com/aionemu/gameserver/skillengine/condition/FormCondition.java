@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.condition;
 
@@ -28,6 +28,8 @@ import com.aionemu.gameserver.skillengine.model.TransformType;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Represents a condition that checks if a player is in a specific {@link TransformType}.<br>
+ * This class is used by the skill engine to validate whether a skill can be cast based on the character's current form.
  * @author kecimis
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -37,15 +39,23 @@ public class FormCondition extends Condition
 	@XmlAttribute(required = true)
 	protected TransformType value;
 	
+	/**
+	 * Checks if the player is in the correct transformation form.<br>
+	 * This method verifies that the effector's transform type matches the required {@code value}.<br>
+	 * It sends a system message to the player if they are in the wrong form.
+	 * @param env The {@link Skill} object containing the current environment and targets.
+	 * @return {@code true} if the condition is met, otherwise {@code false}.
+	 */
 	@Override
 	public boolean validate(Skill env)
 	{
-		if ((env.getEffector() instanceof Player))
+		if (env.getEffector() instanceof Player)
 		{
-			if ((env.getEffector().getTransformModel().isActive()) && (env.getEffector().getTransformModel().getType() == value))
+			if (env.getEffector().getTransformModel().isActive() && (env.getEffector().getTransformModel().getType() == value))
 			{
 				return true;
 			}
+			
 			PacketSendUtility.sendPacket((Player) env.getEffector(), SM_SYSTEM_MESSAGE.STR_SKILL_CAN_NOT_CAST_IN_THIS_FORM);
 			return false;
 		}

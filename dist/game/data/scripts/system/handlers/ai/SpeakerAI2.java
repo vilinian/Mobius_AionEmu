@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.ai;
 
@@ -23,28 +23,38 @@ import com.aionemu.gameserver.model.templates.npcshout.ShoutEventType;
 import com.aionemu.gameserver.services.SiegeService;
 
 /**
+ * Handles the artificial intelligence logic for speaker NPCs.<br>
+ * This class manages how these entities interact with the world and respond to events.
  * @author Rolandas
  */
 @AIName("speaker")
 public class SpeakerAI2 extends GeneralNpcAI2
 {
+	/**
+	 * Handles specific shout events based on the NPC's race and siege status.<br>
+	 * This method checks if certain conditions are met for different patterns.<br>
+	 * It returns {@code true} only if the requirements for a pattern are satisfied.
+	 * @param event The type of shout event occurring.
+	 * @param pattern A string identifier representing the specific shout pattern.
+	 * @param skillNumber The number associated with the skill being used.
+	 * @return {@code true} if the conditions for the pattern are met, otherwise {@code false}.
+	 */
 	@Override
 	public boolean onPatternShout(ShoutEventType event, String pattern, int skillNumber)
 	{
-		if ((getOwner().getWorldId() != 210050000) && (getOwner().getWorldId() != 220070000))
+		if (((getOwner().getWorldId() != 210050000) && (getOwner().getWorldId() != 220070000)) || (event != ShoutEventType.IDLE) || (pattern == null))
 		{
 			return false;
 		}
-		if ((event != ShoutEventType.IDLE) || (pattern == null))
-		{
-			return false;
-		}
+		
 		final SiegeService srv = SiegeService.getInstance();
+		
 		final Race npcRace = getOwner().getRace();
 		if (npcRace == Race.ASMODIANS)
 		{
 			if ("1".equals(pattern))
 			{
+				// TODO: find if Dredgion Ship is spawned
 			}
 			else if ("2".equals(pattern))
 			{
@@ -52,7 +62,7 @@ public class SpeakerAI2 extends GeneralNpcAI2
 			}
 			else if ("3".equals(pattern))
 			{
-				return srv.isSiegeInProgress(1132) && (srv.getSiegeLocation(1132).getRace() == SiegeRace.ASMODIANS);
+				return (srv.isSiegeInProgress(1132) && (srv.getSiegeLocation(1132).getRace() == SiegeRace.ASMODIANS)) || (srv.isSiegeInProgress(1251) && (srv.getSiegeLocation(1251).getRace() == SiegeRace.ASMODIANS));
 			}
 			else if ("4".equals(pattern))
 			{
@@ -64,13 +74,14 @@ public class SpeakerAI2 extends GeneralNpcAI2
 			}
 			else if ("6".equals(pattern))
 			{
-				return (srv.getSiegeLocation(3011).getRace() == SiegeRace.ELYOS) && (srv.getSiegeLocation(3021).getRace() == SiegeRace.ELYOS);
+				return (srv.getSiegeLocation(3011) != null) && (srv.getSiegeLocation(3011).getRace() == SiegeRace.ELYOS) && (srv.getSiegeLocation(3021) != null) && (srv.getSiegeLocation(3021).getRace() == SiegeRace.ELYOS);
 			}
 		}
 		else if (npcRace == Race.ELYOS)
 		{
 			if ("1".equals(pattern))
 			{
+				// TODO: find if Dredgion Ship is spawned
 			}
 			else if ("2".equals(pattern))
 			{
@@ -78,7 +89,7 @@ public class SpeakerAI2 extends GeneralNpcAI2
 			}
 			else if ("3".equals(pattern))
 			{
-				return srv.isSiegeInProgress(1141) && (srv.getSiegeLocation(1141).getRace() == SiegeRace.ELYOS);
+				return (srv.isSiegeInProgress(1141) && (srv.getSiegeLocation(1141).getRace() == SiegeRace.ELYOS)) || (srv.isSiegeInProgress(1211) && (srv.getSiegeLocation(1211).getRace() == SiegeRace.ELYOS));
 			}
 			else if ("4".equals(pattern))
 			{
@@ -90,9 +101,10 @@ public class SpeakerAI2 extends GeneralNpcAI2
 			}
 			else if ("6".equals(pattern))
 			{
-				return (srv.getSiegeLocation(2011).getRace() == SiegeRace.ASMODIANS) && (srv.getSiegeLocation(2021).getRace() == SiegeRace.ASMODIANS);
+				return (srv.getSiegeLocation(2011) != null) && (srv.getSiegeLocation(2011).getRace() == SiegeRace.ASMODIANS) && (srv.getSiegeLocation(2021) != null) && (srv.getSiegeLocation(2021).getRace() == SiegeRace.ASMODIANS);
 			}
 		}
+		
 		return false;
 	}
 }

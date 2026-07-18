@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.models.xmlQuest.events;
 
@@ -33,7 +33,10 @@ import com.aionemu.gameserver.questEngine.model.QuestState;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
- * @author Mr. Poke
+ * Represents an event triggered when a monster is killed during a quest.<br>
+ * This class handles the logic for updating {@link QuestState} based on the kill action.<br>
+ * It provides data necessary for the {@link QuestOperations} to process the completion of a quest objective.
+ * @author Mr. Poke, modified Bobobear
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "OnKillEvent", propOrder =
@@ -47,15 +50,28 @@ public class OnKillEvent extends QuestEvent
 	protected List<Monster> monster;
 	protected QuestOperations complite;
 	
+	/**
+	 * Retrieves the list of {@link Monster} objects associated with this event.<br>
+	 * If the list is {@code null}, it returns a new empty {@code ArrayList}.
+	 * @return A {@code List} of {@link Monster} objects.
+	 */
 	public List<Monster> getMonsters()
 	{
 		if (monster == null)
 		{
 			monster = new ArrayList<>();
 		}
+		
 		return monster;
 	}
 	
+	/**
+	 * Executes the logic for a monster kill event.<br>
+	 * It updates quest variables and sends packets to the player.<br>
+	 * This method returns {@code false} in most cases after processing.
+	 * @param env The current environment containing quest and player data.
+	 * @return {@code true} if the operation succeeded, otherwise {@code false}.
+	 */
 	@Override
 	public boolean operate(QuestEnv env)
 	{
@@ -93,8 +109,10 @@ public class OnKillEvent extends QuestEvent
 					return false;
 				}
 			}
+			
 			complite.operate(env);
 		}
+		
 		return false;
 	}
 }

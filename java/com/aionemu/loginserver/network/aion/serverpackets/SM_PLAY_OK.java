@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.aion.serverpackets;
 
@@ -21,6 +21,8 @@ import com.aionemu.loginserver.network.aion.LoginConnection;
 import com.aionemu.loginserver.network.aion.SessionKey;
 
 /**
+ * This packet is sent to the client to confirm a successful login.<br>
+ * It signals that the user can now enter the game world.
  * @author -Nemesiss-
  */
 public class SM_PLAY_OK extends AionServerPacket
@@ -36,9 +38,11 @@ public class SM_PLAY_OK extends AionServerPacket
 	private final int serverId;
 	
 	/**
-	 * Constructs new instance of <tt>SM_PLAY_OK </tt> packet.
-	 * @param key session key
-	 * @param serverId
+	 * Creates a new {@code SM_PLAY_OK} packet instance.<br>
+	 * This packet handles the successful play response for a user session.<br>
+	 * It uses data from the provided {@link SessionKey}.
+	 * @param key The {@code SessionKey} containing security tokens.
+	 * @param serverId The unique identifier for the game server.
 	 */
 	public SM_PLAY_OK(SessionKey key, byte serverId)
 	{
@@ -48,9 +52,6 @@ public class SM_PLAY_OK extends AionServerPacket
 		this.serverId = serverId;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void writeImpl(LoginConnection con)
 	{

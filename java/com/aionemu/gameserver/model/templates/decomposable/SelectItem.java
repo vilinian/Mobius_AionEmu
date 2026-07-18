@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.decomposable;
 
@@ -23,6 +23,11 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.aionemu.gameserver.model.Race;
 
+/**
+ * Represents a template for items that can be decomposed into other components.<br>
+ * This class defines the data structure for selectable items within the decomposition system.
+ * @author Alcapwnd
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "SelectItem")
 public class SelectItem
@@ -31,21 +36,36 @@ public class SelectItem
 	private int id;
 	
 	@XmlAttribute
-	private final int count = 1;
+	private int count = 1;
 	
-	@XmlAttribute(name = "race")
-	protected Race race = Race.PC_ALL;
+	@XmlAttribute
+	private Race race = Race.PC_ALL;
 	
+	/**
+	 * Retrieves the unique identifier for this selection item.<br>
+	 * This value corresponds to the {@code id} field.
+	 * @return The {@code int} ID of the selected item.
+	 */
 	public int getSelectItemId()
 	{
 		return id;
 	}
 	
+	/**
+	 * Retrieves the current count value.<br>
+	 * This method returns the integer stored in the {@code count} field.
+	 * @return The current count as an {@code int}.
+	 */
 	public int getCount()
 	{
 		return count;
 	}
 	
+	/**
+	 * Retrieves the {@code Race} of the player.<br>
+	 * This method returns the current character race.
+	 * @return The {@link Race} of the player.
+	 */
 	public Race getRace()
 	{
 		return race;

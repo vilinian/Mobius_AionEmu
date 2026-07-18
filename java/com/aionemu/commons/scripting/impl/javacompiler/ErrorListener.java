@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting.impl.javacompiler;
 
@@ -26,7 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is simple compiler error listener that forwards errors to log4j logger
+ * This class acts as a {@code DiagnosticListener} for the Java compiler.<br>
+ * It captures compilation errors and forwards them to the logger.<br>
+ * It helps developers identify issues during the script compilation process.
  * @author SoulKeeper
  */
 public class ErrorListener implements DiagnosticListener<JavaFileObject>
@@ -34,8 +36,10 @@ public class ErrorListener implements DiagnosticListener<JavaFileObject>
 	private static final Logger log = LoggerFactory.getLogger(ErrorListener.class);
 	
 	/**
-	 * Reports compilation errors to log4j
-	 * @param diagnostic compiler errors
+	 * Logs a compilation diagnostic message to the logger.<br>
+	 * This method extracts details like the error kind, message, and source location.<br>
+	 * It formats these details into a readable string for debugging purposes.
+	 * @param diagnostic The {@code Diagnostic} object containing compiler information.
 	 */
 	@Override
 	public void report(Diagnostic<? extends JavaFileObject> diagnostic)
@@ -57,6 +61,7 @@ public class ErrorListener implements DiagnosticListener<JavaFileObject>
 			sb.append("Column: ");
 			sb.append(diagnostic.getColumnNumber());
 		}
+		
 		log.error(sb.toString());
 	}
 }

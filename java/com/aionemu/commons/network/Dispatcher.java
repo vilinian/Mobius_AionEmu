@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.network;
 
@@ -29,8 +29,12 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aionemu.commons.options.Assertion;
+
 /**
- * Dispatcher that dispatch SelectionKeys set selected by Selector.
+ * This class handles the distribution of {@link SelectionKey} objects identified by a {@link Selector}.<br>
+ * It processes network events and routes them to the appropriate handlers.<br>
+ * It extends {@code Thread} to perform these operations asynchronously.
  * @author -Nemesiss-
  */
 public abstract class Dispatcher extends Thread
@@ -55,10 +59,12 @@ public abstract class Dispatcher extends Thread
 	private final Object gate = new Object();
 	
 	/**
-	 * Constructor.
-	 * @param name
-	 * @param dcPool
-	 * @throws IOException
+	 * Creates a new {@link Dispatcher} instance.<br>
+	 * This constructor initializes the internal {@code selector}.<br>
+	 * It sets up the thread name and the execution pool for disconnections.
+	 * @param name The name to assign to the dispatcher thread.
+	 * @param dcPool The {@code Executor} used for handling disconnection tasks.
+	 * @throws IOException If an error occurs while opening the {@code Selector}.
 	 */
 	public Dispatcher(String name, Executor dcPool) throws IOException
 	{
@@ -81,17 +87,15 @@ public abstract class Dispatcher extends Thread
 	abstract void dispatch() throws IOException;
 	
 	/**
-	 * @return Selector of this Dispatcher
+	 * Retrieves the {@link Selector} used by this dispatcher.<br>
+	 * This object manages the selection of ready channels.
+	 * @return The current {@code Selector} instance.
 	 */
-	public final Selector selector()
+	public Selector selector()
 	{
 		return selector;
 	}
 	
-	/**
-	 * Dispatching Selected keys and processing pending close.
-	 * @see java.lang.Thread#run()
-	 */
 	@Override
 	public void run()
 	{
@@ -113,13 +117,15 @@ public abstract class Dispatcher extends Thread
 	}
 	
 	/**
-	 * Register new client connected to this Dispatcher and set SelectionKey (result of registration) as this key of given AConnection.
-	 * @param ch
-	 * @param ops
-	 * @param att
-	 * @throws IOException
+	 * Registers a {@link SelectableChannel} with the internal selector.<br>
+	 * This method links the channel to an {@link AConnection} object.<br>
+	 * It also wakes up the selector to ensure it processes the new registration.
+	 * @param ch The channel to register.
+	 * @param ops The set of operations to monitor on the channel.
+	 * @param att The connection attribute associated with this channel.
+	 * @throws IOException If an I/O error occurs during registration.
 	 */
-	public final void register(SelectableChannel ch, int ops, AConnection att) throws IOException
+	public void register(SelectableChannel ch, int ops, AConnection att) throws IOException
 	{
 		synchronized (gate)
 		{
@@ -129,14 +135,16 @@ public abstract class Dispatcher extends Thread
 	}
 	
 	/**
-	 * Register new Acceptor this Dispatcher and return SelectionKey (result of registration).
-	 * @param ch
-	 * @param ops
-	 * @param att
-	 * @return SelectionKey representing this registration.
-	 * @throws IOException
+	 * Registers a {@link SelectableChannel} with the internal {@code Selector}.<br>
+	 * This method ensures thread safety by synchronizing on the gate object.<br>
+	 * It wakes up the selector before completing the registration.
+	 * @param ch The channel to register.
+	 * @param ops The set of operations to monitor.
+	 * @param att The attachment associated with the key.
+	 * @return The {@link SelectionKey} for the registered channel.
+	 * @throws IOException If an I/O error occurs during registration.
 	 */
-	public final SelectionKey register(SelectableChannel ch, int ops, Acceptor att) throws IOException
+	public SelectionKey register(SelectableChannel ch, int ops, Acceptor att) throws IOException
 	{
 		synchronized (gate)
 		{
@@ -146,10 +154,13 @@ public abstract class Dispatcher extends Thread
 	}
 	
 	/**
-	 * Accept new connection.
-	 * @param key
+	 * Handles an incoming connection request.<br>
+	 * This method retrieves the {@link Acceptor} from the {@code SelectionKey}.<br>
+	 * It then calls the {@code accept} method on that object.<br>
+	 * Any exceptions during this process are logged as errors.
+	 * @param key The {@code SelectionKey} representing the ready channel.
 	 */
-	final void accept(SelectionKey key)
+	void accept(SelectionKey key)
 	{
 		try
 		{
@@ -162,10 +173,12 @@ public abstract class Dispatcher extends Thread
 	}
 	
 	/**
-	 * Read data from socketChannel represented by SelectionKey key. Parse and Process data. Prepare buffer for next read.
-	 * @param key
+	 * Reads data from the channel associated with the given {@code SelectionKey}.<br>
+	 * It processes the incoming bytes into messages using the {@code ByteBuffer)} method.<br>
+	 * If an error occurs or the connection is closed, it calls {@code closeConnectionImpl}.
+	 * @param key The {@code SelectionKey} representing the channel to read from.
 	 */
-	final void read(SelectionKey key)
+	void read(SelectionKey key)
 	{
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		final AConnection con = (AConnection) key.attachment();
@@ -173,8 +186,14 @@ public abstract class Dispatcher extends Thread
 		final ByteBuffer rb = con.readBuffer;
 		
 		/**
-		 * Attempt to read off the channel
+		 * Test if this build should use assertion. If NetworkAssertion == false javac will remove this code block
 		 */
+		if (Assertion.NetworkAssertion)
+		{
+			assert con.readBuffer.hasRemaining();
+		}
+		
+		/** Attempt to read off the channel */
 		int numRead;
 		try
 		{
@@ -202,18 +221,25 @@ public abstract class Dispatcher extends Thread
 		rb.flip();
 		while ((rb.remaining() > 2) && (rb.remaining() >= rb.getShort(rb.position())))
 		{
-			/**
-			 * got full message
-			 */
+			/** got full message */
 			if (!parse(con, rb))
 			{
 				closeConnectionImpl(con);
 				return;
 			}
 		}
+		
 		if (rb.hasRemaining())
 		{
 			con.readBuffer.compact();
+			
+			/**
+			 * Test if this build should use assertion. If NetworkAssertion == false javac will remove this code block
+			 */
+			if (Assertion.NetworkAssertion)
+			{
+				assert con.readBuffer.hasRemaining();
+			}
 		}
 		else
 		{
@@ -222,10 +248,12 @@ public abstract class Dispatcher extends Thread
 	}
 	
 	/**
-	 * Parse data from buffer and prepare buffer for reading just one packet - call processData(ByteBuffer b).
-	 * @param con Connection
-	 * @param buf Buffer with packet data
-	 * @return True if packet was parsed.
+	 * Parses the incoming data from a buffer.<br>
+	 * It extracts the message based on the specified size.<br>
+	 * The method then passes the data to {@code processData}.
+	 * @param con The connection object used to process the data.
+	 * @param buf The buffer containing the raw bytes to be parsed.
+	 * @return {@code true} if the data was processed successfully, or {@code false} otherwise.
 	 */
 	private boolean parse(AConnection con, ByteBuffer buf)
 	{
@@ -237,11 +265,10 @@ public abstract class Dispatcher extends Thread
 			{
 				sz -= 2;
 			}
-			final ByteBuffer b = (ByteBuffer) buf.slice().limit(sz);
+			
+			final ByteBuffer b = buf.slice().limit(sz);
 			b.order(ByteOrder.LITTLE_ENDIAN);
-			/**
-			 * read message fully
-			 */
+			/** read message fully */
 			buf.position(buf.position() + sz);
 			
 			return con.processData(b);
@@ -254,19 +281,19 @@ public abstract class Dispatcher extends Thread
 	}
 	
 	/**
-	 * Write as much as possible data to socketChannel represented by SelectionKey key. If all data were written key write interest will be disabled.
-	 * @param key
+	 * Writes pending data from an {@link AConnection} to the underlying channel.<br>
+	 * This method handles partial writes and manages the {@code OP_WRITE} interest.<br>
+	 * It also closes the connection if it is marked as pending close.
+	 * @param key The {@link SelectionKey} representing the channel and its associated connection.
 	 */
-	final void write(SelectionKey key)
+	void write(SelectionKey key)
 	{
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		final AConnection con = (AConnection) key.attachment();
 		
 		int numWrite;
 		final ByteBuffer wb = con.writeBuffer;
-		/**
-		 * We have not writted data
-		 */
+		/** We have not writted data */
 		if (wb.hasRemaining())
 		{
 			try
@@ -285,9 +312,7 @@ public abstract class Dispatcher extends Thread
 				return;
 			}
 			
-			/**
-			 * Again not all data was send
-			 */
+			/** Again not all data was send */
 			if (wb.hasRemaining())
 			{
 				return;
@@ -305,9 +330,7 @@ public abstract class Dispatcher extends Thread
 				break;
 			}
 			
-			/**
-			 * Attempt to write to the channel
-			 */
+			/** Attempt to write to the channel */
 			try
 			{
 				numWrite = socketChannel.write(wb);
@@ -324,13 +347,19 @@ public abstract class Dispatcher extends Thread
 				return;
 			}
 			
-			/**
-			 * not all data was send
-			 */
+			/** not all data was send */
 			if (wb.hasRemaining())
 			{
 				return;
 			}
+		}
+		
+		/**
+		 * Test if this build should use assertion. If NetworkAssertion == false javac will remove this code block
+		 */
+		if (Assertion.NetworkAssertion)
+		{
+			assert !wb.hasRemaining();
 		}
 		
 		/**
@@ -348,13 +377,25 @@ public abstract class Dispatcher extends Thread
 	}
 	
 	/**
-	 * Connection will be closed [onlyClose()] and onDisconnect() method will be executed on another thread [DisconnectionThreadPool] after getDisconnectionDelay() time in ms. This method may only be called by current Dispatcher Thread.
-	 * @param con
+	 * Closes the network connection for a given {@code AConnection}.<br>
+	 * This method handles the internal logic of disconnecting a client.<br>
+	 * It schedules a {@link DisconnectionTask} to be executed by the pool.
+	 * @param con The {@code AConnection} object that needs to be closed.
 	 */
-	protected final void closeConnectionImpl(AConnection con)
+	protected void closeConnectionImpl(AConnection con)
 	{
-		if (con.onlyClose()) // dcPool.scheduleDisconnection(new DisconnectionTask(con), con.getDisconnectionDelay());
+		/**
+		 * Test if this build should use assertion. If NetworkAssertion == false javac will remove this code block
+		 */
+		if (Assertion.NetworkAssertion)
 		{
+			assert Thread.currentThread() == this;
+		}
+		
+		if (con.onlyClose())
+		{
+			// dcPool.scheduleDisconnection(new DisconnectionTask(con),
+			// con.getDisconnectionDelay());
 			dcPool.execute(new DisconnectionTask(con));
 		}
 	}

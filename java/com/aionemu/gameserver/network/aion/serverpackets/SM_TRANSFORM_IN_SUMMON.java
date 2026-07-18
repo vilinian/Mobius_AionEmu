@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -22,6 +22,8 @@ import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 
 /**
+ * This packet handles the transformation of a {@link Creature} into a summon.<br>
+ * It is sent to clients to update the visual state of an entity during a summoning action.
  * @author xTz
  */
 public class SM_TRANSFORM_IN_SUMMON extends AionServerPacket
@@ -29,11 +31,24 @@ public class SM_TRANSFORM_IN_SUMMON extends AionServerPacket
 	private final Player player;
 	private final int summonObject;
 	
+	/**
+	 * Handles the transformation of a {@link Creature} into a summon.<br>
+	 * This method creates a packet for a specific {@code Player}.<br>
+	 * It uses the unique object ID from the provided {@code creature}.
+	 * @param player The {@code Player} who is performing the action.
+	 * @param creature The {@code Creature} being transformed into a summon.
+	 */
 	public SM_TRANSFORM_IN_SUMMON(Player player, Creature creature)
 	{
 		this(player, creature.getObjectId());
 	}
 	
+	/**
+	 * This packet handles the transformation of a summon.<br>
+	 * It links a {@link Player} to a specific creature object.
+	 * @param player The {@code Player} who owns the summon.
+	 * @param creatureObjectId The unique ID of the {@code Creature} being transformed.
+	 */
 	public SM_TRANSFORM_IN_SUMMON(Player player, int creatureObjectId)
 	{
 		this.player = player;

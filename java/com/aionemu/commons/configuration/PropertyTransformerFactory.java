@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.configuration;
 
@@ -37,22 +37,24 @@ import com.aionemu.commons.configuration.transformers.StringTransformer;
 import com.aionemu.commons.utils.ClassUtils;
 
 /**
- * This class is responsible for creating property transformers. Each time it creates new instance of custom property transformer, but for build-in it uses shared instances to avoid overhead
+ * This class is responsible for creating property transformers.<br>
+ * It provides new instances for custom transformers while using shared instances for built-in types to reduce overhead.
  * @author SoulKeeper
  */
 public class PropertyTransformerFactory
 {
 	/**
-	 * Returns property transformer or throws {@link com.aionemu.commons.configuration.TransformationException} if can't create new one.
-	 * @param clazzToTransform Class that will is going to be transformed
-	 * @param tc {@link com.aionemu.commons.configuration.PropertyTransformer} class that will be instantiated
-	 * @return instance of PropertyTransformer
-	 * @throws TransformationException if can't instantiate {@link com.aionemu.commons.configuration.PropertyTransformer}
+	 * Creates a new {@link PropertyTransformer} instance based on the provided classes.<br>
+	 * It returns a shared instance for built-in types to improve performance.<br>
+	 * If a custom transformer class is provided, it attempts to create a new instance of it.
+	 * @param clazzToTransform The class type that needs to be transformed.
+	 * @param tc The specific {@link PropertyTransformer} class to instantiate, or {@code null} for default behavior.
+	 * @return A valid {@link PropertyTransformer} instance.
+	 * @throws TransformationException If the transformer cannot be created or is not found.
 	 */
 	@SuppressWarnings("rawtypes")
 	public static PropertyTransformer newTransformer(Class clazzToTransform, Class<? extends PropertyTransformer> tc) throws TransformationException
 	{
-		
 		// Just a hack, we can't set null to annotation value
 		if (tc == PropertyTransformer.class)
 		{
@@ -63,13 +65,14 @@ public class PropertyTransformerFactory
 		{
 			try
 			{
-				return tc.newInstance();
+				return tc.getDeclaredConstructor().newInstance();
 			}
 			catch (Exception e)
 			{
 				throw new TransformationException("Can't instantiate property transfromer", e);
 			}
 		}
+		
 		if ((clazzToTransform == Boolean.class) || (clazzToTransform == Boolean.TYPE))
 		{
 			return BooleanTransformer.SHARED_INSTANCE;
@@ -109,8 +112,8 @@ public class PropertyTransformerFactory
 		else if (clazzToTransform.isEnum())
 		{
 			return EnumTransformer.SHARED_INSTANCE;
-			// TODO: Implement
-			// } else if (ClassUtils.isSubclass(clazzToTransform,
+			
+			// TODO: Implement the else if block for ClassUtils.isSubclass.
 			// Collection.class)) {
 			// return new CollectionTransformer();
 			// } else if (clazzToTransform.isArray()) {

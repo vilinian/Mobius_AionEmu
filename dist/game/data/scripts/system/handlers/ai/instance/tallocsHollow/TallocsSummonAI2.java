@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.ai.instance.tallocsHollow;
 
@@ -22,18 +22,18 @@ import com.aionemu.gameserver.ai2.AIName;
 import com.aionemu.gameserver.ai2.NpcAI2;
 import com.aionemu.gameserver.controllers.SummonController;
 import com.aionemu.gameserver.controllers.effect.EffectController;
-import com.aionemu.gameserver.model.ChatType;
 import com.aionemu.gameserver.model.EmotionType;
 import com.aionemu.gameserver.model.gameobjects.Summon;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_CUSTOM_SETTINGS;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_DIALOG_WINDOW;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_EMOTION;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_MESSAGE;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_TRANSFORM_IN_SUMMON;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles the artificial intelligence for the {@link Summon} entity in the Tallocs Hollow instance.<br>
+ * This class manages specific behaviors and interactions for this summon type.
  * @author xTz
  */
 @AIName("tallocssummon")
@@ -41,17 +41,29 @@ public class TallocsSummonAI2 extends NpcAI2
 {
 	private final AtomicBoolean isTransformed = new AtomicBoolean(false);
 	
+	/**
+	 * Handles the logic when a player selects an option in a dialog.<br>
+	 * It checks for specific items and grants rewards or skills based on the {@code dialogId}.<br>
+	 * This method is triggered by the NPC's interaction system.
+	 * @param player The {@link Player} who is interacting with the NPC.
+	 * @param dialogId The unique identifier for the current dialog window.
+	 * @param questId The ID of the quest associated with this interaction.
+	 * @param extendedRewardIndex The index used to determine specific rewards.
+	 * @return Always returns {@code true} to indicate the action was processed.
+	 */
 	@Override
 	public boolean onDialogSelect(Player player, int dialogId, int questId, int extendedRewardIndex)
 	{
-		if ((dialogId == 64) && isTransformed.compareAndSet(false, true)) // 4.3
+		if ((dialogId == 59) && isTransformed.compareAndSet(false, true))
 		{
 			PacketSendUtility.sendPacket(player, new SM_DIALOG_WINDOW(getObjectId(), 0));
 			if (player.getSummon() != null)
 			{
-				PacketSendUtility.broadcastPacket(player, new SM_MESSAGE(player, "Please dismiss your summon.", ChatType.GROUP_LEADER), true);
+				// to do remove
+				PacketSendUtility.sendMessage(player, "please dismiss your summon first.");
 				return true;
 			}
+			
 			final Summon summon = new Summon(getObjectId(), new SummonController(), getSpawnTemplate(), getObjectTemplate(), getObjectTemplate().getLevel(), 0);
 			player.setSummon(summon);
 			summon.setMaster(player);
@@ -65,9 +77,15 @@ public class TallocsSummonAI2 extends NpcAI2
 			summon.setState(1);
 			PacketSendUtility.broadcastPacket(summon, new SM_EMOTION(summon, EmotionType.START_EMOTE2, 0, summon.getObjectId()));
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * This method is called when a dialog starts with an NPC.<br>
+	 * It triggers the start of the item usage logic for the {@code player}.
+	 * @param player The {@link Player} who initiated the interaction.
+	 */
 	@Override
 	protected void handleDialogStart(Player player)
 	{

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.models.xmlQuest;
 
@@ -28,6 +28,8 @@ import com.aionemu.gameserver.questEngine.model.QuestEnv;
 import com.aionemu.gameserver.questEngine.model.QuestState;
 
 /**
+ * Represents an {@link Npc} associated with a quest defined in the XML configuration.<br>
+ * This class maps the NPC data required for quest interactions and progression.
  * @author Mr. Poke
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -41,6 +43,14 @@ public class QuestNpc
 	@XmlAttribute(required = true)
 	protected int id;
 	
+	/**
+	 * Executes the logic for a specific quest dialog.<br>
+	 * It checks if the current dialog ID matches this action.<br>
+	 * It verifies conditions before performing operations.
+	 * @param env The current environment context for the quest.
+	 * @param qs The current state of the player's quest.
+	 * @return {@code true} if the operation was successful, otherwise {@code false}.
+	 */
 	public boolean operate(QuestEnv env, QuestState qs)
 	{
 		int npcId = -1;
@@ -48,10 +58,12 @@ public class QuestNpc
 		{
 			npcId = ((Npc) env.getVisibleObject()).getNpcId();
 		}
+		
 		if (npcId != id)
 		{
 			return false;
 		}
+		
 		for (QuestDialog questDialog : dialog)
 		{
 			if (questDialog.operate(env, qs))
@@ -59,6 +71,7 @@ public class QuestNpc
 				return true;
 			}
 		}
+		
 		return false;
 	}
 }

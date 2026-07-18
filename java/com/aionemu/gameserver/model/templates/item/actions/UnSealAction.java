@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.item.actions;
 
@@ -33,6 +33,11 @@ import com.aionemu.gameserver.services.item.ItemPacketService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
 
+/**
+ * Handles the logic for unsealing an item.<br>
+ * This action is triggered when a player uses a specific {@link Item} to remove its seal.<br>
+ * It manages the necessary state changes and sends updates to the client.
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "UnSealAction")
 public class UnSealAction extends AbstractItemAction
@@ -40,17 +45,38 @@ public class UnSealAction extends AbstractItemAction
 	@XmlAttribute(name = "action")
 	private int action;
 	
+	/**
+	 * Retrieves the specific action ID for this unseal operation.<br>
+	 * This value is used to identify which type of action is being performed.
+	 * @return The {@code int} value representing the action.
+	 */
 	public int getAction()
 	{
 		return action;
 	}
 	
+	/**
+	 * Checks if a {@link Player} can perform this action.<br>
+	 * This method validates the requirements for interacting with items.<br>
+	 * It currently always returns {@code true}.
+	 * @param player The {@link Player} attempting the action.
+	 * @param parentItem The item that triggers the action.
+	 * @param targetItem The item being acted upon.
+	 * @return {@code true} if the action is allowed, otherwise {@code false}.
+	 */
 	@Override
 	public boolean canAct(Player player, Item parentItem, Item targetItem)
 	{
 		return true;
 	}
 	
+	/**
+	 * Executes the action for unsealing an item.<br>
+	 * This method handles the logic when a {@link Player} interacts with an item to change its seal status.
+	 * @param player The {@code Player} who is performing the action.
+	 * @param parentItem The {@code Item} that triggers this action.
+	 * @param targetItem The {@code Item} being acted upon.
+	 */
 	@Override
 	public void act(Player player, Item parentItem, Item targetItem)
 	{
@@ -82,7 +108,7 @@ public class UnSealAction extends AbstractItemAction
 			{
 				if (player.getInventory().decreaseByItemId(parentItem.getItemId(), 1))
 				{
-					PacketSendUtility.broadcastPacketAndReceive(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId().intValue(), player.getObjectId().intValue(), parentItem.getObjectId().intValue(), parentItem.getItemId(), 0, 1, 0));
+					PacketSendUtility.broadcastPacketAndReceive(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId().intValue(), player.getObjectId().intValue(), parentItem.getObjectId().intValue(), parentItem.getItemId(), 0, 1));
 					if (getAction() == 0)
 					{
 						targetItem.setUnSeal(0);
@@ -94,12 +120,14 @@ public class UnSealAction extends AbstractItemAction
 						PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_ITEM_SEAL_START_DONE(targetItem.getNameId()));
 					}
 				}
+				
 				PacketSendUtility.sendPacket(player, new SM_INVENTORY_UPDATE_ITEM(player, targetItem));
 				player.getObserveController().removeObserver(observer);
 				if (targetItem.isEquipped())
 				{
 					player.getGameStats().updateStatsVisually();
 				}
+				
 				ItemPacketService.updateItemAfterInfoChange(player, targetItem);
 				if (targetItem.isEquipped())
 				{

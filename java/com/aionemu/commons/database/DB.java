@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.database;
 
@@ -51,14 +51,27 @@ import org.slf4j.LoggerFactory;
  * After the function is called, it automatically closes and recycles the SQL Connection.<br>
  * <br>
  * Example:
- * <p/>
- * < pre> DB.select(&quot;SELECT name FROM test_table WHERE id=?&quot;, new ParamReadStH() {
- * <p/>
- * public void setParams(PreparedStatement stmt) throws SQLException { stmt.setInt(1, 50); }
- * <p/>
- * public void handleRead(ResultSet rset) throws SQLException { while (rset.next()) { // Usually here in the custom class you would set it to your needed var. var = rset.getString(&quot;name&quot;); } } });
+ * 
+ * <pre>
+ * DB.select(&quot;SELECT name FROM test_table WHERE id=?&quot;, new ParamReadStH()
+ * {
+ * 	
+ * 	public void setParams(PreparedStatement stmt) throws SQLException
+ * 	{
+ * 		stmt.setInt(1, 50);
+ * 	}
+ * 	
+ * 	public void handleRead(ResultSet rset) throws SQLException
+ * 	{
+ * 		while (rset.next())
+ * 		{
+ * 			// Usually here in the custom class you would set it to your
+ * 			// needed var.
+ * 			var = rset.getString(&quot;name&quot;);
+ * 		}
+ * 	}
+ * });
  * </pre>
- * <p/>
  * </p>
  * <hr>
  * <b>INSERT / UPDATE (insertUpdate method)</b>
@@ -82,53 +95,82 @@ import org.slf4j.LoggerFactory;
  * After the function is called, it automatically closes and recycles the SQL Connection.<br>
  * <br>
  * Example:<br>
- * <p/>
- * < pre> DB.insertUpdate(&quot;UPDATE test_table SET some_column=1&quot;);
+ * 
+ * <pre>
+ * DB.insertUpdate(&quot;UPDATE test_table SET some_column=1&quot;);
  * </pre>
- * <p/>
+ * 
  * <br>
- * <p/>
- * < pre> DB.insertUpdate(&quot;INSERT INTO test_table VALUES (?)&quot;, new IUStH() {
- * <p/>
- * public void handleInsertUpdate(PreparedStatement stmt) { // Usually this would be data from the custom class that implements IUSth String[] batchTestVars = { &quot;bob&quot;, &quot;mike&quot;, &quot;joe&quot; };
- * <p/>
- * for (String n : batchTestVars) { stmt.setString(1, n); stmt.addBatch(); }
- * <p/>
- * // REQUIRED stmt.executeBatch(); } });
- * <p/>
+ * 
+ * <pre>
+ * DB.insertUpdate(&quot;INSERT INTO test_table VALUES (?)&quot;, new IUStH()
+ * {
+ * 	
+ * 	public void handleInsertUpdate(PreparedStatement stmt)
+ * 	{
+ * 		// Usually this would be data from the custom class that implements
+ * 		// IUSth
+ * 		String[] batchTestVars =
+ * 		{
+ * 			&quot;bob&quot;,
+ * 			&quot;mike&quot;,
+ * 			&quot;joe&quot;
+ * 		};
+ * 		
+ * 		for (String n : batchTestVars)
+ * 		{
+ * 			stmt.setString(1, n);
+ * 			stmt.addBatch();
+ * 		}
+ * 		
+ * 		// REQUIRED
+ * 		stmt.executeBatch();
+ * 	}
+ * });
+ * 
  * </pre>
- * <p/>
+ * 
  * <br>
- * <p/>
- * < pre> DB.insertUpdate(&quot;UPDATE test_table SET some_column=? WHERE other_column=?&quot;, new IUStH() {
- * <p/>
- * public void handleInsertUpdate(PreparedStatement stmt) { stmt.setString(1, &quot;xxx&quot;); stmt.setInt(2, 10); stmt.executeUpdate(); } });
- * <p/>
+ * 
+ * <pre>
+ * DB.insertUpdate(&quot;UPDATE test_table SET some_column=? WHERE other_column=?&quot;, new IUStH()
+ * {
+ * 	
+ * 	public void handleInsertUpdate(PreparedStatement stmt)
+ * 	{
+ * 		stmt.setString(1, &quot;xxx&quot;);
+ * 		stmt.setInt(2, 10);
+ * 		stmt.executeUpdate();
+ * 	}
+ * });
+ * 
  * </pre>
- * <p/>
  * </p>
+ * This class provides a simplified utility for executing SQL queries using the database connection defined in {@code database.properties}.<br>
+ * It offers convenient methods to perform {@code select}, {@code insert}, and {@code update} operations while automatically managing the lifecycle of the {@code Connection}.<br>
+ * Developers can use custom implementations of reader and updater interfaces to handle query parameters and result processing efficiently.
  * @author Disturbing
  */
 public final class DB
 {
-	/**
-	 * Logger
-	 */
+	/** Logger */
 	protected static final Logger log = LoggerFactory.getLogger(DB.class);
 	
 	/**
-	 * Empty Constructor
+	 * Private constructor to prevent instantiation.<br>
+	 * This class is intended to be used with static methods only.
 	 */
 	private DB()
 	{
-		
 	}
 	
 	/**
-	 * Executes Select Query. Uses ReadSth to utilize params and return data. Recycles connection after competion.
-	 * @param query
-	 * @param reader
-	 * @return boolean Success
+	 * Executes a SQL SELECT query and processes the results.<br>
+	 * This method uses the provided {@code ReadStH} to handle the output.<br>
+	 * It automatically manages the database connection lifecycle.
+	 * @param query The SQL string to be executed.
+	 * @param reader The implementation used to read the result set.
+	 * @return {@code true} if the query was successful, or {@code false} otherwise.
 	 */
 	public static boolean select(String query, ReadStH reader)
 	{
@@ -136,11 +178,13 @@ public final class DB
 	}
 	
 	/**
-	 * Executes Select Query. Uses ReadSth to utilize params and return data. Recycles connection after completion.
-	 * @param query
-	 * @param reader
-	 * @param errMsg
-	 * @return boolean Success
+	 * Executes a SQL select query and processes the results using a reader.<br>
+	 * This method handles opening and closing the database connection automatically.<br>
+	 * It returns {@code true} if the operation succeeds or {@code false} if an error occurs.
+	 * @param query The SQL string to be executed.
+	 * @param reader An implementation of {@link ReadStH} to handle the result set.
+	 * @param errMsg A custom message to log if the query fails; can be {@code null}.
+	 * @return {@code true} if successful, {@code false} otherwise.
 	 */
 	public static boolean select(String query, ReadStH reader, String errMsg)
 	{
@@ -156,6 +200,7 @@ public final class DB
 			{
 				((ParamReadStH) reader).setParams(stmt);
 			}
+			
 			rset = stmt.executeQuery();
 			reader.handleRead(rset);
 		}
@@ -169,6 +214,7 @@ public final class DB
 			{
 				log.warn(errMsg + " " + e, e);
 			}
+			
 			return false;
 		}
 		finally
@@ -179,6 +225,7 @@ public final class DB
 				{
 					con.close();
 				}
+				
 				if (stmt != null)
 				{
 					stmt.close();
@@ -189,14 +236,17 @@ public final class DB
 				log.warn("Failed to close DB connection " + e, e);
 			}
 		}
+		
 		return true;
 	}
 	
 	/**
-	 * Call stored procedure
-	 * @param query
-	 * @param reader
-	 * @return
+	 * Executes a stored procedure or a complex SQL query.<br>
+	 * This method uses the provided {@code ReadStH} to handle the results.<br>
+	 * It returns {@code true} if the execution succeeds.
+	 * @param query The SQL string to be executed.
+	 * @param reader The handler used to process the result set.
+	 * @return {@code true} if successful, {@code false} otherwise.
 	 */
 	public static boolean call(String query, ReadStH reader)
 	{
@@ -204,11 +254,13 @@ public final class DB
 	}
 	
 	/**
-	 * Call stored procedure
-	 * @param query
-	 * @param reader
-	 * @param errMsg
-	 * @return
+	 * Executes a stored procedure or a callable SQL statement.<br>
+	 * This method handles the database connection and statement lifecycle automatically.<br>
+	 * It uses the provided {@code ReadStH} to handle parameters and results.
+	 * @param query The SQL string containing the call statement.
+	 * @param reader The implementation used to set parameters and handle the result set.
+	 * @param errMsg A custom message to log if the execution fails; can be {@code null}.
+	 * @return {@code true} if the procedure executed successfully, otherwise {@code false}.
 	 */
 	public static boolean call(String query, ReadStH reader, String errMsg)
 	{
@@ -224,6 +276,7 @@ public final class DB
 			{
 				((CallReadStH) reader).setParams(stmt);
 			}
+			
 			rset = stmt.executeQuery();
 			reader.handleRead(rset);
 		}
@@ -237,6 +290,7 @@ public final class DB
 			{
 				log.warn(errMsg + " " + e, e);
 			}
+			
 			return false;
 		}
 		finally
@@ -247,6 +301,7 @@ public final class DB
 				{
 					con.close();
 				}
+				
 				if (stmt != null)
 				{
 					stmt.close();
@@ -257,13 +312,15 @@ public final class DB
 				log.warn("Failed to close DB connection " + e, e);
 			}
 		}
+		
 		return true;
 	}
 	
 	/**
-	 * Executes Insert or Update Query not needing any further modification or batching. Recycles connection after completion.
-	 * @param query
-	 * @return boolean Success
+	 * Executes an SQL insert or update query.<br>
+	 * This method handles the database operation and automatically manages the connection.
+	 * @param query The SQL string to be executed.
+	 * @return {@code true} if the operation succeeded, otherwise {@code false}.
 	 */
 	public static boolean insertUpdate(String query)
 	{
@@ -271,10 +328,11 @@ public final class DB
 	}
 	
 	/**
-	 * Executes Insert or Update Query not needing any further modification or batching. Recycles connection after completion.
-	 * @param query
-	 * @param errMsg
-	 * @return success
+	 * Executes an SQL query that inserts or updates data.<br>
+	 * This method handles the database operation and logs a custom message if it fails.
+	 * @param query The SQL string to be executed.
+	 * @param errMsg A custom error message to log in case of failure.
+	 * @return {@code true} if the operation succeeded, or {@code false} otherwise.
 	 */
 	public static boolean insertUpdate(String query, String errMsg)
 	{
@@ -282,10 +340,12 @@ public final class DB
 	}
 	
 	/**
-	 * Executes Insert / Update Query. Utilizes IUSth for Batching and Query Editing. MUST MANUALLY EXECUTE QUERY / BATACH IN IUSth (No need to close Statement after execution)
-	 * @param query
-	 * @param batch
-	 * @return boolean Success
+	 * Executes an SQL query that performs an insert or update operation.<br>
+	 * This method uses the provided {@code IUStH} batch to handle data updates.<br>
+	 * It automatically manages the database connection and closes it after completion.
+	 * @param query The SQL string to be executed by the database.
+	 * @param batch The {@link IUStH} object containing the batch data.
+	 * @return {@code true} if the operation succeeded, or {@code false} otherwise.
 	 */
 	public static boolean insertUpdate(String query, IUStH batch)
 	{
@@ -293,11 +353,13 @@ public final class DB
 	}
 	
 	/**
-	 * Executes Insert or Update Query. Utilizes IUSth for Batching and Query Editing. Defines custom error message if error occurs. MUST MANUALLY EXECUTE QUERY / BATACH IN IUSth (No need to Statement after execution) Recycles connection after completion
-	 * @param query
-	 * @param batch
-	 * @param errMsg
-	 * @return boolean Success
+	 * Executes an insert or update SQL query.<br>
+	 * This method handles batch processing if a {@code IUStH} object is provided.<br>
+	 * It automatically manages the database connection and statement lifecycle.
+	 * @param query The SQL string to be executed.
+	 * @param batch The {@link IUStH} handler for managing batch parameters; can be {@code null}.
+	 * @param errMsg A custom message to log if the execution fails; can be {@code null}.
+	 * @return {@code true} if the operation succeeded, or {@code false} otherwise.
 	 */
 	public static boolean insertUpdate(String query, IUStH batch, String errMsg)
 	{
@@ -339,6 +401,7 @@ public final class DB
 				{
 					con.close();
 				}
+				
 				if (stmt != null)
 				{
 					stmt.close();
@@ -349,13 +412,16 @@ public final class DB
 				log.warn("Failed to close DB connection " + e, e);
 			}
 		}
+		
 		return true;
 	}
 	
 	/**
-	 * Begins new transaction
-	 * @return new Transaction object
-	 * @throws java.sql.SQLException if was unable to create transaction
+	 * Starts a new database transaction.<br>
+	 * This method retrieves a connection from {@link DatabaseFactory}.<br>
+	 * It returns a new {@code Transaction} object to manage the session.
+	 * @return A new {@code Transaction} instance for the current database connection.
+	 * @throws SQLException
 	 */
 	public static Transaction beginTransaction() throws SQLException
 	{
@@ -364,10 +430,10 @@ public final class DB
 	}
 	
 	/**
-	 * Creates PreparedStatement with given sql string.<br>
-	 * Statemens are created with {@link java.sql.ResultSet#TYPE_FORWARD_ONLY} and {@link java.sql.ResultSet#CONCUR_READ_ONLY}
-	 * @param sql SQL querry
-	 * @return Prepared statement if ok or null if error happend while creating
+	 * Creates a {@link PreparedStatement} for the given SQL string.<br>
+	 * This method uses default settings for result set type and concurrency.
+	 * @param sql The SQL query to be prepared.
+	 * @return A new {@code PreparedStatement} object.
 	 */
 	public static PreparedStatement prepareStatement(String sql)
 	{
@@ -375,16 +441,13 @@ public final class DB
 	}
 	
 	/**
-	 * Creates {@link java.sql.PreparedStatement} with given sql<br>
-	 * @param sql SQL querry
-	 * @param resultSetType a result set type; one of <br>
-	 *            <code>ResultSet.TYPE_FORWARD_ONLY</code>,<br>
-	 *            <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or <br>
-	 *            <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
-	 * @param resultSetConcurrency a concurrency type; one of <br>
-	 *            <code>ResultSet.CONCUR_READ_ONLY</code> or <br>
-	 *            <code>ResultSet.CONCUR_UPDATABLE</code>
-	 * @return Prepared Statement if ok or null if error happened while creating
+	 * Creates a {@link PreparedStatement} using the SQL string provided.<br>
+	 * This method handles obtaining the database connection automatically.<br>
+	 * It logs an error if the statement cannot be created.
+	 * @param sql The SQL query string to prepare.
+	 * @param resultSetType The type of result set returned by the query.
+	 * @param resultSetConcurrency The concurrency level for the result set.
+	 * @return The prepared {@link PreparedStatement} object or {@code null} if an error occurs.
 	 */
 	public static PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency)
 	{
@@ -415,9 +478,10 @@ public final class DB
 	}
 	
 	/**
-	 * Executes PreparedStatement
-	 * @param statement PreparedStatement to execute
-	 * @return returns result of {@link java.sql.PreparedStatement#executeQuery()} or -1 in case of error
+	 * Executes an update operation using the provided {@code PreparedStatement}.<br>
+	 * This method handles potential exceptions and logs any errors that occur.
+	 * @param statement The {@code PreparedStatement} to be executed.
+	 * @return The number of rows affected by the update, or -1 if an error occurs.
 	 */
 	public static int executeUpdate(PreparedStatement statement)
 	{
@@ -434,8 +498,10 @@ public final class DB
 	}
 	
 	/**
-	 * Executes PreparedStatement and closes it and it's connection
-	 * @param statement PreparedStatement to close
+	 * Executes an update query and closes the statement.<br>
+	 * This method calls {@code executeUpdate} first.<br>
+	 * It then automatically calls {@code close} to free resources.
+	 * @param statement The {@code PreparedStatement} to execute and close.
 	 */
 	public static void executeUpdateAndClose(PreparedStatement statement)
 	{
@@ -444,9 +510,10 @@ public final class DB
 	}
 	
 	/**
-	 * Executes Querry and returns ResultSet
-	 * @param statement preparedStement to execute
-	 * @return ResultSet or null if error
+	 * Executes a SQL query using the provided {@code PreparedStatement}.<br>
+	 * This method handles the execution and catches any potential exceptions.
+	 * @param statement The {@code PreparedStatement} to be executed.
+	 * @return A {@code ResultSet} containing the query results or {@code null} if an error occurs.
 	 */
 	public static ResultSet executeQuerry(PreparedStatement statement)
 	{
@@ -459,16 +526,19 @@ public final class DB
 		{
 			log.error("Error while executing querry", e);
 		}
+		
 		return rs;
 	}
 	
 	/**
-	 * Closes PreparedStatemet, it's connection and last ResultSet
-	 * @param statement statement to close
+	 * Closes the provided {@code PreparedStatement}.<br>
+	 * This method also closes the underlying {@code Connection}.<br>
+	 * It checks if the statement is already closed before attempting to close it.<br>
+	 * Any exceptions caught during this process are logged as errors.
+	 * @param statement The {@code PreparedStatement} to be closed.
 	 */
 	public static void close(PreparedStatement statement)
 	{
-		
 		try
 		{
 			if (statement.isClosed())

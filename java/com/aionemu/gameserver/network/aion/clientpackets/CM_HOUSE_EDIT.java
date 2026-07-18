@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -42,11 +42,17 @@ import com.aionemu.gameserver.utils.audit.AuditLogger;
 import com.aionemu.gameserver.utils.idfactory.IDFactory;
 
 /**
+ * Handles the client request to edit or modify a house.<br>
+ * This packet processes actions such as moving, rotating, or deleting {@link HouseObject} entities.<br>
+ * It interacts with the {@link HousingService} to update the house state.
  * @author Rolandas
  * @author_update Ever'
  */
 public class CM_HOUSE_EDIT extends AionClientPacket
 {
+	/**
+	 * Logger
+	 */
 	private static final Logger log = LoggerFactory.getLogger(CM_HOUSE_EDIT.class);
 	private HousingAction action;
 	private int actionId;
@@ -55,6 +61,13 @@ public class CM_HOUSE_EDIT extends AionClientPacket
 	int rotation;
 	int buildingId;
 	
+	/**
+	 * This constructor initializes a new {@link CM_HOUSE_EDIT} packet.<br>
+	 * It sets the basic network properties for the house edit action.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary status of the connection.
+	 * @param restStates Variable arguments for additional connection states.
+	 */
 	public CM_HOUSE_EDIT(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -83,6 +96,7 @@ public class CM_HOUSE_EDIT extends AionClientPacket
 		}
 		else if ((action == HousingAction.ENTER_DECORATION) || (action == HousingAction.EXIT_DECORATION))
 		{
+			// NOTHING TO READ
 		}
 		else
 		{
@@ -98,25 +112,31 @@ public class CM_HOUSE_EDIT extends AionClientPacket
 		{
 			return;
 		}
+		
 		if (action == HousingAction.ENTER_DECORATION)
 		{
+			// Enter Decoration mode
 			sendPacket(new SM_HOUSE_EDIT(actionId));
 			sendPacket(new SM_HOUSE_REGISTRY(actionId));
 			sendPacket(new SM_HOUSE_REGISTRY(actionId + 1));
 		}
 		else if (action == HousingAction.EXIT_DECORATION)
 		{
+			// Exit Decoration mode
 			sendPacket(new SM_HOUSE_EDIT(actionId));
 		}
 		else if (action == HousingAction.ADD_ITEM)
 		{
+			// Add item
 			final Item item = player.getInventory().getItemByObjId(itemObjectId);
 			if (item == null)
 			{
 				return;
 			}
+			
 			final ItemTemplate template = item.getItemTemplate();
 			player.getInventory().delete(item, ItemDeleteType.REGISTER);
+			
 			final DecorateAction decorateAction = template.getActions().getDecorateAction();
 			if (decorateAction != null)
 			{
@@ -134,17 +154,20 @@ public class CM_HOUSE_EDIT extends AionClientPacket
 		}
 		else if (action == HousingAction.DELETE_ITEM)
 		{
+			// Delete item
 			player.getHouseRegistry().removeObject(itemObjectId);
 			sendPacket(new SM_HOUSE_EDIT(actionId, 1, itemObjectId));
 			sendPacket(new SM_HOUSE_EDIT(4, 1, itemObjectId));
 		}
 		else if (action == HousingAction.SPAWN_OBJECT)
 		{
+			// spawn object
 			final HouseObject<?> obj = player.getHouseRegistry().getObjectByObjId(itemObjectId);
 			if (obj == null)
 			{
 				return;
 			}
+			
 			obj.setX(x);
 			obj.setY(y);
 			obj.setZ(z);
@@ -153,15 +176,17 @@ public class CM_HOUSE_EDIT extends AionClientPacket
 			obj.spawn();
 			player.getHouseRegistry().setPersistentState(PersistentState.UPDATE_REQUIRED);
 			sendPacket(new SM_HOUSE_EDIT(4, 1, itemObjectId));
-			QuestEngine.getInstance().onHouseItemUseEvent(new QuestEnv(null, player, 0, 0), obj.getObjectTemplate().getTemplateId());
+			QuestEngine.getInstance().onHouseItemUseEvent(new QuestEnv(null, player, 0, 0));
 		}
 		else if (action == HousingAction.MOVE_OBJECT)
 		{
+			// move object
 			final HouseObject<?> obj = player.getHouseRegistry().getObjectByObjId(itemObjectId);
 			if (obj == null)
 			{
 				return;
 			}
+			
 			sendPacket(new SM_HOUSE_EDIT(actionId + 1, 0, itemObjectId));
 			obj.getController().onDelete();
 			obj.setX(x);
@@ -172,57 +197,75 @@ public class CM_HOUSE_EDIT extends AionClientPacket
 			{
 				player.getHouseRegistry().setPersistentState(PersistentState.UPDATE_REQUIRED);
 			}
+			
 			sendPacket(new SM_HOUSE_EDIT(actionId - 1, itemObjectId, x, y, z, rotation));
 			obj.spawn();
 		}
 		else if (action == HousingAction.DESPAWN_OBJECT)
 		{
+			// despawn object
 			final HouseObject<?> obj = player.getHouseRegistry().getObjectByObjId(itemObjectId);
 			if (obj == null)
 			{
 				return;
 			}
+			
 			sendPacket(new SM_HOUSE_EDIT(actionId, 0, itemObjectId));
 			obj.getController().onDelete();
 			obj.removeFromHouse();
 			obj.clearKnownlist();
 			player.getHouseRegistry().setPersistentState(PersistentState.UPDATE_REQUIRED);
-			sendPacket(new SM_HOUSE_EDIT(3, 1, itemObjectId));
+			sendPacket(new SM_HOUSE_EDIT(3, 1, itemObjectId)); // place it back
 		}
 		else if (action == HousingAction.ENTER_RENOVATION)
 		{
+			// enter renovation mode
 			sendPacket(new SM_HOUSE_EDIT(14));
 		}
 		else if (action == HousingAction.EXIT_RENOVATION)
 		{
+			// exit renovation mode
 			sendPacket(new SM_HOUSE_EDIT(15));
 		}
 		else if (action == HousingAction.CHANGE_APPEARANCE)
 		{
+			// update appearence
 			final House house = player.getHouseRegistry().getOwner();
 			if (!removeRenovationCoupon(player, house))
 			{
 				AuditLogger.info(player, "Try house renovation without coupon");
 				return;
 			}
+			
 			HousingService.getInstance().switchHouseBuilding(house, buildingId);
 			player.setHouseRegistry(house.getRegistry());
 			house.getController().updateAppearance();
 		}
 	}
 	
+	/**
+	 * Removes a renovation coupon from the {@code Player} inventory.<br>
+	 * This method checks if the house type is valid before proceeding.<br>
+	 * It identifies the correct item ID based on the player's race.<br>
+	 * The coupon is removed only if it exists in the inventory.
+	 * @param player The {@code Player} who owns the renovation coupon.
+	 * @param house The {@code House} being renovated.
+	 * @return {@code true} if the coupon was successfully removed, {@code false} otherwise.
+	 */
 	private boolean removeRenovationCoupon(Player player, House house)
 	{
 		final int typeId = house.getHouseType().getId();
 		if (typeId == 0)
 		{
-			return false;
+			return false; // studio
 		}
-		final int itemId = (player.getRace().equals(Race.ELYOS) ? 169661004 : 169661000) - typeId;
+		
+		final int itemId = (player.getRace().equals(Race.ELYOS) ? 169661004 : 169661008) - typeId;
 		if (player.getInventory().getItemCountByItemId(itemId) > 0)
 		{
 			return player.getInventory().decreaseByItemId(itemId, 1);
 		}
+		
 		return false;
 	}
 }

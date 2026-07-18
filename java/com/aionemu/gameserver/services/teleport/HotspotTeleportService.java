@@ -1,24 +1,22 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.teleport;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.aionemu.gameserver.configs.main.CustomConfig;
 import com.aionemu.gameserver.controllers.observer.ActionObserver;
 import com.aionemu.gameserver.controllers.observer.ObserverType;
 import com.aionemu.gameserver.dataholders.DataManager;
@@ -33,32 +31,39 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
 
 /**
- * @author Ranastic
+ * This service handles the logic for teleporting players to specific hotspots.<br>
+ * It manages the movement of {@link Player} objects and sends the corresponding {@code SM_HOTSPOT_TELEPORT} packets.
  */
 public class HotspotTeleportService
 {
-	private static final Logger log = LoggerFactory.getLogger(HotspotTeleportService.class);
+	int delay = CustomConfig.HOTSPOT_TELEPORT_DELAY; // 10 Seconds = 10000 Milliseconds
 	
+	/**
+	 * Retrieves the singleton instance of the {@link HotspotTeleportService}.<br>
+	 * Use this method to access the teleport service from anywhere in the code.
+	 * @return The active {@code HotspotTeleportService} instance.
+	 */
 	public static HotspotTeleportService getInstance()
 	{
 		return SingletonHolder.instance;
 	}
 	
-	private HotspotTeleportService()
-	{
-		final int hotspotList = DataManager.HOTSPOT_LOCATION_DATA.size();
-		log.info(hotspotList + "<Hotspot Location 5.1> loaded.");
-	}
-	
+	/**
+	 * Teleports a {@link Player} to a specific hotspot location.<br>
+	 * This method handles the delay, price deduction, and safety checks during the process.<br>
+	 * It cancels the teleport if the player is attacked or enters an abnormal state.
+	 * @param player The {@link Player} who will be moved.
+	 * @param teleportId The unique identifier for the destination hotspot.
+	 * @param price The amount of Kinah to deduct from the player's inventory.
+	 */
 	public void doTeleport(Player player, int teleportId, int price)
 	{
-		final int worldId = DataManager.HOTSPOT_LOCATION_DATA.getHotspotlocationTemplate(teleportId).getMapId();
-		final float getX = DataManager.HOTSPOT_LOCATION_DATA.getHotspotlocationTemplate(teleportId).getX();
-		final float getY = DataManager.HOTSPOT_LOCATION_DATA.getHotspotlocationTemplate(teleportId).getY();
-		final float getZ = DataManager.HOTSPOT_LOCATION_DATA.getHotspotlocationTemplate(teleportId).getZ();
-		// KR - Update December 16th 2015
-		// - Base teleportation cooldown has been reduced from 10min to 1min.
-		final int cooldown = 60; // 1 Minute = 60 Seconds
+		final int worldId = DataManager.HOTSPOT_TELEPORTER_DATA.getHotspotTemplate(teleportId).getMapId();
+		final float getX = DataManager.HOTSPOT_TELEPORTER_DATA.getHotspotTemplate(teleportId).getX();
+		final float getY = DataManager.HOTSPOT_TELEPORTER_DATA.getHotspotTemplate(teleportId).getY();
+		final float getZ = DataManager.HOTSPOT_TELEPORTER_DATA.getHotspotTemplate(teleportId).getZ();
+		final int cooldown = CustomConfig.HOTSPOT_TELEPORT_COOLDOWN_DELAY; // 1 Minute = 60 Seconds
+		
 		player.getController().addTask(TaskId.HOTSPOT_TELEPORT, ThreadPoolManager.getInstance().schedule(new Runnable()
 		{
 			@Override
@@ -67,6 +72,7 @@ public class HotspotTeleportService
 				PacketSendUtility.broadcastPacketAndReceive(player, new SM_HOTSPOT_TELEPORT(3, player.getObjectId(), teleportId));
 				player.getController().addTask(TaskId.HOTSPOT_TELEPORT, ThreadPoolManager.getInstance().schedule(new Runnable()
 				{
+					
 					@Override
 					public void run()
 					{
@@ -77,6 +83,7 @@ public class HotspotTeleportService
 				}, 1000));
 				final ActionObserver attackedObserver = new ActionObserver(ObserverType.ATTACKED)
 				{
+					
 					@Override
 					public void attacked(Creature creature)
 					{
@@ -87,6 +94,7 @@ public class HotspotTeleportService
 				player.setHotTeleObservers(attackedObserver);
 				final ActionObserver rideObserver = new ActionObserver(ObserverType.ABNORMALSETTED)
 				{
+					
 					@Override
 					public void abnormalsetted(AbnormalState state)
 					{
@@ -101,6 +109,7 @@ public class HotspotTeleportService
 				player.setHotTeleObservers(rideObserver);
 				final ActionObserver dotAttackedObserver = new ActionObserver(ObserverType.DOT_ATTACKED)
 				{
+					
 					@Override
 					public void dotattacked(Creature creature, Effect dotEffect)
 					{
@@ -110,11 +119,10 @@ public class HotspotTeleportService
 				player.getObserveController().addObserver(dotAttackedObserver);
 				player.setHotTeleObservers(dotAttackedObserver);
 			}
-		}, 10000));
+		}, delay));
 		PacketSendUtility.broadcastPacketAndReceive(player, new SM_HOTSPOT_TELEPORT(1, player.getObjectId(), teleportId));
 	}
 	
-	@SuppressWarnings("synthetic-access")
 	private static class SingletonHolder
 	{
 		protected static final HotspotTeleportService instance = new HotspotTeleportService();

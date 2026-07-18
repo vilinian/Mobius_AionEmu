@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.ai2.manager;
 
@@ -35,6 +35,8 @@ import com.aionemu.gameserver.utils.ThreadPoolManager;
 import com.aionemu.gameserver.world.geo.GeoService;
 
 /**
+ * Manages the movement and pathfinding logic for {@link Npc} entities.<br>
+ * It handles complex navigation tasks such as route following and collision avoidance. This class ensures that NPCs move smoothly across the game world using {@link WalkerTemplate} data.
  * @author ATracer
  */
 public class WalkManager
@@ -42,8 +44,12 @@ public class WalkManager
 	private static final int WALK_RANDOM_RANGE = 5;
 	
 	/**
-	 * @param npcAI
-	 * @return
+	 * Starts the walking behavior for a specific NPC.<br>
+	 * It sets the {@link AIState} to {@code WALKING}.<br>
+	 * If a walker template exists, it starts route walking.<br>
+	 * Otherwise, it starts random walking.
+	 * @param npcAI The {@link NpcAI2} instance to start walking.
+	 * @return {@code true} if the walking process started successfully, or {@code false} otherwise.
 	 */
 	public static boolean startWalking(NpcAI2 npcAI)
 	{
@@ -59,13 +65,43 @@ public class WalkManager
 		{
 			return startRandomWalking(npcAI, owner);
 		}
+		
 		return true;
 	}
 	
 	/**
-	 * @param npcAI
-	 * @param owner
-	 * @return
+	 * Starts a walking behavior for an {@link NpcAI2} instance.<br>
+	 * It uses the provided {@link WalkerTemplate} to define the path.<br>
+	 * If the template is {@code null}, it starts random walking instead.
+	 * @param npcAI The AI instance that will perform the walking action.
+	 * @param template The template containing the route steps for the NPC.
+	 * @return {@code true} if the walking behavior started successfully, otherwise {@code false}.
+	 */
+	public static boolean startRouteWalking(NpcAI2 npcAI, WalkerTemplate template)
+	{
+		npcAI.setStateIfNot(AIState.WALKING);
+		final Npc owner = npcAI.getOwner();
+		
+		if (template != null)
+		{
+			npcAI.setSubStateIfNot(AISubState.WALK_PATH);
+			startRouteWalking(npcAI, owner, template);
+		}
+		else
+		{
+			return startRandomWalking(npcAI, owner);
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Starts a random walking behavior for an NPC.<br>
+	 * This method checks if movement is enabled and if the owner has a valid random walk count.<br>
+	 * It sets the {@code WALK_RANDOM} state and picks the first destination.
+	 * @param npcAI The AI instance to update.
+	 * @param owner The NPC object associated with the AI.
+	 * @return {@code true} if the walking behavior started successfully, otherwise {@code false}.
 	 */
 	private static boolean startRandomWalking(NpcAI2 npcAI, Npc owner)
 	{
@@ -73,24 +109,30 @@ public class WalkManager
 		{
 			return false;
 		}
+		
 		final int randomWalkNr = owner.getSpawn().getRandomWalk();
 		if (randomWalkNr == 0)
 		{
 			return false;
 		}
+		
 		if (npcAI.setSubStateIfNot(AISubState.WALK_RANDOM))
 		{
 			EmoteManager.emoteStartWalking(npcAI.getOwner());
 			chooseNextRandomPoint(npcAI);
 			return true;
 		}
+		
 		return false;
 	}
 	
 	/**
-	 * @param npcAI
-	 * @param owner
-	 * @param template
+	 * Starts the movement of an NPC along a specific path.<br>
+	 * This method sets up the route from a {@code WalkerTemplate}.<br>
+	 * It also triggers the start walking emote for the owner.
+	 * @param npcAI The AI controller for the NPC.
+	 * @param owner The actual NPC entity being moved.
+	 * @param template The template containing the path steps.
 	 */
 	protected static void startRouteWalking(NpcAI2 npcAI, Npc owner, WalkerTemplate template)
 	{
@@ -98,6 +140,7 @@ public class WalkManager
 		{
 			return;
 		}
+		
 		final List<RouteStep> route = template.getRouteSteps();
 		final int currentPoint = owner.getMoveController().getCurrentPoint();
 		final RouteStep nextStep = findNextRoutStep(owner, route);
@@ -108,9 +151,13 @@ public class WalkManager
 	}
 	
 	/**
-	 * @param owner
-	 * @param route
-	 * @return
+	 * Determines the next {@link RouteStep} for an {@link Npc}.<br>
+	 * It checks the current movement point of the owner.<br>
+	 * If a point exists, it uses {@code List, int)}.<br>
+	 * Otherwise, it finds the closest step using {@code List, RouteStep)}.
+	 * @param owner The {@link Npc} currently moving along the route.
+	 * @param route The list of {@link RouteStep} objects defining the path.
+	 * @return The next {@link RouteStep} to move towards or {@code null}.
 	 */
 	protected static RouteStep findNextRoutStep(Npc owner, List<RouteStep> route)
 	{
@@ -124,14 +171,18 @@ public class WalkManager
 		{
 			nextStep = findClosestRouteStep(owner, route, nextStep);
 		}
+		
 		return nextStep;
 	}
 	
 	/**
-	 * @param owner
-	 * @param route
-	 * @param nextStep
-	 * @return
+	 * Finds the nearest {@link RouteStep} from a list for a specific NPC.<br>
+	 * It checks if the {@code owner} belongs to a walker group first.<br>
+	 * If no group exists, it calculates the distance to every step in the route.
+	 * @param owner The {@link Npc} who is moving along the path.
+	 * @param route The list of {@link RouteStep} objects representing the full path.
+	 * @param nextStep The current target step used as a reference point.
+	 * @return The closest {@link RouteStep} found in the provided list.
 	 */
 	protected static RouteStep findClosestRouteStep(Npc owner, List<RouteStep> route, RouteStep nextStep)
 	{
@@ -164,14 +215,17 @@ public class WalkManager
 				}
 			}
 		}
+		
 		return nextStep;
 	}
 	
 	/**
-	 * @param owner
-	 * @param route
-	 * @param currentPoint
-	 * @return
+	 * Finds the next {@link RouteStep} for an {@link Npc} after a pause.<br>
+	 * It checks if the current point is close enough to move to the next one.
+	 * @param owner The {@link Npc} currently moving along the route.
+	 * @param route The list of {@link RouteStep} objects defining the path.
+	 * @param currentPoint The index of the current step in the {@code route}.
+	 * @return The next {@link RouteStep} to follow.
 	 */
 	protected static RouteStep findNextRouteStepAfterPause(Npc owner, List<RouteStep> route, int currentPoint)
 	{
@@ -181,13 +235,15 @@ public class WalkManager
 		{
 			nextStep = nextStep.getNextStep();
 		}
+		
 		return nextStep;
 	}
 	
 	/**
-	 * Is this npc will walk. Currently all monsters will walk and those npc wich has walk routes
-	 * @param npcAI
-	 * @return
+	 * Checks if the NPC is currently in a walking state.<br>
+	 * It verifies if movement is supported and if the NPC has routes or is attackable.
+	 * @param npcAI The {@link NpcAI2} instance to check.
+	 * @return {@code true} if the NPC is walking, {@code false} otherwise.
 	 */
 	public static boolean isWalking(NpcAI2 npcAI)
 	{
@@ -195,8 +251,10 @@ public class WalkManager
 	}
 	
 	/**
-	 * @param npcAI
-	 * @return
+	 * Checks if the NPC has any defined walking routes.<br>
+	 * This method retrieves the route status from the {@link Npc} owner.
+	 * @param npcAI The {@code NpcAI2} instance to check.
+	 * @return {@code true} if routes exist, otherwise {@code false}.
 	 */
 	public static boolean hasWalkRoutes(NpcAI2 npcAI)
 	{
@@ -204,7 +262,10 @@ public class WalkManager
 	}
 	
 	/**
-	 * @param npcAI
+	 * Handles the logic when an {@link NpcAI2} reaches its current destination.<br>
+	 * This method updates the NPC state based on whether it is following a path or moving randomly.<br>
+	 * It also notifies the walker group if one exists.
+	 * @param npcAI The {@code NpcAI2} instance to update.
 	 */
 	public static void targetReached(NpcAI2 npcAI)
 	{
@@ -213,7 +274,6 @@ public class WalkManager
 			switch (npcAI.getSubState())
 			{
 				case WALK_PATH:
-				{
 					npcAI.getOwner().updateKnownlist();
 					if (npcAI.getOwner().getWalkerGroup() != null)
 					{
@@ -224,33 +284,27 @@ public class WalkManager
 						chooseNextRouteStep(npcAI);
 					}
 					break;
-				}
 				case WALK_WAIT_GROUP:
-				{
 					npcAI.setSubStateIfNot(AISubState.WALK_PATH);
 					chooseNextRouteStep(npcAI);
 					break;
-				}
 				case WALK_RANDOM:
-				{
 					chooseNextRandomPoint(npcAI);
 					break;
-				}
 				case TALK:
-				{
 					npcAI.getOwner().getMoveController().abortMove();
 					break;
-				}
 				default:
-				{
 					break;
-				}
 			}
 		}
 	}
 	
 	/**
-	 * @param npcAI
+	 * Determines and executes the next movement step for an NPC.<br>
+	 * This method checks if the NPC should move immediately or after a pause.<br>
+	 * It interacts with the {@code MoveController} to update the pathing.
+	 * @param npcAI The {@link NpcAI2} instance to update.
 	 */
 	protected static void chooseNextRouteStep(NpcAI2 npcAI)
 	{
@@ -276,7 +330,10 @@ public class WalkManager
 	}
 	
 	/**
-	 * @param npcAI
+	 * Selects a new random destination for an NPC to walk towards.<br>
+	 * This method calculates a target point based on the spawn location and allowed range.<br>
+	 * It schedules a move command using {@link ThreadPoolManager}.
+	 * @param npcAI The {@code NpcAI2} instance of the NPC being moved.
 	 */
 	private static void chooseNextRandomPoint(NpcAI2 npcAI)
 	{
@@ -312,11 +369,13 @@ public class WalkManager
 				}
 			}
 		}, Rnd.get(AIConfig.MINIMIMUM_DELAY, AIConfig.MAXIMUM_DELAY) * 1000);
-		
 	}
 	
 	/**
-	 * @param npcAI
+	 * Stops the movement of a specific NPC.<br>
+	 * This method cancels any active move commands and resets the AI state to {@code IDLE}.<br>
+	 * It also clears any sub-states and triggers the stop walking emote.
+	 * @param npcAI The {@link NpcAI2} instance to stop.
 	 */
 	public static void stopWalking(NpcAI2 npcAI)
 	{
@@ -327,12 +386,13 @@ public class WalkManager
 	}
 	
 	/**
-	 * @param npcAI
-	 * @return
+	 * Checks if the NPC has reached its current destination.<br>
+	 * This method queries the {@code MoveController} of the owner.
+	 * @param npcAI The {@link NpcAI2} instance to check.
+	 * @return {@code true} if the point is reached, {@code false} otherwise.
 	 */
 	public static boolean isArrivedAtPoint(NpcAI2 npcAI)
 	{
 		return npcAI.getOwner().getMoveController().isReachedPoint();
 	}
-	
 }

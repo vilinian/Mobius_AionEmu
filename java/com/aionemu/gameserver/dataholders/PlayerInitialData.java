@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.dataholders;
 
@@ -35,8 +35,8 @@ import com.aionemu.gameserver.model.templates.item.ItemTemplate;
 import gnu.trove.map.hash.THashMap;
 
 /**
- * This table contains all nesessary data for new players. <br/>
- * Created on: 09.08.2009 18:20:41
+ * This class holds all the necessary data for new players.<br>
+ * It serves as a data holder for initial player configuration.
  * @author Aquanox
  */
 @XmlRootElement(name = "player_initial_data")
@@ -45,14 +45,19 @@ public class PlayerInitialData
 {
 	@XmlElement(name = "player_data")
 	private List<PlayerCreationData> dataList = new ArrayList<>();
-	
 	@XmlElement(name = "elyos_spawn_location", required = true)
 	private LocationData elyosSpawnLocation;
 	@XmlElement(name = "asmodian_spawn_location", required = true)
 	private LocationData asmodianSpawnLocation;
-	
 	private final THashMap<PlayerClass, PlayerCreationData> data = new THashMap<>();
 	
+	/**
+	 * This method is called after the XML data has been unmarshalled.<br>
+	 * It populates the {@code data} map using the list of {@code PlayerCreationData}.<br>
+	 * The {@code dataList} is cleared and set to {@code null} after processing.
+	 * @param u The {@link Unmarshaller} used to read the data.
+	 * @param parent The parent object of the current element.
+	 */
 	void afterUnmarshal(Unmarshaller u, Object parent)
 	{
 		for (PlayerCreationData pt : dataList)
@@ -64,32 +69,43 @@ public class PlayerInitialData
 		dataList = null;
 	}
 	
+	/**
+	 * Retrieves the creation data for a specific player class.<br>
+	 * This method looks up the {@code PlayerCreationData} associated with the provided {@link PlayerClass}.
+	 * @param cls The {@code PlayerClass} to look up.
+	 * @return The {@code PlayerCreationData} for the given class, or {@code null} if not found.
+	 */
 	public PlayerCreationData getPlayerCreationData(PlayerClass cls)
 	{
 		return data.get(cls);
 	}
 	
+	/**
+	 * Returns the total number of player creation data entries.<br>
+	 * This method calls {@code size} to get the count.
+	 * @return The size of the internal data map.
+	 */
 	public int size()
 	{
 		return data.size();
 	}
 	
+	/**
+	 * Retrieves the starting location for a specific race.<br>
+	 * This method checks the {@code race} type to find the correct coordinates.
+	 * @param race The {@link Race} of the player.
+	 * @return The {@code LocationData} associated with that race.
+	 */
 	public LocationData getSpawnLocation(Race race)
 	{
 		switch (race)
 		{
 			case ASMODIANS:
-			{
 				return asmodianSpawnLocation;
-			}
 			case ELYOS:
-			{
 				return elyosSpawnLocation;
-			}
 			default:
-			{
 				throw new IllegalArgumentException();
-			}
 		}
 	}
 	
@@ -98,16 +114,13 @@ public class PlayerInitialData
 	 */
 	public static class PlayerCreationData
 	{
-		
 		@XmlAttribute(name = "class")
 		private PlayerClass requiredPlayerClass;
-		
 		@XmlElement(name = "items")
 		private ItemsType itemsType;
 		
 		// @XmlElement(name="shortcuts")
 		// private ShortcutType shortcutData;
-		
 		PlayerClass getRequiredPlayerClass()
 		{
 			return requiredPlayerClass;
@@ -120,20 +133,19 @@ public class PlayerInitialData
 		
 		static class ItemsType
 		{
-			
 			@XmlElement(name = "item")
 			public List<ItemType> items = new ArrayList<>();
 		}
 		
 		public static class ItemType
 		{
-			
 			@XmlAttribute(name = "id")
 			@XmlIDREF
 			public ItemTemplate template;
-			
 			@XmlAttribute(name = "count")
 			public int count;
+			@XmlAttribute(name = "race")
+			public Race race;
 			
 			public ItemTemplate getTemplate()
 			{
@@ -145,6 +157,11 @@ public class PlayerInitialData
 				return count;
 			}
 			
+			public Race getRace()
+			{
+				return race;
+			}
+			
 			@Override
 			public String toString()
 			{
@@ -152,11 +169,11 @@ public class PlayerInitialData
 				sb.append("ItemType");
 				sb.append("{template=").append(template);
 				sb.append(", count=").append(count);
+				sb.append(", race=").append(race);
 				sb.append('}');
 				return sb.toString();
 			}
 		}
-		
 		// public static class ShortcutType
 		// {
 		// public List<Shortcut> shortcuts;
@@ -168,7 +185,6 @@ public class PlayerInitialData
 	 */
 	public static class LocationData
 	{
-		
 		@XmlAttribute(name = "map_id")
 		private int mapId;
 		@XmlAttribute(name = "x")
@@ -210,5 +226,4 @@ public class PlayerInitialData
 			return heading;
 		}
 	}
-	
 }

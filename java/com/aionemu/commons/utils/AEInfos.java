@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.utils;
 
@@ -24,12 +24,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Provides utility methods to retrieve and log various system information.<br>
+ * It helps in gathering environment details for debugging or logging purposes.
  * @author lord_rex This class is for get/log system informations.
  */
 public class AEInfos
 {
 	private static final Logger log = LoggerFactory.getLogger(AEInfos.class);
 	
+	/**
+	 * Retrieves current memory statistics from the {@code Runtime}.<br>
+	 * This method calculates various memory metrics like used and allocated space.<br>
+	 * It returns a formatted array of strings for display purposes.
+	 * @return A {@code String[]} containing the formatted memory information.
+	 */
 	public static String[] getMemoryInfo()
 	{
 		final double max = Runtime.getRuntime().maxMemory() / 1024; // maxMemory is the upper limit the jvm can use
@@ -41,7 +49,8 @@ public class AEInfos
 		final DecimalFormat df = new DecimalFormat(" (0.0000'%')");
 		final DecimalFormat df2 = new DecimalFormat(" # 'KB'");
 		return new String[]
-		{ //
+		{
+			//
 			"+----", //
 			"| Global Memory Informations at " + getRealTime().toString() + ":", //
 			"|    |", //
@@ -56,62 +65,97 @@ public class AEInfos
 		};
 	}
 	
+	/**
+	 * Retrieves basic information about the current CPU.<br>
+	 * This method uses {@code Runtime.getRuntime()} and {@code System.getenv()}.<br>
+	 * It returns a list of strings containing processor details.
+	 * @return An array of {@code String} objects containing CPU data.
+	 */
 	public static String[] getCPUInfo()
 	{
 		return new String[]
-		{ //
+		{
+			//
 			"Available CPU(s): " + Runtime.getRuntime().availableProcessors(), //
 			"Processor(s) Identifier: " + System.getenv("PROCESSOR_IDENTIFIER"), //
-			"...................................................", //
-			"..................................................." //
+			"..................................................", //
+			".................................................." //
 		};
 	}
 	
+	/**
+	 * Retrieves basic information about the current operating system.<br>
+	 * This method uses {@code System.getProperty} to fetch details.
+	 * @return a {@code String[]} containing the OS name, version, and architecture.
+	 */
 	public static String[] getOSInfo()
 	{
 		return new String[]
-		{ //
+		{
+			//
 			"OS: " + System.getProperty("os.name") + " Build: " + System.getProperty("os.version"), //
 			"OS Arch: " + System.getProperty("os.arch"), //
-			"...................................................", //
-			"..................................................." //
+			"..................................................", //
+			".................................................." //
 		};
 	}
 	
+	/**
+	 * Retrieves information about the current Java Runtime Environment.<br>
+	 * This method collects details like the runtime name and version.
+	 * @return a {@code String[]} containing the formatted JRE information.
+	 */
 	public static String[] getJREInfo()
 	{
 		return new String[]
-		{ //
+		{
+			//
 			"Java Platform Information", //
 			"Java Runtime  Name: " + System.getProperty("java.runtime.name"), //
 			"Java Version: " + System.getProperty("java.version"), //
 			"Java Class Version: " + System.getProperty("java.class.version"), //
-			"...................................................", //
-			"..................................................." //
+			"..................................................", //
+			".................................................." //
 		};
 	}
 	
+	/**
+	 * Retrieves basic information about the current Java Virtual Machine.<br>
+	 * This method collects properties like the JVM name, version, and vendor.
+	 * @return a {@code String[]} containing various JVM details.
+	 */
 	public static String[] getJVMInfo()
 	{
 		return new String[]
-		{ //
+		{
+			//
 			"Virtual Machine Information (JVM)", //
 			"JVM Name: " + System.getProperty("java.vm.name"), //
 			"JVM installation directory: " + System.getProperty("java.home"), //
 			"JVM version: " + System.getProperty("java.vm.version"), //
 			"JVM Vendor: " + System.getProperty("java.vm.vendor"), //
 			"JVM Info: " + System.getProperty("java.vm.info"), //
-			"...................................................", //
-			"..................................................." //
+			"..................................................", //
+			".................................................." //
 		};
 	}
 	
+	/**
+	 * Gets the current system time.<br>
+	 * Returns the time formatted as {@code H:mm:ss}.
+	 * @return A {@code String} representing the current time.
+	 */
 	public static String getRealTime()
 	{
 		final SimpleDateFormat String = new SimpleDateFormat("H:mm:ss");
 		return String.format(new Date());
 	}
 	
+	/**
+	 * Prints the current memory information to the logs.<br>
+	 * This method calls {@code getMemoryInfo} and iterates through the results.<br>
+	 * Each piece of information is logged as a new entry.
+	 */
 	public static void printMemoryInfo()
 	{
 		for (String line : getMemoryInfo())
@@ -120,6 +164,11 @@ public class AEInfos
 		}
 	}
 	
+	/**
+	 * Prints the current CPU information to the logs.<br>
+	 * This method calls {@code getCPUInfo} and iterates through the results.<br>
+	 * Each piece of information is logged as a new entry.
+	 */
 	public static void printCPUInfo()
 	{
 		for (String line : getCPUInfo())
@@ -128,6 +177,11 @@ public class AEInfos
 		}
 	}
 	
+	/**
+	 * Prints the operating system information to the log.<br>
+	 * This method calls {@code getOSInfo} and iterates through the results.<br>
+	 * Each piece of information is logged as a new entry.
+	 */
 	public static void printOSInfo()
 	{
 		for (String line : getOSInfo())
@@ -136,6 +190,11 @@ public class AEInfos
 		}
 	}
 	
+	/**
+	 * Prints the Java Runtime Environment information to the logs.<br>
+	 * This method calls {@code getJREInfo} and iterates through the results.<br>
+	 * Each piece of information is logged as an info message.
+	 */
 	public static void printJREInfo()
 	{
 		for (String line : getJREInfo())
@@ -144,6 +203,11 @@ public class AEInfos
 		}
 	}
 	
+	/**
+	 * Prints the current {@code JVM} information to the logs.<br>
+	 * This method calls {@code getJVMInfo} and iterates through the results.<br>
+	 * Each piece of information is logged as an {@code info} level message.
+	 */
 	public static void printJVMInfo()
 	{
 		for (String line : getJVMInfo())
@@ -152,11 +216,19 @@ public class AEInfos
 		}
 	}
 	
+	/**
+	 * Prints the current system time to the log.<br>
+	 * This method calls {@code getRealTime} and logs the result.
+	 */
 	public static void printRealTime()
 	{
 		log.info(getRealTime().toString());
 	}
 	
+	/**
+	 * Prints all system information to the console.<br>
+	 * This method calls {@code printOSInfo}, {@code printCPUInfo}, {@code printJREInfo}, {@code printJVMInfo}, and {@code printMemoryInfo}.
+	 */
 	public static void printAllInfos()
 	{
 		printOSInfo();

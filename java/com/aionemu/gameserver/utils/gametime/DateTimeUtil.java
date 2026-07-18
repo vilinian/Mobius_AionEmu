@@ -1,101 +1,76 @@
 /*
- * This file is part of the Aion-Emu project.
+ * This file is part of the Mobius AionEmu project.
  * 
- * This program is free software: you can redistribute it and/or modify
+ * Mobius AionEmu is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * This program is distributed in the hope that it will be useful,
+ * Mobius AionEmu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.utils.gametime;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.GregorianCalendar;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aionemu.gameserver.configs.main.GSConfig;
 
 /**
- * @author Rolandas
+ * Provides utility methods for handling and converting date and time objects.<br>
+ * This class simplifies operations involving {@code GregorianCalendar} and {@code ZonedDateTime}.
+ * @author Mobius
  */
 public final class DateTimeUtil
 {
 	static Logger log = LoggerFactory.getLogger(DateTimeUtil.class);
-	
 	private static boolean canApplyZoneChange = false;
 	
+	/**
+	 * Initializes the time zone settings.<br>
+	 * This method validates the {@code TIME_ZONE_ID} from {@link GSConfig}.<br>
+	 * If valid, it sets {@code canApplyZoneChange} to {@code true}.
+	 */
 	public static void init()
 	{
 		try
 		{
 			if (!GSConfig.TIME_ZONE_ID.isEmpty())
 			{
-				// just check the validity on start (if invalid zone specified in the switch, default id used)
-				DateTimeZone.forID(System.getProperty("Duser.timezone"));
-				DateTimeZone.forID(GSConfig.TIME_ZONE_ID);
+				// Just check validity on start (throws if the configured zone id is invalid).
+				ZoneId.of(GSConfig.TIME_ZONE_ID);
 				canApplyZoneChange = true;
 			}
 		}
 		catch (Throwable e)
 		{
-			log.error("Invalid or not supported timezones specified!!!\n" + "Use both -Duser.timezone=\"timezone_id\" switch from command line\n" + "and add a valid value for GSConfig.TIME_ZONE_ID");
+			log.error("Invalid or not supported timezone specified!!!\nAdd a valid value for GSConfig.TIME_ZONE_ID");
 		}
 	}
 	
-	// Get now date and time
-	public static DateTime getDateTime()
+	/**
+	 * Converts a {@link GregorianCalendar} object into a {@link ZonedDateTime} object.<br>
+	 * This method handles optional time zone adjustments based on the server configuration.
+	 * @param calendar The {@code GregorianCalendar} instance to convert.
+	 * @return The resulting {@code ZonedDateTime} object.
+	 */
+	public static ZonedDateTime getDateTime(GregorianCalendar calendar)
 	{
-		final DateTime dt = new DateTime();
+		final ZonedDateTime dt = calendar.toZonedDateTime();
 		if (canApplyZoneChange)
 		{
-			return dt.withZoneRetainFields(DateTimeZone.forID(GSConfig.TIME_ZONE_ID));
+			return dt.withZoneSameLocal(ZoneId.of(GSConfig.TIME_ZONE_ID));
 		}
+		
 		return dt;
 	}
-	
-	public static DateTime getDateTime(String isoDateTime)
-	{
-		final DateTime dt = new DateTime(isoDateTime);
-		if (canApplyZoneChange)
-		{
-			return dt.withZoneRetainFields(DateTimeZone.forID(GSConfig.TIME_ZONE_ID));
-		}
-		return dt;
-	}
-	
-	public static DateTime getDateTime(GregorianCalendar calendar)
-	{
-		final DateTime dt = new DateTime(calendar);
-		if (canApplyZoneChange)
-		{
-			return dt.withZoneRetainFields(DateTimeZone.forID(GSConfig.TIME_ZONE_ID));
-		}
-		return dt;
-	}
-	
-	public static DateTime getDateTime(long millisSinceSeventies)
-	{
-		final DateTime dt = new DateTime(millisSinceSeventies);
-		if (canApplyZoneChange)
-		{
-			return dt.withZoneRetainFields(DateTimeZone.forID(GSConfig.TIME_ZONE_ID));
-		}
-		return dt;
-	}
-	
-	public static boolean canApplyZoneChange()
-	{
-		return canApplyZoneChange;
-	}
-	
 }

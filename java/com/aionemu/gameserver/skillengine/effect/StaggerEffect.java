@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
@@ -36,12 +36,21 @@ import com.aionemu.gameserver.world.World;
 import com.aionemu.gameserver.world.geo.GeoService;
 
 /**
+ * Handles the logic for applying a stagger effect to a {@link Creature}.<br>
+ * This effect interrupts the target's movement and actions.<br>
+ * It is used by the skill engine to simulate physical displacement or stun mechanics.
  * @author ATracer
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "StaggerEffect")
 public class StaggerEffect extends EffectTemplate
 {
+	/**
+	 * Applies a specific {@code Effect} to a target.<br>
+	 * This method checks if the target is an instance of {@link Player}.<br>
+	 * It processes the logic required for the effect to take place.
+	 * @param effect The {@code Effect} object to be applied.
+	 */
 	@Override
 	public void applyEffect(Effect effect)
 	{
@@ -54,6 +63,7 @@ public class StaggerEffect extends EffectTemplate
 			{
 				((Player) effected).getFlyController().endFly(true);
 			}
+			
 			effected.getController().cancelCurrentSkill();
 			effected.getEffectController().removeParalyzeEffects();
 			effected.getMoveController().abortMove();
@@ -62,6 +72,12 @@ public class StaggerEffect extends EffectTemplate
 		}
 	}
 	
+	/**
+	 * Starts a new {@link Effect} instance.<br>
+	 * This method initializes the effect and begins its execution.<br>
+	 * It is a convenience method that passes {@code null} for the abnormal state.
+	 * @param effect The {@code Effect} object to be started.
+	 */
 	@Override
 	public void startEffect(Effect effect)
 	{
@@ -69,24 +85,31 @@ public class StaggerEffect extends EffectTemplate
 		effect.setAbnormal(AbnormalState.STAGGER.getId());
 	}
 	
+	/**
+	 * Calculates the logic for a {@code StaggerEffect}.<br>
+	 * This method checks if the target is susceptible to stagger.<br>
+	 * It cancels the target's current skill and moves them backward.
+	 * @param effect The {@code Effect} object to process.
+	 */
 	@Override
 	public void calculate(Effect effect)
 	{
-		if (effect.getEffected().getEffectController().hasPhysicalStateEffect())
+		if (effect.getEffected().getEffectController().hasPhysicalStateEffect() || !super.calculate(effect, StatEnum.STAGGER_RESISTANCE, SpellStatus.STAGGER))
 		{
 			return;
 		}
-		if (!super.calculate(effect, StatEnum.STAGGER_RESISTANCE, SpellStatus.STAGGER))
-		{
-			return;
-		}
+		
+		// Check for packets if this must be fixed someway, but for now it works good so
 		effect.setSkillMoveType(SkillMoveType.STAGGER);
 		final Creature effector = effect.getEffector();
 		final Creature effected = effect.getEffected();
 		effected.getController().cancelCurrentSkill();
+		
+		// Move effected 3 meters backward as on retail
 		final double radian = Math.toRadians(MathUtil.convertHeadingToDegree(effector.getHeading()));
 		float x1 = (float) (Math.cos(radian) * 3);
 		float y1 = (float) (Math.sin(radian) * 3);
+		
 		float z = effected.getZ();
 		final byte intentions = (byte) (CollisionIntention.PHYSICAL.getId() | CollisionIntention.DOOR.getId());
 		final Vector3f closestCollision = GeoService.getInstance().getClosestCollision(effected, effected.getX() + x1, effected.getY() + y1, effected.getZ(), false, intentions);
@@ -96,6 +119,12 @@ public class StaggerEffect extends EffectTemplate
 		effect.setTargetLoc(x1, y1, z);
 	}
 	
+	/**
+	 * Stops a specific {@code Effect} from being active.<br>
+	 * This method removes the associated observers from the target controller.<br>
+	 * Use this to clean up effects when they expire or are removed.
+	 * @param effect The {@code Effect} object to stop.
+	 */
 	@Override
 	public void endEffect(Effect effect)
 	{

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
@@ -28,15 +28,34 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_TARGET_UPDATE;
 import com.aionemu.gameserver.skillengine.model.Effect;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
+/**
+ * Handles the logic for changing a skill's target during execution.<br>
+ * It manages how {@link Creature} or {@link Player} targets are updated and synchronized.<br>
+ * This effect ensures that target changes are correctly broadcast via {@code SM_TARGET_UPDATE}.
+ * @author Kill3r
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "TargetChangeEffect")
 public class TargetChangeEffect extends EffectTemplate
 {
+	/**
+	 * Applies a specific {@code Effect} to a target.<br>
+	 * This method checks if the target is an instance of {@link Player}.<br>
+	 * It processes the logic required for the effect to take place.
+	 * @param effect The {@code Effect} object to be applied.
+	 */
 	@Override
 	public void applyEffect(Effect effect)
 	{
 	}
 	
+	/**
+	 * Starts a specific {@link Effect} and updates the target for players.<br>
+	 * This method checks if the affected creature is a {@code Player}.<br>
+	 * It handles special skill IDs by applying a random chance to set a new target.<br>
+	 * Otherwise, it clears the player's current target.
+	 * @param effect The {@code Effect} object to be started.
+	 */
 	@Override
 	public void startEffect(Effect effect)
 	{

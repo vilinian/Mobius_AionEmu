@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <configuration>
-	<property name="logFolder" value="log/"/>
+	<property name="logFolder" value="log/" />
 	<appender name="app_unkpk" class="ch.qos.logback.core.FileAppender">
 		<file>${logFolder}/unk_packets.log</file>
 		<append>true</append>
@@ -44,15 +44,15 @@
 		</encoder>
 	</appender>
 	<logger name="com.aionl.network.mmocore.handler.ClientPacketHandler" level="debug" additivity="false"> <!-- unknown packets -->
-		<appender-ref ref="app_unkpk"/>
+		<appender-ref ref="app_unkpk" />
 	</logger>
 	<logger name="com.aionemu.loginserver.network.aion.clientpackets.CM_LOGIN" level="debug" additivity="false"> <!-- server logins -->
-		<appender-ref ref="app_login_audit"/>
+		<appender-ref ref="app_login_audit" />
 	</logger>
 	<root>
-		<level value="info"/>
-		<appender-ref ref="app_console"/>
-		<appender-ref ref="out_console"/>
-		<appender-ref ref="out_error"/>
+		<level value="info" />
+		<appender-ref ref="app_console" />
+		<appender-ref ref="out_console" />
+		<appender-ref ref="out_error" />
 	</root>
 </configuration>

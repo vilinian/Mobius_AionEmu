@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -27,26 +27,34 @@ import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 import com.aionemu.gameserver.world.geo.GeoService;
 
 /**
+ * Handles the admin command for teleporting players to specific coordinates.<br>
+ * It utilizes {@link TeleportService2} to move a {@code Player} to a new location.<br>
+ * This class validates the target destination using {@link GeoService}.
  * @author Source
  * @rework Kill3r
  */
 public class Warp extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link Warp} class.<br>
+	 * This command allows administrators to teleport players to specific locations.
+	 */
 	public Warp()
 	{
 		super("warp");
 	}
 	
+	/**
+	 * Executes the command to teleport a player to a specific location.<br>
+	 * It parses coordinates and map data from the provided parameters.<br>
+	 * The method validates the destination and handles both standard and bracketed formats.
+	 * @param player The admin player executing the command.
+	 * @param params Variable arguments containing the location string, map ID, x, y, z, and layer information.
+	 */
 	@Override
 	public void execute(Player player, String... params)
 	{
-		if (params.length < 5)
-		{
-			onFail(player, "");
-			return;
-		}
-		
-		if (!GeoDataConfig.GEO_ENABLE)
+		if ((params.length < 5) || !GeoDataConfig.GEO_ENABLE)
 		{
 			onFail(player, "");
 			return;
@@ -55,14 +63,12 @@ public class Warp extends AdminCommand
 		// [pos:Location;1 120010000 1304.7 1423.1 0.0 0] <-- uses this format of Location
 		try
 		{
-			
 			String LocS, first, last;
 			float x, y, z;
 			LocS = "";
 			int mapL = 0;
 			int layerI = -1;
-			@SuppressWarnings("unused")
-			int race;
+			// int race;
 			
 			first = params[0];
 			mapL = Integer.parseInt(params[1]);
@@ -79,7 +85,7 @@ public class Warp extends AdminCommand
 			if (fm.find())
 			{
 				LocS = fm.group(1);
-				race = Integer.parseInt(fm.group(2));
+				// race = Integer.parseInt(fm.group(2));
 			}
 			
 			if (lm.find())
@@ -99,6 +105,7 @@ public class Warp extends AdminCommand
 				TeleportService2.teleportTo(player, mapL, x, y, z);
 				PacketSendUtility.sendMessage(player, "You have successfully warped to this location --- > " + LocS);
 			}
+			
 		}
 		catch (NumberFormatException e)
 		{
@@ -132,6 +139,7 @@ public class Warp extends AdminCommand
 				locS = fm.group(1);
 				mapL = Integer.parseInt(fm.group(2));
 			}
+			
 			if (lm.find())
 			{
 				layerI = Integer.parseInt(lm.group(1));
@@ -152,6 +160,12 @@ public class Warp extends AdminCommand
 		}
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{
@@ -160,6 +174,7 @@ public class Warp extends AdminCommand
 			PacketSendUtility.sendMessage(player, "You must turn on geo in config to use this command!");
 			return;
 		}
+		
 		PacketSendUtility.sendMessage(player, "syntax //warp <@link>");
 	}
 }

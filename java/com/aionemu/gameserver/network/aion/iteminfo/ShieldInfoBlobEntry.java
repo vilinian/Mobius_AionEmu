@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.iteminfo;
 
@@ -23,17 +23,29 @@ import com.aionemu.gameserver.model.items.ItemSlot;
 import com.aionemu.gameserver.network.aion.iteminfo.ItemInfoBlob.ItemBlobType;
 
 /**
- * This blob is sent for shields. It keeps info about slots that shield can be equipped to.
+ * This class represents a data entry for shields within an {@link ItemInfoBlob}.<br>
+ * It stores information regarding the specific slots where a shield can be equipped.
  * @author -Nemesiss-
  * @modified Rolandas
  */
 public class ShieldInfoBlobEntry extends ItemBlobEntry
 {
+	/**
+	 * Creates a new instance of {@code ShieldInfoBlobEntry}.<br>
+	 * This entry handles data for shield equipment slots.<br>
+	 * It uses the {@code SLOTS_SHIELD} type.
+	 */
 	ShieldInfoBlobEntry()
 	{
 		super(ItemBlobType.SLOTS_SHIELD);
 	}
 	
+	/**
+	 * Writes the shield slot information into a {@code ByteBuffer}.<br>
+	 * This method handles data for items that can be equipped on shields.<br>
+	 * It uses the {@code getSlotFor} method to find valid slots.
+	 * @param buf The {@code ByteBuffer} where the data will be written.
+	 */
 	@Override
 	public void writeThisBlob(ByteBuffer buf)
 	{
@@ -44,6 +56,11 @@ public class ShieldInfoBlobEntry extends ItemBlobEntry
 		writeD(buf, 0); // color ?
 	}
 	
+	/**
+	 * Returns the fixed size of this blob entry.<br>
+	 * This value is used to determine how many bytes to read from the buffer.
+	 * @return The size of the entry as an {@code int}.
+	 */
 	@Override
 	public int getSize()
 	{

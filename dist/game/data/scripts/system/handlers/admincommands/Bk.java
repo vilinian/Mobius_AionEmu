@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -37,6 +37,8 @@ import com.aionemu.gameserver.world.WorldMapType;
 import ch.qos.logback.classic.Logger;
 
 /**
+ * Handles the {@code Bk} admin command to teleport a player back to their previous location.<br>
+ * It utilizes {@link TeleportService2} to manage the movement of the target {@link Player}.
  * @author Mrakobes
  * @modified antness
  */
@@ -44,13 +46,24 @@ public class Bk extends AdminCommand
 {
 	ArrayList<Bookmark> bookmarks = new ArrayList<>();
 	private static final Logger log = (Logger) LoggerFactory.getLogger(Bk.class);
-	String bookmark_name = "";
+	private String bookmark_name = "";
 	
+	/**
+	 * Initializes a new instance of the {@link Bk} class.<br>
+	 * This constructor sets up the default command name as {@code bk}.
+	 */
 	public Bk()
 	{
 		super("bk");
 	}
 	
+	/**
+	 * Executes the bookmark command for a player.<br>
+	 * It allows adding, deleting, teleporting to, or listing bookmarks.<br>
+	 * The method parses parameters to determine which action to perform.
+	 * @param player The {@code Player} executing the command.
+	 * @param params Variable arguments containing the action and the bookmark name.
+	 */
 	@Override
 	public void execute(Player player, String... params)
 	{
@@ -67,7 +80,7 @@ public class Bk extends AdminCommand
 				bookmark_name = params[1].toLowerCase();
 				if (isBookmarkExists(bookmark_name, player.getObjectId()))
 				{
-					PacketSendUtility.sendMessage(player, "Bookmark " + bookmark_name + " already exists!");
+					PacketSendUtility.sendMessage(player, "Bookmark " + bookmark_name + " already exists !");
 					return;
 				}
 				
@@ -127,7 +140,6 @@ public class Bk extends AdminCommand
 		{
 			try
 			{
-				
 				if (params[1].equals("") || (params[1] == null))
 				{
 					PacketSendUtility.sendMessage(player, "syntax //bk <add|del|tele> <bookmark name>");
@@ -166,13 +178,16 @@ public class Bk extends AdminCommand
 				final String chatLink = ChatUtil.position(b.getName(), b.getWorld_id(), b.getX(), b.getY(), b.getZ());
 				PacketSendUtility.sendMessage(player, " = " + chatLink + " =  " + WorldMapType.getWorld(b.getWorld_id()) + "  ( " + b.getX() + " ," + b.getY() + " ," + b.getZ() + " )");
 			}
+			
 			PacketSendUtility.sendMessage(player, "=====Bookmark list end=======");
 		}
 	}
 	
 	/**
-	 * Reload bookmark list from db
-	 * @param objId
+	 * Refreshes the list of bookmarks for a specific character.<br>
+	 * This method clears the current {@code bookmarks} list.<br>
+	 * It then fetches new data from the database using the provided {@code objId}.
+	 * @param objId The unique identifier of the character to update.
 	 */
 	public void updateInfo(int objId)
 	{
@@ -180,7 +195,6 @@ public class Bk extends AdminCommand
 		
 		DB.select("SELECT * FROM `bookmark` where char_id= ?", new ParamReadStH()
 		{
-			
 			@Override
 			public void setParams(PreparedStatement stmt) throws SQLException
 			{
@@ -204,8 +218,11 @@ public class Bk extends AdminCommand
 	}
 	
 	/**
-	 * @param bk_name - bookmark name
-	 * @return Bookmark from bookmark name
+	 * Finds a {@code Bookmark} object by its name.<br>
+	 * It searches through the list of all available bookmarks.<br>
+	 * Returns {@code null} if no match is found.
+	 * @param bk_name The name of the bookmark to search for.
+	 * @return The matching {@code Bookmark} object or {@code null}.
 	 */
 	public Bookmark selectByName(String bk_name)
 	{
@@ -216,13 +233,16 @@ public class Bk extends AdminCommand
 				return b;
 			}
 		}
+		
 		return null;
 	}
 	
 	/**
-	 * @param bk_name - bookmark name
-	 * @param objId
-	 * @return true if bookmark exists
+	 * Checks if a specific bookmark exists in the database.<br>
+	 * It searches using both the name and the character ID.
+	 * @param bk_name The name of the bookmark to search for.
+	 * @param objId The unique identifier of the character.
+	 * @return {@code true} if at least one bookmark is found, otherwise {@code false}.
 	 */
 	public boolean isBookmarkExists(String bk_name, int objId)
 	{
@@ -239,6 +259,7 @@ public class Bk extends AdminCommand
 			{
 				bkcount = rset.getInt("bkcount");
 			}
+			
 			rset.close();
 			statement.close();
 		}
@@ -250,15 +271,21 @@ public class Bk extends AdminCommand
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return bkcount > 0;
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{
 		PacketSendUtility.sendMessage(player, "syntax //bk <add|del|tele|list>");
 	}
-	
 }
 
 class Bookmark
@@ -269,6 +296,15 @@ class Bookmark
 	private final float z;
 	private final int world_id;
 	
+	/**
+	 * Creates a new {@code Bookmark} object.<br>
+	 * This constructor initializes the coordinates and world information.
+	 * @param x The X coordinate of the bookmark.
+	 * @param y The Y coordinate of the bookmark.
+	 * @param z The Z coordinate of the bookmark.
+	 * @param world_id The unique identifier for the world.
+	 * @param name The display name of the bookmark.
+	 */
 	public Bookmark(float x, float y, float z, int world_id, String name)
 	{
 		this.x = x;
@@ -279,7 +315,9 @@ class Bookmark
 	}
 	
 	/**
-	 * @return the name
+	 * Retrieves the name of the bookmark.<br>
+	 * This method returns the {@code String`name`} associated with this object.
+	 * @return The name of the bookmark as a {@code String}.
 	 */
 	public String getName()
 	{
@@ -287,7 +325,9 @@ class Bookmark
 	}
 	
 	/**
-	 * @return the x
+	 * Retrieves the X coordinate of the bookmark.<br>
+	 * This value represents the horizontal position in the world.
+	 * @return The {@code float} value of the X coordinate.
 	 */
 	public float getX()
 	{
@@ -295,7 +335,9 @@ class Bookmark
 	}
 	
 	/**
-	 * @return the y
+	 * Retrieves the vertical coordinate of the bookmark.<br>
+	 * This value represents the height in the game world.
+	 * @return The {@code float} value of the Y coordinate.
 	 */
 	public float getY()
 	{
@@ -303,7 +345,9 @@ class Bookmark
 	}
 	
 	/**
-	 * @return the z
+	 * Retrieves the vertical coordinate of the bookmark.<br>
+	 * This value represents the height in the game world.
+	 * @return The {@code float} value of the Z coordinate.
 	 */
 	public float getZ()
 	{
@@ -311,7 +355,9 @@ class Bookmark
 	}
 	
 	/**
-	 * @return the world_id
+	 * Retrieves the unique identifier for the world.<br>
+	 * This value corresponds to the {@code world_id} of the bookmark.
+	 * @return The integer ID of the world.
 	 */
 	public int getWorld_id()
 	{

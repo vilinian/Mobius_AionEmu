@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting.scriptmanager;
 
@@ -26,9 +26,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Simple class that represents script info.<br>
- * <br>
- * It contains Script root, list of libraries and list of child contexes
+ * This class represents the metadata and structure of a script.<br>
+ * It contains the {@code Script} root, a list of libraries, and a list of child contexts.
  * @author SoulKeeper
  */
 @XmlRootElement(name = "scriptinfo")
@@ -60,8 +59,9 @@ public class ScriptInfo
 	private String compilerClass = ScriptManager.DEFAULT_COMPILER_CLASS.getName();
 	
 	/**
-	 * Returns root of script context
-	 * @return root of script context
+	 * Retrieves the root directory for this script context.<br>
+	 * This directory is used to scan for {@code .java} files.
+	 * @return the {@code File} object representing the root directory.
 	 */
 	public File getRoot()
 	{
@@ -69,8 +69,9 @@ public class ScriptInfo
 	}
 	
 	/**
-	 * Sets root for script context
-	 * @param root root for script context
+	 * Sets the base directory for this script context.<br>
+	 * The system will scan child directories of this {@code File} for scripts.
+	 * @param root The {@code File} object representing the root directory.
 	 */
 	public void setRoot(File root)
 	{
@@ -78,8 +79,9 @@ public class ScriptInfo
 	}
 	
 	/**
-	 * Returns list of libraries that will be used byscript context and it's children
-	 * @return lib of libraries
+	 * Retrieves the list of library files for this script context.<br>
+	 * This method returns all {@code File} objects associated with the libraries.
+	 * @return a {@code List} of {@code File} objects representing the libraries.
 	 */
 	public List<File> getLibraries()
 	{
@@ -87,8 +89,9 @@ public class ScriptInfo
 	}
 	
 	/**
-	 * Sets list of libraries that will be used by script context and it's children
-	 * @param libraries sets list of libraries
+	 * Sets the list of library files for this script context.<br>
+	 * This updates the {@code libraries} field with the provided {@code List<File>}.
+	 * @param libraries The list of {@code File} objects to set as libraries.
 	 */
 	public void setLibraries(List<File> libraries)
 	{
@@ -96,8 +99,9 @@ public class ScriptInfo
 	}
 	
 	/**
-	 * Return list of child context descriptors
-	 * @return list of child context descriptors
+	 * Retrieves the list of child script information.<br>
+	 * This method returns all {@link ScriptInfo} objects associated with this context.
+	 * @return a {@code List} of {@link ScriptInfo} objects.
 	 */
 	public List<ScriptInfo> getScriptInfos()
 	{
@@ -105,8 +109,9 @@ public class ScriptInfo
 	}
 	
 	/**
-	 * Sets list of child context descriptors
-	 * @param scriptInfos list of child context descriptors
+	 * Sets the list of child {@link ScriptInfo} objects.<br>
+	 * This updates the nested scripts for this context.
+	 * @param scriptInfos The list of {@code ScriptInfo} objects to set.
 	 */
 	public void setScriptInfos(List<ScriptInfo> scriptInfos)
 	{
@@ -114,8 +119,9 @@ public class ScriptInfo
 	}
 	
 	/**
-	 * Returns compiler class name
-	 * @return name of compiler class
+	 * Retrieves the name of the compiler class.<br>
+	 * This value is used to determine which compiler to load.
+	 * @return The name of the compiler class as a {@code String}.
 	 */
 	public String getCompilerClass()
 	{
@@ -123,8 +129,9 @@ public class ScriptInfo
 	}
 	
 	/**
-	 * Sets compiler class name
-	 * @param compilerClass name of compiler class
+	 * Sets the name of the class used for compiling scripts.<br>
+	 * This value is stored in the {@code compilerClass} field.
+	 * @param compilerClass The fully qualified name of the compiler class.
 	 */
 	public void setCompilerClass(String compilerClass)
 	{
@@ -132,9 +139,10 @@ public class ScriptInfo
 	}
 	
 	/**
-	 * Returns true if roots are quals
-	 * @param o object to compare with
-	 * @return true if this ScriptInfo and anothers ScriptInfo has same root
+	 * Compares this {@link ScriptInfo} object with another object for equality.<br>
+	 * It checks if both objects have the same {@code root} file.
+	 * @param o The object to compare this instance against.
+	 * @return {@code true} if the objects are equal, {@code false} otherwise.
 	 */
 	@Override
 	public boolean equals(Object o)
@@ -143,6 +151,7 @@ public class ScriptInfo
 		{
 			return true;
 		}
+		
 		if ((o == null) || (getClass() != o.getClass()))
 		{
 			return false;
@@ -151,12 +160,13 @@ public class ScriptInfo
 		final ScriptInfo that = (ScriptInfo) o;
 		
 		return root.equals(that.root);
-		
 	}
 	
 	/**
-	 * Returns hashcode of root
-	 * @return hashcode of root
+	 * Returns a hash code value for this {@link ScriptInfo} object.<br>
+	 * This value is used to identify the object in collections like {@code HashSet}.<br>
+	 * It is calculated based on the {@code root} field.
+	 * @return The integer hash code of this object.
 	 */
 	@Override
 	public int hashCode()
@@ -165,7 +175,9 @@ public class ScriptInfo
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Returns a string representation of the {@code ScriptInfo} object.<br>
+	 * This method includes the root, libraries, compiler class, and child script infos.
+	 * @return A formatted string describing this instance.
 	 */
 	@Override
 	public String toString()

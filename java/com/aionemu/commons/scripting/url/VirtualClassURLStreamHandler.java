@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting.url;
 
@@ -23,7 +23,8 @@ import java.net.URLStreamHandler;
 import com.aionemu.commons.scripting.ScriptClassLoader;
 
 /**
- * This class represents URL Stream handler that accepts {@value #HANDLER_PROTOCOL} protocol
+ * This class provides a custom {@code URLStreamHandler} for the {@code HANDLER_PROTOCOL} protocol.<br>
+ * It allows the system to load resources from virtual paths using the {@link com.aionemu.commons.scripting.ScriptClassLoader}.
  * @author SoulKeeper
  */
 public class VirtualClassURLStreamHandler extends URLStreamHandler
@@ -39,8 +40,9 @@ public class VirtualClassURLStreamHandler extends URLStreamHandler
 	private final ScriptClassLoader cl;
 	
 	/**
-	 * Creates new instance of url stream handler with given classloader
-	 * @param cl ScriptClassLoaderImpl that was used to load compiled class
+	 * Creates a new instance of this handler.<br>
+	 * It initializes the internal {@code ScriptClassLoader}.
+	 * @param cl The {@link ScriptClassLoader} used to load the classes.
 	 */
 	public VirtualClassURLStreamHandler(ScriptClassLoader cl)
 	{
@@ -48,9 +50,10 @@ public class VirtualClassURLStreamHandler extends URLStreamHandler
 	}
 	
 	/**
-	 * Opens new URL connection for URL
-	 * @param u url
-	 * @return Opened connection
+	 * Opens a connection to the specified {@code URL}.<br>
+	 * This method creates a new {@link VirtualClassURLConnection} instance.
+	 * @param u The {@code URL} to connect to.
+	 * @return A new {@code URLConnection} object for the given {@code URL}.
 	 */
 	@Override
 	protected URLConnection openConnection(URL u)

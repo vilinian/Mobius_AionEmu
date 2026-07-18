@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.utils.captcha;
 
@@ -21,6 +21,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
+ * This utility class handles the conversion of {@code BufferedImage} objects into {@code DDS} image formats.<br>
+ * It is primarily used to process and save captcha images for the game server.
  * @author Cura
  */
 public class DDSConverter
@@ -36,9 +38,7 @@ public class DDSConverter
 	
 	protected static class Color
 	{
-		int r;
-		int g;
-		int b;
+		private int r, g, b;
 		
 		public Color()
 		{
@@ -59,6 +59,7 @@ public class DDSConverter
 			{
 				return true;
 			}
+			
 			if ((o == null) || (getClass() != o.getClass()))
 			{
 				return false;
@@ -66,16 +67,8 @@ public class DDSConverter
 			
 			final Color color = (Color) o;
 			
-			if (b != color.b)
-			{
-				return false;
-			}
-			if (g != color.g)
-			{
-				return false;
-			}
 			// noinspection RedundantIfStatement
-			if (r != color.r)
+			if ((b != color.b) || (g != color.g) || (r != color.r))
 			{
 				return false;
 			}
@@ -94,6 +87,13 @@ public class DDSConverter
 		}
 	}
 	
+	/**
+	 * Converts a {@link BufferedImage} into a DXT1 compressed format.<br>
+	 * This method does not support transparency.<br>
+	 * It returns a {@code ByteBuffer} containing the compressed data.
+	 * @param image The source image to convert.
+	 * @return A {@code ByteBuffer} of the DXT1 data, or {@code null} if the input is {@code null}.
+	 */
 	public static ByteBuffer convertToDxt1NoTransparency(BufferedImage image)
 	{
 		if (image == null)
@@ -142,6 +142,14 @@ public class DDSConverter
 		return buffer;
 	}
 	
+	/**
+	 * Constructs the DXT1 header into a {@code ByteBuffer}.<br>
+	 * This method populates the buffer with specific DDS format data.<br>
+	 * It uses the provided {@code width} and {@code height} to set dimensions.
+	 * @param buffer The {@code ByteBuffer} where the header will be written.
+	 * @param width The width of the image in pixels.
+	 * @param height The height of the image in pixels.
+	 */
 	protected static void buildHeaderDxt1(ByteBuffer buffer, int width, int height)
 	{
 		buffer.rewind();
@@ -174,6 +182,13 @@ public class DDSConverter
 		buffer.position(buffer.position() + 12); // 3 unused double-words
 	}
 	
+	/**
+	 * Finds the two colors that are furthest apart in the provided array.<br>
+	 * This method uses {@code Color)} to calculate the distance between every pair.<br>
+	 * It returns the indices of these extreme colors.
+	 * @param colors An array of {@code Color} objects to analyze.
+	 * @return An {@code int[]} containing the two indices of the most distant colors.
+	 */
 	protected static int[] determineExtremeColors(Color[] colors)
 	{
 		int farthest = Integer.MIN_VALUE;
@@ -196,6 +211,14 @@ public class DDSConverter
 		return ex;
 	}
 	
+	/**
+	 * Calculates a bitmask based on the proximity of colors to extreme points.<br>
+	 * This method identifies which color point each color in the array is closest to.<br>
+	 * It uses {@code Color)} to determine these relationships.
+	 * @param colors An array of {@code Color} objects to be processed.
+	 * @param extremaIndices An array of indices pointing to the extreme colors in the {@code colors} array.
+	 * @return A {@code long} bitmask representing the closest color point for each input color.
+	 */
 	protected static long computeBitMask(Color[] colors, int[] extremaIndices)
 	{
 		final Color[] colorPoints = new Color[]
@@ -233,12 +256,19 @@ public class DDSConverter
 					mask = j;
 				}
 			}
+			
 			bitmask |= mask << (i * 2);
 		}
 		
 		return bitmask;
 	}
 	
+	/**
+	 * Converts a {@code Color} object into a 16-bit RGB565 pixel value.<br>
+	 * This method reduces the color depth by shifting bits.
+	 * @param color The {@code Color} object to convert.
+	 * @return The resulting 16-bit integer in {@code RGB565} format.
+	 */
 	protected static int getPixel565(Color color)
 	{
 		final int r = color.r >> 3;
@@ -247,6 +277,12 @@ public class DDSConverter
 		return (r << 11) | (g << 5) | b;
 	}
 	
+	/**
+	 * Converts a {@code int} pixel value to a {@code Color} object.<br>
+	 * This method extracts the red, green, and blue components from a 565 format integer.
+	 * @param pixel The raw {@code int} pixel value to convert.
+	 * @return A new {@code Color} object representing the extracted values.
+	 */
 	protected static Color getColor565(int pixel)
 	{
 		final Color color = new Color();
@@ -258,6 +294,12 @@ public class DDSConverter
 		return color;
 	}
 	
+	/**
+	 * Converts an array of raw pixel values into an array of {@code Color} objects.<br>
+	 * This method extracts the red, green, and blue components from each integer.
+	 * @param pixels An array of integers representing the image pixels.
+	 * @return A new array containing the converted {@code Color} objects.
+	 */
 	protected static Color[] getColors888(int[] pixels)
 	{
 		final Color[] colors = new Color[pixels.length];
@@ -273,6 +315,14 @@ public class DDSConverter
 		return colors;
 	}
 	
+	/**
+	 * Calculates the squared distance between two {@code Color} objects.<br>
+	 * This method compares the red, green, and blue components of both colors.<br>
+	 * It returns a value representing how different the two colors are.
+	 * @param ca The first color to compare.
+	 * @param cb The second color to compare.
+	 * @return The squared distance between {@code ca} and {@code cb}.
+	 */
 	protected static int distance(Color ca, Color cb)
 	{
 		return ((cb.r - ca.r) * (cb.r - ca.r)) + ((cb.g - ca.g) * (cb.g - ca.g)) + ((cb.b - ca.b) * (cb.b - ca.b));

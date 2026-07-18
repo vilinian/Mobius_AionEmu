@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.database.mysql5;
 
@@ -30,12 +30,22 @@ import com.aionemu.gameserver.dao.PlayerAppearanceDAO;
 import com.aionemu.gameserver.model.gameobjects.player.PlayerAppearance;
 
 /**
+ * This class provides the database access layer for managing {@link PlayerAppearance} data.<br>
+ * It handles SQL queries specifically for the {@code mysql5} database system.<br>
+ * It extends the base functionality provided by {@link PlayerAppearanceDAO}.
  * @author SoulKeeper, AEJTester, srx47
  */
 public class MySQL5PlayerAppearanceDAO extends PlayerAppearanceDAO
 {
-	static final Logger log = LoggerFactory.getLogger(PlayerAppearanceDAO.class);
+	private static final Logger log = LoggerFactory.getLogger(PlayerAppearanceDAO.class);
 	
+	/**
+	 * Retrieves the appearance data for a specific player from the database.<br>
+	 * This method populates a {@link PlayerAppearance} object with all character traits.<br>
+	 * It returns {@code null} if an error occurs during the database operation.
+	 * @param playerId The unique identifier of the player to load.
+	 * @return A {@link PlayerAppearance} object containing the loaded data, or {@code null} on failure.
+	 */
 	@Override
 	public PlayerAppearance load(int playerId)
 	{
@@ -112,6 +122,7 @@ public class MySQL5PlayerAppearanceDAO extends PlayerAppearanceDAO
 				pa.setCalfThickness(resultSet.getInt("calf_thickness"));
 				pa.setHeight(resultSet.getFloat("height"));
 			}
+			
 			resultSet.close();
 			statement.close();
 		}
@@ -124,9 +135,17 @@ public class MySQL5PlayerAppearanceDAO extends PlayerAppearanceDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return pa;
 	}
 	
+	/**
+	 * Saves the appearance data for a specific player to the database.<br>
+	 * This method uses a replace operation to update existing records or insert new ones.
+	 * @param id The unique identifier of the player.
+	 * @param pa The {@link PlayerAppearance} object containing the data to save.
+	 * @return {@code true} if the operation was successful, otherwise {@code false}.
+	 */
 	@Override
 	public boolean store(int id, PlayerAppearance pa)
 	{
@@ -200,6 +219,14 @@ public class MySQL5PlayerAppearanceDAO extends PlayerAppearanceDAO
 		});
 	}
 	
+	/**
+	 * Checks if the current database system supports a specific feature.<br>
+	 * This method delegates the check to {@code int, int)}.
+	 * @param s The name of the feature to check.
+	 * @param i The first integer parameter for the feature.
+	 * @param i1 The second integer parameter for the feature.
+	 * @return {@code true} if the feature is supported, {@code false} otherwise.
+	 */
 	@Override
 	public boolean supports(String s, int i, int i1)
 	{

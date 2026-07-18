@@ -1,24 +1,26 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.zone;
 
 import com.aionemu.gameserver.model.geometry.Area;
 
 /**
+ * This class holds the configuration and metadata for a specific game zone.<br>
+ * It provides information about the {@link Area} and other properties associated with a map region.
  * @author MrPoke
  */
 public class ZoneInfo
@@ -27,8 +29,10 @@ public class ZoneInfo
 	private final ZoneTemplate zoneTemplate;
 	
 	/**
-	 * @param area
-	 * @param zoneTemplate
+	 * Creates a new {@link ZoneInfo} instance.<br>
+	 * This constructor links an {@code Area} with its corresponding {@link ZoneTemplate}.
+	 * @param area The physical boundaries of the zone.
+	 * @param zoneTemplate The configuration data for the zone.
 	 */
 	public ZoneInfo(Area area, ZoneTemplate zoneTemplate)
 	{
@@ -37,7 +41,9 @@ public class ZoneInfo
 	}
 	
 	/**
-	 * @return the area
+	 * Retrieves the {@code Area} associated with this zone.<br>
+	 * This method returns the geometry data for the current zone.
+	 * @return The {@link Area} object representing the zone boundaries.
 	 */
 	public Area getArea()
 	{
@@ -45,7 +51,9 @@ public class ZoneInfo
 	}
 	
 	/**
-	 * @return the zoneTemplate
+	 * Retrieves the {@code ZoneTemplate} associated with this zone.<br>
+	 * This method returns the template data for the current area.
+	 * @return The {@link ZoneTemplate} object.
 	 */
 	public ZoneTemplate getZoneTemplate()
 	{

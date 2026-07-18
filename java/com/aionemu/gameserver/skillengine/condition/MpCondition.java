@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.condition;
 
@@ -24,6 +24,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.aionemu.gameserver.skillengine.model.Skill;
 
 /**
+ * Represents a condition that checks the Mana Points (MP) of a character.<br>
+ * It is used by the {@link Skill} engine to determine if a skill can be cast based on MP requirements.
  * @author ATracer
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -32,13 +34,17 @@ public class MpCondition extends Condition
 {
 	@XmlAttribute(required = true)
 	protected int value;
-	
 	@XmlAttribute
 	protected int delta;
-	
 	@XmlAttribute
 	protected boolean ratio;
 	
+	/**
+	 * Checks if the {@link Skill} meets the required MP conditions.<br>
+	 * It calculates the required amount based on the skill level and ratio.
+	 * @param skill The {@code Skill} object to be validated.
+	 * @return {@code true} if the current MP is sufficient, otherwise {@code false}.
+	 */
 	@Override
 	public boolean validate(Skill skill)
 	{
@@ -47,6 +53,7 @@ public class MpCondition extends Condition
 		{
 			valueWithDelta = (skill.getEffector().getLifeStats().getMaxMp() * valueWithDelta) / 100;
 		}
+		
 		return skill.getEffector().getLifeStats().getCurrentMp() > valueWithDelta;
 	}
 }

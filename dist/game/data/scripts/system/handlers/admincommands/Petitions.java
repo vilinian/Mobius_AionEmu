@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -32,15 +32,27 @@ import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * Handles administrative commands related to {@link Petition} objects.<br>
+ * This class allows administrators to manage and view petitions within the game world.
  * @author zdead
  */
 public class Petitions extends AdminCommand
 {
+	/**
+	 * Initializes the {@link Petitions} admin command.<br>
+	 * This constructor registers the command with the name {@code petition}.
+	 */
 	public Petitions()
 	{
 		super("petition");
 	}
 	
+	/**
+	 * Executes the command to manage and view petitions.<br>
+	 * It allows administrators to list, read, delete, or reply to specific petitions.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings where the first element is the petition ID.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
@@ -53,9 +65,9 @@ public class Petitions extends AdminCommand
 			if (petitionsArray.length < 5)
 			{
 				PacketSendUtility.sendMessage(admin, "== " + petitionsArray.length + " first petitions to reply ==");
-				for (Petition element : petitionsArray)
+				for (int i = 0; i < petitionsArray.length; i++)
 				{
-					PacketSendUtility.sendMessage(admin, element.getPetitionId() + " | " + element.getTitle());
+					PacketSendUtility.sendMessage(admin, petitionsArray[i].getPetitionId() + " | " + petitionsArray[i].getTitle());
 				}
 			}
 			else
@@ -124,14 +136,12 @@ public class Petitions extends AdminCommand
 			message.append("= Additional Data =\n");
 			message.append(getFormattedAdditionalData(petition.getPetitionType(), petition.getAdditionalData()));
 			PacketSendUtility.sendMessage(admin, message.toString());
-		}
-		// Delete
+		} // Delete
 		else if ((params.length == 2) && params[1].equals("delete"))
 		{
 			PetitionService.getInstance().deletePetition(petition.getPlayerObjId());
 			PacketSendUtility.sendMessage(admin, "Petition #" + petitionId + " deleted.");
-		}
-		// Reply
+		} // Reply
 		else if ((params.length >= 3) && params[1].equals("reply"))
 		{
 			String replyMessage = "";
@@ -139,6 +149,7 @@ public class Petitions extends AdminCommand
 			{
 				replyMessage += params[i] + " ";
 			}
+			
 			replyMessage += params[params.length - 1];
 			if (replyMessage.equals(""))
 			{
@@ -153,69 +164,62 @@ public class Petitions extends AdminCommand
 		}
 	}
 	
+	/**
+	 * Converts a {@code PetitionType} enum into a readable string.<br>
+	 * This is used to display friendly names in the user interface.
+	 * @param type The {@code PetitionType} to convert.
+	 * @return A human-readable string representation of the petition type.
+	 */
 	private String getHumanizedValue(PetitionType type)
 	{
 		String result = "";
 		switch (type)
 		{
 			case CHARACTER_STUCK:
-			{
 				result = "Character Stuck";
 				break;
-			}
 			case CHARACTER_RESTORATION:
-			{
 				result = "Character Restoration";
 				break;
-			}
 			case BUG:
-			{
 				result = "Bug";
 				break;
-			}
 			case QUEST:
-			{
 				result = "Quest";
 				break;
-			}
 			case UNACCEPTABLE_BEHAVIOR:
-			{
 				result = "Unacceptable Behavior";
 				break;
-			}
 			case SUGGESTION:
-			{
 				result = "Suggestion";
-			}
 			case INQUIRY:
-			{
 				result = "Inquiry about the game";
-			}
 			default:
-			{
 				result = "Unknown";
-			}
 		}
+		
 		return result;
 	}
 	
+	/**
+	 * Formats the raw data string based on the specific {@code PetitionType}.<br>
+	 * This method creates a human-readable layout for different petition categories.
+	 * @param type The category of the petition being processed.
+	 * @param additionalData The raw information provided by the user.
+	 * @return A formatted string ready to be displayed to administrators.
+	 */
 	private String getFormattedAdditionalData(PetitionType type, String additionalData)
 	{
 		String result = "";
 		switch (type)
 		{
 			case CHARACTER_STUCK:
-			{
 				result = "Character Location: " + additionalData;
 				break;
-			}
 			case CHARACTER_RESTORATION:
-			{
 				result = "Category: " + additionalData;
 				break;
-			}
 			case BUG:
-			{
 				final String[] bugData = additionalData.split("/");
 				result = "Time Occured: " + bugData[0] + "\n";
 				result += "Zone and Coords: " + bugData[1];
@@ -224,40 +228,36 @@ public class Petitions extends AdminCommand
 					result += "\nHow to Replicate: " + bugData[2];
 				}
 				break;
-			}
 			case QUEST:
-			{
 				result = "Quest Title: " + additionalData;
 				break;
-			}
 			case UNACCEPTABLE_BEHAVIOR:
-			{
 				final String[] bData = additionalData.split("/");
 				result = "Time Occured: " + bData[0] + "\n";
 				result += "Character Name: " + bData[1] + "\n";
 				result += "Category: " + bData[2];
 				break;
-			}
 			case SUGGESTION:
-			{
 				//
 				result = "Category: " + additionalData;
 				break;
-			}
 			case INQUIRY:
-			{
 				//
 				result = "Petition Category: " + additionalData;
 				break;
-			}
 			default:
-			{
 				result = additionalData;
-			}
 		}
+		
 		return result;
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{

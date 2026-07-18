@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.collision.bih;
 
@@ -34,6 +34,11 @@ import com.aionemu.gameserver.geoEngine.scene.Mesh;
 import com.aionemu.gameserver.geoEngine.scene.VertexBuffer.Type;
 import com.aionemu.gameserver.geoEngine.scene.mesh.IndexBuffer;
 
+/**
+ * Represents a Bounding Interval Hierarchy (BIH) for efficient collision detection.<br>
+ * This class provides spatial partitioning to speed up queries against complex {@link Mesh} objects.<br>
+ * It allows the engine to quickly determine if a {@link Ray} or other volume intersects with geometry.
+ */
 public class BIHTree implements CollisionData
 {
 	public static final int MAX_TREE_DEPTH = 100;
@@ -53,6 +58,13 @@ public class BIHTree implements CollisionData
 		comparators[2] = new TriangleAxisComparator(2);
 	}
 	
+	/**
+	 * Initializes the triangle data for the {@code BIHTree}.<br>
+	 * This method extracts vertex positions from the {@code FloatBuffer} and indices from the {@code IndexBuffer}.<br>
+	 * It populates the internal {@code pointData} array and creates a list of initial {@code triIndices}.
+	 * @param vb The buffer containing the vertex data.
+	 * @param ib The buffer containing the triangle indices.
+	 */
 	private void initTriList(FloatBuffer vb, IndexBuffer ib)
 	{
 		pointData = new float[numTris * 3 * 3];
@@ -82,6 +94,13 @@ public class BIHTree implements CollisionData
 		}
 	}
 	
+	/**
+	 * Creates a new {@link BIHTree} instance for a specific {@link Mesh}.<br>
+	 * This constructor initializes the internal triangle list from the mesh data.<br>
+	 * It requires a valid mesh and a positive number of triangles per node.
+	 * @param mesh The {@link Mesh} used to build the tree.
+	 * @param maxTrisPerNode The maximum number of triangles allowed in each node.
+	 */
 	public BIHTree(Mesh mesh, int maxTrisPerNode)
 	{
 		this.maxTrisPerNode = maxTrisPerNode;
@@ -100,21 +119,42 @@ public class BIHTree implements CollisionData
 		initTriList(vb, ib);
 	}
 	
+	/**
+	 * Creates a new {@link BIHTree} using the default settings.<br>
+	 * This constructor uses the constant {@code MAX_TRIS_PER_NODE} for tree construction.
+	 * @param mesh The {@link Mesh} used to build the collision tree.
+	 */
 	public BIHTree(Mesh mesh)
 	{
 		this(mesh, MAX_TRIS_PER_NODE);
 	}
 	
+	/**
+	 * Creates a new empty instance of {@code BIHTree}.<br>
+	 * This constructor initializes the object without any mesh data.<br>
+	 * You should call {@code construct} after initialization to build the tree.
+	 */
 	public BIHTree()
 	{
 	}
 	
+	/**
+	 * Builds the {@code BIHTree} structure from existing triangle data.<br>
+	 * This method initializes the root node and organizes the spatial hierarchy.
+	 */
 	public void construct()
 	{
 		final BoundingBox sceneBbox = createBox(0, numTris - 1);
 		root = createNode(0, numTris - 1, sceneBbox, 0);
 	}
 	
+	/**
+	 * Creates a {@link BoundingBox} for a range of triangles.<br>
+	 * It calculates the minimum and maximum bounds from indices {@code l} to {@code r}.
+	 * @param l The starting index of the triangle range.
+	 * @param r The ending index of the triangle range.
+	 * @return A new {@link BoundingBox} containing all triangles in the specified range.
+	 */
 	private BoundingBox createBox(int l, int r)
 	{
 		final Vector3f min = Vector3f.newInstance();
@@ -143,11 +183,27 @@ public class BIHTree implements CollisionData
 		return bbox;
 	}
 	
+	/**
+	 * Retrieves the actual triangle index from the internal array.<br>
+	 * This method maps a local position to the global {@code triIndices}.
+	 * @param triIndex The local index within the current tree structure.
+	 * @return The corresponding global triangle index.
+	 */
 	int getTriangleIndex(int triIndex)
 	{
 		return triIndices[triIndex];
 	}
 	
+	/**
+	 * Sorts triangles within a specific range based on their position relative to a split value.<br>
+	 * This method rearranges the triangle indices to organize them into two groups.<br>
+	 * It uses a partitioning logic similar to the quicksort algorithm.
+	 * @param l The starting index of the triangle range.
+	 * @param r The ending index of the triangle range.
+	 * @param split The coordinate value used to divide the triangles.
+	 * @param axis The dimension along which the split is performed.
+	 * @return The final pivot index where the two groups meet.
+	 */
 	private int sortTriangles(int l, int r, float split, int axis)
 	{
 		int pivot = l;
@@ -177,6 +233,14 @@ public class BIHTree implements CollisionData
 		return pivot;
 	}
 	
+	/**
+	 * Updates the minimum or maximum bounds of a {@link BoundingBox}.<br>
+	 * This method modifies either the min or max coordinate based on the provided axis.
+	 * @param bbox The {@link BoundingBox} to be updated.
+	 * @param doMin If {@code true}, updates the minimum value; if {@code false}, updates the maximum value.
+	 * @param axis The index of the axis to modify (e.g., 0, 1, or 2).
+	 * @param value The new coordinate value to set.
+	 */
 	private void setMinMax(BoundingBox bbox, boolean doMin, int axis, float value)
 	{
 		final Vector3f min = bbox.getMin(null);
@@ -194,12 +258,21 @@ public class BIHTree implements CollisionData
 		bbox.setMinMax(min, max);
 	}
 	
+	/**
+	 * Retrieves a specific coordinate from a {@link BoundingBox}.<br>
+	 * It returns either the minimum or maximum value based on the provided axis.
+	 * @param bbox The bounding box to query.
+	 * @param doMin If {@code true}, retrieves the minimum value. If {@code false}, retrieves the maximum value.
+	 * @param axis The index of the axis to check (e.g., 0, 1, or 2).
+	 * @return The float value of the requested coordinate.
+	 */
 	private float getMinMax(BoundingBox bbox, boolean doMin, int axis)
 	{
 		if (doMin)
 		{
 			return bbox.getMin(null).get(axis);
 		}
+		
 		return bbox.getMax(null).get(axis);
 	}
 	
@@ -223,16 +296,13 @@ public class BIHTree implements CollisionData
 	// float v = tri.getCenter().get(axis);
 	// if (v > split){
 	// if (i == 0){
-	// // no left plane
-	// splitIndex = -2;
+	// No left plane split index is -2.
 	// }else{
 	// splitIndex = i;
-	// // first triangle assigned to right
-	// rightPlane = tri.getExtreme(axis, true);
+	// Assign the first triangle to the right plane.
 	// }
 	// }else{
-	// // triangle assigned to left
-	// float ex = tri.getExtreme(axis, false);
+	// Assign the triangle's extreme value on the specified axis to the left float variable.
 	// if (ex > leftPlane)
 	// leftPlane = ex;
 	// }
@@ -280,6 +350,16 @@ public class BIHTree implements CollisionData
 	//
 	// return node;
 	// }
+	
+	/**
+	 * Recursively constructs a {@link BIHNode} for the Bounding Interval Hierarchy.<br>
+	 * This method splits triangles into child nodes based on spatial bounds and depth limits.
+	 * @param l The starting index of the triangle range.
+	 * @param r The ending index of the triangle range.
+	 * @param nodeBbox The bounding box for the current node.
+	 * @param depth The current recursion depth level.
+	 * @return A new {@link BIHNode} representing a leaf or an internal branch.
+	 */
 	private BIHNode createNode(int l, int r, BoundingBox nodeBbox, int depth)
 	{
 		if (((r - l) < maxTrisPerNode) || (depth > MAX_TREE_DEPTH))
@@ -316,6 +396,7 @@ public class BIHTree implements CollisionData
 				axis = 2;
 			}
 		}
+		
 		if (exteriorExt.equals(Vector3f.ZERO))
 		{
 			axis = 0;
@@ -360,6 +441,7 @@ public class BIHTree implements CollisionData
 			// Right Child
 			final BoundingBox rbbox = new BoundingBox(currentBox);
 			setMinMax(rbbox, true, axis, split);
+			
 			// The right node left border is the plane most left
 			node.setRightPlane(getMinMax(createBox(pivot, r), true, axis));
 			node.setRightChild(createNode(pivot, r, rbbox, depth + 1)); // Recursive call
@@ -368,6 +450,14 @@ public class BIHTree implements CollisionData
 		}
 	}
 	
+	/**
+	 * Retrieves the vertices of a specific triangle from the internal data.<br>
+	 * The coordinates are copied into the provided {@code Vector3f} objects.
+	 * @param index The unique identifier for the triangle to retrieve.
+	 * @param v1 The first vertex of the triangle to be populated.
+	 * @param v2 The second vertex of the triangle to be populated.
+	 * @param v3 The third vertex of the triangle to be populated.
+	 */
 	public void getTriangle(int index, Vector3f v1, Vector3f v2, Vector3f v3)
 	{
 		int pointIndex = index * 9;
@@ -385,6 +475,13 @@ public class BIHTree implements CollisionData
 		v3.z = pointData[pointIndex++];
 	}
 	
+	/**
+	 * Swaps the data of two triangles in the internal buffer.<br>
+	 * This method exchanges both vertex positions and their corresponding indices.<br>
+	 * It uses {@code index1} and {@code index2} to identify the targets.
+	 * @param index1 The first triangle index to swap.
+	 * @param index2 The second triangle index to swap.
+	 */
 	public void swapTriangles(int index1, int index2)
 	{
 		final int p1 = index1 * 9;
@@ -405,9 +502,17 @@ public class BIHTree implements CollisionData
 		triIndices[index2] = tmp2;
 	}
 	
+	/**
+	 * Checks for an intersection between a {@code Ray} and the bounding volume.<br>
+	 * If a collision is detected, it performs a detailed intersection test with the tree nodes.
+	 * @param r The ray used to perform the collision check.
+	 * @param worldMatrix The transformation matrix for the object in world space.
+	 * @param worldBound The bounding volume of the object.
+	 * @param results The object where collision data will be stored.
+	 * @return The number of triangles hit by the ray, or 0 if no collision occurs.
+	 */
 	private int collideWithRay(Ray r, Matrix4f worldMatrix, BoundingVolume worldBound, CollisionResults results)
 	{
-		
 		final CollisionResults boundResults = new CollisionResults(results.getIntentions(), results.isOnlyFirst(), results.getInstanceId());
 		worldBound.collideWith(r, boundResults);
 		if (boundResults.size() > 0)
@@ -437,9 +542,19 @@ public class BIHTree implements CollisionData
 			// return root.intersectBrute(r, worldMatrix, this, tMin, tMax, results);
 			return root.intersectWhere(r, worldMatrix, this, tMin, tMax, results);
 		}
+		
 		return 0;
 	}
 	
+	/**
+	 * Checks for a collision between this tree and a {@link BoundingVolume}.<br>
+	 * It transforms the volume into local space using the provided {@code worldMatrix}.<br>
+	 * The method returns the number of triangles that were intersected.
+	 * @param bv The bounding volume to check against.
+	 * @param worldMatrix The matrix representing the current world transformation.
+	 * @param results The object where collision data will be stored.
+	 * @return The count of intersecting triangles.
+	 */
 	private int collideWithBoundingVolume(BoundingVolume bv, Matrix4f worldMatrix, CollisionResults results)
 	{
 		BoundingBox bbox;
@@ -456,10 +571,19 @@ public class BIHTree implements CollisionData
 		return root.intersectWhere(bv, bbox, worldMatrix, this, results);
 	}
 	
+	/**
+	 * Checks for a collision between this tree and another object.<br>
+	 * This method handles both {@code Ray} and {@code BoundingVolume} types.<br>
+	 * It returns the number of collisions found or throws an exception if the type is unsupported.
+	 * @param other The object to check against, such as a {@code Ray} or {@code BoundingVolume}.
+	 * @param worldMatrix The transformation matrix for the world space.
+	 * @param worldBound The bounding volume representing the world boundaries.
+	 * @param results The object where collision data will be stored.
+	 * @return The number of collisions detected.
+	 */
 	@Override
 	public int collideWith(Collidable other, Matrix4f worldMatrix, BoundingVolume worldBound, CollisionResults results)
 	{
-		
 		if (other instanceof Ray)
 		{
 			final Ray ray = (Ray) other;

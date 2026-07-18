@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.models.xmlQuest.events;
 
@@ -30,6 +30,8 @@ import com.aionemu.gameserver.questEngine.handlers.models.xmlQuest.operations.Qu
 import com.aionemu.gameserver.questEngine.model.QuestEnv;
 
 /**
+ * Represents a specific event triggered within an {@code Quest}.<br>
+ * This class holds the data required to execute quest operations and check conditions based on game actions.
  * @author Mr. Poke
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -50,24 +52,22 @@ public abstract class QuestEvent
 	@XmlAttribute
 	protected List<Integer> ids;
 	
+	/**
+	 * Executes the logic for a monster kill event.<br>
+	 * It updates quest variables and sends packets to the player.<br>
+	 * This method returns {@code false} in most cases after processing.
+	 * @param env The current environment containing quest and player data.
+	 * @return {@code true} if the operation succeeded, otherwise {@code false}.
+	 */
 	public boolean operate(QuestEnv env)
 	{
 		return false;
 	}
 	
 	/**
-	 * Gets the value of the ids property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the ids property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getIds().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link Integer }
-	 * @return
+	 * Retrieves the list of unique identifiers for this action.<br>
+	 * If no IDs exist, it returns an empty {@code List}.
+	 * @return a {@code List<Integer>} containing the IDs.
 	 */
 	public List<Integer> getIds()
 	{
@@ -75,6 +75,7 @@ public abstract class QuestEvent
 		{
 			ids = new ArrayList<>();
 		}
+		
 		return ids;
 	}
 }

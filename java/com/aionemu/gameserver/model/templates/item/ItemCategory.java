@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.item;
 
@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlType;
 
 /**
+ * Defines the different categories that items can belong to within the game.<br>
+ * This enumeration is used to classify item types.
  * @author LokiReborn
  */
 @XmlType(name = "item_category")
@@ -27,11 +29,10 @@ import javax.xml.bind.annotation.XmlType;
 public enum ItemCategory
 {
 	MANASTONE,
-	SPECIAL_MANASTONE,
-	PRIMARY_MANASTONE,
+	ANCIENT_MANASTONE,
 	GODSTONE,
+	AMPLIFICATION,
 	ENCHANTMENT,
-	ENCHANTMENT_AMPLIFICATION,
 	FLUX,
 	BALIC_EMOTION,
 	BALIC_MATERIAL,
@@ -40,6 +41,7 @@ public enum ItemCategory
 	RECIPE,
 	GATHERABLE,
 	GATHERABLE_BONUS,
+	DROP_MATERIAL,
 	SWORD,
 	DAGGER,
 	MACE,
@@ -50,8 +52,13 @@ public enum ItemCategory
 	STAFF,
 	BOW,
 	SHIELD,
+	HARP,
+	GUN,
+	CANNON,
+	KEYBLADE,
 	JACKET,
 	PANTS,
+	SHARD,
 	SHOES,
 	GLOVES,
 	SHOULDERS,
@@ -69,17 +76,17 @@ public enum ItemCategory
 	TEMPERING,
 	CRAFT_BOOST,
 	COMBINATION,
-	
-	// 4.0
-	GUN,
-	CANNON,
-	HARP,
-	KEYBLADE,
-	KEYHAMMER,
 	PLUME,
-	NONE,
-	
-	// 5.1
+	STENCHANTMENT,
+	BRACELET,
 	ESTIMA,
-	BRACELET
+	SPRAY,
+	MANA_SLOT_OPEN,
+	GRIND_SLOT_OPEN,
+	GRIND_ENCHANT,
+	ODIAN,
+	RUNE,
+	GLYPH,
+	GLYPH_ENCHANT,
+	NONE
 }

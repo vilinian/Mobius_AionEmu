@@ -1,5 +1,6 @@
 @ECHO off
 TITLE AionEmu - Login Server Console
+MODE CON: COLS=120 LINES=50
 :START
 CLS
 IF "%MODE%" == "" (

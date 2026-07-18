@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -27,15 +27,28 @@ import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * Handles the admin command to add an {@link ItemSetTemplate} to a player.<br>
+ * This allows administrators to grant specific sets of items to characters instantly.
  * @author Antivirus
  */
 public class AddSet extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link AddSet} class.<br>
+	 * This constructor registers the {@code addset} command.
+	 */
 	public AddSet()
 	{
 		super("addset");
 	}
 	
+	/**
+	 * Executes the command to add an item set to a player.<br>
+	 * It parses the provided parameters to identify the target player and the item set ID.<br>
+	 * The method checks for sufficient inventory space before adding all parts of the set.
+	 * @param player The admin player executing the command.
+	 * @param params Variable arguments containing either the target name and item set ID, or just the item set ID if giving to self.
+	 */
 	@Override
 	public void execute(Player player, String... params)
 	{
@@ -69,7 +82,6 @@ public class AddSet extends AdminCommand
 			}
 			catch (NumberFormatException ex)
 			{
-				
 				PacketSendUtility.sendMessage(player, "You must give number to itemset ID.");
 				return;
 			}
@@ -108,11 +120,16 @@ public class AddSet extends AdminCommand
 		PacketSendUtility.sendMessage(receiver, "admin gives you an item set");
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{
 		PacketSendUtility.sendMessage(player, "syntax //addset <player> <itemset ID>");
 		PacketSendUtility.sendMessage(player, "syntax //addset <itemset ID>");
 	}
-	
 }

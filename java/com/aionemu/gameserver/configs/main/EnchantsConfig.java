@@ -1,63 +1,69 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.configs.main;
 
 import com.aionemu.commons.configuration.Property;
 
+/**
+ * This class manages the configuration settings for the enchantment system.<br>
+ * It allows administrators to define various properties related to how enchants behave in-game.
+ */
 public class EnchantsConfig
 {
 	/**
-	 * Enable Cap Enchantment +25
+	 * Supplement Additional Rates
 	 */
-	
 	@Property(key = "gameserver.supplement.lesser", defaultValue = "1.0")
 	public static float LESSER_SUP;
-	
 	@Property(key = "gameserver.supplement.regular", defaultValue = "1.0")
 	public static float REGULAR_SUP;
-	
 	@Property(key = "gameserver.supplement.greater", defaultValue = "1.0")
 	public static float GREATER_SUP;
-	
-	@Property(key = "gameserver.socket.manastone", defaultValue = "50")
-	public static float SOCKET_MANASTONE;
-	
-	@Property(key = "gameserver.enchant.item", defaultValue = "50")
-	public static float ENCHANT_ITEM;
-	
-	@Property(key = "gameserver.manastone.clean", defaultValue = "false")
-	public static boolean CLEAN_STONE;
-	
-	@Property(key = "gameserver.enchant.cast.speed", defaultValue = "4000")
-	public static int ENCHANT_SPEED;
-	
+	@Property(key = "gameserver.supplement.mythic", defaultValue = "1.0")
+	public static float MYTHIC_SUP;
+	/**
+	 * Max enchant level
+	 */
+	@Property(key = "gameserver.enchant.type1", defaultValue = "10")
+	public static int ENCHANT_MAX_LEVEL_TYPE1;
+	@Property(key = "gameserver.enchant.type2", defaultValue = "15")
+	public static int ENCHANT_MAX_LEVEL_TYPE2;
 	@Property(key = "gameserver.enchant.skill", defaultValue = "true")
 	public static boolean ENCHANT_SKILL_ENABLE;
-	
-	@Property(key = "gameserver.enchant.item.broke", defaultValue = "true")
-	public static boolean ENCHANT_ITEM_BROKE;
-	
-	/***
-	 * Tempering (Authorize) Rates
+	/**
+	 * ManaStone Rates
 	 */
-	@Property(key = "gameserver.rate.tempering", defaultValue = "5")
-	public static float TEMPERING_RATE;
+	@Property(key = "gameserver.base.manastone", defaultValue = "50")
+	public static float MANA_STONE;
+	@Property(key = "gameserver.base.enchant", defaultValue = "60")
+	public static float ENCHANT_STONE;
+	@Property(key = "gameserver.manastone.clean", defaultValue = "false")
+	public static boolean CLEAN_STONE;
+	@Property(key = "gameserver.manastone.enchant_cast_delay", defaultValue = "5000")
+	public static int ENCHANT_CAST_DELAY;
+	/**
+	 * Godstone Rates
+	 */
+	@Property(key = "gameserver.godstone.base", defaultValue = "1000")
+	public static int BASE_GODSTONE;
 	
-	// Destroy Item ArchDaeva
-	@Property(key = "gameserver.archdaeva.item.destroy", defaultValue = "true")
-	public static boolean ENABLE_ARCHDAEVA_DESTROY_ITEM;
+	/**
+	 * Enchant Speed
+	 */
+	@Property(key = "gameserver.enchant.cast.speed", defaultValue = "4000")
+	public static int ENCHANT_SPEED;
 }

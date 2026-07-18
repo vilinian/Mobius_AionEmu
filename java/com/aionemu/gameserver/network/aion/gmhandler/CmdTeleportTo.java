@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.gmhandler;
 
@@ -26,16 +26,30 @@ import com.aionemu.gameserver.world.WorldMapInstance;
 import com.aionemu.gameserver.world.WorldMapType;
 
 /**
+ * Handles the Game Master command to teleport a player to a specific location.<br>
+ * It utilizes {@link TeleportService2} to move the target {@code Player} to the desired coordinates.
  * @author Alcapwnd
  */
 public class CmdTeleportTo extends AbstractGMHandler
 {
+	/**
+	 * Creates a new teleport command handler.<br>
+	 * This method initializes the {@code CmdTeleportTo} object.<br>
+	 * It processes the teleport request for an administrator.
+	 * @param admin The {@link Player} who is executing the command.
+	 * @param params The string containing the destination coordinates and world information.
+	 */
 	public CmdTeleportTo(Player admin, String params)
 	{
 		super(admin, params);
 		run();
 	}
 	
+	/**
+	 * Executes the teleport command for an administrator.<br>
+	 * It parses the destination name from the provided parameters.<br>
+	 * If a match is found, it moves the admin to the specific coordinates of that location.
+	 */
 	public void run()
 	{
 		final String destination = params.trim();
@@ -43,13 +57,14 @@ public class CmdTeleportTo extends AbstractGMHandler
 		{
 			return;
 		}
+		
 		if (destination.equalsIgnoreCase("Sanctum"))
 		{
 			goTo(admin, WorldMapType.SANCTUM.getId(), 1322, 1511, 568);
 		}
 		else if (destination.equalsIgnoreCase("Kaisinel"))
 		{
-			goTo(admin, WorldMapType.KAISINEL.getId(), 2155, 1567, 1205);
+			goTo(admin, WorldMapType.KAISINEL_ACADEMY.getId(), 2155, 1567, 1205);
 		}
 		else if (destination.equalsIgnoreCase("Poeta"))
 		{
@@ -161,7 +176,7 @@ public class CmdTeleportTo extends AbstractGMHandler
 		}
 		else if (destination.equalsIgnoreCase("Marchutan"))
 		{
-			goTo(admin, WorldMapType.MARCHUTAN.getId(), 1557, 1429, 266);
+			goTo(admin, WorldMapType.MARCHUTAN_PRIORY.getId(), 1557, 1429, 266);
 		}
 		else if (destination.equalsIgnoreCase("Ishalgen"))
 		{
@@ -664,11 +679,20 @@ public class CmdTeleportTo extends AbstractGMHandler
 			goTo(admin, 300380000, 457, 634, 126);
 		}
 		else
-		{
+		{ // TOTO // 300330000 // 300390000 // 300400000 // 300410000 // 300440000 // 300460000 // 300470000 // 700020000 // 710020000 // 720010000 // 730010000
 			PacketSendUtility.sendMessage(admin, "Could not find the specified destination !");
 		}
 	}
 	
+	/**
+	 * Teleports a player to specific coordinates in a given world.<br>
+	 * This method handles both instance and non-instance maps.
+	 * @param admin The {@code Player} object to teleport.
+	 * @param worldId The unique identifier for the destination world.
+	 * @param x The horizontal coordinate.
+	 * @param y The vertical coordinate.
+	 * @param z The depth coordinate.
+	 */
 	private static void goTo(Player admin, int worldId, float x, float y, float z)
 	{
 		final WorldMap destinationMap = World.getInstance().getWorldMap(worldId);
@@ -682,6 +706,14 @@ public class CmdTeleportTo extends AbstractGMHandler
 		}
 	}
 	
+	/**
+	 * Retrieves the unique ID for a world instance.<br>
+	 * It checks if the {@code admin} is already in an instance within the given {@code worldId}.<br>
+	 * If not, it finds and registers the {@code admin} to a new available instance.
+	 * @param worldId The ID of the world to check.
+	 * @param admin The {@link Player} object representing the administrator.
+	 * @return The unique integer ID of the instance.
+	 */
 	private static int getInstanceId(int worldId, Player admin)
 	{
 		if (admin.getWorldId() == worldId)
@@ -692,6 +724,7 @@ public class CmdTeleportTo extends AbstractGMHandler
 				return registeredInstance.getInstanceId();
 			}
 		}
+		
 		final WorldMapInstance newInstance = InstanceService.getNextAvailableInstance(worldId);
 		InstanceService.registerPlayerWithInstance(newInstance, admin);
 		return newInstance.getInstanceId();

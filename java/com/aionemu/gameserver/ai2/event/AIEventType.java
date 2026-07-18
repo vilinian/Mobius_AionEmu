@@ -1,22 +1,24 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.ai2.event;
 
 /**
+ * Defines the types of events that can occur within the {@code ai2} system.<br>
+ * This enumeration is used to identify specific actions for the AI event handler.
  * @author ATracer
  */
 public enum AIEventType
@@ -38,17 +40,11 @@ public enum AIEventType
 	 */
 	ATTACK_FINISH,
 	/**
-	 * Some neighbor creature is being attacked (broadcast)
+	 * Some neighbour creature is being attacked (broadcast)
 	 */
 	CREATURE_NEEDS_SUPPORT,
-	
-	/**
-	 * Creature is attacking (broadcast)
-	 */
-	
 	MOVE_VALIDATE,
 	MOVE_ARRIVED,
-	
 	CREATURE_SEE,
 	CREATURE_NOT_SEE,
 	CREATURE_MOVED,
@@ -57,19 +53,15 @@ public enum AIEventType
 	RESPAWNED,
 	DESPAWNED,
 	DIED,
-	
 	TARGET_REACHED,
 	TARGET_TOOFAR,
 	TARGET_GIVEUP,
 	TARGET_CHANGED,
 	FOLLOW_ME,
 	STOP_FOLLOW_ME,
-	
 	NOT_AT_HOME,
 	BACK_HOME,
-	
 	DIALOG_START,
 	DIALOG_FINISH,
-	
 	DROP_REGISTERED
 }

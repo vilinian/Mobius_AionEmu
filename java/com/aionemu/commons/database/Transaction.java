@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.database;
 
@@ -25,10 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class allows easy manipulations with transactions, it should be used when critical or synchronized data should be commited to two or more tables. This class allows us to avoid data synchronization problems in db.
- * <p/>
- * Class is not designed to be thread-safe, should be synchronized externally.<br>
- * Class is not fail-safe, if error happens - exception will be thrown.
+ * This class provides a simplified way to manage database transactions.<br>
+ * It ensures that data across multiple tables remains synchronized and consistent.<br>
+ * Note that this class is not thread-safe and should be synchronized externally.
  * @author SoulKeeper
  */
 public class Transaction
@@ -44,9 +43,10 @@ public class Transaction
 	private final Connection connection;
 	
 	/**
-	 * Package private constructor, should be instantiated via {@link com.aionemu.commons.database.DB#beginTransaction()} class
-	 * @param con Connection that will be used for this transaction
-	 * @throws java.sql.SQLException if can't disable autocommit mode
+	 * Creates a new {@link Transaction} instance.<br>
+	 * This method initializes the connection and disables auto-commit mode.
+	 * @param con The {@code Connection} to be used for this transaction.
+	 * @throws SQLException If an error occurs while disabling auto-commit.
 	 */
 	Transaction(Connection con) throws SQLException
 	{
@@ -55,9 +55,11 @@ public class Transaction
 	}
 	
 	/**
-	 * Adds Insert / Update Query to the transaction
-	 * @param sql SQL string
-	 * @throws SQLException if something went wrong
+	 * Executes an {@code INSERT} or {@code UPDATE} SQL statement.<br>
+	 * This method handles the database operation within the current transaction.<br>
+	 * It is a convenience method that calls {@code IUStH)} with a {@code null} second argument.
+	 * @param sql The SQL string to be executed by the database.
+	 * @throws SQLException If a database access error occurs.
 	 */
 	public void insertUpdate(String sql) throws SQLException
 	{
@@ -65,10 +67,12 @@ public class Transaction
 	}
 	
 	/**
-	 * Adds Insert / Update Query to this transaction. Utilizes IUSth for Batching and Query Editing. MUST MANUALLY EXECUTE QUERY / BATACH IN IUSth (No need to close Statement after execution)
-	 * @param sql Sql query
-	 * @param iusth query helper
-	 * @throws SQLException if something went wrong
+	 * Executes an insert or update SQL statement.<br>
+	 * It uses the provided {@code IUStH} object to handle specific logic if it is not {@code null}.<br>
+	 * If {@code iusth} is {@code null}, it performs a standard execution.
+	 * @param sql The SQL query string to execute.
+	 * @param iusth The handler used to process the statement, or {@code null} for default behavior.
+	 * @throws SQLException If a database access error occurs.
 	 */
 	public void insertUpdate(String sql, IUStH iusth) throws SQLException
 	{
@@ -84,10 +88,11 @@ public class Transaction
 	}
 	
 	/**
-	 * Creates new savepoint
-	 * @param name name of savepoint
-	 * @return created savepoint
-	 * @throws SQLException if can't create save point
+	 * Creates a new {@link Savepoint} within the current transaction.<br>
+	 * This allows you to roll back changes to a specific point later.
+	 * @param name The unique identifier for the savepoint.
+	 * @return The created {@code Savepoint} object.
+	 * @throws SQLException If a database access error occurs.
 	 */
 	public Savepoint setSavepoint(String name) throws SQLException
 	{
@@ -95,9 +100,11 @@ public class Transaction
 	}
 	
 	/**
-	 * Releases savepoint of transaction
-	 * @param savepoint savepoint to release
-	 * @throws SQLException if something went wrong
+	 * Releases a specific {@code Savepoint} within the current transaction.<br>
+	 * This tells the database that the savepoint is no longer needed.<br>
+	 * It does not commit the entire transaction.
+	 * @param savepoint The {@code Savepoint} to be released.
+	 * @throws SQLException If a database access error occurs.
 	 */
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException
 	{
@@ -105,8 +112,10 @@ public class Transaction
 	}
 	
 	/**
-	 * Commits transaction
-	 * @throws SQLException if something is wrong with transaction
+	 * Saves all changes made during the current transaction.<br>
+	 * This method finalizes the database operations.<br>
+	 * It calls {@code commit} with a {@code null} value.
+	 * @throws SQLException if an error occurs while committing the transaction.
 	 */
 	public void commit() throws SQLException
 	{
@@ -114,13 +123,14 @@ public class Transaction
 	}
 	
 	/**
-	 * Commits transaction. If rollBackToOnError is null - whole transaction will be rolledback
-	 * @param rollBackToOnError savepoint that should be used to rollback
-	 * @throws SQLException if something went wrongF
+	 * Finalizes the current database transaction.<br>
+	 * If an error occurs during commit, it rolls back to a specific point or fully.<br>
+	 * This method also resets {@code autoCommit} to {@code true} and closes the connection.
+	 * @param rollBackToOnError The {@link Savepoint} to return to if the commit fails. If {@code null}, it performs a full rollback.
+	 * @throws SQLException If a database access error occurs during the process.
 	 */
 	public void commit(Savepoint rollBackToOnError) throws SQLException
 	{
-		
 		try
 		{
 			connection.commit();

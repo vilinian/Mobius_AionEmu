@@ -1,23 +1,24 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
 import java.util.List;
 
+import com.aionemu.gameserver.configs.network.NetworkConfig;
 import com.aionemu.gameserver.model.house.House;
 import com.aionemu.gameserver.model.team.legion.LegionMemberEx;
 import com.aionemu.gameserver.network.aion.AionConnection;
@@ -25,18 +26,28 @@ import com.aionemu.gameserver.network.aion.AionServerPacket;
 import com.aionemu.gameserver.services.HousingService;
 
 /**
+ * This packet handles the transmission of a legion member list to the client.<br>
+ * It contains data regarding all members currently belonging to a specific {@link com.aionemu.gameserver.model.team.legion.LegionMemberEx}.
  * @author Simple
  */
 public class SM_LEGION_MEMBERLIST extends AionServerPacket
 {
-	private static final int OFFLINE = 0x00;
-	private static final int ONLINE = 0x01;
+	private static final int OFFLINE = 0x00, ONLINE = 0x01;
 	private final boolean isFirst;
+	private final boolean result;
 	private final List<LegionMemberEx> legionMembers;
 	
-	public SM_LEGION_MEMBERLIST(List<LegionMemberEx> legionMembers, boolean isFirst)
+	/**
+	 * Creates a new {@code SM_LEGION_MEMBERLIST} packet.<br>
+	 * This constructor initializes the list of members and status flags.
+	 * @param legionMembers The list of {@link LegionMemberEx} objects to include in the packet.
+	 * @param result A boolean indicating if the operation was successful.
+	 * @param isFirst A boolean indicating if this is the first part of the data transmission.
+	 */
+	public SM_LEGION_MEMBERLIST(List<LegionMemberEx> legionMembers, boolean result, boolean isFirst)
 	{
 		this.legionMembers = legionMembers;
+		this.result = result;
 		this.isFirst = isFirst;
 	}
 	
@@ -44,15 +55,10 @@ public class SM_LEGION_MEMBERLIST extends AionServerPacket
 	protected void writeImpl(AionConnection con)
 	{
 		final int size = legionMembers.size();
-		int x = 1;
 		writeC(isFirst ? 1 : 0);
-		writeH((65536 - size));
+		writeH(result ? size : -size);
 		for (LegionMemberEx legionMember : legionMembers)
 		{
-			if (x > size)
-			{
-				break;
-			}
 			writeD(legionMember.getObjectId());
 			writeS(legionMember.getName());
 			writeC(legionMember.getPlayerClass().getClassId());
@@ -63,6 +69,7 @@ public class SM_LEGION_MEMBERLIST extends AionServerPacket
 			writeS(legionMember.getSelfIntro());
 			writeS(legionMember.getNickname());
 			writeD(legionMember.getLastOnline());
+			
 			final int address = HousingService.getInstance().getPlayerAddress(legionMember.getObjectId());
 			if (address > 0)
 			{
@@ -71,6 +78,7 @@ public class SM_LEGION_MEMBERLIST extends AionServerPacket
 				{
 					house = HousingService.getInstance().getHouseByAddress(address);
 				}
+				
 				writeD(address);
 				writeD(house.getDoorState().getPacketValue());
 			}
@@ -79,11 +87,8 @@ public class SM_LEGION_MEMBERLIST extends AionServerPacket
 				writeD(0);
 				writeD(0);
 			}
-			writeC(1);
-			writeC(0);
-			writeC(0);
-			writeC(0);
-			x++;
+			
+			writeD(NetworkConfig.GAMESERVER_ID);
 		}
 	}
 }

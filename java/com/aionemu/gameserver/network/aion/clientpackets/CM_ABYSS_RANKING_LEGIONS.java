@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -28,6 +28,9 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_ABYSS_RANKING_LEGION
 import com.aionemu.gameserver.services.abyss.AbyssRankingCache;
 
 /**
+ * Handles the client request to retrieve the abyss ranking for various legions.<br>
+ * This packet communicates with {@link AbyssRankingCache} to fetch and send the relevant data.<br>
+ * It allows players to view the competitive standings of different factions.
  * @author SheppeR
  */
 public class CM_ABYSS_RANKING_LEGIONS extends AionClientPacket
@@ -35,17 +38,20 @@ public class CM_ABYSS_RANKING_LEGIONS extends AionClientPacket
 	private Race queriedRace;
 	private AbyssRankUpdateType updateType;
 	private int raceId;
-	
 	private static final Logger log = LoggerFactory.getLogger(CM_ABYSS_RANKING_LEGIONS.class);
 	
+	/**
+	 * This method initializes a new {@link CM_ABYSS_RANKING_LEGIONS} packet.<br>
+	 * It sets the required network states for the request.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state required for processing.
+	 * @param restStates Additional connection states that may be required.
+	 */
 	public CM_ABYSS_RANKING_LEGIONS(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void readImpl()
 	{
@@ -53,23 +59,16 @@ public class CM_ABYSS_RANKING_LEGIONS extends AionClientPacket
 		switch (raceId)
 		{
 			case 0:
-			{
 				queriedRace = Race.ELYOS;
 				updateType = AbyssRankUpdateType.LEGION_ELYOS;
 				break;
-			}
 			case 1:
-			{
 				queriedRace = Race.ASMODIANS;
 				updateType = AbyssRankUpdateType.LEGION_ASMODIANS;
 				break;
-			}
 		}
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void runImpl()
 	{

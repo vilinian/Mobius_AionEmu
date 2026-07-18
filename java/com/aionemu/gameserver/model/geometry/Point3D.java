@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.geometry;
 
@@ -21,38 +21,40 @@ import java.io.Serializable;
 import com.aionemu.gameserver.model.templates.zone.Point2D;
 
 /**
- * This class represents 3D point.<br>
- * It's valid for serializing and cloning.
+ * Represents a coordinate in three-dimensional space.<br>
+ * This class is designed to be {@code Serializable} and supports cloning for easy data replication.
  * @author SoulKeeper
  */
+@SuppressWarnings("serial")
 public class Point3D implements Cloneable, Serializable
 {
 	/**
 	 * X coord of the point
 	 */
 	private float x;
-	
 	/**
 	 * Y coord of the point
 	 */
 	private float y;
-	
 	/**
 	 * Z coord of the point
 	 */
 	private float z;
 	
 	/**
-	 * Creates new point with coords 0, 0, 0
+	 * Creates a new {@link Point3D} instance.<br>
+	 * All coordinates are initialized to {@code 0.0f}.
 	 */
 	public Point3D()
 	{
 	}
 	
 	/**
-	 * Creates new 3D point from 2D point and z coord
-	 * @param point 2D point
-	 * @param z z coord
+	 * Creates a new {@link Point3D} using coordinates from a 2D point.<br>
+	 * The {@code x} and {@code y} values are taken from the provided {@code point}.<br>
+	 * The {@code z} value is set to the provided float.
+	 * @param point The {@code Point2D} containing the horizontal coordinates.
+	 * @param z The vertical coordinate for the new point.
 	 */
 	public Point3D(Point2D point, float z)
 	{
@@ -60,8 +62,9 @@ public class Point3D implements Cloneable, Serializable
 	}
 	
 	/**
-	 * Clones another 3D point
-	 * @param point 3d point to clone
+	 * Creates a new {@link Point3D} instance by copying the coordinates from another point.<br>
+	 * This method uses the values from the provided {@code point} object to initialize this one.
+	 * @param point The source {@link Point3D} to copy from.
 	 */
 	public Point3D(Point3D point)
 	{
@@ -69,10 +72,11 @@ public class Point3D implements Cloneable, Serializable
 	}
 	
 	/**
-	 * Creates new 3d point with given coords
-	 * @param x x coord
-	 * @param y y coord
-	 * @param z z coord
+	 * Creates a new {@link Point3D} instance.<br>
+	 * This constructor sets the coordinates using the provided values.
+	 * @param x The X coordinate of the point.
+	 * @param y The Y coordinate of the point.
+	 * @param z The Z coordinate of the point.
 	 */
 	public Point3D(float x, float y, float z)
 	{
@@ -82,8 +86,9 @@ public class Point3D implements Cloneable, Serializable
 	}
 	
 	/**
-	 * Returns x coord
-	 * @return x coord
+	 * Retrieves the X coordinate of the bookmark.<br>
+	 * This value represents the horizontal position in the world.
+	 * @return The {@code float} value of the X coordinate.
 	 */
 	public float getX()
 	{
@@ -91,8 +96,9 @@ public class Point3D implements Cloneable, Serializable
 	}
 	
 	/**
-	 * Sets x coord of this point
-	 * @param x x coord
+	 * Sets the {@code x} coordinate of this point.<br>
+	 * This updates the horizontal position value.
+	 * @param x The new {@code float} value for the {@code x} coordinate.
 	 */
 	public void setX(float x)
 	{
@@ -100,8 +106,9 @@ public class Point3D implements Cloneable, Serializable
 	}
 	
 	/**
-	 * Returns y coord of this point
-	 * @return y coord
+	 * Retrieves the vertical coordinate of the bookmark.<br>
+	 * This value represents the height in the game world.
+	 * @return The {@code float} value of the Y coordinate.
 	 */
 	public float getY()
 	{
@@ -109,8 +116,9 @@ public class Point3D implements Cloneable, Serializable
 	}
 	
 	/**
-	 * Sets y coord of this point
-	 * @param y y coord
+	 * Sets the {@code y} coordinate of this point.<br>
+	 * This updates the vertical position value.
+	 * @param y The new {@code float} value for the {@code y} coordinate.
 	 */
 	public void setY(float y)
 	{
@@ -118,8 +126,9 @@ public class Point3D implements Cloneable, Serializable
 	}
 	
 	/**
-	 * Returns z coord of this point
-	 * @return z coord
+	 * Retrieves the vertical coordinate of the bookmark.<br>
+	 * This value represents the height in the game world.
+	 * @return The {@code float} value of the Z coordinate.
 	 */
 	public float getZ()
 	{
@@ -127,8 +136,9 @@ public class Point3D implements Cloneable, Serializable
 	}
 	
 	/**
-	 * Sets z coord of this point
-	 * @param z z coord
+	 * Sets the vertical coordinate of this point.<br>
+	 * This updates the {@code z} value to the provided amount.
+	 * @param z The new {@code float} value for the vertical position.
 	 */
 	public void setZ(float z)
 	{
@@ -136,9 +146,10 @@ public class Point3D implements Cloneable, Serializable
 	}
 	
 	/**
-	 * Checks if this point is equal to another point
-	 * @param o point to compare with
-	 * @return true if equal
+	 * Compares this {@link Point3D} object with another object for equality.<br>
+	 * It checks if both objects have the same x, y, and z coordinates.
+	 * @param o The object to compare this instance against.
+	 * @return {@code true} if the objects are equal, {@code false} otherwise.
 	 */
 	@Override
 	public boolean equals(Object o)
@@ -147,6 +158,7 @@ public class Point3D implements Cloneable, Serializable
 		{
 			return true;
 		}
+		
 		if (!(o instanceof Point3D))
 		{
 			return false;
@@ -158,16 +170,10 @@ public class Point3D implements Cloneable, Serializable
 	}
 	
 	/**
-	 * Returns point's hashcode.<br>
-	 * 
-	 * <pre>
-	 * int result = x;
-	 * result = 31 * result + y;
-	 * result = 31 * result + z;
-	 * return result;
-	 * </pre>
-	 * 
-	 * @return hashcode
+	 * Returns a hash code value for this {@link Point3D} object.<br>
+	 * This value is used to identify the object in collections like {@code HashSet}.<br>
+	 * It is calculated based on the {@code x}, {@code y}, and {@code z} fields.
+	 * @return The integer hash code of this object.
 	 */
 	@Override
 	public int hashCode()
@@ -179,8 +185,9 @@ public class Point3D implements Cloneable, Serializable
 	}
 	
 	/**
-	 * Clones this point
-	 * @return copy of this point
+	 * Creates a new copy of this {@link Point3D} object.<br>
+	 * The new object has the same coordinates as the original.
+	 * @return A new {@code Point3D} instance.
 	 */
 	@Override
 	public Point3D clone()
@@ -189,8 +196,9 @@ public class Point3D implements Cloneable, Serializable
 	}
 	
 	/**
-	 * Formatted string representation of this point
-	 * @return returns formatted string that represents this point
+	 * Returns a string representation of the {@code Point3D}.<br>
+	 * It displays the class name and the values of the x, y, and z coordinates.
+	 * @return A formatted string representing this point.
 	 */
 	@Override
 	public String toString()

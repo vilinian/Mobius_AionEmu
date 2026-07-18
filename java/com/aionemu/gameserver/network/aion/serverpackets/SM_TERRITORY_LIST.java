@@ -1,18 +1,5 @@
-/*
- * This file is part of the Aion-Emu project.
+/**
  * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -22,11 +9,21 @@ import com.aionemu.gameserver.model.team.legion.LegionTerritory;
 import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 
+/**
+ * This packet sends a list of territories to the client.<br>
+ * It contains information about {@link LegionTerritory} objects for display purposes.
+ * @author CoolyT
+ */
 public class SM_TERRITORY_LIST extends AionServerPacket
 {
 	int size = 6;
 	Collection<LegionTerritory> territoryList;
 	
+	/**
+	 * Creates a new {@link SM_TERRITORY_LIST} packet.<br>
+	 * This constructor initializes the list of territories.
+	 * @param territoryList The collection of {@link LegionTerritory} objects to include.
+	 */
 	public SM_TERRITORY_LIST(Collection<LegionTerritory> territoryList)
 	{
 		this.territoryList = territoryList;
@@ -38,7 +35,7 @@ public class SM_TERRITORY_LIST extends AionServerPacket
 		writeH(territoryList.size());
 		for (LegionTerritory territory : territoryList)
 		{
-			writeD(territory.getId());
+			writeD(territory.getId()); // TerretoryId
 			writeD(territory.getLegionId());
 			writeH(territory.getLegionId() > 0 ? 0x8009 : 0);
 			writeH(territory.getLegionId() > 0 ? 255 : 0);

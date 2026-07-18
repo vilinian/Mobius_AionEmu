@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.team2.common.events;
 
@@ -22,9 +22,11 @@ import com.aionemu.gameserver.model.team2.TemporaryPlayerTeam;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_ABYSS_RANK_UPDATE;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.utils.PacketSendUtility;
-import com.google.common.base.Predicate;
+import java.util.function.Predicate;
 
 /**
+ * This event is triggered when a {@link Player} stops mentoring another player.<br>
+ * It handles the logic for updating team statuses and notifying relevant parties.
  * @author ATracer
  * @param <T>
  */
@@ -33,12 +35,24 @@ public abstract class PlayerStopMentoringEvent<T extends TemporaryPlayerTeam<? e
 	protected final T team;
 	protected final Player player;
 	
+	/**
+	 * Creates a new event for when a player stops mentoring.<br>
+	 * This constructor initializes the {@code team} and the {@link Player}.
+	 * @param team The {@code T} type team associated with the event.
+	 * @param player The {@link Player} who is stopping the mentoring process.
+	 */
 	public PlayerStopMentoringEvent(T team, Player player)
 	{
 		this.team = team;
 		this.player = player;
 	}
 	
+	/**
+	 * Handles the logic for when a player stops being mentored.<br>
+	 * It updates the {@code Player} mentor status to {@code false}.<br>
+	 * This method sends a system message and an abyss rank update to the player.<br>
+	 * It also triggers the team-wide effects via {@code applyOnMembers}.
+	 */
 	@Override
 	public void handleEvent()
 	{
@@ -48,13 +62,21 @@ public abstract class PlayerStopMentoringEvent<T extends TemporaryPlayerTeam<? e
 		PacketSendUtility.broadcastPacketAndReceive(player, new SM_ABYSS_RANK_UPDATE(2, player));
 	}
 	
+	/**
+	 * Processes the end of a mentoring session for a specific player.<br>
+	 * It sends a system message if the member is not the mentor.<br>
+	 * This method also triggers the group packet update.
+	 * @param member The {@code Player} to receive the event updates.
+	 * @return Always returns {@code true}.
+	 */
 	@Override
-	public boolean apply(Player member)
+	public boolean test(Player member)
 	{
 		if (!player.equals(member))
 		{
 			PacketSendUtility.sendPacket(member, SM_SYSTEM_MESSAGE.STR_MSG_MENTOR_END_PARTYMSG(player.getName()));
 		}
+		
 		sendGroupPacketOnMentorEnd(member);
 		return true;
 	}

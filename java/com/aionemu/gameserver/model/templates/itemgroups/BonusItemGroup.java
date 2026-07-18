@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.itemgroups;
 
@@ -28,6 +28,7 @@ import com.aionemu.gameserver.model.templates.rewards.BonusType;
  * @author Rolandas
  *
  */
+
 /**
  * <p/>
  * Java class for ItemGroup complex type.
@@ -64,23 +65,32 @@ public abstract class BonusItemGroup
 {
 	@XmlAttribute(name = "bonusType", required = true)
 	protected BonusType bonusType;
-	
 	@XmlAttribute(name = "chance")
 	protected Float chance;
 	
+	/**
+	 * Retrieves the type of bonus associated with this item group.<br>
+	 * This method returns the {@code BonusType} value stored in the object.
+	 * @return The {@link BonusType} of the current item group.
+	 */
 	public BonusType getBonusType()
 	{
 		return bonusType;
 	}
 	
+	/**
+	 * Retrieves the probability of this drop occurring.<br>
+	 * The value is stored as a {@code float}.
+	 * @return The drop chance value.
+	 */
 	public float getChance()
 	{
 		if (chance == null)
 		{
-			return 0.0f;
+			return 0.0F;
 		}
 		
-		return chance.floatValue();
+		return chance;
 	}
 	
 	public abstract ItemRaceEntry[] getRewards();

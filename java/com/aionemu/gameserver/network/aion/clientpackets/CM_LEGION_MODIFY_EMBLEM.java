@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -23,11 +23,15 @@ import com.aionemu.gameserver.network.aion.AionConnection.State;
 import com.aionemu.gameserver.services.LegionService;
 
 /**
+ * Handles the client request to modify a legion emblem.<br>
+ * This packet allows players to change their current {@link LegionEmblemType}.
  * @author Simple modified cura
  */
 public class CM_LEGION_MODIFY_EMBLEM extends AionClientPacket
 {
-	/** Emblem related information **/
+	/**
+	 * Emblem related information *
+	 */
 	private int legionId;
 	private int emblemId;
 	private int red;
@@ -36,9 +40,11 @@ public class CM_LEGION_MODIFY_EMBLEM extends AionClientPacket
 	private LegionEmblemType emblemType;
 	
 	/**
-	 * @param opcode
-	 * @param state
-	 * @param restStates
+	 * This method initializes a new {@code CM_LEGION_MODIFY_EMBLEM} packet.<br>
+	 * It sets the required network states for the request.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary state of the connection.
+	 * @param restStates Additional states associated with the packet.
 	 */
 	public CM_LEGION_MODIFY_EMBLEM(int opcode, State state, State... restStates)
 	{

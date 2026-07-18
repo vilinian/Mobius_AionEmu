@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.controllers.observer;
 
@@ -39,6 +39,9 @@ import com.aionemu.gameserver.utils.MathUtil;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * This class handles the logic for processing shield effects during an attack.<br>
+ * It monitors {@link AttackResult} to determine if a target's shield should be reduced or triggered.<br>
+ * It ensures that defensive mechanics are correctly applied when a {@code Creature} is hit.
  * @author ATracer modified by Sippolo, kecimis, Luzien
  */
 public class AttackShieldObserver extends AttackCalcObserver
@@ -50,7 +53,7 @@ public class AttackShieldObserver extends AttackCalcObserver
 	private final Effect effect;
 	private final HitType hitType;
 	private final int shieldType;
-	private int probability = 100;
+	private float probability = 100f;
 	private int minradius = 0;
 	private int maxradius = 100;
 	private HealType healType = null;
@@ -59,46 +62,97 @@ public class AttackShieldObserver extends AttackCalcObserver
 	private boolean totalHitPercentSet = false;
 	
 	/**
-	 * @param hit
-	 * @param totalHit
-	 * @param percent
-	 * @param effect
-	 * @param type
-	 * @param shieldType
-	 * @param probability
+	 * Creates a new {@link AttackShieldObserver} with default radius and damage values.<br>
+	 * This constructor initializes the observer using specific hit parameters and shield types.
+	 * @param hit The base hit value for the attack.
+	 * @param totalHit The total hit value for the attack.
+	 * @param percent A boolean indicating if the hit is a percentage.
+	 * @param effect The {@link Effect} associated with the attack.
+	 * @param type The {@link HitType} of the attack.
+	 * @param shieldType The specific type of shield to check against.
+	 * @param probability The chance for the shield effect to trigger.
 	 */
-	public AttackShieldObserver(int hit, int totalHit, boolean percent, Effect effect, HitType type, int shieldType, int probability)
+	public AttackShieldObserver(int hit, int totalHit, boolean percent, Effect effect, HitType type, int shieldType, float probability)
 	{
 		this(hit, totalHit, percent, false, effect, type, shieldType, probability, 0, 100, null, 0, 0);
 	}
 	
-	public AttackShieldObserver(int hit, int effectorDamage, int totalHit, boolean percent, Effect effect, HitType type, int shieldType, int probability)
+	/**
+	 * Creates a new {@link AttackShieldObserver} with specific damage and hit values.<br>
+	 * This constructor initializes the observer using default radius and MP values.
+	 * @param hit The base hit value for the attack.
+	 * @param effectorDamage The damage dealt by the effect.
+	 * @param totalHit The total hit value of the attack.
+	 * @param percent Indicates if the hit is based on a percentage.
+	 * @param effect The {@link Effect} associated with this observer.
+	 * @param type The {@link HitType} of the attack.
+	 * @param shieldType The type of shield being checked.
+	 * @param probability The chance for the effect to trigger.
+	 */
+	public AttackShieldObserver(int hit, int effectorDamage, int totalHit, boolean percent, Effect effect, HitType type, int shieldType, float probability)
 	{
 		this(hit, totalHit, percent, false, effect, type, shieldType, probability, 0, 100, null, effectorDamage, 0);
 	}
 	
-	public AttackShieldObserver(int hit, int totalHit, boolean percent, Effect effect, HitType type, int shieldType, int probability, int mpValue)
+	/**
+	 * Creates a new {@link AttackShieldObserver} with default radius and heal values.<br>
+	 * This constructor initializes the observer using specific hit data and an {@code Effect}.
+	 * @param hit The amount of damage dealt.
+	 * @param totalHit The total possible damage.
+	 * @param percent Indicates if the hit value is a percentage.
+	 * @param effect The {@link Effect} associated with the attack.
+	 * @param type The {@link HitType} of the attack.
+	 * @param shieldType The identifier for the shield type.
+	 * @param probability The chance for the effect to occur.
+	 * @param mpValue The amount of MP involved in the calculation.
+	 */
+	public AttackShieldObserver(int hit, int totalHit, boolean percent, Effect effect, HitType type, int shieldType, float probability, int mpValue)
 	{
 		this(hit, totalHit, percent, false, effect, type, shieldType, probability, 0, 100, null, 0, mpValue);
 	}
 	
-	public AttackShieldObserver(int hit, int totalHit, boolean hitPercent, boolean totalHitPercent, Effect effect, HitType type, int shieldType, int probability, int minradius, int maxradius, HealType healType, int effectorDamage, int mpValue)
+	/**
+	 * Initializes a new instance of the {@code AttackShieldObserver}.<br>
+	 * This constructor sets up all parameters required for shield and reflector logic.
+	 * @param hit The base hit value.
+	 * @param totalHit The total absorbed damage or percentage for reflectors.
+	 * @param hitPercent Determines if the hit is treated as a percentage.
+	 * @param totalHitPercent Determines if the total hit is treated as a percentage.
+	 * @param effect The {@code Effect} associated with this observer.
+	 * @param type The {@link HitType} of the attack.
+	 * @param shieldType The specific type of shield being applied.
+	 * @param probability The chance for the effect to trigger, divided by 10.
+	 * @param minradius The minimum radius for reflector effects.
+	 * @param maxradius The maximum radius for reflector effects.
+	 * @param healType The {@link HealType} used for convert healing.
+	 * @param effectorDamage The damage value for protection effects.
+	 * @param mpValue The mana value associated with the effect.
+	 */
+	public AttackShieldObserver(int hit, int totalHit, boolean hitPercent, boolean totalHitPercent, Effect effect, HitType type, int shieldType, float probability, int minradius, int maxradius, HealType healType, int effectorDamage, int mpValue)
 	{
 		this.hit = hit;
-		this.totalHit = totalHit;// total absorbed dmg for shield, percentage for reflector
+		this.totalHit = totalHit; // total absorbed dmg for shield, percentage for reflector
 		this.effect = effect;
 		this.hitPercent = hitPercent;
 		this.totalHitPercent = totalHitPercent;
 		hitType = type;
 		this.shieldType = shieldType;
-		this.probability = probability;
-		this.minradius = minradius;// only for reflector
-		this.maxradius = maxradius;// only for reflector
-		this.healType = healType;// only for convertheal
-		this.effectorDamage = effectorDamage;// only for protect
+		this.probability = probability / 10;
+		this.minradius = minradius; // only for reflector
+		this.maxradius = maxradius; // only for reflector
+		this.healType = healType; // only for convertheal
+		this.effectorDamage = effectorDamage; // only for protect
 		this.mpValue = mpValue;
 	}
 	
+	/**
+	 * Processes a list of attack results to apply shield mechanics.<br>
+	 * This method calculates damage reduction, reflection, or protection based on the {@code shieldType}.<br>
+	 * It updates the damage values and status for each result in the provided list.
+	 * @param attackList The list of {@link AttackResult} objects to be processed.
+	 * @param attackerEffect The {@link Effect} being used by the attacker.
+	 * @param attacker The {@link Creature} performing the attack.
+	 */
 	@Override
 	public void checkShield(List<AttackResult> attackList, Effect attackerEffect, Creature attacker)
 	{
@@ -108,6 +162,8 @@ public class AttackShieldObserver extends AttackCalcObserver
 			{
 				continue;
 			}
+			
+			// Handle Hit Types for Shields
 			if (hitType != HitType.EVERYHIT)
 			{
 				if ((attackResult.getDamageType() != null) && (attackResult.getDamageType() != hitType))
@@ -115,13 +171,17 @@ public class AttackShieldObserver extends AttackCalcObserver
 					continue;
 				}
 			}
+			
 			if (Rnd.get(0, 100) > probability)
 			{
 				continue;
 			}
-			if (shieldType == 2)
+			
+			// shield type 2, normal shield
+			if ((shieldType == 2) || (shieldType == 16))
 			{
 				final int damage = attackResult.getDamage();
+				
 				int absorbedDamage = 0;
 				if (hitPercent)
 				{
@@ -131,31 +191,40 @@ public class AttackShieldObserver extends AttackCalcObserver
 				{
 					absorbedDamage = damage >= hit ? hit : damage;
 				}
+				
 				absorbedDamage = absorbedDamage >= totalHit ? totalHit : absorbedDamage;
 				totalHit -= absorbedDamage;
+				
 				if (absorbedDamage > 0)
 				{
 					attackResult.setShieldType(shieldType);
 				}
+				
 				attackResult.setDamage(damage - absorbedDamage);
+				
+				// dont launch subeffect if damage is fully absorbed
 				if ((absorbedDamage >= damage) && !isPunchShield(attackerEffect))
 				{
 					attackResult.setLaunchSubEffect(false);
 				}
+				
 				if (mpValue > 0)
 				{
-					attackResult.setShieldMp((int) (absorbedDamage * mpValue * 0.01f));
-					effect.getEffected().getLifeStats().reduceMp((int) (absorbedDamage * mpValue * 0.01f));
+					attackResult.setShieldMp((int) (absorbedDamage * mpValue * 0.01F));
+					effect.getEffected().getLifeStats().reduceMp((int) (absorbedDamage * mpValue * 0.01F));
 					attackResult.setReflectedSkillId(effect.getSkillId());
 				}
+				
 				if (totalHit <= 0)
 				{
 					effect.endEffect();
 					return;
 				}
-			}
+				
+			} // shield type 1, reflected damage
 			else if (shieldType == 1)
 			{
+				// totalHit is radius
 				if (minradius != 0)
 				{
 					if (MathUtil.isIn3dRange(attacker, effect.getEffected(), minradius))
@@ -163,41 +232,48 @@ public class AttackShieldObserver extends AttackCalcObserver
 						continue;
 					}
 				}
+				
 				if (MathUtil.isIn3dRange(attacker, effect.getEffected(), maxradius))
 				{
 					final int reflectedDamage = (attackResult.getDamage() * totalHit) / 100;
-					int reflectedHit = Math.max(reflectedDamage, hit);
+					int reflectedHit = Math.max(reflectedDamage, hit); // percentage of damage, but at least hit value
 					attackResult.setShieldType(shieldType);
 					if (attacker instanceof Npc)
 					{
 						reflectedHit = attacker.getAi2().modifyDamage(reflectedHit);
 					}
+					
 					attackResult.setReflectedDamage(reflectedHit);
 					attackResult.setReflectedSkillId(effect.getSkillId());
 					attacker.getController().onAttack(effect.getEffected(), reflectedHit, false);
+					
 					if (effect.getEffected() instanceof Player)
 					{
 						PacketSendUtility.sendPacket((Player) effect.getEffected(), SM_SYSTEM_MESSAGE.STR_SKILL_PROC_EFFECT_OCCURRED(effect.getSkillTemplate().getNameId()));
 					}
 				}
 				break;
-			}
+			} // shield type 8, protect effect (ex. skillId: 417 Bodyguard I)
 			else if (shieldType == 8)
 			{
+				// totalHit is radius
 				if ((effect.getEffector() == null) || effect.getEffector().getLifeStats().isAlreadyDead())
 				{
 					effect.endEffect();
 					break;
 				}
+				
 				if ((effect.getEffector() instanceof Summon) && ((((Summon) effect.getEffector()).getMode() == SummonMode.RELEASE) || (((Summon) effect.getEffector()).getMaster() == null)))
 				{
 					effect.endEffect();
 					break;
 				}
+				
 				if (MathUtil.isIn3dRange(effect.getEffector(), effect.getEffected(), totalHit))
 				{
 					int damageProtected = 0;
 					int effectorDamage = 0;
+					
 					if (hitPercent)
 					{
 						damageProtected = ((int) (attackResult.getDamage() * hit * 0.01));
@@ -205,12 +281,14 @@ public class AttackShieldObserver extends AttackCalcObserver
 						{
 							this.effectorDamage = 100;
 						}
+						
 						effectorDamage = ((int) (attackResult.getDamage() * this.effectorDamage * 0.01));
 					}
 					else
 					{
 						damageProtected = hit;
 					}
+					
 					final int finalDamage = attackResult.getDamage() - damageProtected;
 					attackResult.setDamage((finalDamage <= 0 ? 0 : finalDamage));
 					attackResult.setShieldType(shieldType);
@@ -219,19 +297,26 @@ public class AttackShieldObserver extends AttackCalcObserver
 					attackResult.setProtectorId(effect.getEffectorId());
 					effect.getEffector().getController().onAttack(attacker, effect.getSkillId(), TYPE.PROTECTDMG, effectorDamage, false, LOG.REGULAR);
 				}
-			}
+				
+			} // shield type 0, convertHeal
 			else if (shieldType == 0)
 			{
 				final int damage = attackResult.getDamage();
+				
 				int absorbedDamage = damage;
+				
 				if (totalHitPercent && !totalHitPercentSet)
 				{
 					totalHit = (int) (totalHit * 0.01 * effect.getEffected().getGameStats().getHealth().getCurrent());
 					totalHitPercentSet = true;
 				}
+				
 				absorbedDamage = absorbedDamage >= totalHit ? totalHit : absorbedDamage;
 				totalHit -= absorbedDamage;
+				
 				attackResult.setDamage(damage - absorbedDamage);
+				
+				// heal part
 				int healValue = 0;
 				if (hitPercent)
 				{
@@ -241,27 +326,25 @@ public class AttackShieldObserver extends AttackCalcObserver
 				{
 					healValue = hit;
 				}
+				
 				switch (healType)
 				{
 					case HP:
-					{
 						effect.getEffected().getLifeStats().increaseHp(TYPE.HP, healValue, effect.getSkillId(), LOG.REGULAR);
 						break;
-					}
 					case MP:
-					{
 						effect.getEffected().getLifeStats().increaseMp(TYPE.HEAL_MP, healValue, effect.getSkillId(), LOG.REGULAR);
 						break;
-					}
 					default:
-					{
 						break;
-					}
 				}
+				
+				// dont launch subeffect if damage is fully absorbed
 				if ((absorbedDamage >= damage) && !isPunchShield(attackerEffect))
 				{
 					attackResult.setLaunchSubEffect(false);
 				}
+				
 				if (totalHit <= 0)
 				{
 					effect.endEffect();
@@ -271,12 +354,19 @@ public class AttackShieldObserver extends AttackCalcObserver
 		}
 	}
 	
+	/**
+	 * Checks if the given {@code Effect} contains a provoked skill.<br>
+	 * This is used to identify specific shield behaviors during attacks.
+	 * @param effect The {@code Effect} object to check.
+	 * @return {@code true} if a provoked skill is found, otherwise {@code false}.
+	 */
 	private boolean isPunchShield(Effect effect)
 	{
 		if (effect == null)
 		{
 			return false;
 		}
+		
 		for (EffectTemplate template : effect.getEffectTemplates())
 		{
 			if (template.getSubEffect() != null)
@@ -288,6 +378,7 @@ public class AttackShieldObserver extends AttackCalcObserver
 				}
 			}
 		}
+		
 		return false;
 	}
 }

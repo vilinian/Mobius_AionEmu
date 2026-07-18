@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.utils;
 
@@ -21,55 +21,75 @@ import java.util.Iterator;
 import com.aionemu.gameserver.geoEngine.utils.IntMap.Entry;
 
 /**
- * Taken from http://code.google.com/p/skorpios/
+ * A specialized map implementation that uses {@code Integer} keys.<br>
+ * It provides an efficient way to store and retrieve values associated with integer identifiers.
  * @author Nate
  * @param <T>
  */
 @SuppressWarnings("rawtypes")
 public final class IntMap<T> implements Iterable<Entry>, Cloneable
 {
-	Entry[] table;
+	private Entry[] table;
 	private final float loadFactor;
-	int size;
-	private int mask;
-	private int capacity;
-	private int threshold;
+	private int size, mask, capacity, threshold;
 	
+	/**
+	 * Creates a new empty {@link IntMap} instance.<br>
+	 * This constructor uses default settings for capacity and load factor.<br>
+	 * The map is initialized with an initial capacity of {@code 16}.
+	 */
 	public IntMap()
 	{
 		this(16, 0.75f);
 	}
 	
+	/**
+	 * Creates a new {@link IntMap} with a specific starting size.<br>
+	 * This helps prevent frequent resizing of the internal table.<br>
+	 * The default load factor is set to {@code 0.75f}.
+	 * @param initialCapacity The initial number of slots in the map.
+	 */
 	public IntMap(int initialCapacity)
 	{
 		this(initialCapacity, 0.75f);
 	}
 	
+	/**
+	 * Creates a new {@link IntMap} with a specific size and growth rate.<br>
+	 * This constructor initializes the internal table based on your settings.
+	 * @param initialCapacity The starting number of slots for the map.
+	 * @param loadFactor The ratio used to determine when to resize the map.
+	 */
 	public IntMap(int initialCapacity, float loadFactor)
 	{
 		if (initialCapacity > (1 << 30))
 		{
 			throw new IllegalArgumentException("initialCapacity is too large.");
 		}
-		if (initialCapacity < 0)
+		
+		if ((initialCapacity < 0) || (loadFactor <= 0))
 		{
 			throw new IllegalArgumentException("initialCapacity must be greater than zero.");
 		}
-		if (loadFactor <= 0)
-		{
-			throw new IllegalArgumentException("initialCapacity must be greater than zero.");
-		}
+		
 		capacity = 1;
 		while (capacity < initialCapacity)
 		{
 			capacity <<= 1;
 		}
+		
 		this.loadFactor = loadFactor;
-		this.threshold = (int) (capacity * loadFactor);
-		this.table = new Entry[capacity];
-		this.mask = capacity - 1;
+		threshold = (int) (capacity * loadFactor);
+		table = new Entry[capacity];
+		mask = capacity - 1;
 	}
 	
+	/**
+	 * Creates a deep copy of this {@link IntMap}.<br>
+	 * This method copies all entries into a new instance.<br>
+	 * It ensures that the internal table is independent of the original.
+	 * @return A new {@code IntMap} containing the same data, or {@code null} if cloning fails.
+	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public IntMap<T> clone()
@@ -85,15 +105,24 @@ public final class IntMap<T> implements Iterable<Entry>, Cloneable
 					newTable[i] = table[i].clone();
 				}
 			}
+			
 			clone.table = newTable;
 			return clone;
 		}
 		catch (CloneNotSupportedException ex)
 		{
 		}
+		
 		return null;
 	}
 	
+	/**
+	 * Checks if the map contains a specific value.<br>
+	 * It searches through all entries in the {@link IntMap}.<br>
+	 * Returns {@code true} if a match is found.
+	 * @param value The object to search for.
+	 * @return {@code true} if the value exists, otherwise {@code false}.
+	 */
 	public boolean containsValue(Object value)
 	{
 		final Entry[] table = this.table;
@@ -107,9 +136,16 @@ public final class IntMap<T> implements Iterable<Entry>, Cloneable
 				}
 			}
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * Checks if the map contains a specific key.<br>
+	 * It searches for the provided {@code int} value in the internal table.
+	 * @param key The integer key to search for.
+	 * @return {@code true} if the key exists, otherwise {@code false}.
+	 */
 	public boolean containsKey(int key)
 	{
 		final int index = (key) & mask;
@@ -120,9 +156,17 @@ public final class IntMap<T> implements Iterable<Entry>, Cloneable
 				return true;
 			}
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * Retrieves the value associated with a specific key.<br>
+	 * This method searches for the entry matching {@code key}.<br>
+	 * It returns {@code null} if the key is not found.
+	 * @param key The integer key to look up.
+	 * @return The value associated with the key, or {@code null} if it does not exist.
+	 */
 	@SuppressWarnings("unchecked")
 	public T get(int key)
 	{
@@ -134,13 +178,23 @@ public final class IntMap<T> implements Iterable<Entry>, Cloneable
 				return (T) e.value;
 			}
 		}
+		
 		return null;
 	}
 	
+	/**
+	 * Associates the specified {@code value} with the given {@code key}.<br>
+	 * If the {@code key} already exists, the old value is replaced.<br>
+	 * This method may trigger a rehash if the internal capacity is exceeded.
+	 * @param key The integer identifier for the entry.
+	 * @param value The object to store in the map.
+	 * @return The previous value associated with {@code key}, or {@code null} if there was no mapping.
+	 */
 	@SuppressWarnings("unchecked")
 	public T put(int key, T value)
 	{
 		int index = key & mask;
+		
 		// Check if key already exists.
 		for (Entry e = table[index]; e != null; e = e.next)
 		{
@@ -148,10 +202,12 @@ public final class IntMap<T> implements Iterable<Entry>, Cloneable
 			{
 				continue;
 			}
+			
 			final Object oldValue = e.value;
 			e.value = value;
 			return (T) oldValue;
 		}
+		
 		table[index] = new Entry(key, value, table[index]);
 		if (size++ >= threshold)
 		{
@@ -177,14 +233,22 @@ public final class IntMap<T> implements Iterable<Entry>, Cloneable
 					while (e != null);
 				}
 			}
+			
 			table = newTable;
 			capacity = newCapacity;
 			threshold = (int) (newCapacity * loadFactor);
 			mask = capacity - 1;
 		}
+		
 		return null;
 	}
 	
+	/**
+	 * Removes the entry associated with the specified {@code key}.<br>
+	 * This method updates the internal size of the map.
+	 * @param key The integer key to be removed from the map.
+	 * @return The value that was previously associated with the {@code key}, or {@code null} if the key did not exist.
+	 */
 	@SuppressWarnings("unchecked")
 	public T remove(int key)
 	{
@@ -205,19 +269,32 @@ public final class IntMap<T> implements Iterable<Entry>, Cloneable
 				{
 					prev.next = next;
 				}
+				
 				return (T) e.value;
 			}
+			
 			prev = e;
 			e = next;
 		}
+		
 		return null;
 	}
 	
+	/**
+	 * Returns the number of elements in this map.<br>
+	 * This value represents the current count of key-value pairs stored.
+	 * @return The total number of items currently in the map.
+	 */
 	public int size()
 	{
 		return size;
 	}
 	
+	/**
+	 * Removes all elements from the map.<br>
+	 * The {@code size()} will become 0 after this call.<br>
+	 * This method does not affect other collections.
+	 */
 	public void clear()
 	{
 		final Entry[] table = this.table;
@@ -225,9 +302,15 @@ public final class IntMap<T> implements Iterable<Entry>, Cloneable
 		{
 			table[index] = null;
 		}
+		
 		size = 0;
 	}
 	
+	/**
+	 * Returns an {@link Iterator} to traverse the entries in this map.<br>
+	 * Use this to loop through all key-value pairs.
+	 * @return An {@code Iterator} of {@link Entry} objects.
+	 */
 	@Override
 	public Iterator<Entry> iterator()
 	{
@@ -236,7 +319,6 @@ public final class IntMap<T> implements Iterable<Entry>, Cloneable
 	
 	final class IntMapIterator implements Iterator<Entry>
 	{
-		
 		/**
 		 * Current entry.
 		 */
@@ -276,17 +358,16 @@ public final class IntMap<T> implements Iterable<Entry>, Cloneable
 				el++;
 				return e;
 			}
+			
 			// if (cur != null && cur.next != null){
-			// if we have a current entry, continue to the next entry in the list
-			// cur = cur.next;
+			// If there is a current entry, move to the next one in the list.
 			// el++;
 			// return cur;
 			// }
 			
 			do
 			{
-				// either we exhausted the current entry list, or
-				// the entry was null. find another non-null entry.
+				// Find another non-null entry because the current entry list is exhausted or the entry was null.
 				cur = table[++idx];
 			}
 			while (cur == null);
@@ -304,7 +385,6 @@ public final class IntMap<T> implements Iterable<Entry>, Cloneable
 	
 	public static final class Entry<T> implements Cloneable
 	{
-		
 		final int key;
 		T value;
 		Entry next;
@@ -345,6 +425,7 @@ public final class IntMap<T> implements Iterable<Entry>, Cloneable
 			catch (CloneNotSupportedException ex)
 			{
 			}
+			
 			return null;
 		}
 	}

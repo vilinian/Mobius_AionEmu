@@ -1,26 +1,27 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.scene;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
-
 import javax.activation.UnsupportedDataTypeException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.aionemu.gameserver.geoEngine.bounding.BoundingVolume;
 import com.aionemu.gameserver.geoEngine.collision.Collidable;
@@ -28,18 +29,21 @@ import com.aionemu.gameserver.geoEngine.collision.CollisionIntention;
 import com.aionemu.gameserver.geoEngine.collision.CollisionResults;
 import com.aionemu.gameserver.geoEngine.math.Matrix3f;
 import com.aionemu.gameserver.geoEngine.math.Ray;
+import com.aionemu.gameserver.geoEngine.math.Triangle;
 import com.aionemu.gameserver.geoEngine.math.Vector3f;
+import com.aionemu.gameserver.geoEngine.scene.mesh.DoorGeometry;
 
 /**
- * <code>Node</code> defines an internal node of a scene graph. The internal node maintains a collection of children and handles merging said children into a single bound to allow for very fast culling of multiple nodes. Node allows for any number of children to be attached.
+ * Represents an internal node within a scene graph structure.<br>
+ * This class manages a collection of children and merges them into a single bound for efficient culling.<br>
+ * It allows for any number of child {@link Node} objects to be attached.
  * @author Mark Powell
  * @author Gregg Patton
  * @author Joshua Slack
  */
 public class Node extends Spatial
 {
-	private static final Logger logger = Logger.getLogger(Node.class.getName());
-	
+	private static final Logger logger = LoggerFactory.getLogger(Node.class);
 	/**
 	 * This node's children.
 	 */
@@ -47,15 +51,17 @@ public class Node extends Spatial
 	protected short collisionFlags;
 	
 	/**
-	 * Default constructor.
+	 * Creates a new instance of the {@link Node} class.<br>
+	 * This is the default constructor for initializing a scene graph node.
 	 */
 	public Node()
 	{
 	}
 	
 	/**
-	 * Constructor instantiates a new <code>Node</code> with a default empty list for containing children.
-	 * @param name the name of the scene element. This is required for identification and comparision purposes.
+	 * Creates a new {@link Node} with a specific name.<br>
+	 * This constructor initializes the default collision flags.
+	 * @param name The unique identifier for this node.
 	 */
 	public Node(String name)
 	{
@@ -64,8 +70,9 @@ public class Node extends Spatial
 	}
 	
 	/**
-	 * <code>getQuantity</code> returns the number of children this node maintains.
-	 * @return the number of children this node maintains.
+	 * Returns the total number of children attached to this {@link Node}.<br>
+	 * This value corresponds to the size of the internal children list.
+	 * @return The count of child nodes.
 	 */
 	public int getQuantity()
 	{
@@ -73,8 +80,9 @@ public class Node extends Spatial
 	}
 	
 	/**
-	 * <code>getTriangleCount</code> returns the number of triangles contained in all sub-branches of this node that contain geometry.
-	 * @return the triangle count of this branch.
+	 * Calculates the total number of triangles for this node and all its children.<br>
+	 * It sums the results from {@code getTriangleCount} for every child in the list.
+	 * @return The total sum of triangles as an {@code int}.
 	 */
 	@Override
 	public int getTriangleCount()
@@ -92,8 +100,9 @@ public class Node extends Spatial
 	}
 	
 	/**
-	 * <code>getVertexCount</code> returns the number of vertices contained in all sub-branches of this node that contain geometry.
-	 * @return the vertex count of this branch.
+	 * Calculates the total number of vertices for this node and all its children.<br>
+	 * It sums the results of {@code getVertexCount} for every child in the list.
+	 * @return The total vertex count as an {@code int}.
 	 */
 	@Override
 	public int getVertexCount()
@@ -111,11 +120,11 @@ public class Node extends Spatial
 	}
 	
 	/**
-	 * <code>attachChild</code> attaches a child to this node. This node becomes the child's parent. The current number of children maintained is returned. <br>
-	 * If the child already had a parent it is detached from that former parent.
-	 * @param child the child to attach to this node.
-	 * @return the number of children maintained by this node.
-	 * @throws NullPointerException If child is null.
+	 * Adds a {@link Spatial} object as a child to this node.<br>
+	 * It checks for intersections with existing children to determine placement.<br>
+	 * If the child is a {@link DoorGeometry}, it is added to the internal doors map.
+	 * @param child The {@link Spatial} object to attach.
+	 * @return Always returns 0.
 	 */
 	public int attachChild(Spatial child)
 	{
@@ -130,6 +139,7 @@ public class Node extends Spatial
 			{
 				child.getParent().detachChild(child);
 			}
+			
 			child.setParent(this);
 			children.add(child);
 		}
@@ -138,12 +148,12 @@ public class Node extends Spatial
 	}
 	
 	/**
-	 * <code>attachChildAt</code> attaches a child to this node at an index. This node becomes the child's parent. The current number of children maintained is returned. <br>
-	 * If the child already had a parent it is detached from that former parent.
-	 * @param child the child to attach to this node.
-	 * @param index
-	 * @return the number of children maintained by this node.
-	 * @throws NullPointerException if child is null.
+	 * Adds a {@link Spatial} object to the list of children at a specific position.<br>
+	 * This method automatically handles removing the child from its previous parent if it has one.<br>
+	 * It ensures that the child is correctly linked to this node as its new parent.
+	 * @param child The {@link Spatial} object to add to the scene graph.
+	 * @param index The position in the children list where the new child should be inserted.
+	 * @return The new size of the children list after the addition.
 	 */
 	public int attachChildAt(Spatial child, int index)
 	{
@@ -158,6 +168,7 @@ public class Node extends Spatial
 			{
 				child.getParent().detachChild(child);
 			}
+			
 			child.setParent(this);
 			children.add(index, child);
 		}
@@ -166,9 +177,11 @@ public class Node extends Spatial
 	}
 	
 	/**
-	 * <code>detachChild</code> removes a given child from the node's list. This child will no longe be maintained.
-	 * @param child the child to remove.
-	 * @return the index the child was at. -1 if the child was not in the list.
+	 * Removes a specific child from this node.<br>
+	 * This method updates the internal children list.<br>
+	 * It returns the original index of the removed child.
+	 * @param child The {@code Spatial} object to remove from the scene graph.
+	 * @return The zero-based index of the removed child, or -1 if it was not found.
 	 */
 	public int detachChild(Spatial child)
 	{
@@ -184,6 +197,7 @@ public class Node extends Spatial
 			{
 				detachChildAt(index);
 			}
+			
 			return index;
 		}
 		
@@ -191,9 +205,11 @@ public class Node extends Spatial
 	}
 	
 	/**
-	 * <code>detachChild</code> removes a given child from the node's list. This child will no longe be maintained. Only the first child with a matching name is removed.
-	 * @param childName the child to remove.
-	 * @return the index the child was at. -1 if the child was not in the list.
+	 * Removes a child node from this scene graph based on its name.<br>
+	 * This method searches the {@code children} list for a match.<br>
+	 * It returns the index of the removed child or -1 if not found.
+	 * @param childName The unique name of the child to remove.
+	 * @return The index of the detached child, or -1 if no match exists.
 	 */
 	public int detachChildNamed(String childName)
 	{
@@ -211,13 +227,15 @@ public class Node extends Spatial
 				return x;
 			}
 		}
+		
 		return -1;
 	}
 	
 	/**
-	 * <code>detachChildAt</code> removes a child at a given index. That child is returned for saving purposes.
-	 * @param index the index of the child to be removed.
-	 * @return the child at the supplied index.
+	 * Removes a child from the node at the specified position.<br>
+	 * This method updates the parent reference of the removed {@code Spatial}.
+	 * @param index The position in the children list to remove from.
+	 * @return The {@code Spatial} object that was removed, or {@code null} if nothing was found.
 	 */
 	public Spatial detachChildAt(int index)
 	{
@@ -226,11 +244,14 @@ public class Node extends Spatial
 		{
 			child.setParent(null);
 		}
+		
 		return child;
 	}
 	
 	/**
-	 * <code>detachAllChildren</code> removes all children attached to this node.
+	 * Removes all {@link Spatial} objects from the current node.<br>
+	 * This method clears the internal list of children.<br>
+	 * It logs a message to confirm that all children were removed.
 	 */
 	public void detachAllChildren()
 	{
@@ -238,18 +259,27 @@ public class Node extends Spatial
 		{
 			detachChildAt(i);
 		}
+		
 		logger.info("All children removed.");
 	}
 	
+	/**
+	 * Finds the position of a child in the list.<br>
+	 * It returns the index of the specified {@code Spatial}.<br>
+	 * If the object is not found, it returns -1.
+	 * @param sp The {@code Spatial} object to search for.
+	 * @return The zero-based index of the child or -1 if not found.
+	 */
 	public int getChildIndex(Spatial sp)
 	{
 		return children.indexOf(sp);
 	}
 	
 	/**
-	 * More efficient than e.g detaching and attaching as no updates are needed.
-	 * @param index1
-	 * @param index2
+	 * Swaps the positions of two children in the internal list.<br>
+	 * This method exchanges the elements at the specified indices.
+	 * @param index1 The first position to swap.
+	 * @param index2 The second position to swap.
 	 */
 	public void swapChildren(int index1, int index2)
 	{
@@ -261,9 +291,10 @@ public class Node extends Spatial
 	}
 	
 	/**
-	 * <code>getChild</code> returns a child at a given index.
-	 * @param i the index to retrieve the child from.
-	 * @return the child at a specified index.
+	 * Retrieves a child node from the collection.<br>
+	 * This method uses the provided index to find a {@link Spatial}.
+	 * @param i The index of the child to retrieve.
+	 * @return The {@code Spatial} object at the specified position.
 	 */
 	public Spatial getChild(int i)
 	{
@@ -271,9 +302,11 @@ public class Node extends Spatial
 	}
 	
 	/**
-	 * <code>getChild</code> returns the first child found with exactly the given name (case sensitive.)
-	 * @param name the name of the child to retrieve. If null, we'll return null.
-	 * @return the child if found, or null.
+	 * Finds a child node by its name.<br>
+	 * This method searches through all children and their descendants recursively.<br>
+	 * It returns {@code null} if no match is found or if the input is {@code null}.
+	 * @param name The unique name of the child to find.
+	 * @return The matching {@link Spatial} object, or {@code null} if not found.
 	 */
 	public Spatial getChild(String name)
 	{
@@ -298,13 +331,15 @@ public class Node extends Spatial
 				}
 			}
 		}
+		
 		return null;
 	}
 	
 	/**
-	 * determines if the provided Spatial is contained in the children list of this node.
-	 * @param spat the child object to look for.
-	 * @return true if the object is contained, false otherwise.
+	 * Checks if a specific {@code Spatial} object exists in the children hierarchy.<br>
+	 * This method searches through all direct and nested children of this node.
+	 * @param spat The {@code Spatial} object to search for.
+	 * @return {@code true} if the child is found, otherwise {@code false}.
 	 */
 	public boolean hasChild(Spatial spat)
 	{
@@ -326,14 +361,22 @@ public class Node extends Spatial
 	}
 	
 	/**
-	 * Returns all children to this node.
-	 * @return a list containing all children to this node
+	 * Retrieves the list of child {@link Spatial} objects. <br>
+	 * This method returns all nodes attached to this node.
+	 * @return A {@code List} containing all children.
 	 */
 	public List<Spatial> getChildren()
 	{
 		return children;
 	}
 	
+	/**
+	 * Updates the geometry of children at specific positions.<br>
+	 * This method passes the change request to the parent node.
+	 * @param geometry The {@code Geometry} object to apply.
+	 * @param index1 The first child index.
+	 * @param index2 The second child index.
+	 */
 	public void childChange(Geometry geometry, int index1, int index2)
 	{
 		// just pass to parent
@@ -343,6 +386,14 @@ public class Node extends Spatial
 		}
 	}
 	
+	/**
+	 * Checks if this node collides with another object.<br>
+	 * This method handles collisions with {@link Ray} and {@link Triangle} types.<br>
+	 * It updates the provided {@code results} object if a collision occurs.
+	 * @param other The {@link Collidable} object to check against.
+	 * @param results The {@link CollisionResults} container to store any detected hits.
+	 * @return Returns 1 if a collision occurred, or 0 if no collision was found.
+	 */
 	@Override
 	public int collideWith(Collidable other, CollisionResults results)
 	{
@@ -365,47 +416,31 @@ public class Node extends Spatial
 			final Spatial child = children.get(i);
 			if (child instanceof Geometry)
 			{
-				
-				// not used materialIds do not have collision intention for materials set
-				// not all material meshes have physical collisions set
-				// TODO: implement event mesh collisions
-				if (((child.getIntentions() & results.getIntentions()) == 0) || ((child.getIntentions() & CollisionIntention.EVENT.getId()) != 0))
-				{
-					continue;
-				}
-				if (((results.getIntentions() & CollisionIntention.MATERIAL.getId()) != 0) && (child.getMaterialId() <= 0))
+				// Not used material IDs do not have collision intentions, and not all material meshes have physical collisions; TODO: implement event mesh collisions.
+				if (((child.getIntentions() & results.getIntentions()) == 0) || ((child.getIntentions() & CollisionIntention.EVENT.getId()) != 0) || (((results.getIntentions() & CollisionIntention.MATERIAL.getId()) != 0) && (child.getMaterialId() <= 0)))
 				{
 					continue;
 				}
 			}
+			
 			total += child.collideWith(other, results);
 			if ((total > 0) && results.isOnlyFirst())
 			{
 				break;
 			}
 		}
+		
 		return total;
 	}
 	
 	/**
-	 * Returns flat list of Spatials implementing the specified class AND with name matching the specified pattern.
-	 * </P>
-	 * <p/>
-	 * Note that we are <i>matching</i> the pattern, therefore the pattern must match the entire pattern (i.e. it behaves as if it is sandwiched between "^" and "$"). You can set regex modes, like case insensitivity, by using the (?X) or (?X:Y) constructs.
-	 * </P>
-	 * <p/>
-	 * By design, it is always safe to code loops like: <CODE><PRE>
-	 * for (Spatial spatial : node.descendantMatches(AClass.class, "regex"))
-	 * </PRE></CODE>
-	 * </P>
-	 * <p/>
-	 * "Descendants" does not include self, per the definition of the word. To test for descendants AND self, you must do a <code>node.matches(aClass, aRegex)</code> + <code>node.descendantMatches(aClass, aRegex)</code>.
-	 * <p/>
+	 * Finds all descendants that match a specific type and name pattern.<br>
+	 * This method searches through the children of this {@link Node} recursively.<br>
+	 * It filters results based on the provided class and regular expression.
 	 * @param <T>
-	 * @param spatialSubclass Subclass which matching Spatials must implement. Null causes all Spatials to qualify.
-	 * @param nameRegex Regular expression to match Spatial name against. Null causes all Names to qualify.
-	 * @return Non-null, but possibly 0-element, list of matching Spatials (also Instances extending Spatials).
-	 * @see java.util.regex.Pattern
+	 * @param spatialSubclass The class type to filter by.
+	 * @param nameRegex The regular expression to match against the descendant names.
+	 * @return A list of matching descendants as a list of type {@code T}.
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Spatial> List<T> descendantMatches(Class<T> spatialSubclass, String nameRegex)
@@ -415,6 +450,7 @@ public class Node extends Spatial
 		{
 			return newList;
 		}
+		
 		for (int i = 0; i < children.size(); i++)
 		{
 			final Spatial child = children.get(i);
@@ -422,19 +458,23 @@ public class Node extends Spatial
 			{
 				newList.add((T) child);
 			}
+			
 			if (child instanceof Node)
 			{
 				newList.addAll(((Node) child).descendantMatches(spatialSubclass, nameRegex));
 			}
 		}
+		
 		return newList;
 	}
 	
 	/**
-	 * Convenience wrapper.
-	 * @param spatialSubclass
+	 * Finds all descendants that match a specific type.<br>
+	 * This method searches through the children of this {@link Node}.<br>
+	 * It returns a list of objects that are instances of the provided class.
 	 * @param <T>
-	 * @return
+	 * @param spatialSubclass The class type to filter the descendants by.
+	 * @return A list of matching descendant objects.
 	 */
 	public <T extends Spatial> List<T> descendantMatches(Class<T> spatialSubclass)
 	{
@@ -442,16 +482,23 @@ public class Node extends Spatial
 	}
 	
 	/**
-	 * Convenience wrapper.
-	 * @param nameRegex
+	 * Finds all descendants that match a specific name pattern.<br>
+	 * This method searches through the children of this {@link Node}.<br>
+	 * It returns a list of matching {@code Spatial} objects.
 	 * @param <T>
-	 * @return
+	 * @param nameRegex The regular expression used to filter names.
+	 * @return A list of matching descendant objects.
 	 */
 	public <T extends Spatial> List<T> descendantMatches(String nameRegex)
 	{
 		return descendantMatches(null, nameRegex);
 	}
 	
+	/**
+	 * Sets the bounding volume for all children of this node.<br>
+	 * This method updates each child with a clone of the provided {@link BoundingVolume}.
+	 * @param modelBound The new {@code BoundingVolume} to apply to all children.
+	 */
 	@Override
 	public void setModelBound(BoundingVolume modelBound)
 	{
@@ -464,6 +511,11 @@ public class Node extends Spatial
 		}
 	}
 	
+	/**
+	 * Updates the bounding box of this node based on its children.<br>
+	 * This method iterates through all child {@link Spatial} objects and updates their bounds.<br>
+	 * It then merges these bounds into the local {@code worldBound}.
+	 */
 	@Override
 	public void updateModelBound()
 	{
@@ -489,12 +541,16 @@ public class Node extends Spatial
 				}
 			}
 		}
+		
 		worldBound = resultBound;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see aionjHungary.geoEngine.scene.Spatial#setTransform(aionjHungary.geoEngine.math.Matrix3f, aionjHungary.geoEngine.math.Vector3f)
+	/**
+	 * Updates the transformation for all children of this node.<br>
+	 * This method applies the rotation, location, and scale to every child in the {@code children} list.
+	 * @param rotation The {@code Matrix3f} representing the object's rotation.
+	 * @param loc The {@code Vector3f} representing the object's position.
+	 * @param scale The float value used to resize the object.
 	 */
 	@Override
 	public void setTransform(Matrix3f rotation, Vector3f loc, float scale)
@@ -508,6 +564,12 @@ public class Node extends Spatial
 		}
 	}
 	
+	/**
+	 * Creates a deep copy of this {@code Node}.<br>
+	 * This method recursively clones all children attached to the node.
+	 * @return A new {@code Node} instance that is a copy of the current one.
+	 * @throws CloneNotSupportedException If the object cannot be cloned.
+	 */
 	@Override
 	public Node clone() throws CloneNotSupportedException
 	{
@@ -529,15 +591,26 @@ public class Node extends Spatial
 				new UnsupportedDataTypeException();
 			}
 		}
+		
 		return node;
 	}
 	
+	/**
+	 * Retrieves the collision flags for this geometry.<br>
+	 * This method returns the flags stored in the underlying {@link Mesh}.
+	 * @return The collision flags as a {@code short}.
+	 */
 	@Override
 	public short getCollisionFlags()
 	{
 		return collisionFlags;
 	}
 	
+	/**
+	 * Sets the collision flags for this node.<br>
+	 * This updates the internal {@code collisionFlags} field with the provided value.
+	 * @param flags The new bitmask to use for collision detection.
+	 */
 	@Override
 	public void setCollisionFlags(short flags)
 	{

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -26,6 +26,8 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.services.DuelService;
 
 /**
+ * Handles a request from the client to initiate a duel with another player.<br>
+ * This packet triggers the {@link DuelService} to validate and process the challenge.
  * @author xavier
  */
 public class CM_DUEL_REQUEST extends AionClientPacket
@@ -36,19 +38,17 @@ public class CM_DUEL_REQUEST extends AionClientPacket
 	private int objectId;
 	
 	/**
-	 * Constructs new instance of <tt>CM_DUEL_REQUEST</tt> packet
-	 * @param opcode
-	 * @param state
-	 * @param restStates
+	 * Creates a new instance of the {@link CM_DUEL_REQUEST} packet.<br>
+	 * This packet is used to request a duel with another player.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state associated with the request.
+	 * @param restStates Additional states that may be required by the server.
 	 */
 	public CM_DUEL_REQUEST(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void readImpl()
 	{
@@ -61,17 +61,12 @@ public class CM_DUEL_REQUEST extends AionClientPacket
 		final Player activePlayer = getConnection().getActivePlayer();
 		final AionObject target = activePlayer.getKnownList().getObject(objectId);
 		
-		if (!CustomConfig.INSTANCE_DUEL_ENABLE && activePlayer.isInInstance())
+		if ((!CustomConfig.INSTANCE_DUEL_ENABLE && activePlayer.isInInstance()) || (target == null))
 		{
 			return;
 		}
 		
-		if (target == null)
-		{
-			return;
-		}
-		
-		if ((target instanceof Player) && !((Player) target).equals(activePlayer))
+		if ((target instanceof Player) && !target.equals(activePlayer))
 		{
 			final DuelService duelService = DuelService.getInstance();
 			
@@ -82,16 +77,19 @@ public class CM_DUEL_REQUEST extends AionClientPacket
 				sendPacket(SM_SYSTEM_MESSAGE.STR_DUEL_YOU_ARE_IN_DUEL_ALREADY);
 				return;
 			}
+			
 			if (duelService.isDueling(targetPlayer.getObjectId()))
 			{
 				sendPacket(SM_SYSTEM_MESSAGE.STR_DUEL_PARTNER_IN_DUEL_ALREADY(target.getName()));
 				return;
 			}
+			
 			if (targetPlayer.getPlayerSettings().isInDeniedStatus(DeniedStatus.DUEL))
 			{
 				sendPacket(SM_SYSTEM_MESSAGE.STR_MSG_REJECTED_DUEL(targetPlayer.getName()));
 				return;
 			}
+			
 			duelService.onDuelRequest(activePlayer, targetPlayer);
 			duelService.confirmDuelWith(activePlayer, targetPlayer);
 		}

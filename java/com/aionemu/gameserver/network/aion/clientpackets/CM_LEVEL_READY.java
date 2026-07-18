@@ -1,21 +1,22 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
+import com.aionemu.gameserver.configs.main.EventsConfig;
 import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.gameobjects.Pet;
 import com.aionemu.gameserver.model.gameobjects.Summon;
@@ -31,29 +32,41 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_INSTANCE_COUNT_INFO;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_MOTION;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_PLAYER_INFO;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
+import com.aionemu.gameserver.network.aion.serverpackets.SM_UPGRADE_ARCADE;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_WINDSTREAM_ANNOUNCE;
+import com.aionemu.gameserver.network.aion.serverpackets.SM_YOUTUBE_VIDEO;
 import com.aionemu.gameserver.questEngine.QuestEngine;
 import com.aionemu.gameserver.questEngine.model.QuestEnv;
-import com.aionemu.gameserver.services.AStationService;
-import com.aionemu.gameserver.services.AbyssLandingService;
 import com.aionemu.gameserver.services.BaseService;
-import com.aionemu.gameserver.services.ProtectorConquerorService;
+import com.aionemu.gameserver.services.DynamicFlagService;
+import com.aionemu.gameserver.services.FastTrackService;
+import com.aionemu.gameserver.services.MinionService;
 import com.aionemu.gameserver.services.SiegeService;
 import com.aionemu.gameserver.services.TownService;
 import com.aionemu.gameserver.services.WeatherService;
 import com.aionemu.gameserver.services.rift.RiftInformer;
 import com.aionemu.gameserver.services.teleport.TeleportService2;
-import com.aionemu.gameserver.spawnengine.ShugoImperialTombSpawnManager;
+import com.aionemu.gameserver.services.territory.TerritoryService;
+import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.world.World;
 import com.aionemu.gameserver.world.WorldMapType;
 
 /**
- * Client is saying that level[map] is ready.
+ * This packet is received from the client to indicate that a specific level or map is ready.<br>
+ * It informs the server that the client has finished loading the requested environment.
  * @author -Nemesiss-
  * @author Kwazar
  */
 public class CM_LEVEL_READY extends AionClientPacket
 {
+	/**
+	 * This method initializes a {@link CM_LEVEL_READY} packet.<br>
+	 * It sets the required opcode and connection states.<br>
+	 * Use this to prepare the level ready data for the client.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state of the player.
+	 * @param restStates A variable number of additional connection states.
+	 */
 	public CM_LEVEL_READY(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -68,17 +81,20 @@ public class CM_LEVEL_READY extends AionClientPacket
 	protected void runImpl()
 	{
 		final Player activePlayer = getConnection().getActivePlayer();
+		
 		if (activePlayer.getHouseRegistry() != null)
 		{
 			sendPacket(new SM_HOUSE_OBJECTS(activePlayer));
 		}
+		
 		if (activePlayer.isInInstance())
 		{
 			sendPacket(new SM_INSTANCE_COUNT_INFO(activePlayer.getWorldId(), activePlayer.getInstanceId()));
 		}
+		
 		sendPacket(new SM_PLAYER_INFO(activePlayer, false));
-		activePlayer.getController().startProtectionActiveTask();
 		sendPacket(new SM_MOTION(activePlayer.getObjectId(), activePlayer.getMotions().getActiveMotions()));
+		
 		WindstreamTemplate template = DataManager.WINDSTREAM_DATA.getStreamTemplate(activePlayer.getPosition().getMapId());
 		Location2D location;
 		if (template != null)
@@ -89,65 +105,101 @@ public class CM_LEVEL_READY extends AionClientPacket
 				sendPacket(new SM_WINDSTREAM_ANNOUNCE(location.getFlyPathType().getId(), template.getMapid(), location.getId(), location.getState()));
 			}
 		}
+		
 		location = null;
 		template = null;
+		
+		/**
+		 * Spawn player into the world.
+		 */
+		// If already spawned, despawn before spawning into the world
 		if (activePlayer.isSpawned())
 		{
 			World.getInstance().despawn(activePlayer);
 		}
+		
 		World.getInstance().spawn(activePlayer);
+		
 		activePlayer.getController().refreshZoneImpl();
+		
+		// SM_SHIELD_EFFECT, SM_ABYSS_ARTIFACT_INFO3
 		if (activePlayer.isInSiegeWorld())
 		{
 			SiegeService.getInstance().onEnterSiegeWorld(activePlayer);
 		}
-		activePlayer.getController().updateNearbyQuests();
+		
 		WeatherService.getInstance().loadWeather(activePlayer);
-		if (activePlayer.isOnAStation())
+		
+		// SM_UPGRADE_ARCADE
+		if (EventsConfig.ENABLE_EVENT_ARCADE && (activePlayer.getLevel() >= 50))
 		{
-			if (activePlayer.A_STATION_TYPE == 1)
+			sendPacket(new SM_UPGRADE_ARCADE(true));
+		}
+		
+		if (activePlayer.isInSiegeWorld())
+		{
+			SiegeService.getInstance().onEnterSiegeWorld(activePlayer);
+		}
+		
+		// SM_NEARBY_QUESTS
+		activePlayer.getController().updateZone();
+		activePlayer.getController().updateNearbyQuests();
+		
+		if (activePlayer.isOnFastTrack())
+		{
+			if (activePlayer.FAST_TRACK_TYPE == 1)
 			{
-				activePlayer.A_STATION_TYPE = 2;
+				activePlayer.FAST_TRACK_TYPE = 2;
 			}
-			else if (activePlayer.A_STATION_TYPE == 2)
+			else if (activePlayer.FAST_TRACK_TYPE == 2)
 			{
-				AStationService.getInstance().handleMoveBack(activePlayer);
+				FastTrackService.getInstance().handleMoveBack(activePlayer);
 			}
 		}
+		
 		QuestEngine.getInstance().onEnterWorld(new QuestEnv(null, activePlayer, 0, 0));
 		activePlayer.getController().onEnterWorld();
+		
+		// zone channel message (is this must be here?)
 		if (!WorldMapType.getWorld(activePlayer.getWorldId()).isPersonal())
 		{
 			sendPacket(new SM_SYSTEM_MESSAGE(1390122, activePlayer.getPosition().getInstanceId()));
 		}
+		
 		// Rift
 		RiftInformer.sendRiftsInfo(activePlayer);
+		
 		// Town 3.9
 		TownService.getInstance().onEnterWorld(activePlayer);
-		ProtectorConquerorService.getInstance().onEnterMap(activePlayer);
+		TerritoryService.getInstance().onEnterWorld(activePlayer);
+		
 		// Base 4.3
 		BaseService.getInstance().onEnterBaseWorld(activePlayer);
-		// Shugo Imperial Tomb 4.3
-		ShugoImperialTombSpawnManager.sendImperialStatus(activePlayer);
-		// Abyss Landing 4.9.1
-		AbyssLandingService.getInstance().onEnterWorld(activePlayer);
+		DynamicFlagService.getInstance().onEnterWorld(activePlayer);
 		activePlayer.getEffectController().updatePlayerEffectIcons();
 		sendPacket(SM_CUBE_UPDATE.cubeSize(StorageType.CUBE, activePlayer));
-		TeleportService2.archdaevaTransformation(activePlayer);
 		TeleportService2.playerTransformation(activePlayer);
-		TeleportService2.instanceTransformation(activePlayer);
-		// Pet.
+		
+		// Pet
 		final Pet pet = activePlayer.getPet();
 		if ((pet != null) && !pet.isSpawned())
 		{
 			World.getInstance().spawn(pet);
 		}
-		// Summon.
+		
+		// Summon
 		final Summon summon = activePlayer.getSummon();
 		if ((summon != null) && !summon.isSpawned())
 		{
 			World.getInstance().spawn(summon);
 		}
-		activePlayer.setPortAnimation(0x02);
+		
+		if (activePlayer.getCommonData().getLastMinion() != 0)
+		{
+			MinionService.getInstance().spawnMinion(activePlayer, activePlayer.getCommonData().getLastMinion());
+		}
+		
+		activePlayer.setPortAnimation(2);
+		PacketSendUtility.sendPacket(activePlayer, new SM_YOUTUBE_VIDEO());
 	}
 }

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.aion.serverpackets;
 
@@ -26,11 +26,19 @@ import com.aionemu.loginserver.network.aion.AionServerPacket;
 import com.aionemu.loginserver.network.aion.LoginConnection;
 
 /**
+ * This packet handles the retrieval of available game servers.<br>
+ * It sends a list of {@link GameServerInfo} objects to the client.<br>
+ * Use this class when the client requests the current server status.
  * @author -Nemesiss-
  * @modified cura
  */
 public class SM_SERVER_LIST extends AionServerPacket
 {
+	/**
+	 * This constructor initializes a new {@code SM_SERVER_LIST} packet.<br>
+	 * It sets the default packet ID to {@code 0x04}.<br>
+	 * Use this class to send server information to the client.
+	 */
 	public SM_SERVER_LIST()
 	{
 		super(0x04);
@@ -43,13 +51,14 @@ public class SM_SERVER_LIST extends AionServerPacket
 		Map<Integer, Integer> charactersCountOnServer = null;
 		
 		final int accountId = con.getAccount().getId();
+		
 		// int accessLevel = con.getAccount().getAccessLevel();
 		int maxId = 0;
 		
 		charactersCountOnServer = AccountController.getGSCharacterCountsFor(accountId);
 		
-		writeC(servers.size());// servers
-		writeC(con.getAccount().getLastServer());// last server
+		writeC(servers.size()); // servers
+		writeC(con.getAccount().getLastServer()); // last server
 		for (GameServerInfo gsi : servers)
 		{
 			if (gsi.getId() > maxId)
@@ -57,20 +66,21 @@ public class SM_SERVER_LIST extends AionServerPacket
 				maxId = gsi.getId();
 			}
 			
-			writeC(gsi.getId());// server id
+			writeC(gsi.getId()); // server id
 			writeB(gsi.getIPAddressForPlayer(con.getIP())); // server IP
-			writeD(gsi.getPort());// port
+			writeD(gsi.getPort()); // port
 			writeC(0x00); // age limit
-			writeC(0x01);// pvp=1
-			writeH(gsi.getCurrentPlayers());// currentPlayers
-			writeH(gsi.getMaxPlayers());// maxPlayers
-			writeC(gsi.isOnline() ? 1 : 0);// ServerStatus, up=1
-			writeD(1);// bits);
-			writeC(1);// server.brackets ? 0x01 : 0x00);
+			writeC(0x01); // pvp=1
+			writeH(gsi.getCurrentPlayers()); // currentPlayers
+			writeH(gsi.getMaxPlayers()); // maxPlayers
+			writeC(gsi.isOnline() ? 1 : 0); // ServerStatus, up=1
+			writeD(1); // bits);
+			writeC(1); // server.brackets ? 0x01 : 0x00);
 		}
 		
 		writeH(maxId + 1);
 		writeC(0x01);
+		writeB(new byte[49]);
 		
 		for (int i = 1; i <= maxId; i++)
 		{

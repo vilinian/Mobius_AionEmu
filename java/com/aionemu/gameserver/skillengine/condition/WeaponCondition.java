@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.condition;
 
@@ -32,6 +32,8 @@ import com.aionemu.gameserver.skillengine.model.Skill;
 import com.aionemu.gameserver.skillengine.model.Skill.SkillMethod;
 
 /**
+ * This class defines conditions related to the weapon used by a {@link Creature}.<br>
+ * It allows the skill engine to check for specific requirements involving {@link WeaponType} or other weapon-based attributes.
  * @author ATracer
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -41,6 +43,13 @@ public class WeaponCondition extends Condition
 	@XmlAttribute(name = "weapon")
 	private List<WeaponType> weaponType;
 	
+	/**
+	 * Validates the weapon condition for a skill.<br>
+	 * This method checks if the effector has a valid weapon during casting.<br>
+	 * It returns {@code true} if the skill is not a cast or if the weapon is valid.
+	 * @param env The {@link Skill} object containing the current environment and targets.
+	 * @return {@code true} if the condition is met, otherwise {@code false}.
+	 */
 	@Override
 	public boolean validate(Skill env)
 	{
@@ -52,6 +61,13 @@ public class WeaponCondition extends Condition
 		return isValidWeapon(env.getEffector());
 	}
 	
+	/**
+	 * Validates whether the owner of the {@code Stat2} meets the weapon requirements.<br>
+	 * This method checks the creature associated with the provided statistic.
+	 * @param stat The {@code Stat2} object containing the owner information.
+	 * @param statFunction The {@link IStatFunction} being processed.
+	 * @return {@code true} if the owner is valid, {@code false} otherwise.
+	 */
 	@Override
 	public boolean validate(Stat2 stat, IStatFunction statFunction)
 	{
@@ -59,8 +75,11 @@ public class WeaponCondition extends Condition
 	}
 	
 	/**
-	 * @param creature
-	 * @return
+	 * Checks if the {@code creature} is using a valid weapon type.<br>
+	 * This method verifies the main hand weapon of a {@link Player}.<br>
+	 * It returns {@code true} for all non-player creatures.
+	 * @param creature The {@code Creature} to check.
+	 * @return {@code true} if the weapon is valid, otherwise {@code false}.
 	 */
 	private boolean isValidWeapon(Creature creature)
 	{
@@ -69,6 +88,7 @@ public class WeaponCondition extends Condition
 			final Player player = (Player) creature;
 			return weaponType.contains(player.getEquipment().getMainHandWeaponType());
 		}
+		
 		// for npcs we don't validate weapon, though in templates they are present
 		return true;
 	}

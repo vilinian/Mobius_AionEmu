@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.aion.clientpackets;
 
@@ -38,6 +38,8 @@ import com.aionemu.loginserver.network.aion.serverpackets.SM_LOGIN_OK;
 import com.aionemu.loginserver.utils.BruteForceProtector;
 
 /**
+ * Handles the login request sent from the client to the server.<br>
+ * It processes credentials and initiates the authentication flow via {@link AccountController}.
  * @author -Nemesiss-, KID, Lyahim
  */
 public class CM_LOGIN extends AionClientPacket
@@ -52,9 +54,11 @@ public class CM_LOGIN extends AionClientPacket
 	private byte[] data;
 	
 	/**
-	 * Constructs new instance of <tt>CM_LOGIN </tt> packet.
-	 * @param buf
-	 * @param client
+	 * Handles the login request from a client.<br>
+	 * This method initializes the {@code CM_LOGIN} packet.<br>
+	 * It uses the provided buffer and connection to process the data.
+	 * @param buf The {@code ByteBuffer} containing the raw packet data.
+	 * @param client The {@link LoginConnection} representing the current client session.
 	 */
 	public CM_LOGIN(ByteBuffer buf, LoginConnection client)
 	{
@@ -91,6 +95,7 @@ public class CM_LOGIN extends AionClientPacket
 			sendPacket(new SM_LOGIN_FAIL(AionAuthResponse.SYSTEM_ERROR));
 			return;
 		}
+		
 		final String user = new String(decrypted, 64, 32).trim().toLowerCase();
 		final String password = new String(decrypted, 96, 32).trim();
 		
@@ -105,15 +110,12 @@ public class CM_LOGIN extends AionClientPacket
 		switch (response)
 		{
 			case AUTHED:
-			{
 				client.setState(State.AUTHED_LOGIN);
 				client.setSessionKey(new SessionKey(client.getAccount()));
 				client.sendPacket(new SM_LOGIN_OK(client.getSessionKey()));
 				log.debug("" + user + " got authed state");
 				break;
-			}
 			case INVALID_PASSWORD:
-			{
 				if (Config.ENABLE_BRUTEFORCE_PROTECTION)
 				{
 					final String ip = client.getIP();
@@ -136,13 +138,10 @@ public class CM_LOGIN extends AionClientPacket
 					client.sendPacket(new SM_LOGIN_FAIL(response));
 				}
 				break;
-			}
 			default:
-			{
 				log.debug(user + " got unknown (" + response.toString() + ") attemp state");
 				client.close(new SM_LOGIN_FAIL(response), false);
 				break;
-			}
 		}
 	}
 }

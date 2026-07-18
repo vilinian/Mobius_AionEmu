@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.spawnengine;
 
@@ -25,10 +25,8 @@ import com.aionemu.gameserver.model.templates.spawns.SpawnTemplate;
 import com.aionemu.gameserver.model.templates.walker.WalkerTemplate;
 
 /**
- * Forms the walker groups on initial spawn<br>
- * Brings NPCs back to their positions if they die<br>
- * Cleanup and rework will be made after tests and error handling<br>
- * To use only with patch!
+ * This class manages the formation of walker groups during initial spawns.<br>
+ * It ensures that {@link Npc} entities return to their correct positions if they die. This utility is intended for use with patches only.
  * @author vlog
  * @based on Imaginary's imagination
  * @modified Rolandas
@@ -38,10 +36,13 @@ public class WalkerFormator
 	private static final Logger log = LoggerFactory.getLogger(WalkerFormator.class);
 	
 	/**
-	 * @param npc
-	 * @param worldId
-	 * @param instanceId
-	 * @return <tt>true</tt> if npc was brought into world by the method call.
+	 * Processes NPCs that belong to a cluster group.<br>
+	 * This method assigns the {@code npc} to a {@link WalkerGroup} if it exists.<br>
+	 * It also handles caching new candidates for clustered formations.
+	 * @param npc The {@code Npc} object to process.
+	 * @param worldId The ID of the current world.
+	 * @param instanceId The ID of the current instance.
+	 * @return {@code false} if the NPC was handled by a group or failed processing, and {@code true} if it was cached as a new candidate.
 	 */
 	public static boolean processClusteredNpc(Npc npc, int worldId, int instanceId)
 	{
@@ -64,19 +65,24 @@ public class WalkerFormator
 				log.warn("Missing walker ID: " + spawn.getWalkerId());
 				return false;
 			}
+			
 			if (template.getPool() < 2)
 			{
 				return false;
 			}
+			
 			return formations.cacheWalkerCandidate(new ClusteredNpc(npc, instanceId, template));
 		}
+		
 		return false;
 	}
 	
 	/**
-	 * Organizes spawns in all processed walker groups. Must be called only when spawning all npcs for the instance of world.
-	 * @param worldId
-	 * @param instanceId
+	 * Organizes and spawns walker groups for a specific world and instance.<br>
+	 * This method retrieves the formations from {@link WalkerFormationsCache}.<br>
+	 * It then calls the {@code organizeAndSpawn()} method on those formations.
+	 * @param worldId The unique identifier for the world.
+	 * @param instanceId The unique identifier for the instance.
 	 */
 	public static void organizeAndSpawn(int worldId, int instanceId)
 	{
@@ -85,12 +91,26 @@ public class WalkerFormator
 	}
 	
 	/**
-	 * @param worldId
-	 * @param instanceId
+	 * Updates the current cluster for a specific walker group.<br>
+	 * This method modifies the formation data for a given world and instance.
+	 * @param worldId The unique identifier of the world.
+	 * @param instanceId The unique identifier of the instance.
+	 * @param walkerGroup The {@code WalkerGroup} to apply to the cluster.
+	 */
+	public static void changeWalkerGroup(int worldId, int instanceId, WalkerGroup walkerGroup)
+	{
+		final InstanceWalkerFormations formations = WalkerFormationsCache.getInstanceFormations(worldId, instanceId);
+		formations.changeCluster(walkerGroup);
+	}
+	
+	/**
+	 * This method handles the cleanup when a game instance is destroyed.<br>
+	 * It notifies {@link WalkerFormationsCache} to clear its data for the specific instance.
+	 * @param worldId The unique identifier of the world.
+	 * @param instanceId The unique identifier of the instance.
 	 */
 	public static void onInstanceDestroy(int worldId, int instanceId)
 	{
 		WalkerFormationsCache.onInstanceDestroy(worldId, instanceId);
 	}
-	
 }

@@ -1,24 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-	Player Housing Script
-	Made By Encom
- -->
 <lboxes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="scripts.xsd">
-  <lbox>
-    <id>101</id>
-    <name><![CDATA[New Script]]></name>
-    <desc><![CDATA[Enter the description.]]></desc>
-    <script><![CDATA[function OnInit()
+	<lbox>
+		<id>101</id>
+		<name><![CDATA[New Script]]></name>
+		<desc><![CDATA[Enter the description.]]></desc>
+		<script><![CDATA[function OnInit()
     -- Create the initialization script.
 end
 ]]></script>
-    <icon>1</icon>
-  </lbox>
-  <lbox>
-    <id>102</id>
-    <name><![CDATA[Greeting]]></name>
-    <desc><![CDATA[The butler will say a greeting to an approaching visitor.]]></desc>
-    <script><![CDATA[-- You can customize the butler's greeting to match every visitor.
+		<icon>1</icon>
+	</lbox>
+	<lbox>
+		<id>102</id>
+		<name><![CDATA[Greeting]]></name>
+		<desc><![CDATA[The butler will say a greeting to an approaching visitor.]]></desc>
+		<script><![CDATA[-- You can customize the butler's greeting to match every visitor.
 -- Enter the character name in the table below, along with the greeting text and sound for the character's visit.
 
 helloTable = { 
@@ -87,14 +83,14 @@ end
 --    otl, pat, plead, ready, sad, slap, surprise, taunt, thanks, thunder,
 --    useup, victory, yes, wave, boo, charge, dislike, panic, salute, smile,
 --    sorry, think, blueflag, twoflag, whiteflag, sing, jump]]></script>
-    <icon>4</icon>
-  </lbox>
-  <lbox>
-    <id>116</id>
-    <name><![CDATA[Simonerk Says]]></name>
-    <desc><![CDATA[Enter the text "Simonerk Says" in the chat window to play the game with the butler.]]></desc>
-    <script>
-    <![CDATA[
+		<icon>4</icon>
+	</lbox>
+	<lbox>
+		<id>116</id>
+		<name><![CDATA[Simonerk Says]]></name>
+		<desc><![CDATA[Enter the text "Simonerk Says" in the chat window to play the game with the butler.]]></desc>
+		<script>
+<![CDATA[
 -- You modify how the game is played by changing the command text strings shown below.
 g_flagTable = { 
   { "[kvalue:Command1;Simonerk says Lift the Blue Flag;str]",			  [kvalue:Motion1;H.Emotion.blueflag;moti]  },
@@ -273,13 +269,14 @@ function OnUserSay(str, desc)
   end
 end
 ]]></script>
-    <icon>6</icon>
-  </lbox>
-  <lbox>
-    <id>117</id>
-    <name><![CDATA[Table Jump]]></name>
-    <desc><![CDATA[Enter "Table Jump" in the chat window to start a game of Jump on the Glowing Furniture.  Designate each piece of furniture you want to use as an Outlet by clicking on a number in the Outlet window and then clicking on the piece of furniture you want to use. ]]></desc>
-    <script><![CDATA[constStageNum        = 10;
+		<icon>6</icon>
+	</lbox>
+	<lbox>
+		<id>117</id>
+		<name><![CDATA[Table Jump]]></name>
+		<desc>
+<![CDATA[Enter "Table Jump" in the chat window to start a game of Jump on the Glowing Furniture.  Designate each piece of furniture you want to use as an Outlet by clicking on a number in the Outlet window and then clicking on the piece of furniture you want to use. ]]></desc>
+		<script><![CDATA[constStageNum        = 10;
 constTableNum         = 6;
 constTableNumPerStage = 2;     -- About one-third of constTableNum is good enough.
 
@@ -467,14 +464,14 @@ function OnPlayerJumpEnd(outletIndex)
   end
 end
 ]]></script>
-    <icon>5</icon>
-  </lbox>
-  <lbox>
-    <id>103</id>
-    <name><![CDATA[Play Song]]></name>
-    <desc><![CDATA[Add the action to the butler’s right click menu to play a song.]]></desc>
-    <script>
-  <![CDATA[-- Prompts on script initialization.
+		<icon>5</icon>
+	</lbox>
+	<lbox>
+		<id>103</id>
+		<name><![CDATA[Play Song]]></name>
+		<desc><![CDATA[Add the action to the butler’s right click menu to play a song.]]></desc>
+		<script>
+<![CDATA[-- Prompts on script initialization.
 function OnInit()
 
     -- Add the right-click menu to the butler.
@@ -531,14 +528,15 @@ end
 --            H.Percussion.snare (Snare) H.Percussion.tomtom1 (Tom-tom 1)
 --            H.Percussion.tomtom2 (Tom-tom 2) H.Percussion.tomtom3 (Tom-tom 3)
 --            H.Percussion.fx1 - H.Percussion.fx20 (Effect Sound 1 - 20)]]></script>
-    <icon>2</icon>
-  </lbox>
-  <lbox>
-    <id>119</id>
-    <name><![CDATA[Scales]]></name>
-    <desc><![CDATA[Add the action to the butler’s right click menu and choose it to play some simple scales and Mary Had a Little Lamb]]></desc>
-    <script>
-      <![CDATA[-- Prompts on script initialization.
+		<icon>2</icon>
+	</lbox>
+	<lbox>
+		<id>119</id>
+		<name><![CDATA[Scales]]></name>
+		<desc>
+<![CDATA[Add the action to the butler’s right click menu and choose it to play some simple scales and Mary Had a Little Lamb]]></desc>
+		<script>
+<![CDATA[-- Prompts on script initialization.
 function OnInit()
 
     -- Add the right-click menu to the butler.
@@ -577,15 +575,16 @@ end
 --            H.Percussion.snare (Snare) H.Percussion.tomtom1 (Tom-tom 1)
 --            H.Percussion.tomtom2 (Tom-tom 2) H.Percussion.tomtom3 (Tom-tom 3)
 --            H.Percussion.fx1 - H.Percussion.fx20 (Effect Sound 1 - 20)]]>
-    </script>
-    <icon>2</icon>
-  </lbox>
-  <lbox>
-    <id>104</id>
-    <name><![CDATA[SFX Song]]></name>
-    <desc><![CDATA[Add the action to the butler’s right click menu to play a song using Aion sound effects for percussion.]]></desc>
-    <script>
-  <![CDATA[-- Script initialization
+		</script>
+		<icon>2</icon>
+	</lbox>
+	<lbox>
+		<id>104</id>
+		<name><![CDATA[SFX Song]]></name>
+		<desc>
+<![CDATA[Add the action to the butler’s right click menu to play a song using Aion sound effects for percussion.]]></desc>
+		<script>
+<![CDATA[-- Script initialization
 function OnInit()
 
     -- Add the right-click menu to the butler.
@@ -642,14 +641,14 @@ end
 --            H.Percussion.snare (Snare) H.Percussion.tomtom1 (Tom-tom 1)
 --            H.Percussion.tomtom2 (Tom-tom 2) H.Percussion.tomtom3 (Tom-tom 3)
 --            H.Percussion.fx1 - H.Percussion.fx20 (Effect Sound 1 - 20)]]>
-    </script>
-    <icon>5</icon>
-  </lbox>
-  <lbox>
-    <id>105</id>
-    <name><![CDATA[Laughing]]></name>
-    <desc><![CDATA[Enter "Giggle" inside the house and the butler will laugh.]]></desc>
-    <script><![CDATA[-- Starts when the house script is initialized.
+		</script>
+		<icon>5</icon>
+	</lbox>
+	<lbox>
+		<id>105</id>
+		<name><![CDATA[Laughing]]></name>
+		<desc><![CDATA[Enter "Giggle" inside the house and the butler will laugh.]]></desc>
+		<script><![CDATA[-- Starts when the house script is initialized.
 function OnInit()
 end
 
@@ -669,13 +668,13 @@ function OnUserSay(str)
 
     end
 end]]></script>
-    <icon>3</icon>
-  </lbox>
-  <lbox>
-    <id>106</id>
-    <name><![CDATA[Dance]]></name>
-    <desc><![CDATA[Dance at home and the butler will start singing.]]></desc>
-    <script><![CDATA[-- Starts when the house script is initialized.
+		<icon>3</icon>
+	</lbox>
+	<lbox>
+		<id>106</id>
+		<name><![CDATA[Dance]]></name>
+		<desc><![CDATA[Dance at home and the butler will start singing.]]></desc>
+		<script><![CDATA[-- Starts when the house script is initialized.
 function OnInit()
 end
 
@@ -709,15 +708,15 @@ function OnUserEmotion(motion)
         H.PlaySound(5, "t250 r r r r r r r r x_");
   end
 end]]></script>
-    <icon>6</icon>
-  </lbox>
-  <lbox>
-    <id>107</id>
-    <name><![CDATA[Move Cube]]></name>
-    <desc><![CDATA[Enter "Move" inside the house and the furniture designated as the outlet starts moving. (Except for PC)
+		<icon>6</icon>
+	</lbox>
+	<lbox>
+		<id>107</id>
+		<name><![CDATA[Move Cube]]></name>
+		<desc><![CDATA[Enter "Move" inside the house and the furniture designated as the outlet starts moving. (Except for PC)
 (Only designate Cube Accents or decorative letters as the outlet. Other furniture is fixed in position.
 You can buy a Cube Accent from [pos:Garkinerk (Furniture Merchant);700010000 1177.3 1937.6 0.0 0] if you're Elyos, or from [pos:Hopurunerk (Furniture Merchant);710010000 1082.8 1405.4 0.0 0] if you're Asmodian.)]]></desc>
-    <script><![CDATA[-- Starts when the house script is initialized.
+		<script><![CDATA[-- Starts when the house script is initialized.
 function OnInit()
 
     -- Activates when the player enters a 4m radius of the butler.
@@ -746,15 +745,15 @@ function OnUserSay(str)
   end
 end
 ]]></script>
-    <icon>4</icon>
-  </lbox>
-  <lbox>
-    <id>108</id>
-    <name><![CDATA[Flashlight]]></name>
-    <desc><![CDATA[Add the action to the butler’s right click menu to make the furniture designated as the outlet light up.
+		<icon>4</icon>
+	</lbox>
+	<lbox>
+		<id>108</id>
+		<name><![CDATA[Flashlight]]></name>
+		<desc><![CDATA[Add the action to the butler’s right click menu to make the furniture designated as the outlet light up.
 (HQ Shader Quality: Needs to be set as High)
 ]]></desc>
-    <script><![CDATA[-- Starts when the house script is initialized.
+		<script><![CDATA[-- Starts when the house script is initialized.
 function OnInit()
 
     -- Add the right-click menu to the butler.
@@ -789,15 +788,15 @@ function OnMenu(menuNum)
     H.PlaySound(0, "r2[1]");
 end
 ]]></script>
-    <icon>5</icon>
-  </lbox>
-  <lbox>
-    <id>109</id>
-    <name><![CDATA[Jump Items]]></name>
-    <desc><![CDATA[Enter "Jump" while inside the house to make the designated item jump.
+		<icon>5</icon>
+	</lbox>
+	<lbox>
+		<id>109</id>
+		<name><![CDATA[Jump Items]]></name>
+		<desc><![CDATA[Enter "Jump" while inside the house to make the designated item jump.
 (Only house staff, Cube Accents, and decorative letters should be selected as the outlet. Other installations are fixed in position.)]]></desc>
-    <script>
-  <![CDATA[-- Starts when the house script is initialized.
+		<script>
+<![CDATA[-- Starts when the house script is initialized.
 function OnInit()
 
     -- Set the number of outlets to 1.
@@ -821,13 +820,13 @@ function OnUserSay(str)
         H.Jump(H.Outlet.outlet1, 1, 1);
     end
 end]]></script>
-    <icon>1</icon>
-  </lbox>
-  <lbox>
-    <id>110</id>
-    <name><![CDATA[Look At]]></name>
-    <desc><![CDATA[Enter "Butler" inside the house and the butler looks at the speaker.]]></desc>
-    <script><![CDATA[-- Starts when the house script is initialized.
+		<icon>1</icon>
+	</lbox>
+	<lbox>
+		<id>110</id>
+		<name><![CDATA[Look At]]></name>
+		<desc><![CDATA[Enter "Butler" inside the house and the butler looks at the speaker.]]></desc>
+		<script><![CDATA[-- Starts when the house script is initialized.
 function OnInit()
 end
 
@@ -851,13 +850,14 @@ function OnUserSay(str, username)
 
     end
 end]]></script>
-    <icon>4</icon>
-  </lbox>
-  <lbox>
-    <id>111</id>
-    <name><![CDATA[Blue Flag White Flag]]></name>
-    <desc><![CDATA[When you say "Blue Flag" or "White Flag" inside the house, the butler will hold up a blue or white flag.]]></desc>
-    <script><![CDATA[-- Starts when the house script is initialized.
+		<icon>4</icon>
+	</lbox>
+	<lbox>
+		<id>111</id>
+		<name><![CDATA[Blue Flag White Flag]]></name>
+		<desc>
+<![CDATA[When you say "Blue Flag" or "White Flag" inside the house, the butler will hold up a blue or white flag.]]></desc>
+		<script><![CDATA[-- Starts when the house script is initialized.
 function OnInit()
 end
 
@@ -886,13 +886,14 @@ function OnUserSay(str)
 
     end     
 end]]></script>
-    <icon>5</icon>
-  </lbox>
-  <lbox>
-    <id>112</id>
-    <name><![CDATA[Party Time]]></name>
-    <desc><![CDATA[Do the "Victory" motion or say "Begin" in chat inside the house. The butler starts to clap his hands, the installation designated as the outlet shines, and the melody is played.]]></desc>
-    <script><![CDATA[-- Starts when the house script is initialized.
+		<icon>5</icon>
+	</lbox>
+	<lbox>
+		<id>112</id>
+		<name><![CDATA[Party Time]]></name>
+		<desc>
+<![CDATA[Do the "Victory" motion or say "Begin" in chat inside the house. The butler starts to clap his hands, the installation designated as the outlet shines, and the melody is played.]]></desc>
+		<script><![CDATA[-- Starts when the house script is initialized.
 function OnInit()
 
     -- Sets the number of outlets to 1.
@@ -968,13 +969,14 @@ function OnUserSay(str)
        PartyTime()
     end
 end]]></script>
-    <icon>6</icon>
-  </lbox>
-  <lbox>
-    <id>113</id>
-    <name><![CDATA[Disco]]></name>
-    <desc><![CDATA[Say "Light" inside the house and the installation designated as the outlet starts responding with light according to the given melody.]]></desc>
-    <script><![CDATA[-- Starts when the house script is initialized.
+		<icon>6</icon>
+	</lbox>
+	<lbox>
+		<id>113</id>
+		<name><![CDATA[Disco]]></name>
+		<desc>
+<![CDATA[Say "Light" inside the house and the installation designated as the outlet starts responding with light according to the given melody.]]></desc>
+		<script><![CDATA[-- Starts when the house script is initialized.
 function OnInit()
 
     -- Sets the number of outlets to 7.
@@ -1020,13 +1022,14 @@ function OnSoundPlay(channel, note, len, label)
     end
 end
 ]]></script>
-    <icon>3</icon>
-  </lbox>
-  <lbox>
-    <id>114</id>
-    <name><![CDATA[Flag Dance]]></name>
-    <desc><![CDATA[Enter "Flag" inside the house and the butler starts responding by raising a blue flag and white flag according to the given melody.]]></desc>
-    <script><![CDATA[-- Starts when the house script is initialized.
+		<icon>3</icon>
+	</lbox>
+	<lbox>
+		<id>114</id>
+		<name><![CDATA[Flag Dance]]></name>
+		<desc>
+<![CDATA[Enter "Flag" inside the house and the butler starts responding by raising a blue flag and white flag according to the given melody.]]></desc>
+		<script><![CDATA[-- Starts when the house script is initialized.
 function OnInit()
 
     -- Sets the number of outlets to 3.
@@ -1089,15 +1092,15 @@ function OnSoundPlay(channel, note, len, label)
     end
 end
 ]]></script>
-    <icon>2</icon>
-  </lbox>
-  <lbox>
-    <id>115</id>
-    <name><![CDATA[Box Dance]]></name>
-    <desc><![CDATA[Add the action to the butler’s right click menu to play melodies and to move the designated outlet installation.
+		<icon>2</icon>
+	</lbox>
+	<lbox>
+		<id>115</id>
+		<name><![CDATA[Box Dance]]></name>
+		<desc><![CDATA[Add the action to the butler’s right click menu to play melodies and to move the designated outlet installation.
 (Designate only the Cube Accents or decorative letters as the outlet. Other installations are fixed in position.
 You can buy a Cube Accent from [pos:Garkinerk (Furniture Merchant);700010000 1177.3 1937.6 0.0 0] if you're Elyos, or from [pos:Hopurunerk (Furniture Merchant);710010000 1082.8 1405.4 0.0 0] if you're Asmodian.)]]></desc>
-    <script><![CDATA[-- Starts when the house script is initialized.
+		<script><![CDATA[-- Starts when the house script is initialized.
 function OnInit()
 
     -- Add the right-click menu to the butler.
@@ -1207,14 +1210,14 @@ function OnMenu(menuNum)
     H.SetPos(14, 4, 0, 0, 2, 1);
 	
 end]]></script>
-    <icon>6</icon>
-  </lbox>
-  <lbox>
-    <id>118</id>
-    <name><![CDATA[Jukebox]]></name>
-    <desc><![CDATA[Plays one of the songs in the Jukebox Playlist when a character enters a house.
+		<icon>6</icon>
+	</lbox>
+	<lbox>
+		<id>118</id>
+		<name><![CDATA[Jukebox]]></name>
+		<desc><![CDATA[Plays one of the songs in the Jukebox Playlist when a character enters a house.
 A player can control the Jukebox by entering commands in the chat window such as "Next," "Previous," "Current," "Pause," "Play," or "Volume 60."]]></desc>
-    <script><![CDATA[-- The song that is played varies for each visitor.
+		<script><![CDATA[-- The song that is played varies for each visitor.
 -- Enter the character's name and the index (the order of songs in the playlist) to be played when that character visits in the table below.
 
 songTable = {
@@ -1272,6 +1275,6 @@ end
 --    H.ReplayJukeBoxSong();     ->   Replays the current song from the beginning.
 --    H.SetJukeBoxVolume();      ->   Adjusts the volume of the Jukebox. (0~100)
 ]]></script>
-    <icon>1</icon>
-  </lbox>
+		<icon>1</icon>
+	</lbox>
 </lboxes>

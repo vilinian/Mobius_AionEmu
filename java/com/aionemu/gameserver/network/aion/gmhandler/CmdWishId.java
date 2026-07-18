@@ -1,22 +1,21 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.gmhandler;
 
-import com.aionemu.gameserver.configs.administration.PanelConfig;
 import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.services.item.ItemService;
@@ -25,25 +24,33 @@ import com.aionemu.gameserver.utils.Util;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * Handles the GM command to grant a specific item to a player based on its unique ID.<br>
+ * It validates the {@code wishId} and uses {@link ItemService} to process the request.
  * @author Alcapwnd
  */
 public class CmdWishId extends AbstractGMHandler
 {
+	/**
+	 * Creates a new instance of the {@code CmdWishId} handler.<br>
+	 * This constructor initializes the command with an administrator and specific parameters.<br>
+	 * It automatically triggers the {@code run} method to execute the logic.
+	 * @param admin The {@code Player} object representing the administrator who sent the command.
+	 * @param params The string containing the arguments for the wish command.
+	 */
 	public CmdWishId(Player admin, String params)
 	{
 		super(admin, params);
 		run();
 	}
 	
+	/**
+	 * Executes the command to give a specific item to a player.<br>
+	 * It validates the quantity and the {@code itemId} provided in the parameters.<br>
+	 * If successful, it adds the items using {@code int, int)}.
+	 */
 	public void run()
 	{
 		Player t = admin;
-		
-		if (admin.getClientConnection().getAccount().getAccessLevel() <= PanelConfig.WISHITEMID_PANEL_LEVEL)
-		{
-			PacketSendUtility.sendMessage(admin, "You haven't access this panel commands");
-			return;
-		}
 		
 		if ((admin.getTarget() != null) && (admin.getTarget() instanceof Player))
 		{

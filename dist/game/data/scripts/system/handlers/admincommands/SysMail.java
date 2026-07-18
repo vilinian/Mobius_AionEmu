@@ -1,25 +1,23 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
 
 import com.aionemu.commons.database.dao.DAOManager;
 import com.aionemu.gameserver.dao.PlayerDAO;
@@ -27,7 +25,6 @@ import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.Race;
 import com.aionemu.gameserver.model.gameobjects.LetterType;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
-import com.aionemu.gameserver.model.gameobjects.player.PlayerCommonData;
 import com.aionemu.gameserver.model.templates.item.ItemTemplate;
 import com.aionemu.gameserver.services.mail.MailFormatter;
 import com.aionemu.gameserver.services.mail.SystemMailService;
@@ -37,10 +34,16 @@ import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * Handles the administration command for sending system-wide mail to players.<br>
+ * It allows administrators to broadcast messages using the {@link SystemMailService}.
  * @author xTz
  */
 public class SysMail extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link SysMail} class.<br>
+	 * This constructor registers the {@code sysmail} command with the system.
+	 */
 	public SysMail()
 	{
 		super("sysmail");
@@ -48,7 +51,6 @@ public class SysMail extends AdminCommand
 	
 	enum RecipientType
 	{
-		
 		ELYOS,
 		ASMO,
 		ALL,
@@ -59,25 +61,24 @@ public class SysMail extends AdminCommand
 			switch (this)
 			{
 				case ELYOS:
-				{
 					return race == Race.ELYOS;
-				}
 				case ASMO:
-				{
 					return race == Race.ASMODIANS;
-				}
 				case ALL:
-				{
 					return (race == Race.ELYOS) || (race == Race.ASMODIANS);
-				}
 				default:
-				{
 					return false;
-				}
 			}
 		}
 	}
 	
+	/**
+	 * Executes the command to send a system mail to players.<br>
+	 * It supports sending to specific players or groups like @all, @elyos, and @asmodians.<br>
+	 * The method handles different letter types including Blackcloud and Express mails.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings containing the sender, recipient, letter type, item ID, count, kinah amount, and message content.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
@@ -101,6 +102,7 @@ public class SysMail extends AdminCommand
 				onFail(admin, null);
 				return;
 			}
+			
 			sender = paramValues[0];
 			paramValues = new String[params.length - 1];
 			System.arraycopy(params, 1, paramValues, 0, params.length - 1);
@@ -234,14 +236,17 @@ public class SysMail extends AdminCommand
 		}
 	}
 	
+	/**
+	 * Extracts specific text from an array of words based on pipe symbols.<br>
+	 * It identifies the content between the first and last pipe characters.<br>
+	 * This method updates the first element of the output array.
+	 * @param words The source array of strings to parse.
+	 * @param outText The array where the extracted text will be stored.
+	 * @return The number of words processed during extraction.
+	 */
 	private int extractText(String[] words, String[] outText)
 	{
-		if ((words.length == 0) || (outText.length == 0))
-		{
-			return 0;
-		}
-		
-		if (!words[0].startsWith("|"))
+		if ((words.length == 0) || (outText.length == 0) || !words[0].startsWith("|"))
 		{
 			return 0;
 		}
@@ -267,15 +272,29 @@ public class SysMail extends AdminCommand
 					wordCount++;
 					break;
 				}
+				
 				titleWords.add(word);
 			}
 			
-			outText[0] = StringUtils.join(titleWords.toArray(new String[0]), ' ');
+			outText[0] = String.join(" ", titleWords);
 		}
 		
 		return wordCount;
 	}
 	
+	/**
+	 * Validates the parameters for sending a system mail.<br>
+	 * This method checks if the recipient, items, and kinah values are valid.<br>
+	 * It determines if the letter should be sent as an express delivery.
+	 * @param admin The {@link Player} who is executing the command.
+	 * @param item The unique ID of the item to include in the mail.
+	 * @param count The quantity of the specified item.
+	 * @param kinah The amount of kinah to attach to the letter.
+	 * @param recipient The name or identifier of the target receiver.
+	 * @param recipientType The {@code RecipientType} category for the target.
+	 * @param letterType The {@link LetterType} style of the mail being sent.
+	 * @return {@code true} if it is an express letter, {@code false} otherwise, or {@code null} if validation fails.
+	 */
 	private static Boolean checkExpress(Player admin, int item, int count, int kinah, String recipient, RecipientType recipientType, LetterType letterType)
 	{
 		Boolean shouldExpress = null;
@@ -287,13 +306,6 @@ public class SysMail extends AdminCommand
 		}
 		else if (recipientType == RecipientType.PLAYER)
 		{
-			final PlayerCommonData recipientCommonData = DAOManager.getDAO(PlayerDAO.class).loadPlayerCommonDataByName(recipient);
-			if ((recipientCommonData != null) && (recipientCommonData.getMailboxLetters() >= 100))
-			{
-				PacketSendUtility.sendMessage(admin, recipient + "Players mail box is full");
-				return null;
-			}
-			
 			if (letterType == LetterType.NORMAL)
 			{
 				if (!DAOManager.getDAO(PlayerDAO.class).isNameUsed(recipient))
@@ -301,6 +313,7 @@ public class SysMail extends AdminCommand
 					PacketSendUtility.sendMessage(admin, "Could not find a Recipient by that name.");
 					return null;
 				}
+				
 				shouldExpress = false;
 			}
 			else if (letterType == LetterType.EXPRESS)
@@ -310,10 +323,12 @@ public class SysMail extends AdminCommand
 					PacketSendUtility.sendMessage(admin, "This Recipient is offline.");
 					return null;
 				}
+				
 				shouldExpress = true;
 			}
-			else // Black cloud
+			else
 			{
+				// Black cloud
 				shouldExpress = World.getInstance().findPlayer(recipient) != null;
 			}
 		}
@@ -348,6 +363,7 @@ public class SysMail extends AdminCommand
 				PacketSendUtility.sendMessage(admin, "Item id is incorrect: " + item);
 				return null;
 			}
+			
 			final long maxStackCount = itemTemplate.getMaxStackCount();
 			if ((count > maxStackCount) && (maxStackCount != 0))
 			{
@@ -366,9 +382,16 @@ public class SysMail extends AdminCommand
 			PacketSendUtility.sendMessage(admin, "Kinah attachment are not for black cloud letters!");
 			return null;
 		}
+		
 		return shouldExpress;
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.teleport;
 
@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.aionemu.gameserver.configs.administration.AdminConfig;
 import com.aionemu.gameserver.configs.main.CustomConfig;
 import com.aionemu.gameserver.configs.main.MembershipConfig;
+import com.aionemu.gameserver.configs.main.SecurityConfig;
 import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.Race;
 import com.aionemu.gameserver.model.TeleportAnimation;
@@ -31,7 +32,9 @@ import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.items.storage.Storage;
 import com.aionemu.gameserver.model.siege.FortressLocation;
 import com.aionemu.gameserver.model.team2.alliance.PlayerAlliance;
+import com.aionemu.gameserver.model.team2.alliance.PlayerAllianceService;
 import com.aionemu.gameserver.model.team2.group.PlayerGroup;
+import com.aionemu.gameserver.model.team2.group.PlayerGroupService;
 import com.aionemu.gameserver.model.team2.league.League;
 import com.aionemu.gameserver.model.templates.InstanceCooltime;
 import com.aionemu.gameserver.model.templates.portal.ItemReq;
@@ -50,35 +53,47 @@ import com.aionemu.gameserver.world.World;
 import com.aionemu.gameserver.world.WorldMapInstance;
 
 /**
+ * Manages the teleportation logic for portals within the game world.<br>
+ * This service handles player movement between different {@link WorldMapInstance} locations.<br>
+ * It validates requirements such as items, quests, and permissions before allowing a teleport.
  * @author ATracer, xTz
  */
 public class PortalService
 {
 	private static Logger log = LoggerFactory.getLogger(PortalService.class);
 	
+	/**
+	 * Teleports a {@link Player} to a specific location defined by a {@link PortalPath}.<br>
+	 * This method validates all requirements such as race, level, quests, and items.<br>
+	 * It also handles instance registration and group logic based on the portal configuration.
+	 * @param portalPath The path data containing destination details and requirements.
+	 * @param player The {@link Player} who is attempting to use the portal.
+	 * @param npcObjectId The ID of the NPC associated with this portal.
+	 */
 	public static void port(PortalPath portalPath, Player player, int npcObjectId)
 	{
 		if (!CustomConfig.ENABLE_INSTANCES)
 		{
 			return;
 		}
+		
 		final PortalLoc loc = DataManager.PORTAL_LOC_DATA.getPortalLoc(portalPath.getLocId());
 		if (loc == null)
 		{
 			log.warn("No portal loc for locId" + portalPath.getLocId());
 			return;
 		}
+		
 		boolean instanceTitleReq = false;
 		boolean instanceLevelReq = false;
 		boolean instanceRaceReq = false;
 		boolean instanceQuestReq = false;
 		boolean instanceGroupReq = false;
-		boolean instanceItemReq = false;
-		int instanceCooldownRate = 0;
 		final int mapId = loc.getWorldId();
 		final int playerSize = portalPath.getPlayerCount();
 		final boolean isInstance = portalPath.isInstance();
 		final InstanceCooltime clt = DataManager.INSTANCE_COOLTIME_DATA.getInstanceCooltimeByWorldId(mapId);
+		
 		if (player.getAccessLevel() < AdminConfig.INSTANCE_REQ)
 		{
 			instanceTitleReq = !player.havePermission(MembershipConfig.INSTANCES_TITLE_REQ);
@@ -86,84 +101,94 @@ public class PortalService
 			instanceRaceReq = !player.havePermission(MembershipConfig.INSTANCES_RACE_REQ);
 			instanceQuestReq = !player.havePermission(MembershipConfig.INSTANCES_QUEST_REQ);
 			instanceGroupReq = !player.havePermission(MembershipConfig.INSTANCES_GROUP_REQ);
-			instanceItemReq = !player.havePermission(MembershipConfig.INSTANCES_ITEM_REQ);
-			instanceCooldownRate = InstanceService.getInstanceRate(player, loc.getWorldId());
 		}
+		
 		if (instanceRaceReq && !checkRace(player, portalPath.getRace()))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MOVE_PORTAL_ERROR_INVALID_RACE);
 			return;
 		}
+		
 		if (instanceGroupReq && !checkPlayerSize(player, portalPath, npcObjectId))
 		{
 			return;
 		}
-		final int siegeId = portalPath.getSiegeId();
-		if (instanceRaceReq && (siegeId != 0) && !checkSiegeId(player, siegeId))
+		
+		final int sigeId = portalPath.getSigeId();
+		if (instanceRaceReq && (sigeId != 0))
 		{
-			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MOVE_PORTAL_ERROR_INVALID_RACE);
-			return;
+			if (!checkSigeId(player, sigeId))
+			{
+				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MOVE_PORTAL_ERROR_INVALID_RACE);
+				return;
+			}
 		}
+		
 		final PortalReq portalReq = portalPath.getPortalReq();
 		if (portalReq != null)
 		{
-			if (instanceLevelReq && !checkEnterLevel(player, mapId, portalReq, npcObjectId))
+			if ((instanceLevelReq && !checkEnterLevel(player, mapId, portalReq, npcObjectId)) || (instanceQuestReq && !checkQuestsReq(player, npcObjectId, portalReq.getQuestReq())))
 			{
 				return;
 			}
-			if (instanceQuestReq && !checkQuestsReq(player, npcObjectId, portalReq.getQuestReq()))
-			{
-				return;
-			}
-			if (instanceItemReq && !checkItemReq(player, npcObjectId, portalReq.getItemReq()))
-			{
-				return;
-			}
+			
 			final int titleId = portalReq.getTitleId();
 			if (instanceTitleReq && (titleId != 0))
 			{
 				if (!checkTitle(player, titleId))
 				{
-					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_CANNOT_USE_DIRECT_PORTAL_NOT_TITLE);
+					PacketSendUtility.sendMessage(player, "You must have correct title.");
 					return;
 				}
 			}
+			
 			if (!checkKinah(player, portalReq.getKinahReq()))
 			{
 				return;
 			}
+			
+			if (SecurityConfig.INSTANCE_KEYCHECK && !checkItemReq(player, portalReq.getItemReq()))
+			{
+				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_INSTANCE_CANT_ENTER_WITHOUT_ITEM);
+				return;
+			}
 		}
+		
 		boolean reenter = false;
 		int useDelay = 0;
 		int instanceCooldown = 0;
+		
 		if (clt != null)
 		{
 			instanceCooldown = clt.getEntCoolTime();
+			useDelay = instanceCooldown;
 		}
-		if (instanceCooldownRate > 0)
-		{
-			useDelay = instanceCooldown / instanceCooldownRate;
-		}
+		
+		// if (instanceCooldownRate > 0) {
+		// useDelay = instanceCooldown / instanceCooldownRate;
+		// }
+		
 		WorldMapInstance instance = null;
 		if (player.getPortalCooldownList().isPortalUseDisabled(mapId) && (useDelay > 0))
 		{
 			switch (playerSize)
 			{
-				case 0:
-				{
+				case 0: // solo
 					instance = InstanceService.getRegisteredInstance(mapId, player.getObjectId());
 					break;
-				}
-				case 6:
-				{
+				case 3: // shugo tomb
 					if (player.getPlayerGroup2() != null)
 					{
 						instance = InstanceService.getRegisteredInstance(mapId, player.getPlayerGroup2().getTeamId());
 					}
 					break;
-				}
-				default:
-				{
+				case 6: // group
+					if (player.getPlayerGroup2() != null)
+					{
+						instance = InstanceService.getRegisteredInstance(mapId, player.getPlayerGroup2().getTeamId());
+					}
+					break;
+				default: // alliance
 					if (player.isInAlliance2())
 					{
 						if (player.isInLeague())
@@ -176,18 +201,14 @@ public class PortalService
 						}
 					}
 					break;
-				}
 			}
-			if (instance == null)
+			
+			if ((instance == null) || !instance.isRegistered(player.getObjectId()))
 			{
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_CANNOT_MAKE_INSTANCE_COOL_TIME);
 				return;
 			}
-			if (!instance.isRegistered(player.getObjectId()))
-			{
-				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_CANNOT_MAKE_INSTANCE_COOL_TIME);
-				return;
-			}
+			
 			reenter = true;
 			log.debug(player.getName() + "has been in intance and also have cd, can reenter.");
 		}
@@ -195,34 +216,45 @@ public class PortalService
 		{
 			log.debug(player.getName() + "doesn't have cd of this instance, can enter and will be registed to this intance");
 		}
+		
 		final PlayerGroup group = player.getPlayerGroup2();
 		switch (playerSize)
 		{
 			case 0:
-			{
+				// If there is a group (whatever group requirement exists or not)...
 				if ((group != null) && !instanceGroupReq)
 				{
 					instance = InstanceService.getRegisteredInstance(mapId, group.getTeamId());
-				}
+				} // But if there is no group, go to solo
 				else
 				{
 					instance = InstanceService.getRegisteredInstance(mapId, player.getObjectId());
 				}
+				
+				// No group instance, group on and default requirement off
 				if ((instance == null) && (group != null) && !instanceGroupReq)
 				{
+					// For each player from group
 					for (Player member : group.getMembers())
 					{
+						// Get his instance
 						instance = InstanceService.getRegisteredInstance(mapId, member.getObjectId());
+						
+						// If some player is soloing and I found no one else yet, I get his instance
 						if (instance != null)
 						{
 							break;
 						}
 					}
+					
+					// No solo instance found
 					if ((instance == null) && isInstance)
 					{
 						instance = registerGroup(group, mapId);
 					}
 				}
+				
+				// if already registered - just teleport
 				if (instance != null)
 				{
 					if (loc.getWorldId() != player.getWorldId())
@@ -232,50 +264,106 @@ public class PortalService
 						return;
 					}
 				}
+				
 				port(player, loc, reenter, isInstance);
 				break;
-			}
-			case 6:
-			{
+			case 3:
 				if ((group != null) || !instanceGroupReq)
 				{
+					// If there is a group (whatever group requirement exists or not)...
 					if (group != null)
 					{
 						instance = InstanceService.getRegisteredInstance(mapId, group.getTeamId());
-					}
+					} // But if there is no group (and solo is enabled, of course)
 					else
 					{
 						instance = InstanceService.getRegisteredInstance(mapId, player.getObjectId());
 					}
+					
+					// No instance (for group), group on and default requirement off
 					if ((instance == null) && (group != null) && !instanceGroupReq)
 					{
+						// For each player from group
 						for (Player member : group.getMembers())
 						{
+							// Get his instance
 							instance = InstanceService.getRegisteredInstance(mapId, member.getObjectId());
+							
+							// If some player is soloing and I found no one else yet, I get his instance
 							if (instance != null)
 							{
 								break;
 							}
 						}
+						
+						// No solo instance found
 						if (instance == null)
 						{
 							instance = registerGroup(group, mapId);
 						}
-					}
+						
+					} // No instance and default requirement on = Group on
 					else if ((instance == null) && instanceGroupReq)
 					{
 						instance = registerGroup(group, mapId);
-					}
+					} // No instance, default requirement off, no group = Register new instance with player ID
 					else if ((instance == null) && !instanceGroupReq && (group == null))
 					{
 						instance = InstanceService.getNextAvailableInstance(mapId);
 					}
+					
 					transfer(player, loc, instance, reenter);
 				}
 				break;
-			}
+			case 6:
+				if ((group != null) || !instanceGroupReq)
+				{
+					// If there is a group (whatever group requirement exists or not)...
+					if (group != null)
+					{
+						instance = InstanceService.getRegisteredInstance(mapId, group.getTeamId());
+					} // But if there is no group (and solo is enabled, of course)
+					else
+					{
+						instance = InstanceService.getRegisteredInstance(mapId, player.getObjectId());
+					}
+					
+					// No instance (for group), group on and default requirement off
+					if ((instance == null) && (group != null) && !instanceGroupReq)
+					{
+						// For each player from group
+						for (Player member : group.getMembers())
+						{
+							// Get his instance
+							instance = InstanceService.getRegisteredInstance(mapId, member.getObjectId());
+							
+							// If some player is soloing and I found no one else yet, I get his instance
+							if (instance != null)
+							{
+								break;
+							}
+						}
+						
+						// No solo instance found
+						if (instance == null)
+						{
+							instance = registerGroup(group, mapId);
+						}
+						
+					} // No instance and default requirement on = Group on
+					else if ((instance == null) && instanceGroupReq)
+					{
+						instance = registerGroup(group, mapId);
+					} // No instance, default requirement off, no group = Register new instance with player ID
+					else if ((instance == null) && !instanceGroupReq && (group == null))
+					{
+						instance = InstanceService.getNextAvailableInstance(mapId);
+					}
+					
+					transfer(player, loc, instance, reenter);
+				}
+				break;
 			default:
-			{
 				final PlayerAlliance allianceGroup = player.getPlayerAlliance2();
 				if ((allianceGroup != null) || !instanceGroupReq)
 				{
@@ -298,6 +386,7 @@ public class PortalService
 					{
 						instance = InstanceService.getRegisteredInstance(mapId, allianceId);
 					}
+					
 					if ((instance == null) && (allianceGroup != null) && !instanceGroupReq)
 					{
 						if (league != null)
@@ -325,6 +414,7 @@ public class PortalService
 								}
 							}
 						}
+						
 						if (instance == null)
 						{
 							if (league != null)
@@ -352,16 +442,24 @@ public class PortalService
 					{
 						instance = InstanceService.getNextAvailableInstance(mapId);
 					}
+					
 					if ((instance != null) && (instance.getPlayersInside().size() < playerSize))
 					{
 						transfer(player, loc, instance, reenter);
 					}
 				}
 				break;
-			}
 		}
 	}
 	
+	/**
+	 * Verifies if the {@code Player} has enough currency.<br>
+	 * This method attempts to deduct the specified amount of kinah from the player's inventory.<br>
+	 * If the deduction fails, it sends a system message and returns {@code false}.
+	 * @param player The {@code Player} who will pay the cost.
+	 * @param kinah The amount of currency to check and deduct.
+	 * @return {@code true} if the payment was successful, otherwise {@code false}.
+	 */
 	private static boolean checkKinah(Player player, int kinah)
 	{
 		final Storage inventory = player.getInventory();
@@ -370,12 +468,26 @@ public class PortalService
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_NOT_ENOUGH_KINA(kinah));
 			return false;
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Verifies if a {@link Player} meets the level requirements to enter a specific map.<br>
+	 * This method checks the player's level against the minimum and maximum levels defined in {@code portalReq}.<br>
+	 * It also handles special mentor restrictions for instance maps.<br>
+	 * If the requirements are not met, it sends an error message or dialog to the player.
+	 * @param player The {@link Player} attempting to enter the map.
+	 * @param mapId The unique identifier of the destination map.
+	 * @param portalReq The requirement object containing level limits and error codes.
+	 * @param npcObjectId The ID of the NPC associated with the portal.
+	 * @return {@code true} if the player can enter, or {@code false} otherwise.
+	 */
 	private static boolean checkEnterLevel(Player player, int mapId, PortalReq portalReq, int npcObjectId)
 	{
 		final int enterMinLvl = portalReq.getMinLevel();
+		final int enterMaxLvl = portalReq.getMaxLevel();
+		final int lvl = player.getLevel();
 		final InstanceCooltime instancecooltime = DataManager.INSTANCE_COOLTIME_DATA.getInstanceCooltimeByWorldId(mapId);
 		if ((instancecooltime != null) && player.isMentor())
 		{
@@ -385,7 +497,8 @@ public class PortalService
 				return false;
 			}
 		}
-		if (player.getLevel() < enterMinLvl)
+		
+		if ((lvl > enterMaxLvl) || (lvl < enterMinLvl))
 		{
 			final int errDialog = portalReq.getErrLevel();
 			if (errDialog != 0)
@@ -396,19 +509,31 @@ public class PortalService
 			{
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_CANT_INSTANCE_ENTER_LEVEL);
 			}
+			
 			return false;
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Verifies if the {@link Player} meets the group requirements for a specific portal.<br>
+	 * This method checks if the player belongs to the correct party, alliance, or league based on capacity.<br>
+	 * It sends an error message to the player if they do not meet the criteria.
+	 * @param player The {@link Player} attempting to enter the portal.
+	 * @param portalPath The {@link PortalPath} containing the entry requirements and current count.
+	 * @param npcObjectId The unique ID of the NPC associated with the portal.
+	 * @return {@code true} if the player is allowed to enter, otherwise {@code false}.
+	 */
 	private static boolean checkPlayerSize(Player player, PortalPath portalPath, int npcObjectId)
 	{
-		final int errDialog = portalPath.getErrGroup();
 		final int playerSize = portalPath.getPlayerCount();
-		if ((playerSize > 2) && (playerSize <= 6))
+		if (playerSize == 3)
 		{
+			// shugo tomb
 			if (!player.isInGroup2())
 			{
+				final int errDialog = portalPath.getErrGroup();
 				if (errDialog != 0)
 				{
 					PacketSendUtility.sendPacket(player, new SM_DIALOG_WINDOW(npcObjectId, errDialog));
@@ -417,62 +542,105 @@ public class PortalService
 				{
 					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_ENTER_ONLY_PARTY_DON);
 				}
+				
+				return false;
+			}
+		}
+		else if (playerSize == 6)
+		{
+			// group
+			if (!player.isInGroup2())
+			{
+				final int errDialog = portalPath.getErrGroup();
+				if (errDialog != 0)
+				{
+					PacketSendUtility.sendPacket(player, new SM_DIALOG_WINDOW(npcObjectId, errDialog));
+				}
+				else
+				{
+					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_ENTER_ONLY_PARTY_DON);
+				}
+				
 				return false;
 			}
 		}
 		else if ((playerSize > 6) && (playerSize <= 24))
 		{
+			// alliance
 			if (!player.isInAlliance2())
 			{
-				if (errDialog != 0)
-				{
-					PacketSendUtility.sendPacket(player, new SM_DIALOG_WINDOW(npcObjectId, errDialog));
-				}
-				else
-				{
-					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_ENTER_ONLY_FORCE_DON);
-				}
+				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_ENTER_ONLY_FORCE_DON);
 				return false;
 			}
 		}
 		else if (playerSize > 24)
 		{
+			// league
 			if (!player.isInLeague())
 			{
-				if (errDialog != 0)
-				{
-					PacketSendUtility.sendPacket(player, new SM_DIALOG_WINDOW(npcObjectId, errDialog));
-				}
-				else
-				{
-					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_ENTER_ONLY_UNION_DON);
-				}
+				PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1401251));
 				return false;
 			}
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if the {@code Player} is allowed to use a specific portal based on their race.<br>
+	 * It returns {@code true} if the player's race matches the required {@code Race}.<br>
+	 * It also returns {@code true} if the required race is set to {@code PC_ALL}.
+	 * @param player The {@code Player} attempting to use the portal.
+	 * @param portalRace The required {@code Race} for this specific portal.
+	 * @return {@code true} if the player's race is valid; {@code false} otherwise.
+	 */
 	private static boolean checkRace(Player player, Race portalRace)
 	{
 		return player.getRace().equals(portalRace) || portalRace.equals(Race.PC_ALL);
 	}
 	
-	private static boolean checkSiegeId(Player player, int siegeId)
+	/**
+	 * Verifies if a {@link Player} is allowed to enter a specific siege location.<br>
+	 * It checks if the player's race matches the required race of the fortress.
+	 * @param player The {@code Player} object to check.
+	 * @param sigeId The unique identifier for the siege location.
+	 * @return {@code true} if the player is allowed to enter, otherwise {@code false}.
+	 */
+	private static boolean checkSigeId(Player player, int sigeId)
 	{
-		final FortressLocation loc = SiegeService.getInstance().getFortress(siegeId);
-		if ((loc != null) && (loc.getRace().getRaceId() != player.getRace().getRaceId()))
+		final FortressLocation loc = SiegeService.getInstance().getFortress(sigeId);
+		if (loc != null)
 		{
-			return false;
+			if (loc.getRace().getRaceId() != player.getRace().getRaceId())
+			{
+				return false;
+			}
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Verifies if the {@code Player} possesses a specific title.<br>
+	 * This method compares the player's current title ID with the provided {@code titleId}.
+	 * @param player The {@link Player} object to check.
+	 * @param titleId The unique identifier of the title to verify.
+	 * @return {@code true} if the IDs match, otherwise {@code false}.
+	 */
 	private static boolean checkTitle(Player player, int titleId)
 	{
 		return player.getCommonData().getTitleId() == titleId;
 	}
 	
+	/**
+	 * Verifies if a {@link Player} meets specific quest requirements.<br>
+	 * It checks the current progress of quests provided in the list.<br>
+	 * If requirements are not met, it sends an error message or dialog.
+	 * @param player The {@link Player} to check.
+	 * @param npcObjectId The ID of the NPC associated with the requirement.
+	 * @param questReq A list of {@link QuestReq} objects to validate.
+	 * @return {@code true} if all requirements are met, otherwise {@code false}.
+	 */
 	private static boolean checkQuestsReq(Player player, int npcObjectId, List<QuestReq> questReq)
 	{
 		if (questReq != null)
@@ -491,16 +659,27 @@ public class PortalService
 					}
 					else
 					{
-						PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_CANNOT_MOVE_TO_AIRPORT_NEED_FINISH_QUEST);
+						PacketSendUtility.sendMessage(player, "You must complete the entrance quest.");
 					}
+					
 					return false;
 				}
 			}
 		}
+		
 		return true;
 	}
 	
-	private static boolean checkItemReq(Player player, int npcObjectId, List<ItemReq> itemReq)
+	/**
+	 * Verifies if the {@code player} has enough items to meet the requirements.<br>
+	 * This method checks the inventory for each {@code ItemReq} in the list.<br>
+	 * If all items are present, it subtracts them from the inventory and returns {@code true}.<br>
+	 * It returns {@code false} if any required item is missing or insufficient.
+	 * @param player The {@link Player} whose inventory will be checked.
+	 * @param itemReq A list of {@link ItemReq} objects defining the needed items.
+	 * @return {@code true} if requirements are met and items are consumed, otherwise {@code false}.
+	 */
+	private static boolean checkItemReq(Player player, List<ItemReq> itemReq)
 	{
 		if (itemReq != null)
 		{
@@ -509,29 +688,31 @@ public class PortalService
 			{
 				if (inventory.getItemCountByItemId(item.getItemId()) < item.getItemCount())
 				{
-					final int errDialog = item.getErrItem();
-					if (errDialog != 0)
-					{
-						PacketSendUtility.sendPacket(player, new SM_DIALOG_WINDOW(npcObjectId, errDialog));
-					}
-					else
-					{
-						PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_INSTANCE_CANT_ENTER_WITHOUT_ITEM_TRY_LATER);
-					}
 					return false;
 				}
 			}
+			
 			for (ItemReq item : itemReq)
 			{
 				inventory.decreaseByItemId(item.getItemId(), item.getItemCount());
 			}
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Handles the teleportation logic for a player through a portal.<br>
+	 * It determines whether to use an instance-based transfer or a standard world transfer.
+	 * @param requester The {@link Player} who is initiating the teleport.
+	 * @param loc The {@link PortalLoc} destination of the portal.
+	 * @param reenter Determines if the player should be allowed to re-enter the location.
+	 * @param isInstance Specifies whether the target location is an instance map.
+	 */
 	private static void port(Player requester, PortalLoc loc, boolean reenter, boolean isInstance)
 	{
 		WorldMapInstance instance = null;
+		
 		if (isInstance)
 		{
 			instance = InstanceService.getNextAvailableInstance(loc.getWorldId(), requester.getObjectId());
@@ -540,10 +721,21 @@ public class PortalService
 		}
 		else
 		{
+			/*
+			 * WorldMap worldMap = World.getInstance().getWorldMap(worldId); if (worldMap == null) { log.warn("There is no registered map with id " + worldId); return; } instance = worldMap.getWorldMapInstance();
+			 */
 			easyTransfer(requester, loc);
 		}
 	}
 	
+	/**
+	 * Registers a {@link PlayerGroup} to a new world map instance.<br>
+	 * This method finds the next available instance for the given {@code mapId}.<br>
+	 * It then links the group to that instance using {@link InstanceService}.
+	 * @param group The {@link PlayerGroup} to be registered.
+	 * @param mapId The unique identifier of the map type.
+	 * @return The {@link WorldMapInstance} created for this group.
+	 */
 	private static WorldMapInstance registerGroup(PlayerGroup group, int mapId)
 	{
 		final WorldMapInstance instance = InstanceService.getNextAvailableInstance(mapId);
@@ -551,6 +743,14 @@ public class PortalService
 		return instance;
 	}
 	
+	/**
+	 * Registers a {@link PlayerAlliance} to a new world map instance.<br>
+	 * This method finds the next available instance for the given {@code mapId}.<br>
+	 * It then links the alliance group to that specific instance.
+	 * @param group The {@link PlayerAlliance} to be registered.
+	 * @param mapId The unique identifier of the map type.
+	 * @return The {@link WorldMapInstance} created for this registration.
+	 */
 	private static WorldMapInstance registerAlliance(PlayerAlliance group, int mapId)
 	{
 		final WorldMapInstance instance = InstanceService.getNextAvailableInstance(mapId);
@@ -558,6 +758,14 @@ public class PortalService
 		return instance;
 	}
 	
+	/**
+	 * Registers a {@link League} with a new world map instance.<br>
+	 * This method retrieves the next available instance for the given {@code mapId}.<br>
+	 * It then links the league group to that specific instance.
+	 * @param group The {@link League} group to register.
+	 * @param mapId The unique identifier of the map.
+	 * @return The registered {@link WorldMapInstance}.
+	 */
 	private static WorldMapInstance registerLeague(League group, int mapId)
 	{
 		final WorldMapInstance instance = InstanceService.getNextAvailableInstance(mapId);
@@ -565,11 +773,21 @@ public class PortalService
 		return instance;
 	}
 	
+	/**
+	 * Moves a {@link Player} to a specific location within an instance.<br>
+	 * This method handles registration, teleportation, and cooldown logic.<br>
+	 * It also removes group memberships for specific world IDs.
+	 * @param player The {@link Player} object to be moved.
+	 * @param loc The {@link PortalLoc} containing the destination coordinates and world ID.
+	 * @param instance The {@link WorldMapInstance} where the player will enter.
+	 * @param reenter A boolean flag indicating if the player is re-entering the same location.
+	 */
 	private static void transfer(Player player, PortalLoc loc, WorldMapInstance instance, boolean reenter)
 	{
 		player.setInstanceStartPos(loc.getX(), loc.getY(), loc.getZ());
 		InstanceService.registerPlayerWithInstance(instance, player);
-		TeleportService2.teleportTo(player, loc.getWorldId(), instance.getInstanceId(), loc.getX(), loc.getY(), loc.getZ(), loc.getH(), TeleportAnimation.FIRE_ANIMATION);
+		TeleportService2.teleportTo(player, loc.getWorldId(), instance.getInstanceId(), loc.getX(), loc.getY(), loc.getZ(), loc.getH(), TeleportAnimation.BEAM_ANIMATION);
+		
 		if (!reenter)
 		{
 			if (player.getPortalCooldownList().getPortalCooldownItem(loc.getWorldId()) == null)
@@ -579,14 +797,45 @@ public class PortalService
 			else
 			{
 				player.getPortalCooldownList().addEntry(loc.getWorldId());
-				// You have successfully entered the area, consuming one of your permitted entries.
 				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_INSTANCE_DUNGEON_COUNT_USE);
+			}
+		}
+		
+		switch (loc.getWorldId())
+		{
+			case 300190000:
+			case 300200000:
+			case 300230000:
+			case 300240000:
+			case 300320000:
+			case 300460000:
+			case 300480000:
+			case 300610000:
+			case 301270000:
+			case 301510000:
+			case 301630000:
+			case 301640000:
+			case 302100000:
+			case 302330000:
+			case 302400000:
+			{
+				PlayerGroupService.removePlayer(player);
+				PlayerAllianceService.removePlayer(player);
+				PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1401718));
+				break;
 			}
 		}
 	}
 	
+	/**
+	 * Moves a player to a specific portal location.<br>
+	 * This method uses {@code teleportTo} to perform the move.<br>
+	 * It applies the {@code BEAM_ANIMATION} during the teleport.
+	 * @param player The {@code Player} object to be moved.
+	 * @param loc The {@code PortalLoc} destination for the teleport.
+	 */
 	private static void easyTransfer(Player player, PortalLoc loc)
 	{
-		TeleportService2.teleportTo(player, loc.getWorldId(), loc.getX(), loc.getY(), loc.getZ(), loc.getH(), TeleportAnimation.FIRE_ANIMATION);
+		TeleportService2.teleportTo(player, loc.getWorldId(), loc.getX(), loc.getY(), loc.getZ(), loc.getH(), TeleportAnimation.BEAM_ANIMATION);
 	}
 }

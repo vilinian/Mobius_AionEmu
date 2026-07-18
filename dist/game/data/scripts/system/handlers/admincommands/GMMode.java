@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -24,15 +24,28 @@ import com.aionemu.gameserver.utils.audit.GMService;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 
 /**
+ * Handles the logic for toggling and managing Game Master (GM) modes.<br>
+ * This class allows administrators to enable special privileges for {@link Player} objects.<br>
+ * It extends {@link AdminCommand} to provide command-based access to these features.
  * @author Eloann
  */
 public class GMMode extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link GMMode} class.<br>
+	 * This constructor sets up the default command name for the admin system.
+	 */
 	public GMMode()
 	{
 		super("gm");
 	}
 	
+	/**
+	 * Toggles the GM mode for the administrator.<br>
+	 * Use {@code on} to enable it or {@code off} to disable it.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings where the first element must be either {@code on} or {@code off}.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
@@ -42,7 +55,7 @@ public class GMMode extends AdminCommand
 			return;
 		}
 		
-		if (params.length != 2)
+		if (params.length != 1)
 		{
 			onFail(admin, null);
 			return;
@@ -50,74 +63,58 @@ public class GMMode extends AdminCommand
 		
 		if (params[0].toLowerCase().equals("on"))
 		{
-			if (params[1].equals("y"))
-			{
-				GMService.getInstance().onPlayerAvailable(admin); // send available message
-				admin.setWispable();
-			}
-			else if (params[1].toLowerCase().equals("n"))
-			{
-				PacketSendUtility.sendMessage(admin, "You are Back Online");
-				admin.setWispable();
-			}
-			else
-			{
-				admin.setWispable();
-				PacketSendUtility.sendMessage(admin, "You are Back Online with GM Tag");
-			}
-			
 			if (!admin.isGmMode())
 			{
 				admin.setGmMode(true);
+				admin.setWispable();
 				
-				GMService.getInstance().onPlayerLogin(admin); // put gm into gmlist
+				GMService.getInstance().onPlayerLogin(admin); // put gm into
 				
+				// gmlist
+				GMService.getInstance().onPlayerAvailable(admin); // send
+				
+				// The message is available.
 				admin.clearKnownlist();
 				PacketSendUtility.sendPacket(admin, new SM_PLAYER_INFO(admin, false));
 				PacketSendUtility.sendPacket(admin, new SM_MOTION(admin.getObjectId(), admin.getMotions().getActiveMotions()));
 				admin.updateKnownlist();
 				PacketSendUtility.sendMessage(admin, "you are now Available and Wispable by players");
+				
 			}
 		}
-		if (params[0].equals("off"))
+		
+		if (params[0].toLowerCase().equals("off"))
 		{
-			if (params[1].toLowerCase().equals("y"))
-			{
-				GMService.getInstance().onPlayerUnavailable(admin); // send unavailable message
-				GMService.getInstance().onPlayerLogedOut(admin); // remove gm into gmlist
-			}
-			else if (params[1].toLowerCase().equals("n"))
-			{
-				PacketSendUtility.sendMessage(admin, "You are in Offline Status");
-				PacketSendUtility.sendMessage(admin, "you are now Unavailable but can be Whisperable by players");
-			}
-			else
-			{
-				PacketSendUtility.sendMessage(admin, "You are Offline without GM Tag, But people can Whisper you.");
-			}
 			if (admin.isGmMode())
 			{
 				admin.setGmMode(false);
+				admin.setUnWispable();
 				
+				GMService.getInstance().onPlayerLogedOut(admin); // remove gm
+				
+				// Add to the GMList.
+				GMService.getInstance().onPlayerUnavailable(admin); // send
+				
+				// The message is unavailable.
 				admin.clearKnownlist();
 				PacketSendUtility.sendPacket(admin, new SM_PLAYER_INFO(admin, false));
 				PacketSendUtility.sendPacket(admin, new SM_MOTION(admin.getObjectId(), admin.getMotions().getActiveMotions()));
 				admin.updateKnownlist();
-				PacketSendUtility.sendMessage(admin, "You are unavailable to players now.");
+				PacketSendUtility.sendMessage(admin, "you are now Unavailable and Unwispable by players");
 			}
-		}
-		if (params[0].equalsIgnoreCase("detector"))
-		{
-			// if (params[1].equalsIgnoreCase("on")){
-			// admin.
-			// }
 		}
 	}
 	
+	/**
+	 * This method is called when an {@code execute} command fails.<br>
+	 * It sends a failure notification to the administrator.
+	 * @param admin The {@code Player} who attempted the command.
+	 * @param message The error message to display.
+	 */
 	@Override
 	public void onFail(Player admin, String message)
 	{
-		final String syntax = "syntax //gm <on|off> <y/n>\n y = You want to announce the players, that you are On\nAlso your Whisperable state changes to 'Whisperable'\n n = You don't want to announce the players, + You 'Whisperable' State goes Off";
+		final String syntax = "syntax //gm <on|off>";
 		PacketSendUtility.sendMessage(admin, syntax);
 	}
 }

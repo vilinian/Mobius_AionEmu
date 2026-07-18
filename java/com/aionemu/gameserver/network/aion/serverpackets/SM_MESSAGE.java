@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -24,7 +24,8 @@ import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 
 /**
- * Massage [chat, etc]
+ * This packet handles the transmission of chat messages and other related text communications.<br>
+ * It is used to send information from the server to the client regarding player interactions.
  * @author -Nemesiss-, Sweetkr
  */
 public class SM_MESSAGE extends AionServerPacket
@@ -37,27 +38,22 @@ public class SM_MESSAGE extends AionServerPacket
 	 * Object that is saying smth or null.
 	 */
 	private final int senderObjectId;
-	
 	/**
 	 * Message.
 	 */
 	private final String message;
-	
 	/**
 	 * Name of the sender
 	 */
 	private final String senderName;
-	
 	/**
 	 * Sender race
 	 */
 	private Race race;
-	
 	/**
 	 * Chat type
 	 */
 	private final ChatType chatType;
-	
 	/**
 	 * Sender coordinates
 	 */
@@ -66,10 +62,12 @@ public class SM_MESSAGE extends AionServerPacket
 	private float z;
 	
 	/**
-	 * Constructs new <tt>SM_MESSAGE </tt> packet
-	 * @param player who sent message
-	 * @param message actual message
-	 * @param chatType what chat type should be used
+	 * Creates a new {@code SM_MESSAGE} packet.<br>
+	 * This constructor initializes the message with data from a {@link Player}.<br>
+	 * It sets the sender details and coordinates automatically.
+	 * @param player The {@code Player} who is sending the message.
+	 * @param message The text content of the message.
+	 * @param chatType The category of the chat message.
 	 */
 	public SM_MESSAGE(Player player, String message, ChatType chatType)
 	{
@@ -85,11 +83,13 @@ public class SM_MESSAGE extends AionServerPacket
 	}
 	
 	/**
-	 * Manual creation of chat message.<br>
-	 * @param senderObjectId - can be 0 if system message(like announcements)
-	 * @param senderName - used for shout ATM, can be null in other cases
-	 * @param message - actual text
-	 * @param chatType type of chat, Normal, Shout, Announcements, Etc...
+	 * Creates a new {@code SM_MESSAGE} packet.<br>
+	 * This constructor initializes the message with specific sender details.<br>
+	 * It is used to send chat or other system messages to players.
+	 * @param senderObjectId The unique ID of the object sending the message.
+	 * @param senderName The display name of the sender.
+	 * @param message The actual text content of the message.
+	 * @param chatType The category of the chat, such as global or local.
 	 */
 	public SM_MESSAGE(int senderObjectId, String senderName, String message, ChatType chatType)
 	{
@@ -99,9 +99,6 @@ public class SM_MESSAGE extends AionServerPacket
 		this.chatType = chatType;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void writeImpl(AionConnection con)
 	{
@@ -123,27 +120,23 @@ public class SM_MESSAGE extends AionServerPacket
 		switch (chatType)
 		{
 			case NORMAL:
-			case GOLDEN_YELLOW:
 			case WHITE:
 			case YELLOW:
 			case BRIGHT_YELLOW:
 			case WHITE_CENTER:
 			case YELLOW_CENTER:
 			case BRIGHT_YELLOW_CENTER:
-			{
+			case BRIGHT_YELLOW_CENTER_NEW:
 				writeH(0x00); // unknown
 				writeS(message);
 				break;
-			}
 			case SHOUT:
-			{
 				writeS(senderName);
 				writeS(message);
 				writeF(x);
 				writeF(y);
 				writeF(z);
 				break;
-			}
 			case ALLIANCE:
 			case GROUP:
 			case GROUP_LEADER:
@@ -162,11 +155,13 @@ public class SM_MESSAGE extends AionServerPacket
 			case CH9:
 			case CH10:
 			case COMMAND:
-			{
+			case UNION_WAR:
+			case GMRESPONSE:
 				writeS(senderName);
 				writeS(message);
 				break;
-			}
+			default:
+				break;
 		}
 	}
 }

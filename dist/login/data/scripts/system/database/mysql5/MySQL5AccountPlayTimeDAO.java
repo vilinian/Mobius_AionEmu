@@ -1,44 +1,59 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
-package system.database.mysql5;
+ 
+ 
+package mysql5;
 
 import com.aionemu.commons.database.DB;
 import com.aionemu.loginserver.dao.AccountPlayTimeDAO;
 import com.aionemu.loginserver.model.AccountTime;
 
 /**
+ * This class provides the {@code MySQL5} specific implementation for handling account play time data.<br>
+ * It extends {@link AccountPlayTimeDAO} to perform database operations using a {@code MySQL5} compatible driver.
  * @author Antraxx
  */
-public class MySQL5AccountPlayTimeDAO extends AccountPlayTimeDAO
-{
-	@Override
-	public boolean update(Integer accountId, AccountTime accountTime)
-	{
-		String sql = "INSERT INTO account_playtime (`account_id`,`accumulated_online`) VALUES (" + accountId + ", " + accountTime.getAccumulatedOnlineTime() + ") " + "ON DUPLICATE KEY UPDATE `accumulated_online` = `accumulated_online` + " + accountTime.getAccumulatedOnlineTime();
-		return DB.insertUpdate(sql);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean supports(String database, int majorVersion, int minorVersion)
-	{
-		return MySQL5DAOUtils.supports(database, majorVersion, minorVersion);
-	}
-	
+public class MySQL5AccountPlayTimeDAO extends AccountPlayTimeDAO {
+
+    /**
+     * Updates the accumulated online time for a specific account.<br>
+     * It adds the new time to the existing value in the database.
+     * @param accountId The unique identifier of the account.
+     * @param accountTime The object containing the time to be added.
+     * @return {@code true} if the update was successful, otherwise {@code false}.
+     */
+    @Override
+    public boolean update(Integer accountId, AccountTime accountTime) {
+        String sql = "INSERT INTO account_playtime (`account_id`,`accumulated_online`) VALUES (" + accountId + ", " + accountTime.getAccumulatedOnlineTime() + ") "
+                + "ON DUPLICATE KEY UPDATE `accumulated_online` = `accumulated_online` + " + accountTime.getAccumulatedOnlineTime();
+        return DB.insertUpdate(sql);
+    }
+
+    /**
+     * Checks if the current system supports a specific database version.<br>
+     * It uses {@code int, int)} to verify compatibility.
+     * @param database The name of the database to check.
+     * @param majorVersion The major version number of the database.
+     * @param minorVersion The minor version number of the database.
+     * @return {@code true} if the database is supported, otherwise {@code false}.
+     */
+    @Override
+    public boolean supports(String database, int majorVersion, int minorVersion) {
+        return MySQL5DAOUtils.supports(database, majorVersion, minorVersion);
+    }
+
 }

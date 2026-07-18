@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.event;
 
@@ -30,6 +30,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 /**
+ * This class represents a collection of {@code EventQuest} objects.<br>
+ * It serves as a data model for managing multiple event quests within the game server.
  * @author Rolandas
  */
 @XmlType(name = "EventQuestList", propOrder =
@@ -41,15 +43,19 @@ import javax.xml.bind.annotation.XmlType;
 public class EventQuestList
 {
 	protected String startable;
-	
 	protected String maintainable;
-	
 	@XmlTransient
 	private List<Integer> startQuests;
-	
 	@XmlTransient
 	private List<Integer> maintainQuests;
 	
+	/**
+	 * This method is called after the XML data has been unmarshalled.<br>
+	 * It populates the {@code startQuests} and {@code maintainQuests} lists.<br>
+	 * The values are parsed from the {@code startable} and {@code maintainable} strings.
+	 * @param u The {@link Unmarshaller} used to read the data.
+	 * @param parent The parent object of the current element.
+	 */
 	void afterUnmarshal(Unmarshaller u, Object parent)
 	{
 		if (startable != null)
@@ -63,6 +69,13 @@ public class EventQuestList
 		}
 	}
 	
+	/**
+	 * Parses a string of quest IDs into a list.<br>
+	 * The input string should contain IDs separated by semicolons.<br>
+	 * This method returns an empty {@code List<Integer>} if the data is empty.
+	 * @param data A semicolon-separated string of quest IDs.
+	 * @return A {@code List<Integer>} containing the parsed quest IDs.
+	 */
 	List<Integer> getQuestsFromData(String data)
 	{
 		final Set<String> q = new HashSet<>();
@@ -83,7 +96,9 @@ public class EventQuestList
 	}
 	
 	/**
-	 * @return the startQuests (automatically started on logon)
+	 * Retrieves the list of quests that can be started.<br>
+	 * This method ensures the internal {@code startQuests} list is initialized.
+	 * @return a {@code List<Integer>} containing the IDs of all startable quests.
 	 */
 	public List<Integer> getStartableQuests()
 	{
@@ -91,11 +106,14 @@ public class EventQuestList
 		{
 			startQuests = new ArrayList<>();
 		}
+		
 		return startQuests;
 	}
 	
 	/**
-	 * @return the maintainQuests (started indirectly from other quests)
+	 * Retrieves the list of quests that can be maintained.<br>
+	 * This method ensures the {@code maintainQuests} list is initialized.
+	 * @return a {@code List<Integer>} containing the IDs of maintainable quests.
 	 */
 	public List<Integer> getMaintainQuests()
 	{
@@ -103,6 +121,7 @@ public class EventQuestList
 		{
 			maintainQuests = new ArrayList<>();
 		}
+		
 		return maintainQuests;
 	}
 }

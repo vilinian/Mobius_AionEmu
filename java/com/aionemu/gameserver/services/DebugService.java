@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services;
 
@@ -27,28 +27,45 @@ import com.aionemu.gameserver.utils.ThreadPoolManager;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * Provides utility methods for debugging the game server environment.<br>
+ * It allows developers to inspect and manipulate various game states and objects.<br>
+ * This service is primarily used during development and testing phases.
  * @author ATracer
  */
 public class DebugService
 {
 	private static final Logger log = LoggerFactory.getLogger(DebugService.class);
-	
 	private static final int ANALYZE_PLAYERS_INTERVAL = 30 * 60 * 1000;
 	
+	/**
+	 * Provides access to the global instance of {@link DebugService}.<br>
+	 * This method follows the singleton pattern.
+	 * @return The single shared instance of {@code DebugService}.
+	 */
 	public static DebugService getInstance()
 	{
 		return SingletonHolder.instance;
 	}
 	
+	/**
+	 * Private constructor for the {@link DebugService} class.<br>
+	 * This prevents other classes from creating new instances of this service.<br>
+	 * It initializes the background task to call {@code analyzeWorldPlayers} at a fixed interval.
+	 */
 	private DebugService()
 	{
 		ThreadPoolManager.getInstance().scheduleAtFixedRate(() -> analyzeWorldPlayers(), ANALYZE_PLAYERS_INTERVAL, ANALYZE_PLAYERS_INTERVAL);
-		log.info("DebugService started. Analyze iterval: " + ANALYZE_PLAYERS_INTERVAL);
+		log.info("[DebugService] started... Analyze iterval: every " + ((ANALYZE_PLAYERS_INTERVAL / 1000) / 60) + " minutes.");
 	}
 	
-	void analyzeWorldPlayers()
+	/**
+	 * Scans all active players in the world.<br>
+	 * Checks for missing connections or high ping intervals.<br>
+	 * Logs warnings to the debug logger for any issues found.
+	 */
+	private void analyzeWorldPlayers()
 	{
-		log.info("Starting analysis of world players at " + System.currentTimeMillis());
+		log.debug("[DebugService] Starting analysis of world players at " + System.currentTimeMillis());
 		
 		final Iterator<Player> playersIterator = World.getInstance().getPlayersIterator();
 		while (playersIterator.hasNext())
@@ -77,7 +94,6 @@ public class DebugService
 		}
 	}
 	
-	@SuppressWarnings("synthetic-access")
 	private static class SingletonHolder
 	{
 		protected static final DebugService instance = new DebugService();

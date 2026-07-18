@@ -1,42 +1,29 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.math;
 
-import com.aionemu.gameserver.configs.main.GeoDataConfig;
-
-import javolution.context.ObjectFactory;
-import javolution.lang.Reusable;
-
 /**
- * <code>Triangle</code> defines a object for containing triangle information. The triangle is defined by a collection of three <code>Vector3f</code> objects.
+ * Represents a geometric triangle in 3D space.<br>
+ * This class stores the information for a triangle defined by three {@link Vector3f} objects.
  * @author Mark Powell
  * @author Joshua Slack
  */
-public class Triangle extends AbstractTriangle implements Reusable
+public class Triangle extends AbstractTriangle
 {
-	@SuppressWarnings("rawtypes")
-	private static final ObjectFactory FACTORY = new ObjectFactory()
-	{
-		@Override
-		public Object create()
-		{
-			return new Triangle();
-		}
-	};
 	private Vector3f pointa = new Vector3f();
 	private Vector3f pointb = new Vector3f();
 	private Vector3f pointc = new Vector3f();
@@ -45,15 +32,20 @@ public class Triangle extends AbstractTriangle implements Reusable
 	private float projection;
 	private int index;
 	
+	/**
+	 * Creates a new instance of the {@link Triangle} class.<br>
+	 * This constructor initializes a default triangle with empty coordinates.
+	 */
 	public Triangle()
 	{
 	}
 	
 	/**
-	 * Constructor instantiates a new <Code>Triangle</code> object with the supplied vectors as the points. It is recommended that the vertices be supplied in a counter clockwise winding to support normals for a right handed coordinate system.
-	 * @param p1 the first point of the triangle.
-	 * @param p2 the second point of the triangle.
-	 * @param p3 the third point of the triangle.
+	 * Creates a new {@link Triangle} using three specific points.<br>
+	 * This constructor initializes the internal vertices of the triangle.
+	 * @param p1 The first vertex of the triangle as a {@code Vector3f}.
+	 * @param p2 The second vertex of the triangle as a {@code Vector3f}.
+	 * @param p3 The third vertex of the triangle as a {@code Vector3f}.
 	 */
 	public Triangle(Vector3f p1, Vector3f p2, Vector3f p3)
 	{
@@ -63,45 +55,53 @@ public class Triangle extends AbstractTriangle implements Reusable
 	}
 	
 	/**
-	 * <code>get</code> retrieves a point on the triangle denoted by the index supplied.
-	 * @param i the index of the point.
-	 * @return the point.
+	 * Retrieves a specific vertex of the triangle.<br>
+	 * The index corresponds to the points defined in this class.
+	 * @param i The index of the point to retrieve. Use {@code 0}, {@code 1}, or {@code 2}.
+	 * @return The {@link Vector3f} at the specified index, or {@code null} if the index is invalid.
 	 */
 	public Vector3f get(int i)
 	{
 		switch (i)
 		{
 			case 0:
-			{
 				return pointa;
-			}
 			case 1:
-			{
 				return pointb;
-			}
 			case 2:
-			{
 				return pointc;
-			}
 			default:
-			{
 				return null;
-			}
 		}
 	}
 	
+	/**
+	 * Retrieves the first vertex of this triangle.<br>
+	 * This returns the {@code pointa} coordinate.
+	 * @return the {@link Vector3f} representing the first point.
+	 */
 	@Override
 	public Vector3f get1()
 	{
 		return pointa;
 	}
 	
+	/**
+	 * Retrieves the second vertex of this triangle.<br>
+	 * This method returns the {@code Vector3f} object stored in {@code pointb}.
+	 * @return The second vertex as a {@link Vector3f}.
+	 */
 	@Override
 	public Vector3f get2()
 	{
 		return pointb;
 	}
 	
+	/**
+	 * Retrieves the third vertex of this triangle.<br>
+	 * This method returns the {@code Vector3f} object stored in {@code pointc}.
+	 * @return The third vertex as a {@link Vector3f}.
+	 */
 	@Override
 	public Vector3f get3()
 	{
@@ -109,76 +109,88 @@ public class Triangle extends AbstractTriangle implements Reusable
 	}
 	
 	/**
-	 * <code>set</code> sets one of the triangles points to that specified as a parameter.
-	 * @param i the index to place the point.
-	 * @param point the point to set.
+	 * Updates a specific vertex of the triangle.<br>
+	 * This method replaces one of the three points based on the provided index.
+	 * @param i The index of the point to update. It must be 0, 1, or 2.
+	 * @param point The new {@code Vector3f} value for the selected vertex.
 	 */
 	public void set(int i, Vector3f point)
 	{
 		switch (i)
 		{
 			case 0:
-			{
 				pointa.set(point);
 				break;
-			}
 			case 1:
-			{
 				pointb.set(point);
 				break;
-			}
 			case 2:
-			{
 				pointc.set(point);
 				break;
-			}
 		}
 	}
 	
 	/**
-	 * <code>set</code> sets one of the triangles points to that specified as a parameter.
-	 * @param i the index to place the point.
-	 * @param x
-	 * @param y
-	 * @param z
+	 * Updates the coordinates of a specific vertex in this triangle.<br>
+	 * The method sets the {@code x}, {@code y}, and {@code z} values for one of the three points.
+	 * @param i The index of the point to update. Must be 0, 1, or 2.
+	 * @param x The new x-coordinate.
+	 * @param y The new y-coordinate.
+	 * @param z The new z-coordinate.
 	 */
 	public void set(int i, float x, float y, float z)
 	{
 		switch (i)
 		{
 			case 0:
-			{
 				pointa.set(x, y, z);
 				break;
-			}
 			case 1:
-			{
 				pointb.set(x, y, z);
 				break;
-			}
 			case 2:
-			{
 				pointc.set(x, y, z);
 				break;
-			}
 		}
 	}
 	
+	/**
+	 * Sets the first point of this triangle.<br>
+	 * This method updates {@code pointa} using the provided value.
+	 * @param v The {@code Vector3f} to set as the first point.
+	 */
 	public void set1(Vector3f v)
 	{
 		pointa.set(v);
 	}
 	
+	/**
+	 * Sets the second point of the triangle.<br>
+	 * This method updates {@code pointb} using the provided {@code Vector3f}.
+	 * @param v The new position for the second vertex.
+	 */
 	public void set2(Vector3f v)
 	{
 		pointb.set(v);
 	}
 	
+	/**
+	 * Sets the third point of the triangle.<br>
+	 * This method updates {@code pointc} using the provided {@code Vector3f}.
+	 * @param v The new coordinates for the third vertex.
+	 */
 	public void set3(Vector3f v)
 	{
 		pointc.set(v);
 	}
 	
+	/**
+	 * Sets the three vertices of this triangle.<br>
+	 * This method updates {@code pointa}, {@code pointb}, and {@code pointc}.
+	 * @param v1 The first vertex position.
+	 * @param v2 The second vertex position.
+	 * @param v3 The third vertex position.
+	 */
 	@Override
 	public void set(Vector3f v1, Vector3f v2, Vector3f v3)
 	{
@@ -188,7 +200,9 @@ public class Triangle extends AbstractTriangle implements Reusable
 	}
 	
 	/**
-	 * calculateCenter finds the average point of the triangle.
+	 * Calculates the center point of this {@code Triangle}.<br>
+	 * It uses the three vertices to find the average position.<br>
+	 * The result is stored in the internal {@code center} field.
 	 */
 	public void calculateCenter()
 	{
@@ -200,11 +214,14 @@ public class Triangle extends AbstractTriangle implements Reusable
 		{
 			center.set(pointa);
 		}
+		
 		center.addLocal(pointb).addLocal(pointc).multLocal(FastMath.ONE_THIRD);
 	}
 	
 	/**
-	 * calculateCenter finds the average point of the triangle.
+	 * Calculates the surface normal of this triangle.<br>
+	 * This method updates the {@code normal} field based on the current vertices.<br>
+	 * It uses a cross product calculation to determine the direction.
 	 */
 	public void calculateNormal()
 	{
@@ -216,13 +233,15 @@ public class Triangle extends AbstractTriangle implements Reusable
 		{
 			normal.set(pointb);
 		}
+		
 		normal.subtractLocal(pointa).crossLocal(pointc.x - pointa.x, pointc.y - pointa.y, pointc.z - pointa.z);
 		normal.normalizeLocal();
 	}
 	
 	/**
-	 * obtains the center point of this triangle (average of the three triangles)
-	 * @return the center point.
+	 * Gets the center point of this triangle.<br>
+	 * If the center has not been calculated yet, it calls {@code calculateCenter}.
+	 * @return The center position as a {@link Vector3f}.
 	 */
 	public Vector3f getCenter()
 	{
@@ -230,12 +249,14 @@ public class Triangle extends AbstractTriangle implements Reusable
 		{
 			calculateCenter();
 		}
+		
 		return center;
 	}
 	
 	/**
-	 * sets the center point of this triangle (average of the three triangles)
-	 * @param center the center point.
+	 * Sets the center point of this {@link Triangle}.<br>
+	 * This method updates the internal {@code center} field.
+	 * @param center The new {@code Vector3f} to use as the center.
 	 */
 	public void setCenter(Vector3f center)
 	{
@@ -243,8 +264,9 @@ public class Triangle extends AbstractTriangle implements Reusable
 	}
 	
 	/**
-	 * obtains the unit length normal vector of this triangle, if set or calculated
-	 * @return the normal vector
+	 * Retrieves the surface normal of this triangle.<br>
+	 * If the {@code normal} is {@code null}, it calls {@code calculateNormal} to compute it first.
+	 * @return The {@code Vector3f} representing the unit normal.
 	 */
 	public Vector3f getNormal()
 	{
@@ -252,12 +274,14 @@ public class Triangle extends AbstractTriangle implements Reusable
 		{
 			calculateNormal();
 		}
+		
 		return normal;
 	}
 	
 	/**
-	 * sets the normal vector of this triangle (to conform, must be unit length)
-	 * @param normal the normal vector.
+	 * Sets the normal vector for this {@link Triangle}.<br>
+	 * This updates the internal orientation of the triangle.
+	 * @param normal The {@code Vector3f} representing the direction perpendicular to the surface.
 	 */
 	public void setNormal(Vector3f normal)
 	{
@@ -265,8 +289,9 @@ public class Triangle extends AbstractTriangle implements Reusable
 	}
 	
 	/**
-	 * obtains the projection of the vertices relative to the line origin.
-	 * @return the projection of the triangle.
+	 * Retrieves the current projection value of this {@code Triangle}.<br>
+	 * This value is used for spatial calculations.
+	 * @return The {@code float} projection value.
 	 */
 	public float getProjection()
 	{
@@ -274,8 +299,9 @@ public class Triangle extends AbstractTriangle implements Reusable
 	}
 	
 	/**
-	 * sets the projection of the vertices relative to the line origin.
-	 * @param projection the projection of the triangle.
+	 * Sets the projection value for this {@code Triangle}.<br>
+	 * This updates the internal {@code projection} field.
+	 * @param projection The new float value to assign to the triangle.
 	 */
 	public void setProjection(float projection)
 	{
@@ -283,8 +309,9 @@ public class Triangle extends AbstractTriangle implements Reusable
 	}
 	
 	/**
-	 * obtains an index that this triangle represents if it is contained in a OBBTree.
-	 * @return the index in an OBBtree
+	 * Retrieves the current index of this {@code Triangle}.<br>
+	 * This value is used to identify the triangle in a collection.
+	 * @return The integer value of the {@code index}.
 	 */
 	public int getIndex()
 	{
@@ -292,14 +319,24 @@ public class Triangle extends AbstractTriangle implements Reusable
 	}
 	
 	/**
-	 * sets an index that this triangle represents if it is contained in a OBBTree.
-	 * @param index the index in an OBBtree
+	 * Sets the unique identifier for this {@code Triangle}.<br>
+	 * This value is used to identify the triangle in a collection.
+	 * @param index The new integer value to assign to the triangle.
 	 */
 	public void setIndex(int index)
 	{
 		this.index = index;
 	}
 	
+	/**
+	 * Calculates the surface normal of a triangle defined by three vertices.<br>
+	 * The result is stored in and returned as a {@code Vector3f}.
+	 * @param v1 The first vertex of the triangle.
+	 * @param v2 The second vertex of the triangle.
+	 * @param v3 The third vertex of the triangle.
+	 * @param store The destination vector to store the result.
+	 * @return The normalized surface normal as a {@code Vector3f}.
+	 */
 	public static Vector3f computeTriangleNormal(Vector3f v1, Vector3f v2, Vector3f v3, Vector3f store)
 	{
 		if (store == null)
@@ -315,11 +352,21 @@ public class Triangle extends AbstractTriangle implements Reusable
 		return store.normalizeLocal();
 	}
 	
+	/**
+	 * Retrieves the specific class type of this triangle.<br>
+	 * This is useful for identifying subclasses of {@link Triangle}.
+	 * @return The {@code Class} object representing the current instance type.
+	 */
 	public Class<? extends Triangle> getClassTag()
 	{
-		return getClass();
+		return this.getClass();
 	}
 	
+	/**
+	 * Creates a deep copy of this {@link Triangle} object.<br>
+	 * This method clones all internal {@code Vector3f} points.
+	 * @return A new {@code Triangle} instance with the same values.
+	 */
 	@Override
 	public Triangle clone()
 	{
@@ -337,11 +384,12 @@ public class Triangle extends AbstractTriangle implements Reusable
 		}
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see javolution.lang.Reusable#reset()
+	/**
+	 * Resets all fields to their default values.<br>
+	 * This method clears the coordinates of {@code pointa}, {@code pointb}, and {@code pointc}.<br>
+	 * It also sets {@code center} and {@code normal} to {@code null}.<br>
+	 * Use this to clear the current state of the {@link Triangle} instance.
 	 */
-	@Override
 	public void reset()
 	{
 		pointa.reset();
@@ -354,32 +402,20 @@ public class Triangle extends AbstractTriangle implements Reusable
 	}
 	
 	/**
-	 * Returns a new, preallocated or {@link #recycle recycled} text builder (on the stack when executing in a {@link javolution.context.StackContext StackContext}).
-	 * @return a new, preallocated or recycled text builder instance.
+	 * Creates a new instance of the {@link Triangle} class.
+	 * @return A new {@code Triangle} instance.
 	 */
 	public static Triangle newInstance()
 	{
-		if (GeoDataConfig.GEO_OBJECT_FACTORY_ENABLE)
-		{
-			return (Triangle) FACTORY.object();
-		}
 		return new Triangle();
 	}
 	
 	/**
-	 * Recycles a text builder {@link #newInstance() instance} immediately (on the stack when executing in a {@link javolution.context.StackContext StackContext}).
-	 * @param instance
+	 * Recycles the provided {@code Triangle} instance.
+	 * @param instance The {@code Triangle} object to be recycled.
 	 */
-	@SuppressWarnings("unchecked")
 	public static void recycle(Triangle instance)
 	{
-		if (GeoDataConfig.GEO_OBJECT_FACTORY_ENABLE)
-		{
-			FACTORY.recycle(instance);
-		}
-		else
-		{
-			instance = null;
-		}
+		// pooling removed
 	}
 }

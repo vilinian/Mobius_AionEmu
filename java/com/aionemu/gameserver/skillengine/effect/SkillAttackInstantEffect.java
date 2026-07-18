@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
@@ -26,6 +26,8 @@ import com.aionemu.gameserver.skillengine.change.Func;
 import com.aionemu.gameserver.skillengine.model.Effect;
 
 /**
+ * Represents an instant attack effect triggered by a skill.<br>
+ * This class handles immediate damage calculations and applications within the {@link DamageEffect} framework.
  * @author ATracer
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -33,24 +35,37 @@ import com.aionemu.gameserver.skillengine.model.Effect;
 public class SkillAttackInstantEffect extends DamageEffect
 {
 	@XmlAttribute
-	protected int rnddmg;// TODO should be enum and different types of random damage behaviour
+	protected int rnddmg; // TODO should be enum and different types of random damage behaviour
 	@XmlAttribute
 	protected boolean cannotmiss;
 	
 	/**
-	 * @return the rnddmg
+	 * Retrieves the random damage value.<br>
+	 * This value is used to determine the variance of an attack.
+	 * @return the {@code int} value of {@code rnddmg}.
 	 */
 	public int getRnddmg()
 	{
 		return rnddmg;
 	}
 	
+	/**
+	 * Retrieves the current calculation mode.<br>
+	 * This value determines how the effect is applied to the target.
+	 * @return The {@code Func} representing the operation mode.
+	 */
 	@Override
 	public Func getMode()
 	{
 		return mode;
 	}
 	
+	/**
+	 * Calculates the attributes for a specific {@code Effect}.<br>
+	 * This method updates the {@code effect} to include an AP boost.<br>
+	 * It also links this instance as a success effect.
+	 * @param effect The {@code Effect} object to be updated.
+	 */
 	@Override
 	public void calculate(Effect effect)
 	{
@@ -58,7 +73,9 @@ public class SkillAttackInstantEffect extends DamageEffect
 	}
 	
 	/**
-	 * @return the cannotmiss
+	 * Checks if the skill effect is guaranteed to hit.<br>
+	 * This method returns the value of the {@code cannotmiss} attribute.
+	 * @return {@code true} if the effect cannot miss, {@code false} otherwise.
 	 */
 	public boolean isCannotmiss()
 	{

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.weddingcommands;
 
@@ -24,19 +24,32 @@ import com.aionemu.gameserver.utils.ThreadPoolManager;
 import com.aionemu.gameserver.utils.chathandlers.WeddingCommand;
 
 /**
+ * Handles the {@code missyou} command for married players.<br>
+ * It allows users to send a special message or effect to their spouse.
  * @author synchro2
+ * @rework Eloann
  */
 public class missyou extends WeddingCommand
 {
+	/**
+	 * Initializes the {@code missyou} command.<br>
+	 * This method sets up the command within the {@link WeddingCommand} system.
+	 */
 	public missyou()
 	{
 		super("missyou");
 	}
 	
+	/**
+	 * Teleports the player to their wedding partner.<br>
+	 * It checks if both players are online and not in restricted areas or combat.<br>
+	 * The command can only be used once every hour.
+	 * @param player The {@code Player} executing the command.
+	 * @param params Additional parameters for the command.
+	 */
 	@Override
 	public void execute(Player player, String... params)
 	{
-		
 		final Player partner = player.findPartner();
 		
 		if (partner == null)
@@ -44,21 +57,22 @@ public class missyou extends WeddingCommand
 			PacketSendUtility.sendMessage(player, "Not online.");
 			return;
 		}
-		if ((player.getWorldId() == 510010000) || (player.getWorldId() == 520010000))
+		
+		if (player.isInPrison() || player.isInPvPArena() || partner.isInPrison() || partner.isInPvPArena())
 		{
-			PacketSendUtility.sendMessage(player, "You can't use this command on prison.");
+			PacketSendUtility.sendMessage(player, "You cannot use this command in your location.");
 			return;
 		}
 		
-		if ((partner.getWorldId() == 510010000) || (partner.getWorldId() == 520010000))
-		{
-			PacketSendUtility.sendMessage(player, "You can't teleported to " + partner.getName() + ", your partner is on prison.");
-			return;
-		}
-		
-		if (partner.isInInstance())
+		if (player.isInInstance() || partner.isInInstance())
 		{
 			PacketSendUtility.sendMessage(player, "You can't teleported to " + partner.getName() + ", your partner is in Instance.");
+			return;
+		}
+		
+		if (player.isAttackMode() || partner.isAttackMode())
+		{
+			PacketSendUtility.sendMessage(player, "You can't use this command in combat mode!");
 			return;
 		}
 		
@@ -76,6 +90,12 @@ public class missyou extends WeddingCommand
 		}
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{

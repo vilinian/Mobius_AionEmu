@@ -1,99 +1,175 @@
-/*
- * This file is part of the Aion-Emu project.
+/**
  * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.gameobjects.player;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.aionemu.commons.database.dao.DAOManager;
-import com.aionemu.gameserver.dao.PlayerUpgradeArcadeDAO;
-import com.aionemu.gameserver.model.gameobjects.PersistentState;
-
 /**
- * @author Ranastic
+ * This class manages the data and logic for a player's upgrade arcade.<br>
+ * It handles specific progression mechanics related to arcade-style upgrades.
+ * @author CoolyT
  */
 public class PlayerUpgradeArcade
 {
-	Logger log = LoggerFactory.getLogger(PlayerUpgradeArcade.class);
-	int frenzyMeter;
-	int upgradeLvl;
-	private PersistentState persistentState;
+	private int frenzyPoints = 0;
+	private int frenzyCount = 0;
+	private int frenzyLevel = 1;
+	private int failedLevel = 1;
+	private boolean isFrenzy = false;
+	private boolean reTry = false;
+	private boolean failed = false;
 	
-	public PlayerUpgradeArcade(int frenzyMeter, int upgradeLvl)
+	/**
+	 * Retrieves the current number of {@code frenzyPoints}.<br>
+	 * This value represents the player's progress in the arcade.
+	 * @return The current amount of {@code frenzyPoints}.
+	 */
+	public int getFrenzyPoints()
 	{
-		this.frenzyMeter = frenzyMeter;
-		this.upgradeLvl = upgradeLvl;
-		persistentState = PersistentState.NEW;
+		return frenzyPoints;
 	}
 	
-	public void setFrenzyMeter(int meter)
+	/**
+	 * Updates the current amount of {@code frenzyPoints}.<br>
+	 * This method sets the value for the player's frenzy points.
+	 * @param frenzyPoints The new number of points to set.
+	 */
+	public void setFrenzyPoints(int frenzyPoints)
 	{
-		frenzyMeter = meter;
+		this.frenzyPoints = frenzyPoints;
 	}
 	
-	public int getFrenzyMeter()
+	/**
+	 * Retrieves the current number of frenzy counts.<br>
+	 * This value tracks how many times the frenzy has been activated.
+	 * @return The current {@code int} value of {@code frenzyCount}.
+	 */
+	public int getFrenzyCount()
 	{
-		return frenzyMeter;
+		return frenzyCount;
 	}
 	
-	public void setUpgradeLvl(int upgradeLvl)
+	/**
+	 * Updates the current {@code frenzyCount} for the player.<br>
+	 * This value tracks how many times a frenzy action has occurred.
+	 * @param frenzyCount The new integer value to set for the count.
+	 */
+	public void setFrenzyCount(int frenzyCount)
 	{
-		this.upgradeLvl = upgradeLvl;
+		this.frenzyCount = frenzyCount;
 	}
 	
-	public int getUpgradeLvl()
+	/**
+	 * Retrieves the current level of the player's frenzy.<br>
+	 * This value is used to track progress in the arcade mode.
+	 * @return The current {@code int} value of the frenzy level.
+	 */
+	public int getFrenzyLevel()
 	{
-		return upgradeLvl;
+		return frenzyLevel;
 	}
 	
-	public PlayerUpgradeArcade()
+	/**
+	 * Updates the current level of the player's frenzy.<br>
+	 * This method sets the {@code frenzyLevel} field to a new value.
+	 * @param frenzyLevel The new integer level to assign.
+	 */
+	public void setFrenzyLevel(int frenzyLevel)
 	{
+		this.frenzyLevel = frenzyLevel;
 	}
 	
-	public void setFrenzyMeterByObjId(int playerId)
+	/**
+	 * Retrieves the current level at which the player failed.<br>
+	 * This value is used to track progress in the {@link PlayerUpgradeArcade}.
+	 * @return The integer value of the {@code failedLevel}.
+	 */
+	public int getFailedLevel()
 	{
-		DAOManager.getDAO(PlayerUpgradeArcadeDAO.class).setFrenzyMeterByObjId(playerId, getFrenzyMeter());
+		return failedLevel;
 	}
 	
-	public void setUpgradeLvlByObjId(int playerId)
+	/**
+	 * Updates the current level at which the player failed.<br>
+	 * This value is used to track progress in the {@link PlayerUpgradeArcade}.
+	 * @param failedLevel The new integer value for the failed level.
+	 */
+	public void setFailedLevel(int failedLevel)
 	{
-		DAOManager.getDAO(PlayerUpgradeArcadeDAO.class).setUpgradeLvlByObjId(playerId, getUpgradeLvl());
+		this.failedLevel = failedLevel;
 	}
 	
-	public PersistentState getPersistentState()
+	/**
+	 * Checks if the player is currently in a frenzy state.<br>
+	 * This method returns the current value of the {@code isFrenzy} flag.
+	 * @return {@code true} if the player is in frenzy, {@code false} otherwise.
+	 */
+	public boolean isFrenzy()
 	{
-		return persistentState;
+		return isFrenzy;
 	}
 	
-	public void setPersistentState(PersistentState persistentState)
+	/**
+	 * Updates the frenzy status of the player.<br>
+	 * This method sets the {@code isFrenzy} flag to either {@code true} or {@code false}.
+	 * @param isFrenzy The new frenzy state to apply.
+	 */
+	public void setFrenzy(boolean isFrenzy)
 	{
-		switch (persistentState)
-		{
-			case UPDATE_REQUIRED:
-			{
-				if (this.persistentState == PersistentState.NEW)
-				{
-					break;
-				}
-			}
-			default:
-			{
-				this.persistentState = persistentState;
-			}
-		}
+		this.isFrenzy = isFrenzy;
 	}
+	
+	/**
+	 * Checks if the player is currently in a retry state.<br>
+	 * This method returns the value of the {@code reTry} field.
+	 * @return {@code true} if the player is retrying, {@code false} otherwise.
+	 */
+	public boolean isReTry()
+	{
+		return reTry;
+	}
+	
+	/**
+	 * Sets whether the player can attempt the arcade again.<br>
+	 * This updates the {@code reTry} status of the current session.
+	 * @param reTry The boolean value to set for retry status.
+	 */
+	public void setReTry(boolean reTry)
+	{
+		this.reTry = reTry;
+	}
+	
+	/**
+	 * Checks if the arcade upgrade has failed.<br>
+	 * This method returns {@code true} if the {@code failed} flag is set to {@code true}.
+	 * @return {@code true} if the upgrade failed, otherwise {@code false}.
+	 */
+	public boolean isFailed()
+	{
+		return failed;
+	}
+	
+	/**
+	 * Updates the failure status of the player upgrade.<br>
+	 * Sets the {@code failed} field to the provided value.
+	 * @param failed The new failure status to set.
+	 */
+	public void setFailed(boolean failed)
+	{
+		this.failed = failed;
+	}
+	
+	/**
+	 * Resets the frenzy state to its default values.<br>
+	 * This method sets {@code isFrenzy}, {@code failed}, {@code reTry} to {@code false}.<br>
+	 * It also resets {@code frenzyLevel} and {@code failedLevel} to {@code 1}.
+	 */
+	public void reset()
+	{
+		isFrenzy = false;
+		failed = false;
+		frenzyLevel = 1;
+		failedLevel = 1;
+		reTry = false;
+	}
+	
 }

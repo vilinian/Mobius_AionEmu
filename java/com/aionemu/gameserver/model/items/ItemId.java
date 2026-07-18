@@ -1,28 +1,30 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.items;
 
 /**
+ * Represents the unique identifiers for all items in the game.<br>
+ * This {@code enum} is used to map specific item types to their respective IDs.
  * @author ATracer
  */
 public enum ItemId
 {
 	KINAH(182400001),
-	LUNA(182495000), // Aion 5.0.5
+	LUNA(182495000), // Aion 5.0
 	STIGMA_SHARD(141000001),
 	RUSTED_MEDAL(182005205),
 	RUSTED_MEDAL_ASMODIANS(182005206),
@@ -113,13 +115,23 @@ public enum ItemId
 	VETERAN_CRYSTAL(186000222), // Aion 3.7
 	GLORIOUS_INSIGNIA(182213259); // Aion 3.5
 	
-	private int itemId;
+	private final int itemId;
 	
+	/**
+	 * Creates a new {@link ItemId} instance.<br>
+	 * This constructor assigns the unique identifier to the enum constant.
+	 * @param itemId The unique integer ID of the item.
+	 */
 	private ItemId(int itemId)
 	{
 		this.itemId = itemId;
 	}
 	
+	/**
+	 * Retrieves the unique identifier for this item.<br>
+	 * This corresponds to the internal {@code itemId} field.
+	 * @return The integer value of the item ID.
+	 */
 	public int value()
 	{
 		return itemId;

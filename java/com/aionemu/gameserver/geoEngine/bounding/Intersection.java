@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.bounding;
 
@@ -24,11 +24,21 @@ import com.aionemu.gameserver.geoEngine.math.Plane;
 import com.aionemu.gameserver.geoEngine.math.Vector3f;
 
 /**
- * This class includes some utility methods for computing intersection between bounding volumes and triangles.
+ * Provides utility methods for calculating intersections between bounding volumes and triangles.<br>
+ * It helps the {@code bounding} system determine spatial overlaps.
  * @author Kirill
  */
 public class Intersection
 {
+	/**
+	 * Calculates the minimum and maximum values from three coordinates.<br>
+	 * The results are stored directly into the provided {@code Vector3f} object.<br>
+	 * This method updates the {@code x} and {@code y} components of the vector.
+	 * @param x0 The first coordinate value.
+	 * @param x1 The second coordinate value.
+	 * @param x2 The third coordinate value.
+	 * @param minMax The {@code Vector3f} object to store the results in.
+	 */
 	private static void findMinMax(float x0, float x1, float x2, Vector3f minMax)
 	{
 		minMax.set(x0, x0, 0);
@@ -36,14 +46,17 @@ public class Intersection
 		{
 			minMax.setX(x1);
 		}
+		
 		if (x1 > minMax.y)
 		{
 			minMax.setY(x1);
 		}
+		
 		if (x2 < minMax.x)
 		{
 			minMax.setX(x2);
 		}
+		
 		if (x2 > minMax.y)
 		{
 			minMax.setY(x2);
@@ -67,14 +80,22 @@ public class Intersection
 	// if(min > rad || max < -rad)
 	// return false;
 	// }
+	
+	/**
+	 * Determines if a triangle intersects with a {@link BoundingBox}.<br>
+	 * This method uses the separating axis theorem to check for overlap.<br>
+	 * It returns {@code true} if an intersection exists and {@code false} otherwise.
+	 * @param bbox The bounding box to check against.
+	 * @param v1 The first vertex of the triangle.
+	 * @param v2 The second vertex of the triangle.
+	 * @param v3 The third vertex of the triangle.
+	 * @return {@code true} if the triangle and box intersect, {@code false} otherwise.
+	 */
 	public static boolean intersect(BoundingBox bbox, Vector3f v1, Vector3f v2, Vector3f v3)
 	{
-		// use separating axis theorem to test overlap between triangle and box
-		// need to test for overlap in these directions:
-		// 1) the {x,y,z}-directions (actually, since we use the AABB of the triangle
-		// we do not even need to test these)
-		// 2) normal of the triangle
-		// 3) crossproduct(edge from tri, {x,y,z}-directin)
+		// Use the separating axis theorem to test for overlap between the triangle and the box in these directions:.
+		// The x, y, and z directions are not needed because we use the triangle's AABB.
+		// Calculate the triangle's normal using the cross product of an edge and the vector from the triangle to the point.
 		// this gives 3x3=9 more tests
 		
 		final Vector3f tmp0 = new Vector3f(), tmp1 = new Vector3f(), tmp2 = new Vector3f();
@@ -85,9 +106,7 @@ public class Intersection
 		final Vector3f extent = bbox.getExtent(null);
 		
 		// float min,max,p0,p1,p2,rad,fex,fey,fez;
-		// float normal[3]
-		// This is the fastest branch on Sun
-		// move everything so that the boxcenter is in (0,0,0)
+		// Move everything so that the box center is at (0,0,0) for the fastest branch.
 		v1.subtract(center, tmp0);
 		v2.subtract(center, tmp1);
 		v3.subtract(center, tmp2);
@@ -174,6 +193,7 @@ public class Intersection
 		{
 			return false;
 		}
+		
 		//
 		fex = FastMath.abs(e2.x);
 		fey = FastMath.abs(e2.y);
@@ -213,10 +233,7 @@ public class Intersection
 		}
 		
 		// Bullet 1:
-		// first test overlap in the {x,y,z}-directions
-		// find min, max of the triangle each direction, and test for overlap in
-		// that direction -- this is equivalent to testing a minimal AABB around
-		// the triangle against the AABB
+		// First, test for overlaps in the x, y, and z directions by finding the minimum and maximum of the triangle in each direction, which is equivalent to testing a minimal AABB around the triangle against the AABB.
 		final Vector3f minMax = new Vector3f();
 		
 		// test in X-direction
@@ -241,9 +258,7 @@ public class Intersection
 		}
 		
 		// // Bullet 2:
-		// // test if the box intersects the plane of the triangle
-		// // compute plane equation of triangle: normal * x + d = 0
-		// Vector3f normal = new Vector3f();
+		// Test if the box intersects the plane of the triangle by computing the plane equation normal * x + d = 0.
 		// e0.cross(e1, normal);
 		final Plane p = new Plane();
 		p.setPlanePoints(v1, v2, v3);
@@ -251,6 +266,7 @@ public class Intersection
 		{
 			return false;
 		}
+		
 		//
 		// if(!planeBoxOverlap(normal,v0,boxhalfsize)) return false;
 		

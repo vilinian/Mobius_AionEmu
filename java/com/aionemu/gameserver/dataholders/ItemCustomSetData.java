@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.dataholders;
 
@@ -25,40 +25,59 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.aionemu.gameserver.model.templates.item.ItemCustomSetTeamplate;
+import com.aionemu.gameserver.model.templates.item.ItemCustomSetTemplate;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * This class holds the data for custom item sets within the game server.<br>
+ * It serves as a data container that maps specific items to their respective {@link ItemCustomSetTemplate} configurations.
+ */
 @XmlRootElement(name = "item_custom_sets")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ItemCustomSetData
 {
-	@XmlElement(name = "item_custom_set", required = true)
-	protected List<ItemCustomSetTeamplate> customTemplates;
-	
+	@XmlElement(name = "item_custom_set")
+	private List<ItemCustomSetTemplate> itemCustomSetTemplateList;
 	@XmlTransient
-	private final TIntObjectHashMap<ItemCustomSetTeamplate> custom = new TIntObjectHashMap<>();
+	private final TIntObjectHashMap<ItemCustomSetTemplate> itemCustomSetTemplateTIntObjectHashMap = new TIntObjectHashMap<>();
 	
-	public ItemCustomSetTeamplate getCustomTemplate(int id)
+	/**
+	 * This method is called after the object is unmarshalled from XML.<br>
+	 * It populates the {@code itemCustomSetTemplateTIntObjectHashMap} using data from {@code itemCustomSetTemplateList}.<br>
+	 * Finally, it clears and nullifies the original list to save memory.
+	 * @param unmarshaller The {@link Unmarshaller} used to read the XML.
+	 * @param o The object that was just unmarshalled.
+	 */
+	void afterUnmarshal(Unmarshaller unmarshaller, Object o)
 	{
-		return custom.get(id);
-	}
-	
-	void afterUnmarshal(Unmarshaller u, Object parent)
-	{
-		for (ItemCustomSetTeamplate it : customTemplates)
+		for (ItemCustomSetTemplate itemCustomSetTemplate : itemCustomSetTemplateList)
 		{
-			getCustomMap().put(it.getId(), it);
+			itemCustomSetTemplateTIntObjectHashMap.put(itemCustomSetTemplate.getItem_id(), itemCustomSetTemplate);
 		}
+		
+		itemCustomSetTemplateList.clear();
+		itemCustomSetTemplateList = null;
 	}
 	
-	private TIntObjectHashMap<ItemCustomSetTeamplate> getCustomMap()
-	{
-		return custom;
-	}
-	
+	/**
+	 * Returns the number of elements in this set.<br>
+	 * This method calls {@code size} to get the count.
+	 * @return The total number of items currently stored in the collection.
+	 */
 	public int size()
 	{
-		return custom.size();
+		return itemCustomSetTemplateTIntObjectHashMap.size();
+	}
+	
+	/**
+	 * Retrieves a specific custom set template based on an item ID.<br>
+	 * This method looks up the data in the internal map.
+	 * @param itemId The unique identifier of the item to look up.
+	 * @return The {@link ItemCustomSetTemplate} associated with the ID, or {@code null} if not found.
+	 */
+	public ItemCustomSetTemplate getItemCustomSetTemplate(int itemId)
+	{
+		return itemCustomSetTemplateTIntObjectHashMap.get(itemId);
 	}
 }

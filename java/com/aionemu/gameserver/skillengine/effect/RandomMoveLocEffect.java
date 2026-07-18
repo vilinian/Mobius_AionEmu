@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
@@ -24,9 +24,9 @@ import javax.xml.bind.annotation.XmlType;
 import com.aionemu.gameserver.geoEngine.collision.CollisionIntention;
 import com.aionemu.gameserver.geoEngine.math.Vector3f;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
+import com.aionemu.gameserver.network.aion.serverpackets.SM_RIDE_ROBOT;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_TARGET_UPDATE;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_TRANSFORM;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_USE_ROBOT;
 import com.aionemu.gameserver.skillengine.model.DashStatus;
 import com.aionemu.gameserver.skillengine.model.Effect;
 import com.aionemu.gameserver.skillengine.model.Skill;
@@ -37,8 +37,12 @@ import com.aionemu.gameserver.world.World;
 import com.aionemu.gameserver.world.geo.GeoService;
 
 /**
+ * Handles the logic for moving an entity to a random location.<br>
+ * This effect is used by {@link Skill} to trigger unpredictable movement.<br>
+ * It calculates a new position based on the current coordinates and applies it to the target.
  * @author Bio
  * @reworked Kill3r
+ * @update a7xatomic
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "RandomMoveLocEffect")
@@ -46,65 +50,90 @@ public class RandomMoveLocEffect extends EffectTemplate
 {
 	@XmlAttribute(name = "distance")
 	private float distance;
-	
 	@XmlAttribute(name = "direction")
 	private float direction;
 	
+	/**
+	 * Applies a specific {@code Effect} to a target.<br>
+	 * This method checks if the target is an instance of {@link Player}.<br>
+	 * It processes the logic required for the effect to take place.
+	 * @param effect The {@code Effect} object to be applied.
+	 */
 	@Override
 	public void applyEffect(Effect effect)
 	{
 		final Player effector = (Player) effect.getEffector();
+		
+		// Deselect targets
 		PacketSendUtility.sendPacket(effector, new SM_TARGET_UPDATE(effector));
+		
 		final Skill skill = effect.getSkill();
 		World.getInstance().updatePosition(effector, skill.getX(), skill.getY(), skill.getZ(), skill.getH());
 	}
 	
+	/**
+	 * Calculates the movement and status for a specific {@code Effect}.<br>
+	 * This method updates the dash status based on the skill ID and robot state.<br>
+	 * It also handles player positioning and sends necessary network packets.
+	 * @param effect The {@code Effect} object to be processed.
+	 */
 	@Override
 	public void calculate(Effect effect)
 	{
 		effect.addSucessEffect(this);
 		if (((Player) effect.getEffector()).getRobotId() != 0)
 		{
-			if ((effect.getSkill().getSkillId() == 2424) || (effect.getSkill().getSkillId() == 2425)) // Hypergate Detonation.
+			if ((effect.getSkill().getSkillId() == 2424) || (effect.getSkill().getSkillId() == 2425))
 			{
 				effect.setDashStatus(DashStatus.RANDOMMOVELOC);
 			}
 			else
 			{
-				effect.setDashStatus(DashStatus.RIDERMOVELOC);
+				effect.setDashStatus(DashStatus.ROBOTMOVELOC);
 			}
 		}
 		else
 		{
-			if (effect.getSkillId() == 4697) // Mercurial Blast.
+			if (effect.getSkillId() == 4697)
 			{
-				effect.setDashStatus(DashStatus.RIDERMOVELOC);
+				// Mercurial Blast
+				effect.setDashStatus(DashStatus.ROBOTMOVELOC);
 			}
 			else
 			{
 				effect.setDashStatus(DashStatus.RANDOMMOVELOC);
 			}
+			
 			effect.setSkillMoveType(SkillMoveType.MOVEBEHIND);
 		}
+		
 		final Player effector = (Player) effect.getEffector();
-		if ((effect.getSkill().getSkillId() == 2424) || (effect.getSkill().getSkillId() == 2425)) // Hypergate Detonation.
+		if ((effect.getSkill().getSkillId() == 2424) || (effect.getSkill().getSkillId() == 2425))
 		{
 			RemoveSkill((Player) effect.getEffector());
-			PacketSendUtility.broadcastPacket(effector, new SM_USE_ROBOT(effector, 0), true);
+			PacketSendUtility.broadcastPacket(effector, new SM_RIDE_ROBOT(effector, 0), true);
 			effector.setUseRobot(false);
 			effector.setRobotId(0);
 		}
+		
+		// Move Effector backwards direction=1 or frontwards direction=0
 		final double radian = Math.toRadians(MathUtil.convertHeadingToDegree(effector.getHeading()));
 		final float x1 = (float) (Math.cos((Math.PI * direction) + radian) * distance);
 		final float y1 = (float) (Math.sin((Math.PI * direction) + radian) * distance);
 		effector.getEffectController().updatePlayerEffectIcons();
 		PacketSendUtility.broadcastPacketAndReceive(effector, new SM_TRANSFORM(effector, true));
-		PacketSendUtility.broadcastPacketAndReceive(effector, new SM_TRANSFORM(effector, effector.getTransformedModelId(), true, effector.getTransformedItemId()));
+		PacketSendUtility.broadcastPacketAndReceive(effector, new SM_TRANSFORM(effector, effector.getTransformedModelId(), true, effector.getTransformedItemId(), effector.getTransformedSkillId()));
 		final byte intentions = (byte) (CollisionIntention.PHYSICAL.getId() | CollisionIntention.DOOR.getId());
 		final Vector3f closestCollision = GeoService.getInstance().getClosestCollision(effector, effector.getX() + x1, effector.getY() + y1, effector.getZ(), false, intentions);
 		effect.getSkill().setTargetPosition(closestCollision.getX(), closestCollision.getY(), closestCollision.getZ(), effector.getHeading());
 	}
 	
+	/**
+	 * Removes specific skill effects from the player.<br>
+	 * This method clears various mobility and kinetic status effects.<br>
+	 * It interacts with the {@code getEffectController} to remove multiple effect IDs.
+	 * @param player The {@code Player} object whose effects will be removed.
+	 */
 	private void RemoveSkill(Player player)
 	{
 		player.getEffectController().removeEffect(2767); // Embark I

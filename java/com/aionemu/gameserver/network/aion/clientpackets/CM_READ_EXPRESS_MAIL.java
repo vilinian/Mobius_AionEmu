@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -29,12 +29,21 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
 
 /**
+ * Handles the client request to read an express mail message.<br>
+ * This packet processes the retrieval of mail content and sends the appropriate response to the {@link Player}.
  * @author antness thx to Guapo for sniffing
  */
 public class CM_READ_EXPRESS_MAIL extends AionClientPacket
 {
 	private int action;
 	
+	/**
+	 * Handles the client request to read an express mail.<br>
+	 * This method initializes the packet with the required network states.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state.
+	 * @param restStates Additional connection states if needed.
+	 */
 	public CM_READ_EXPRESS_MAIL(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -54,54 +63,41 @@ public class CM_READ_EXPRESS_MAIL extends AionClientPacket
 		switch (action)
 		{
 			case 0:
-			{
+				// window is closed
 				if (player.getPostman() != null)
 				{
 					player.getPostman().getController().onDelete();
 					player.setPostman(null);
 				}
 				break;
-			}
 			case 1:
-			{
+				// click on icon
 				if (player.getPostman() != null)
 				{
-					// An express courier has already arrived.
 					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_POSTMAN_ALREADY_SUMMONED);
-					return;
-				}
-				else if (player.isInPrison())
-				{
-					// You cannot call a courier here.
-					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_POSTMAN_UNABLE_POSITION);
-					return;
 				}
 				else if (player.isFlying())
 				{
-					// You cannot call a courier while flying.
 					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_POSTMAN_UNABLE_IN_FLIGHT);
-					return;
 				}
-				else if (player.getController().hasTask(TaskId.EXPRESS_MAIL_USE))
+				else if (player.getController().hasScheduledTask(TaskId.EXPRESS_MAIL_USE))
 				{
-					// Please wait for a while before you call for the courier again.
 					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_POSTMAN_UNABLE_IN_COOLTIME);
-					return;
 				}
 				else if (haveUnreadExpress)
 				{
 					VisibleObjectSpawner.spawnPostman(player);
 					final Future<?> task = ThreadPoolManager.getInstance().schedule(new Runnable()
 					{
+						
 						@Override
 						public void run()
 						{
 						}
-					}, 600000);
+					}, 600000); // 10 min
 					player.getController().addTask(TaskId.EXPRESS_MAIL_USE, task);
 				}
 				break;
-			}
 		}
 	}
 }

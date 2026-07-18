@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting.scriptmanager;
 
@@ -24,7 +24,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Root element for script descriptors
+ * This class serves as the root element for script descriptors.<br>
+ * It acts as a container for managing multiple scripts within the {@link ScriptManager}.
  * @author SoulKeeper
  */
 @XmlRootElement(name = "scriptlist")
@@ -38,8 +39,9 @@ public class ScriptList
 	private Set<ScriptInfo> scriptInfos;
 	
 	/**
-	 * Returns list of script descriptors
-	 * @return list of script descriptors
+	 * Retrieves the collection of all available scripts.<br>
+	 * This method returns the internal set of {@link ScriptInfo} objects.
+	 * @return a {@code Set} containing all {@code ScriptInfo} entries.
 	 */
 	public Set<ScriptInfo> getScriptInfos()
 	{
@@ -47,8 +49,9 @@ public class ScriptList
 	}
 	
 	/**
-	 * Sets list of script descriptors
-	 * @param scriptInfos lisft of script descriptors
+	 * Updates the collection of {@link ScriptInfo} objects.<br>
+	 * This method sets the internal list of scripts to the provided set.
+	 * @param scriptInfos The new set of {@code ScriptInfo} objects to store.
 	 */
 	public void setScriptInfos(Set<ScriptInfo> scriptInfos)
 	{
@@ -56,7 +59,9 @@ public class ScriptList
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Returns a string representation of the {@code ScriptList}.<br>
+	 * This method includes the list of script information.
+	 * @return A formatted string representing this object.
 	 */
 	@Override
 	public String toString()

@@ -1,23 +1,27 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.configs.main;
 
 import com.aionemu.commons.configuration.Property;
 
+/**
+ * This class manages the security-related configuration settings for the game server.<br>
+ * It provides access to various properties used to enforce safety and protection rules.
+ */
 public class SecurityConfig
 {
 	@Property(key = "gameserver.security.gmaudit.message.broadcast", defaultValue = "false")
@@ -68,8 +72,6 @@ public class SecurityConfig
 	public static int FLOOD_DELAY;
 	@Property(key = "gameserver.security.flood.msg", defaultValue = "6")
 	public static int FLOOD_MSG;
-	@Property(key = "gameserver.security.flood.msg.preview", defaultValue = "2")
-	public static int FLOOD_MSG_PREVIEW;
 	@Property(key = "gameserver.security.pff.enable", defaultValue = "false")
 	public static boolean PFF_ENABLE;
 	@Property(key = "gameserver.security.pff.level", defaultValue = "1")
@@ -80,4 +82,8 @@ public class SecurityConfig
 	public static boolean ENABLE_FLYPATH_VALIDATOR;
 	@Property(key = "gameserver.security.survey.delay.minute", defaultValue = "20")
 	public static int SURVEY_DELAY;
+	@Property(key = "gameserver.security.instance.keycheck", defaultValue = "false")
+	public static boolean INSTANCE_KEYCHECK;
+	@Property(key = "gameserver.security.integrity.check", defaultValue = "true")
+	public static boolean INTEGRITY_CHECK;
 }

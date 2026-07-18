@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -30,13 +30,30 @@ import com.aionemu.gameserver.services.teleport.TeleportService2;
 import com.aionemu.gameserver.utils.MathUtil;
 
 /**
+ * Handles the client request to select a destination from a teleportation menu.<br>
+ * This packet triggers the {@link TeleportService2} to process the player's choice.<br>
+ * It validates the selected {@link TeleporterTemplate} and moves the {@link Player} accordingly.
  * @author ATracer, orz, KID
  */
 public class CM_TELEPORT_SELECT extends AionClientPacket
 {
+	/**
+	 * NPC ID
+	 */
 	public int targetObjectId;
+	/**
+	 * Destination of teleport
+	 */
 	public int locId;
 	
+	/**
+	 * Handles the client request to select a teleport destination.<br>
+	 * This packet is sent when a player interacts with a teleporter.<br>
+	 * It initializes the {@link CM_TELEPORT_SELECT} object with necessary states.
+	 * @param opcode The network operation code.
+	 * @param state The primary connection state.
+	 * @param restStates Additional connection states.
+	 */
 	public CM_TELEPORT_SELECT(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -46,7 +63,8 @@ public class CM_TELEPORT_SELECT extends AionClientPacket
 	protected void readImpl()
 	{
 		targetObjectId = readD();
-		locId = readD();
+		locId = readD(); // locationId
+		readH(); // unk 0 added with 5.3
 	}
 	
 	@Override
@@ -57,19 +75,21 @@ public class CM_TELEPORT_SELECT extends AionClientPacket
 		{
 			return;
 		}
+		
 		final AionObject obj = player.getKnownList().getObject(targetObjectId);
 		if ((obj != null) && (obj instanceof Npc))
 		{
 			final Npc npc = (Npc) obj;
 			final int npcId = npc.getNpcId();
-			if (!MathUtil.isInRange(npc, player, npc.getObjectTemplate().getTalkDistance() + 5))
+			if (!MathUtil.isInRange(npc, player, npc.getObjectTemplate().getTalkDistance() + 2))
 			{
 				return;
 			}
+			
 			final TeleporterTemplate teleport = DataManager.TELEPORTER_DATA.getTeleporterTemplateByNpcId(npcId);
 			if (teleport != null)
 			{
-				TeleportService2.teleport(teleport, locId, player, npc, TeleportAnimation.JUMP_ANIMATION_2);
+				TeleportService2.teleport(teleport, locId, player, npc, TeleportAnimation.JUMP_ANIMATION);
 			}
 			else
 			{

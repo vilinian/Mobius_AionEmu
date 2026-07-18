@@ -11,9 +11,8 @@
     <orderEntry type="library" name="jsr166-1.0.0" level="project" />
     <orderEntry type="library" name="libs2" level="project" />
     <orderEntry type="library" name="libs1" level="project" />
-    <orderEntry type="library" name="javolution-5.5.1" level="project" />
     <orderEntry type="library" name="lib1" level="project" />
-    <orderEntry type="module" module-name="AL-Commons" />
-    <orderEntry type="module" module-name="AL-Login" />
+    <orderEntry type="module" module-name="Commons" />
+    <orderEntry type="module" module-name="Login" />
   </component>
 </module>

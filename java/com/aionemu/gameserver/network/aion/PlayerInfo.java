@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion;
 
@@ -30,6 +30,9 @@ import com.aionemu.gameserver.model.items.ItemSlot;
 import com.aionemu.gameserver.model.templates.item.ItemTemplate;
 
 /**
+ * This class represents the core data structure for player information within the game server.<br>
+ * It serves as a base model for handling {@link com.aionemu.gameserver.model.gameobjects.player.PlayerCommonData} and related attributes.<br>
+ * It is used to synchronize player state between the server and the client via {@link AionServerPacket}.
  * @author AEJTester
  * @author Nemesiss
  * @author Niato
@@ -38,10 +41,20 @@ public abstract class PlayerInfo extends AionServerPacket
 {
 	private static Logger log = LoggerFactory.getLogger(PlayerInfo.class);
 	
+	/**
+	 * Creates a new instance of the {@link PlayerInfo} class.<br>
+	 * This constructor is used to initialize the packet data.
+	 */
 	protected PlayerInfo()
 	{
 	}
 	
+	/**
+	 * Writes the player information into the packet buffer.<br>
+	 * This method serializes data such as appearance, position, and equipment.<br>
+	 * It handles specific logic for legion membership and display slots.
+	 * @param accPlData The {@code PlayerAccountData} object containing all necessary player details.
+	 */
 	protected void writePlayerInfo(PlayerAccountData accPlData)
 	{
 		final PlayerCommonData pbd = accPlData.getPlayerCommonData();
@@ -56,7 +69,7 @@ public abstract class PlayerInfo extends AionServerPacket
 		writeD(playerAppearance.getVoice());
 		writeD(playerAppearance.getSkinRGB());
 		writeD(playerAppearance.getHairRGB());
-		writeD(playerAppearance.getEyeRGB());
+		writeD(playerAppearance.getEyeRGB()); // TODO LEFT EYE
 		writeD(playerAppearance.getLipRGB());
 		writeC(playerAppearance.getFace());
 		writeC(playerAppearance.getHair());
@@ -68,7 +81,7 @@ public abstract class PlayerInfo extends AionServerPacket
 		writeC(playerAppearance.getRemoveMane());
 		writeD(playerAppearance.getRightEyeRGB());
 		writeC(playerAppearance.getEyeLashShape());
-		writeC(0x06);// UNK 6
+		writeC(0x06); // UNK 6
 		writeC(playerAppearance.getJawLine());
 		writeC(playerAppearance.getForehead());
 		writeC(playerAppearance.getEyeHeight());
@@ -109,7 +122,7 @@ public abstract class PlayerInfo extends AionServerPacket
 		writeC(playerAppearance.getLegThickness());
 		writeC(playerAppearance.getFootSize());
 		writeC(playerAppearance.getFacialRate());
-		writeC(0);// unk;
+		writeC(0); // unk;
 		writeC(playerAppearance.getArmLength());
 		writeC(playerAppearance.getLegLength());
 		writeC(playerAppearance.getShoulders());
@@ -119,19 +132,17 @@ public abstract class PlayerInfo extends AionServerPacket
 		writeC(playerAppearance.getForeArmThickness());
 		writeC(playerAppearance.getHandSpan());
 		writeC(playerAppearance.getCalfThickness());
-		writeC(0x00);// always 0 may be acessLevel
-		writeC(0x00);// always 0
-		writeC(0x00);// always 0
-		
+		writeC(0x00); // always 0 may be acessLevel
+		writeC(0x00); // always 0
+		writeC(0x00); // always 0
 		writeF(playerAppearance.getHeight());
-		final int raceSex = 100000 + (raceId * 2) + genderId;
-		writeD(raceSex);
-		writeD(pbd.getPosition().getMapId());
+		writeD(genderId == 0 ? 100000 : 100001); // 100000 = Male 100001 = Female
+		writeD(pbd.getPosition().getMapId()); // mapid for preloading map
 		writeF(pbd.getPosition().getX());
 		writeF(pbd.getPosition().getY());
 		writeF(pbd.getPosition().getZ());
 		writeD(pbd.getPosition().getHeading());
-		writeH(pbd.getLevel());
+		writeH(pbd.getLevel()); // lvl confirmed
 		writeH(0);
 		writeD(pbd.getTitleId());
 		if (accPlData.isLegionMember())
@@ -143,43 +154,49 @@ public abstract class PlayerInfo extends AionServerPacket
 		{
 			writeB(new byte[86]);
 		}
-		writeH(accPlData.isLegionMember() ? 0x01 : 0x00);
-		writeD((int) pbd.getLastOnline().getTime());
+		
+		writeH(accPlData.isLegionMember() ? 0x01 : 0x00); // is in legion?
+		writeD((int) (pbd.getLastOnline().getTime() / 1000)); // last online
+		
 		int itemsDataSize = 0;
+		
+		// TODO figure out this part when fully equipped
 		final List<Item> items = accPlData.getEquipment();
+		
 		for (Item item : items)
 		{
 			if (itemsDataSize >= 208)
 			{
 				break;
 			}
+			
 			final ItemTemplate itemTemplate = item.getItemTemplate();
 			if (itemTemplate == null)
 			{
 				log.warn("Missing item. PlayerId: " + pbd.getPlayerObjId() + " ItemId: " + item.getObjectId());
 				continue;
 			}
-			final long slot = item.getEquipmentSlot();
-			if ((slot == 393216) || (slot == 131072) || (slot == 262144))
+			
+			if (ItemSlot.isDisplaySlot(item.getEquipmentSlot()))
 			{
-				continue;
-			}
-			if (itemTemplate.isArmor() || itemTemplate.isWeapon())
-			{
-				if (itemTemplate.getItemSlot() <= ItemSlot.PANTS.getSlotIdMask())
+				if ((item.getEquipmentSlot() == ItemSlot.SUB_HAND.getSlotIdMask()) || (item.getEquipmentSlot() == ItemSlot.EARRINGS_LEFT.getSlotIdMask()) || (item.getEquipmentSlot() == ItemSlot.RING_LEFT.getSlotIdMask()))
 				{
-					writeC((slot == 2) || (slot == 64) || (slot == 256) ? 2 : 1);
-					writeD(item.getItemSkinTemplate().getTemplateId());
-					final GodStone godStone = item.getGodStone();
-					writeD(godStone != null ? godStone.getItemId() : 0);
-					writeD(item.getItemColor());
-					itemsDataSize += 13;
+					writeC(0x02);
 				}
+				else
+				{
+					writeC(0x01);
+				}
+				
+				writeD(item.getItemSkinTemplate().getTemplateId());
+				final GodStone godStone = item.getGodStone();
+				writeD((godStone != null) ? godStone.getItemId() : 0);
+				writeD(item.getItemColor());
+				itemsDataSize += 13;
 			}
 		}
+		
 		final byte[] stupidNc = new byte[208 - itemsDataSize];
 		writeB(stupidNc);
-		writeB(new byte[92]);// 5.1 protocol
-		writeD(accPlData.getDeletionTimeInSeconds());
 	}
 }

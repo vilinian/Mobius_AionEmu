@@ -1,27 +1,32 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
 import com.aionemu.gameserver.model.gameobjects.Item;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
-//import com.aionemu.gameserver.model.items.ManaStone;
+// import com.aionemu.gameserver.model.items.ManaStone;
 import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 
+/**
+ * This packet handles the result of a tuning action performed by a player.<br>
+ * It informs the client whether the tuning process was successful or failed.
+ * @author FrozenKiller
+ */
 public class SM_TUNE_RESULT extends AionServerPacket
 {
 	private final Player player;
@@ -29,6 +34,14 @@ public class SM_TUNE_RESULT extends AionServerPacket
 	private final int tuningScrollId;
 	private final int itemId;
 	
+	/**
+	 * This packet sends the result of an item tuning action to a player.<br>
+	 * It contains details about the items involved in the process.
+	 * @param player The {@link Player} who performed the action.
+	 * @param itemObjectId The unique object ID of the item being tuned.
+	 * @param tuningScrollId The ID of the scroll used for tuning.
+	 * @param itemId The ID of the resulting item after tuning.
+	 */
 	public SM_TUNE_RESULT(Player player, int itemObjectId, int tuningScrollId, int itemId)
 	{
 		this.player = player;
@@ -48,17 +61,19 @@ public class SM_TUNE_RESULT extends AionServerPacket
 			case ARMOR:
 			{
 				writeH(5);
-				break;
 			}
 			case WEAPON:
 			{
 				writeH(10);
-				break;
 			}
+			default:
+				break;
 		}
-		writeC(item.getEnchantLevel());
+		
+		writeC(item.getEnchantOrAuthorizeLevel());
 		writeD(itemId);
 		writeH(0); // TODO found value 256,512,1024 (maybe slot ?)
+		
 		// int count = 0;
 		// for (ManaStone manaStone : item.getItemStones()) {
 		// writeD(manaStone.getItemId());
@@ -71,12 +86,15 @@ public class SM_TUNE_RESULT extends AionServerPacket
 		// count++;
 		// }
 		// }
+		// System.out.println("Count: " + count);
+		// System.out.println("ManaStone: " + item.getItemStones());
 		writeD(0);
 		writeD(0);
 		writeD(0);
 		writeD(0);
 		writeD(0);
 		writeD(0);
+		
 		if (item.getGodStone() != null)
 		{
 			writeD(item.getGodStone().getItemId());
@@ -85,7 +103,9 @@ public class SM_TUNE_RESULT extends AionServerPacket
 		{
 			writeD(0);
 		}
+		
 		writeB(new byte[13]); // Spacer
+		
 		if (item.getIdianStone() != null)
 		{
 			writeD(item.getIdianStone().getItemId());
@@ -94,6 +114,7 @@ public class SM_TUNE_RESULT extends AionServerPacket
 		{
 			writeD(0);
 		}
+		
 		writeC(2); // TODO found value 0 and 2
 		writeB(new byte[120]); // Garbage
 		if (tuningScrollId > 0)

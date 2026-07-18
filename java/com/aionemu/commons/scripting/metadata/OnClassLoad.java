@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting.metadata;
 
@@ -23,16 +23,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Method marked as {@link OnClassLoad} will be called when class was loaded by script.<br>
- * It's more useful alternative for
- * <p/>
- * < pre> static { ... }
- * </pre>
- * <p/>
- * block.<br>
- * <br>
- * Only static methods with no arguments can be marked with this annotation.<br>
- * This is only used if {@link com.aionemu.commons.scripting.ScriptContext#getClassListener()} returns instance of {@link com.aionemu.commons.scripting.classlistener.OnClassLoadUnloadListener} subclass.
+ * This annotation marks a static method with no arguments to be executed when a class is loaded by a script.<br>
+ * It serves as a more flexible alternative to using a {@code static { ... }} block.<br>
+ * The method is only triggered if the {@code getClassListener} returns an instance of {@link com.aionemu.commons.scripting.classlistener.OnClassLoadUnloadListener} or one of its subclasses.
  * @author SoulKeeper
  */
 @Documented

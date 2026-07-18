@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -32,19 +32,30 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 import com.aionemu.gameserver.world.zone.ZoneName;
 
-import javolution.util.FastList;
-
 /**
+ * Handles administrative commands related to the auction system.<br>
+ * This class allows administrators to manage and interact with house auctions.<br>
+ * It provides functionality for interacting with {@link HousingBidService} and {@link HouseStatus}.
  * @author Rolandas
  * @modified Luzien
  */
 public class Auction extends AdminCommand
 {
+	/**
+	 * Initializes a new instance of the {@link Auction} class.<br>
+	 * This constructor registers the command with the name {@code auction}.
+	 */
 	public Auction()
 	{
 		super("auction");
 	}
 	
+	/**
+	 * Manages the addition and removal of houses from the auction system.<br>
+	 * Supports adding specific types by zone, removing houses by name or zone, and adding random houses based on race.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings containing the action (add, remove, addrandom) and required details.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
@@ -61,6 +72,7 @@ public class Auction extends AdminCommand
 				onFail(admin, null);
 				return;
 			}
+			
 			final String param = params[1].toUpperCase();
 			final List<House> housesToRemove = new ArrayList<>();
 			
@@ -71,6 +83,7 @@ public class Auction extends AdminCommand
 				{
 					PacketSendUtility.sendMessage(admin, "No such house!");
 				}
+				
 				housesToRemove.add(house);
 			}
 			else
@@ -81,12 +94,14 @@ public class Auction extends AdminCommand
 					PacketSendUtility.sendMessage(admin, "No such zone!");
 					return;
 				}
+				
 				for (House house : HousingService.getInstance().getCustomHouses())
 				{
 					if (house.getStatus() != HouseStatus.SELL_WAIT)
 					{
 						continue;
 					}
+					
 					final float x = house.getX();
 					final float y = house.getY();
 					final float z = house.getZ();
@@ -111,6 +126,7 @@ public class Auction extends AdminCommand
 					onFail(admin, null);
 					return;
 				}
+				
 				noSale = true;
 			}
 			
@@ -128,7 +144,6 @@ public class Auction extends AdminCommand
 		}
 		else if ("add".equals(params[0]))
 		{
-			
 			if ((params.length < 3) || (params.length > 4))
 			{
 				onFail(admin, null);
@@ -180,14 +195,11 @@ public class Auction extends AdminCommand
 			
 			for (House house : HousingService.getInstance().getCustomHouses())
 			{
-				if ((house.getOwnerId() != 0) || (house.getHouseType() != houseType))
+				if ((house.getOwnerId() != 0) || (house.getHouseType() != houseType) || (house.getStatus() == HouseStatus.INACTIVE))
 				{
 					continue;
 				}
-				if (house.getStatus() == HouseStatus.INACTIVE)
-				{
-					continue;
-				}
+				
 				if (house.getStatus() == HouseStatus.SELL_WAIT)
 				{
 					// check to see if the bid entry exists
@@ -202,6 +214,7 @@ public class Auction extends AdminCommand
 						continue;
 					}
 				}
+				
 				final float x = house.getX();
 				final float y = house.getY();
 				final float z = house.getZ();
@@ -283,6 +296,7 @@ public class Auction extends AdminCommand
 				PacketSendUtility.sendMessage(admin, "Invalid count. Only positive numbers!");
 				return;
 			}
+			
 			long bidPrice = 0;
 			if (params.length == 5)
 			{
@@ -302,7 +316,7 @@ public class Auction extends AdminCommand
 			}
 			
 			int counter = 0;
-			final FastList<House> houses = HousingService.getInstance().getCustomHouses();
+			final List<House> houses = HousingService.getInstance().getCustomHouses();
 			while (!houses.isEmpty() && (counter < count))
 			{
 				final House house = houses.get(Rnd.get(houses.size()));
@@ -311,6 +325,7 @@ public class Auction extends AdminCommand
 				{
 					continue;
 				}
+				
 				if (race != Race.PC_ALL)
 				{
 					final int mapId = house.getAddress().getMapId();
@@ -329,10 +344,12 @@ public class Auction extends AdminCommand
 						}
 					}
 				}
+				
 				if (house.getStatus() == HouseStatus.INACTIVE)
 				{
 					continue;
 				}
+				
 				if (house.getStatus() == HouseStatus.SELL_WAIT)
 				{
 					// check to see if the bid entry exists
@@ -370,8 +387,15 @@ public class Auction extends AdminCommand
 		{
 			onFail(admin, null);
 		}
+		
 	}
 	
+	/**
+	 * Handles the failure of an {@code execute} command.<br>
+	 * It sends a syntax hint to the player.
+	 * @param player The {@code Player} who attempted the command.
+	 * @param message The error message associated with the failure.
+	 */
 	@Override
 	public void onFail(Player player, String message)
 	{

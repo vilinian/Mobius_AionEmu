@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
@@ -31,6 +31,8 @@ import com.aionemu.gameserver.model.templates.item.WeaponType;
 import com.aionemu.gameserver.skillengine.model.Effect;
 
 /**
+ * Handles the application of weapon mastery effects to a character.<br>
+ * It calculates specific stat bonuses based on the {@link WeaponType} equipped by the player.
  * @author ATracer
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -40,6 +42,12 @@ public class WeaponMasteryEffect extends BuffEffect
 	@XmlAttribute(name = "weapon")
 	private WeaponType weaponType;
 	
+	/**
+	 * Starts a new {@link Effect} instance.<br>
+	 * This method initializes the effect and begins its execution.<br>
+	 * It is a convenience method that passes {@code null} for the abnormal state.
+	 * @param effect The {@code Effect} object to be started.
+	 */
 	@Override
 	public void startEffect(Effect effect)
 	{
@@ -62,6 +70,7 @@ public class WeaponMasteryEffect extends BuffEffect
 				masteryModifiers.add(new StatWeaponMasteryFunction(weaponType, StatEnum.OFF_HAND_POWER, modifier.getValue(), modifier.isBonus()));
 			}
 		}
+		
 		effect.getEffected().getGameStats().addEffect(effect, masteryModifiers);
 	}
 }

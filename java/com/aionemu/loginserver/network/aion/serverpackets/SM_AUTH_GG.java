@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.aion.serverpackets;
 
@@ -20,6 +20,8 @@ import com.aionemu.loginserver.network.aion.AionServerPacket;
 import com.aionemu.loginserver.network.aion.LoginConnection;
 
 /**
+ * This packet handles the {@code GG} (Good Game) authentication response.<br>
+ * It is used to acknowledge a successful game session transition during the login process.
  * @author -Nemesiss-
  */
 public class SM_AUTH_GG extends AionServerPacket
@@ -30,8 +32,9 @@ public class SM_AUTH_GG extends AionServerPacket
 	private final int sessionId;
 	
 	/**
-	 * Constructs new instance of <tt>SM_AUTH_GG</tt> packet
-	 * @param sessionId
+	 * Creates a new instance of the {@code SM_AUTH_GG} packet.<br>
+	 * This packet is used to handle authentication success messages.
+	 * @param sessionId The unique identifier for the current connection.
 	 */
 	public SM_AUTH_GG(int sessionId)
 	{
@@ -40,17 +43,10 @@ public class SM_AUTH_GG extends AionServerPacket
 		this.sessionId = sessionId;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void writeImpl(LoginConnection con)
 	{
 		writeD(sessionId);
-		writeD(0x00);
-		writeD(0x00);
-		writeD(0x00);
-		writeD(0x00);
-		writeB(new byte[0x19]);
+		writeB(new byte[35]);
 	}
 }

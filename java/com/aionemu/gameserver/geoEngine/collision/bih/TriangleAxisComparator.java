@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.collision.bih;
 
@@ -20,15 +20,31 @@ import java.util.Comparator;
 
 import com.aionemu.gameserver.geoEngine.math.Vector3f;
 
+/**
+ * Provides a comparison logic for {@link BIHTriangle} objects based on their axis values.<br>
+ * This class is used to sort triangles efficiently during the construction of Bounding Interval Hierarchies.
+ */
 public class TriangleAxisComparator implements Comparator<BIHTriangle>
 {
 	private final int axis;
 	
+	/**
+	 * Creates a new instance of {@link TriangleAxisComparator}.<br>
+	 * This constructor sets the specific coordinate axis used for comparison.
+	 * @param axis The integer representing the axis to compare along.
+	 */
 	public TriangleAxisComparator(int axis)
 	{
 		this.axis = axis;
 	}
 	
+	/**
+	 * Compares two {@link BIHTriangle} objects based on their center coordinates.<br>
+	 * The comparison is performed along a specific axis defined by this comparator.
+	 * @param o1 The first triangle to compare.
+	 * @param o2 The second triangle to compare.
+	 * @return A positive integer if the first triangle is greater, a negative integer if it is smaller, or zero if they are equal.
+	 */
 	@Override
 	public int compare(BIHTriangle o1, BIHTriangle o2)
 	{
@@ -38,29 +54,22 @@ public class TriangleAxisComparator implements Comparator<BIHTriangle>
 		switch (axis)
 		{
 			case 0:
-			{
 				v1 = c1.x;
 				v2 = c2.x;
 				break;
-			}
 			case 1:
-			{
 				v1 = c1.y;
 				v2 = c2.y;
 				break;
-			}
 			case 2:
-			{
 				v1 = c1.z;
 				v2 = c2.z;
 				break;
-			}
 			default:
-			{
 				assert false;
 				return 0;
-			}
 		}
+		
 		if (v1 > v2)
 		{
 			return 1;

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -35,13 +35,23 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.world.geo.GeoService;
 
 /**
- * @author Wartraxx
- **/
+ * Handles the client request to open a door within a house.<br>
+ * This packet triggers the {@link House} logic to check permissions and move the player.<br>
+ * It interacts with the {@link HousingService} to process the interaction.
+ * @author Rolandas
+ */
 public class CM_HOUSE_OPEN_DOOR extends AionClientPacket
 {
 	int address;
 	boolean leave = false;
 	
+	/**
+	 * Handles the client request to open a house door.<br>
+	 * This packet is processed by the server to update the door status.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state of the sender.
+	 * @param restStates Additional states associated with the packet.
+	 */
 	public CM_HOUSE_OPEN_DOOR(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -65,15 +75,18 @@ public class CM_HOUSE_OPEN_DOOR extends AionClientPacket
 		{
 			return;
 		}
+		
 		if ((player.getAccessLevel() >= 3) && HousingConfig.ENABLE_SHOW_HOUSE_DOORID)
 		{
-			PacketSendUtility.sendMessage(player, "House Door Id: " + address);
+			PacketSendUtility.sendMessage(player, "House door id: " + address);
 		}
+		
 		final House house = HousingService.getInstance().getHouseByAddress(address);
 		if (house == null)
 		{
 			return;
 		}
+		
 		if (leave)
 		{
 			if (house.getAddress().getExitMapId() != null)
@@ -89,8 +102,8 @@ public class CM_HOUSE_OPEN_DOOR extends AionClientPacket
 					final Vector3f colSign = GeoService.getInstance().getClosestCollision(sign, player.getX(), player.getY(), player.getZ() + 2, false, flags);
 					final Vector3f colWall = GeoService.getInstance().getClosestCollision(player, colSign.getX(), colSign.getY(), colSign.getZ(), true, flags);
 					final double radian = Math.toRadians(MathUtil.calculateAngleFrom(player.getX(), player.getY(), colWall.x, colWall.y));
-					final float x = (float) (Math.cos(radian) * 3.0D);
-					final float y = (float) (Math.sin(radian) * 3.0D);
+					final float x = (float) (Math.cos(radian) * 0.1);
+					final float y = (float) (Math.sin(radian) * 0.1);
 					TeleportService2.teleportTo(player, house.getWorldId(), colWall.getX() + x, colWall.getY() + y, player.getZ(), (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 				}
 				else
@@ -111,6 +124,7 @@ public class CM_HOUSE_OPEN_DOOR extends AionClientPacket
 				{
 					allowed = (player.getFriendList().getFriend(house.getOwnerId()) != null) || ((player.getLegion() != null) && player.getLegion().isMember(house.getOwnerId()));
 				}
+				
 				if (!allowed)
 				{
 					if (player.getAccessLevel() < HousingConfig.ENTER_HOUSE_ACCESSLEVEL)
@@ -120,6 +134,7 @@ public class CM_HOUSE_OPEN_DOOR extends AionClientPacket
 					}
 				}
 			}
+			
 			final double radian = Math.toRadians(MathUtil.convertHeadingToDegree(player.getHeading()));
 			final float x = (float) (Math.cos(radian) * 6);
 			final float y = (float) (Math.sin(radian) * 6);

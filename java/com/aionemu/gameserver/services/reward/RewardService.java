@@ -1,20 +1,23 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.reward;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,35 +30,52 @@ import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.templates.rewards.RewardEntryItem;
 import com.aionemu.gameserver.services.mail.SystemMailService;
 
-import javolution.util.FastList;
-
 /**
+ * This service handles the distribution of rewards to {@link Player} objects.<br>
+ * It manages reward logic for various game events and interacts with {@link RewardServiceDAO}.
  * @author KID
  */
 public class RewardService
 {
-	private final RewardServiceDAO dao;
 	private static RewardService controller = new RewardService();
 	private static final Logger log = LoggerFactory.getLogger(RewardService.class);
+	private final RewardServiceDAO dao;
 	
+	/**
+	 * Gets the singleton instance of the {@link RewardService}.<br>
+	 * This method provides a global access point to the reward system.
+	 * @return The active {@code RewardService} instance.
+	 */
 	public static RewardService getInstance()
 	{
 		return controller;
 	}
 	
+	/**
+	 * Creates a new instance of the {@link RewardService}.<br>
+	 * This constructor initializes the internal {@code dao} using {@link DAOManager}.
+	 */
 	public RewardService()
 	{
 		dao = DAOManager.getDAO(RewardServiceDAO.class);
 	}
 	
+	/**
+	 * Checks for available rewards for a specific player.<br>
+	 * Sends items to the player's mailbox if they are eligible.<br>
+	 * Updates the database to mark rewards as claimed.
+	 * @param player The {@link Player} object to check for rewards.
+	 */
 	public void verify(Player player)
 	{
-		final FastList<RewardEntryItem> list = dao.getAvailable(player.getObjectId());
+		final List<RewardEntryItem> list = dao.getAvailable(player.getObjectId());
 		if ((list.size() == 0) || (player.getMailbox() == null))
 		{
 			return;
 		}
-		final FastList<Integer> rewarded = FastList.newInstance();
+		
+		final List<Integer> rewarded = new ArrayList<>();
+		
 		for (RewardEntryItem item : list)
 		{
 			if (DataManager.ITEM_DATA.getItemTemplate(item.id) == null)
@@ -63,12 +83,14 @@ public class RewardService
 				log.warn("[RewardController][" + item.unique + "] null template for item " + item.id + " on player " + player.getObjectId() + ".");
 				continue;
 			}
+			
 			try
 			{
 				if (!SystemMailService.getInstance().sendMail("$$CASH_ITEM_MAIL", player.getName(), item.id + ", " + item.count, "0, " + (System.currentTimeMillis() / 1000) + ",", item.id, (int) item.count, 0, LetterType.BLACKCLOUD))
 				{
 					continue;
 				}
+				
 				log.info("[RewardController][" + item.unique + "] player " + player.getName() + " has received (" + item.count + ")" + item.id + ".");
 				rewarded.add(item.unique);
 			}
@@ -78,11 +100,10 @@ public class RewardService
 				continue;
 			}
 		}
+		
 		if (rewarded.size() > 0)
 		{
 			dao.uncheckAvailable(rewarded);
-			FastList.recycle(rewarded);
-			FastList.recycle(list);
 		}
 	}
 }

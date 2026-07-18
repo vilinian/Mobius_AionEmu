@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting.impl.javacompiler;
 
@@ -22,7 +22,8 @@ import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 
 /**
- * This class allows us to compile sources that are located only in memory.
+ * This class provides a way to compile Java source code that exists only in memory.<br>
+ * It extends {@link SimpleJavaFileObject} to handle source content as a {@code String}.
  * @author SoulKeeper
  */
 public class JavaSourceFromString extends SimpleJavaFileObject
@@ -33,9 +34,10 @@ public class JavaSourceFromString extends SimpleJavaFileObject
 	private final String code;
 	
 	/**
-	 * Creates new object that contains sources of java class
-	 * @param className class name of class
-	 * @param code source code of class
+	 * Creates a new {@link JavaSourceFromString} object from a string of source code.<br>
+	 * This method is used to compile Java classes that are stored in memory rather than on disk.
+	 * @param className The name of the class to be created.
+	 * @param code The raw source code as a {@code String}.
 	 */
 	public JavaSourceFromString(String className, String code)
 	{
@@ -44,9 +46,10 @@ public class JavaSourceFromString extends SimpleJavaFileObject
 	}
 	
 	/**
-	 * Returns class source code
-	 * @param ignoreEncodingErrors not used
-	 * @return class source code
+	 * Retrieves the source code content as a {@code CharSequence}.<br>
+	 * This method returns the internal {@code code} string.
+	 * @param ignoreEncodingErrors Set to {@code true} to skip errors, or {@code false} to throw them.
+	 * @return The source code of the class.
 	 */
 	@Override
 	public CharSequence getCharContent(boolean ignoreEncodingErrors)

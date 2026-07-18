@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.database.mysql5;
 
@@ -37,23 +37,30 @@ import com.aionemu.gameserver.model.gameobjects.PersistentState;
 import com.aionemu.gameserver.model.templates.challenge.ChallengeQuestTemplate;
 import com.aionemu.gameserver.model.templates.challenge.ChallengeType;
 
-import javolution.util.FastMap;
-
 /**
+ * This class provides the database access layer for managing {@link ChallengeTask} data using a {@code mysql5} backend.<br>
+ * It handles all SQL queries related to challenge tasks and inherits functionality from {@link ChallengeTasksDAO}.
  * @author ViAl
  */
 public class MySQL5ChallengeTasksDAO extends ChallengeTasksDAO
 {
 	private static final Logger log = LoggerFactory.getLogger(MySQL5ChallengeTasksDAO.class);
-	
 	private static final String SELECT_QUERY = "SELECT * FROM `challenge_tasks` WHERE `owner_id` = ? AND `owner_type` = ?";
 	private static final String INSERT_QUERY = "INSERT INTO `challenge_tasks` (`task_id`, `quest_id`, `owner_id`, `owner_type`, `complete_count`, `complete_time`) VALUES (?, ?, ?, ?, ?, ?);";
 	private static final String UPDATE_QUERY = "UPDATE `challenge_tasks` SET `complete_count` = ?, `complete_time`= ? WHERE `task_id` = ? AND `quest_id` = ? AND `owner_id` = ?";
 	
+	/**
+	 * Loads all challenge tasks from the database for a specific owner.<br>
+	 * This method filters results based on the provided {@code ownerId} and {@code type}.<br>
+	 * It returns a map where the keys are task IDs and values are {@link ChallengeTask} objects.
+	 * @param ownerId The unique identifier of the owner.
+	 * @param type The category of the challenge to filter by.
+	 * @return A {@code Map} containing all loaded tasks for the given criteria.
+	 */
 	@Override
 	public Map<Integer, ChallengeTask> load(int ownerId, ChallengeType type)
 	{
-		final FastMap<Integer, ChallengeTask> tasks = new FastMap<Integer, ChallengeTask>().shared();
+		final Map<Integer, ChallengeTask> tasks = new HashMap<>();
 		Connection conn = null;
 		try
 		{
@@ -83,6 +90,7 @@ public class MySQL5ChallengeTasksDAO extends ChallengeTasksDAO
 					tasks.get(taskId).getQuests().put(questId, quest);
 				}
 			}
+			
 			rset.close();
 			stmt.close();
 		}
@@ -94,9 +102,16 @@ public class MySQL5ChallengeTasksDAO extends ChallengeTasksDAO
 		{
 			DatabaseFactory.close(conn);
 		}
+		
 		return tasks;
 	}
 	
+	/**
+	 * Saves the progress of a {@link ChallengeTask} to the database.<br>
+	 * This method checks the status of each quest within the task.<br>
+	 * It calls {@code insertQuestEntry} for new quests and {@code updateQuestEntry} for updates.
+	 * @param task The {@code ChallengeTask} object containing the data to be stored.
+	 */
 	@Override
 	public void storeTask(ChallengeTask task)
 	{
@@ -105,19 +120,24 @@ public class MySQL5ChallengeTasksDAO extends ChallengeTasksDAO
 			switch (quest.getPersistentState())
 			{
 				case NEW:
-				{
 					insertQuestEntry(task, quest);
 					break;
-				}
 				case UPDATE_REQUIRED:
-				{
 					updateQuestEntry(task, quest);
 					break;
-				}
+				default:
+					break;
 			}
 		}
 	}
 	
+	/**
+	 * Saves a new {@link ChallengeTask} entry into the database.<br>
+	 * This method links the task with its corresponding {@link ChallengeQuest}.<br>
+	 * It updates the quest state to {@code PersistentState.UPDATED} after success.
+	 * @param task The {@code ChallengeTask} object containing the data to save.
+	 * @param quest The {@link ChallengeQuest} object associated with this task.
+	 */
 	private void insertQuestEntry(ChallengeTask task, ChallengeQuest quest)
 	{
 		Connection conn = null;
@@ -145,6 +165,13 @@ public class MySQL5ChallengeTasksDAO extends ChallengeTasksDAO
 		}
 	}
 	
+	/**
+	 * Updates the progress of a specific quest entry in the database.<br>
+	 * This method synchronizes the completion count and time from the {@code ChallengeTask}.<br>
+	 * It also sets the persistent state of the {@link ChallengeQuest} to {@code UPDATED}.
+	 * @param task The {@code ChallengeTask} containing the updated progress data.
+	 * @param quest The {@link ChallengeQuest} object that needs to be refreshed.
+	 */
 	private void updateQuestEntry(ChallengeTask task, ChallengeQuest quest)
 	{
 		Connection conn = null;
@@ -171,10 +198,17 @@ public class MySQL5ChallengeTasksDAO extends ChallengeTasksDAO
 		}
 	}
 	
+	/**
+	 * Checks if the current database is compatible with this DAO.<br>
+	 * It uses {@code int, int)} to verify the version.
+	 * @param databaseName The name of the database to check.
+	 * @param majorVersion The major version number of the database.
+	 * @param minorVersion The minor version number of the database.
+	 * @return {@code true} if the database is supported, {@code false} otherwise.
+	 */
 	@Override
 	public boolean supports(String databaseName, int majorVersion, int minorVersion)
 	{
 		return MySQL5DAOUtils.supports(databaseName, majorVersion, minorVersion);
 	}
-	
 }

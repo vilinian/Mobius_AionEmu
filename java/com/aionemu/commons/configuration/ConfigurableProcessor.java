@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.configuration;
 
@@ -24,7 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is designed to process classes and interfaces that have fields marked with {@link Property} annotation
+ * This class processes classes and interfaces containing fields annotated with {@link Property}.<br>
+ * It handles the configuration logic for these components.<br>
+ * Use this class to manage property-based configurations across the system.
  * @author SoulKeeper
  */
 public class ConfigurableProcessor
@@ -32,13 +34,11 @@ public class ConfigurableProcessor
 	private static final Logger log = LoggerFactory.getLogger(ConfigurableProcessor.class);
 	
 	/**
-	 * This method is an entry point to the parser logic.<br>
-	 * Any object or class that have {@link Property} annotation in it or it's parent class/interface can be submitted here.<br>
-	 * If object(new Something()) is submitted, object fields are parsed. (non-static)<br>
-	 * If class is submitted(Sotmething.class), static fields are parsed.<br>
-	 * <p/>
-	 * @param object Class or Object that has {@link Property} annotations.
-	 * @param properties Properties that should be used while seraching for a {@link Property#key()}
+	 * Processes fields marked with the {@link Property} annotation.<br>
+	 * This method handles both class types and specific instances.<br>
+	 * It uses the provided {@code Properties} to map keys to values.
+	 * @param object The {@code Class} or instance to process.
+	 * @param properties A variable number of {@code Properties} objects used for lookups.
 	 */
 	public static void process(Object object, Properties... properties)
 	{
@@ -58,18 +58,18 @@ public class ConfigurableProcessor
 	}
 	
 	/**
-	 * This method uses recurcieve calls to launch search for {@link Property} annotation on itself and parents\interfaces.
-	 * @param clazz Class of object
-	 * @param obj Object if any, null if parsing class (static fields only)
-	 * @param props Properties with keys\values
+	 * Processes fields for a specific class and its hierarchy.<br>
+	 * This method handles both instance and static properties.<br>
+	 * It recursively explores interfaces and superclasses.
+	 * @param clazz The {@code Class<?>} to be processed.
+	 * @param obj The object instance to use for non-static field values.
+	 * @param props An array of {@code Properties} used to look up configuration keys.
 	 */
 	private static void process(Class<?> clazz, Object obj, Properties[] props)
 	{
 		processFields(clazz, obj, props);
 		
-		// Interfaces can't have any object fields, only static
-		// So there is no need to parse interfaces for instances of objects
-		// Only classes (static fields) can be located in interfaces
+		// Since interfaces cannot contain instance fields, only classes can be parsed for object instances.
 		if (obj == null)
 		{
 			for (Class<?> itf : clazz.getInterfaces())
@@ -86,23 +86,20 @@ public class ConfigurableProcessor
 	}
 	
 	/**
-	 * This method runs throught the declared fields watching for the {@link Property} annotation. It also watches for the field modifiers like {@link java.lang.reflect.Modifier#STATIC} and {@link java.lang.reflect.Modifier#FINAL}
-	 * @param clazz Class of object
-	 * @param obj Object if any, null if parsing class (static fields only)
-	 * @param props Properties with keys\values
+	 * Iterates through all declared fields of a specific class.<br>
+	 * It identifies fields marked with the {@link Property} annotation.<br>
+	 * The method filters out static fields based on whether an instance is provided.<br>
+	 * It calls {@code Object, java.util.Properties[])} for each valid field.
+	 * @param clazz The class to inspect for fields.
+	 * @param obj The object instance to use if processing non-static fields.
+	 * @param props An array of {@link Properties} used to look up configuration values.
 	 */
 	private static void processFields(Class<?> clazz, Object obj, Properties[] props)
 	{
 		for (Field f : clazz.getDeclaredFields())
 		{
-			// Static fields should not be modified when processing object
-			if (Modifier.isStatic(f.getModifiers()) && (obj != null))
-			{
-				continue;
-			}
-			
-			// Not static field should not be processed when parsing class
-			if (!Modifier.isStatic(f.getModifiers()) && (obj == null))
+			// Static fields should not be modified or processed when parsing classes.
+			if ((Modifier.isStatic(f.getModifiers()) && (obj != null)) || (!Modifier.isStatic(f.getModifiers()) && (obj == null)))
 			{
 				continue;
 			}
@@ -115,22 +112,22 @@ public class ConfigurableProcessor
 					log.error("Attempt to proceed final field " + f.getName() + " of class " + clazz.getName());
 					throw new RuntimeException();
 				}
+				
 				processField(f, obj, props);
 			}
 		}
 	}
 	
 	/**
-	 * This method takes {@link Property} annotation and does sets value according to annotation property. For this reason {@link #getFieldValue(java.lang.reflect.Field, java.util.Properties[])} can be called, however if method sees that there is no need - field can remain with it's initial value.
-	 * <p/>
-	 * Also this method is capturing and logging all {@link Exception} that are thrown by underlying methods.
-	 * @param f field that is going to be processed
-	 * @param obj Object if any, null if parsing class (static fields only)
-	 * @param props Properties with kyes\values
+	 * Processes a single {@code Field} to update its value.<br>
+	 * It checks if the field has a {@link Property} annotation.<br>
+	 * The value is updated if it differs from the default or exists in the properties.
+	 * @param f The {@code Field} to be processed.
+	 * @param obj The object instance where the field value will be set.
+	 * @param props An array of {@code Properties} used to look up values.
 	 */
 	private static void processField(Field f, Object obj, Properties[] props)
 	{
-		final boolean oldAccessible = f.isAccessible();
 		f.setAccessible(true);
 		try
 		{
@@ -149,17 +146,18 @@ public class ConfigurableProcessor
 			log.error("Can't transform field " + f.getName() + " of class " + f.getDeclaringClass());
 			throw new RuntimeException();
 		}
-		f.setAccessible(oldAccessible);
+		
 	}
 	
 	/**
-	 * This method is responsible for receiving field value.<br>
-	 * It tries to load property by key, if not found - it uses default value.<br>
-	 * Transformation is done using {@link com.aionemu.commons.configuration.PropertyTransformerFactory}
-	 * @param field field that has to be transformed
-	 * @param props properties with key\values
-	 * @return transformed object that will be used as field value
-	 * @throws TransformationException if something goes wrong during transformation
+	 * Retrieves and transforms the value for a specific {@code Field}.<br>
+	 * It looks up the value in the provided {@code Properties} array using the key from the {@link Property} annotation.<br>
+	 * If no value is found, it falls back to the default value defined in the annotation.<br>
+	 * The final result is processed by a {@link PropertyTransformer}.
+	 * @param field The {@code Field} to retrieve the value from.
+	 * @param props An array of {@code Properties} used to look up configuration values.
+	 * @return The transformed value as an {@code Object}.
+	 * @throws TransformationException If an error occurs during the transformation process.
 	 */
 	private static Object getFieldValue(Field field, Properties[] props) throws TransformationException
 	{
@@ -191,10 +189,12 @@ public class ConfigurableProcessor
 	}
 	
 	/**
-	 * Finds value by key in properties
-	 * @param key value key
-	 * @param props properties to loook for the key
-	 * @return value if found, null otherwise
+	 * Searches for a specific property value across an array of {@code Properties}.<br>
+	 * It returns the first value found that matches the provided {@code key}.<br>
+	 * If no match is found, it returns {@code null}.
+	 * @param key The name of the property to look for.
+	 * @param props An array of {@code Properties} objects to search through.
+	 * @return The value associated with the {@code key}, or {@code null} if not found.
 	 */
 	private static String findPropertyByKey(String key, Properties[] props)
 	{
@@ -210,10 +210,11 @@ public class ConfigurableProcessor
 	}
 	
 	/**
-	 * Checks if key is present in the given properties
-	 * @param key key to check
-	 * @param props prperties to look for key
-	 * @return true if key present, false in other case
+	 * Checks if a specific key exists within an array of {@code Properties}.<br>
+	 * It calls the {@code Properties[])} method to perform the search.
+	 * @param key The string name of the key to look for.
+	 * @param props An array of {@code Properties} objects to search through.
+	 * @return {@code true} if the key is found, or {@code false} otherwise.
 	 */
 	private static boolean isKeyPresent(String key, Properties[] props)
 	{

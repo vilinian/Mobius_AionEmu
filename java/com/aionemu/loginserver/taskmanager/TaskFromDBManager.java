@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.taskmanager;
 
@@ -26,6 +26,9 @@ import com.aionemu.loginserver.dao.TaskFromDBDAO;
 import com.aionemu.loginserver.taskmanager.trigger.TaskFromDBTrigger;
 
 /**
+ * This class manages the retrieval and handling of tasks stored in the database.<br>
+ * It works with {@link TaskFromDBDAO} to fetch data and coordinate task execution.<br>
+ * Use this manager to process any dynamic tasks loaded from the system's storage.
  * @author nrg
  */
 public class TaskFromDBManager
@@ -33,7 +36,12 @@ public class TaskFromDBManager
 	private static final Logger log = LoggerFactory.getLogger(TaskFromDBManager.class);
 	private final ArrayList<TaskFromDBTrigger> tasksList;
 	
-	TaskFromDBManager()
+	/**
+	 * Private constructor for initializing the {@code TaskFromDBManager}.<br>
+	 * It loads all tasks from the database using {@link TaskFromDBDAO}.<br>
+	 * It then registers the task instances into the internal list.
+	 */
+	private TaskFromDBManager()
 	{
 		tasksList = getDAO().getAllTasks();
 		log.info("Loaded " + tasksList.size() + " task" + (tasksList.size() > 1 ? "s" : "") + " from the database");
@@ -42,7 +50,9 @@ public class TaskFromDBManager
 	}
 	
 	/**
-	 * Launching & checking task process
+	 * Initializes all valid tasks loaded from the database.<br>
+	 * It iterates through the {@code tasksList}.<br>
+	 * Each valid {@link TaskFromDBTrigger} calls its {@code initTrigger()} method.
 	 */
 	private void registerTaskInstances()
 	{
@@ -61,8 +71,9 @@ public class TaskFromDBManager
 	}
 	
 	/**
-	 * Retuns {@link com.aionemu.gameserver.dao.TaskFromDBDAO} , just a shortcut
-	 * @return {@link com.aionemu.gameserver.dao.TaskFromDBDAO}
+	 * Retrieves the database access object for tasks.<br>
+	 * This method uses {@link DAOManager} to fetch the correct instance.
+	 * @return The {@code TaskFromDBDAO} instance used for database operations.
 	 */
 	private static TaskFromDBDAO getDAO()
 	{
@@ -70,8 +81,9 @@ public class TaskFromDBManager
 	}
 	
 	/**
-	 * Get the instance
-	 * @return
+	 * Provides the global instance of the {@link TaskFromDBManager}.<br>
+	 * This method follows the Singleton pattern.
+	 * @return The singleton instance of {@code TaskFromDBManager}.
 	 */
 	public static TaskFromDBManager getInstance()
 	{

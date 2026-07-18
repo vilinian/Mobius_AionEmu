@@ -1,20 +1,23 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.world.zone;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,27 +27,36 @@ import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.templates.zone.ZoneInfo;
 import com.aionemu.gameserver.world.knownlist.Visitor;
 
-import javolution.util.FastMap;
-
 /**
+ * Represents a specific instance of a zone where invasion events occur.<br>
+ * This class manages the unique state and logic for these specialized areas.
  * @author Source
  */
 public class InvasionZoneInstance extends ZoneInstance
 {
 	private static final Logger log = LoggerFactory.getLogger(InvasionZoneInstance.class);
-	private final FastMap<Integer, Player> players = new FastMap<>();
+	private final Map<Integer, Player> players = new HashMap<>();
 	
 	/**
-	 * @param mapId
-	 * @param template
+	 * Creates a new instance of an invasion zone.<br>
+	 * This constructor initializes the zone using a specific map and template.
+	 * @param mapId The unique identifier for the map.
+	 * @param template The {@link ZoneInfo} configuration for this zone.
 	 */
 	public InvasionZoneInstance(int mapId, ZoneInfo template)
 	{
 		super(mapId, template);
 	}
 	
+	/**
+	 * Handles the logic when a {@code Creature} enters this zone.<br>
+	 * It checks if the creature can enter using the parent class method.<br>
+	 * If successful, it adds the player to the internal tracking list.
+	 * @param creature The {@code Creature} entering the zone.
+	 * @return {@code true} if the creature successfully entered, otherwise {@code false}.
+	 */
 	@Override
-	public boolean onEnter(Creature creature)
+	public synchronized boolean onEnter(Creature creature)
 	{
 		if (super.onEnter(creature))
 		{
@@ -52,11 +64,19 @@ public class InvasionZoneInstance extends ZoneInstance
 			{
 				players.put(creature.getObjectId(), (Player) creature);
 			}
+			
 			return true;
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * This method is called when a {@link Creature} leaves the zone.<br>
+	 * It removes the creature from the internal player list if it is a {@link Player}.
+	 * @param creature The {@link Creature} that is leaving the zone.
+	 * @return {@code true} if the leave action was successful, otherwise {@code false}.
+	 */
 	@Override
 	public synchronized boolean onLeave(Creature creature)
 	{
@@ -66,18 +86,25 @@ public class InvasionZoneInstance extends ZoneInstance
 			{
 				players.remove(creature.getObjectId());
 			}
+			
 			return true;
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * Iterates through all {@link Player} objects in the current location.<br>
+	 * Applies the provided {@code Visitor} to each non-null player found.<br>
+	 * Logs an error if any exception occurs during the process.
+	 * @param visitor The {@code Visitor} to apply to every player.
+	 */
 	public void doOnAllPlayers(Visitor<Player> visitor)
 	{
 		try
 		{
-			for (FastMap.Entry<Integer, Player> e = players.head(), mapEnd = players.tail(); (e = e.getNext()) != mapEnd;)
+			for (Player player : players.values())
 			{
-				final Player player = e.getValue();
 				if (player != null)
 				{
 					visitor.visit(player);
@@ -89,5 +116,4 @@ public class InvasionZoneInstance extends ZoneInstance
 			log.error("Exception when running visitor on all players" + ex);
 		}
 	}
-	
 }

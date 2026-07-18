@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services;
 
@@ -23,9 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.database.dao.DAOManager;
-import com.aionemu.gameserver.GameServer;
 import com.aionemu.gameserver.configs.main.CacheConfig;
-import com.aionemu.gameserver.configs.main.GSConfig;
 import com.aionemu.gameserver.dao.InventoryDAO;
 import com.aionemu.gameserver.dao.LegionMemberDAO;
 import com.aionemu.gameserver.dao.PlayerAppearanceDAO;
@@ -50,27 +48,32 @@ import com.aionemu.gameserver.utils.collections.cachemap.CacheMapFactory;
 import com.aionemu.gameserver.world.World;
 
 /**
- * This class is a front-end for daos and it's responsibility is to retrieve the Account objects
+ * This class serves as a front-end for {@code DAO} objects.<br>
+ * Its primary responsibility is to retrieve and manage {@link Account} objects.
  * @author Luno
  * @modified cura
+ * @author GiGatR00n
  */
 public class AccountService
 {
 	private static final Logger log = LoggerFactory.getLogger(AccountService.class);
-	
 	private static CacheMap<Integer, Account> accountsMap = CacheMapFactory.createSoftCacheMap("Account", "account");
 	
 	/**
-	 * Returns {@link Account} object that has given id.
-	 * @param accountId
-	 * @param accountTime
-	 * @param accountName
-	 * @param accessLevel
-	 * @param membership
-	 * @param toll
-	 * @return Account
+	 * Retrieves an {@link Account} object from the cache or database.<br>
+	 * This method updates the account details with the provided values.<br>
+	 * It also removes any deleted characters associated with the account.
+	 * @param accountId The unique identifier for the account.
+	 * @param accountName The name of the account.
+	 * @param accountTime The time data for the account.
+	 * @param accessLevel The permission level assigned to the account.
+	 * @param membership The membership status of the account.
+	 * @param toll The toll value associated with the account.
+	 * @param luna The luna value associated with the account.
+	 * @param isReturn A flag indicating if the account is a return.
+	 * @return The updated {@link Account} object.
 	 */
-	public static Account getAccount(int accountId, String accountName, AccountTime accountTime, byte accessLevel, byte membership, long toll)
+	public static Account getAccount(int accountId, String accountName, AccountTime accountTime, byte accessLevel, byte membership, long toll, long luna, byte isReturn)
 	{
 		log.debug("[AS] request for account: " + accountId);
 		
@@ -83,26 +86,26 @@ public class AccountService
 				accountsMap.put(accountId, account);
 			}
 		}
+		
 		account.setName(accountName);
 		account.setAccountTime(accountTime);
 		account.setAccessLevel(accessLevel);
 		account.setMembership(membership);
 		account.setToll(toll);
-		// account.setLuna(luna);
+		account.setLuna(luna);
+		account.setIsReturn(isReturn);
 		removeDeletedCharacters(account);
-		if (account.isEmpty())
-		{
-			removeAccountWH(accountId);
-		}
-		
 		return account;
 	}
 	
 	/**
-	 * Removes from db characters that should be deleted (their deletion time has passed).
-	 * @param account
+	 * This method removes characters from an {@code Account} that have been marked for deletion.<br>
+	 * It checks if the current system time has passed the character's deletion timestamp.<br>
+	 * If a character is removed, it updates the account race count and calls {@code deletePlayerFromDB}.<br>
+	 * If the account becomes empty after removal, it clears the warehouse and removes the account from the whitelist.
+	 * @param account The {@code Account} object to process for deleted characters.
 	 */
-	private static void removeDeletedCharacters(Account account)
+	public static void removeDeletedCharacters(Account account)
 	{
 		/* Removes chars that should be removed */
 		final Iterator<PlayerAccountData> it = account.iterator();
@@ -110,32 +113,38 @@ public class AccountService
 		{
 			final PlayerAccountData pad = it.next();
 			final Race race = pad.getPlayerCommonData().getRace();
-			final int deletionTime = pad.getDeletionTimeInSeconds() * 1000;
+			final long deletionTime = (long) pad.getDeletionTimeInSeconds() * (long) 1000;
 			if ((deletionTime != 0) && (deletionTime <= System.currentTimeMillis()))
 			{
 				it.remove();
 				account.decrementCountOf(race);
 				PlayerService.deletePlayerFromDB(pad.getPlayerCommonData().getPlayerObjId());
-				if (GSConfig.ENABLE_RATIO_LIMITATION && (pad.getPlayerCommonData().getLevel() >= GSConfig.RATIO_MIN_REQUIRED_LEVEL))
-				{
-					if (account.getNumberOf(race) == 0)
-					{
-						GameServer.updateRatio(pad.getPlayerCommonData().getRace(), -1);
-					}
-				}
 			}
+		}
+		
+		if (account.isEmpty())
+		{
+			removeAccountWH(account.getId());
+			account.getAccountWarehouse().clear();
 		}
 	}
 	
+	/**
+	 * Removes the warehouse data for a specific account.<br>
+	 * This method interacts with the {@link InventoryDAO} to delete records.
+	 * @param accountId The unique identifier of the account to process.
+	 */
 	private static void removeAccountWH(int accountId)
 	{
 		DAOManager.getDAO(InventoryDAO.class).deleteAccountWH(accountId);
 	}
 	
 	/**
-	 * Loads account data and returns.
-	 * @param accountId
-	 * @return
+	 * Loads an {@link Account} object from the database using a unique ID.<br>
+	 * This method retrieves all character data and warehouse information for the given account.<br>
+	 * It ensures that online statuses are verified against the current world state.
+	 * @param accountId The unique identifier of the account to load.
+	 * @return The populated {@link Account} object.
 	 */
 	public static Account loadAccount(int accountId)
 	{
@@ -158,6 +167,7 @@ public class AccountService
 					log.warn(playerCommonData.getName() + " has online status, but I cant find it in World. Skip online status");
 				}
 			}
+			
 			final PlayerAppearance appereance = appereanceDAO.load(playerId);
 			
 			final LegionMember legionMember = DAOManager.getDAO(LegionMemberDAO.class).loadLegionMember(playerId);
@@ -185,6 +195,7 @@ public class AccountService
 		{
 			account.setAccountWarehouse(new PlayerStorage(StorageType.ACCOUNT_WAREHOUSE));
 		}
+		
 		return account;
 	}
 }

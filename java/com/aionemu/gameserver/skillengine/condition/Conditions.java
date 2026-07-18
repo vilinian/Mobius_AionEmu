@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.condition;
 
@@ -31,11 +31,18 @@ import com.aionemu.gameserver.skillengine.model.Effect;
 import com.aionemu.gameserver.skillengine.model.Skill;
 
 /**
+ * This class serves as a container for various skill conditions.<br>
+ * It defines the requirements that must be met for a {@link Skill} to execute its effects.
  * @author ATracer
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Conditions", propOrder =
 {
+	/**
+	 * This class represents a collection of conditions.<br>
+	 * It is used to check various requirements for skills and effects.<br>
+	 * Each condition can be mapped to specific types like {@code hp}, {@code mp}, or {@code target}.
+	 */
 	"conditions"
 })
 public class Conditions
@@ -47,36 +54,32 @@ public class Conditions
 		@XmlElement(name = "mp", type = MpCondition.class),
 		@XmlElement(name = "hp", type = HpCondition.class),
 		@XmlElement(name = "dp", type = DpCondition.class),
-		@XmlElement(name = "playermove", type = PlayerMovedCondition.class),
+		@XmlElement(name = "move_casting", type = PlayerMovedCondition.class),
+		@XmlElement(name = "arrowcheck", type = ArrowCheckCondition.class),
 		@XmlElement(name = "onfly", type = OnFlyCondition.class),
 		@XmlElement(name = "weapon", type = WeaponCondition.class),
 		@XmlElement(name = "noflying", type = NoFlyingCondition.class),
-		@XmlElement(name = "shield", type = ShieldCondition.class),
-		@XmlElement(name = "armor", type = ArmorCondition.class),
-		@XmlElement(name = "charge", type = ChargeCondition.class),
+		@XmlElement(name = "lefthandweapon", type = LeftHandCondition.class),
+		@XmlElement(name = "charge", type = ItemChargeCondition.class),
+		@XmlElement(name = "chargeweapon", type = ChargeWeaponCondition.class),
+		@XmlElement(name = "chargearmor", type = ChargeArmorCondition.class),
+		@XmlElement(name = "polishchargeweapon", type = PolishChargeCondition.class),
+		@XmlElement(name = "skillcharge", type = SkillChargeCondition.class),
 		@XmlElement(name = "targetflying", type = TargetFlyingCondition.class),
 		@XmlElement(name = "selfflying", type = SelfFlyingCondition.class),
 		@XmlElement(name = "combatcheck", type = CombatCheckCondition.class),
-		@XmlElement(name = "front", type = FrontCondition.class),
 		@XmlElement(name = "chain", type = ChainCondition.class),
+		@XmlElement(name = "front", type = FrontCondition.class),
 		@XmlElement(name = "back", type = BackCondition.class),
 		@XmlElement(name = "form", type = FormCondition.class),
-		@XmlElement(name = "idianchargeweapon", type = IdianChargeCondition.class)
+		@XmlElement(name = "robotcheck", type = RobotCheckCondition.class)
 	})
 	protected List<Condition> conditions;
 	
 	/**
-	 * Gets the value of the conditions property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the conditions property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getConditions().add(newItem);
-	 * </pre>
-	 * 
-	 * @return
+	 * Retrieves the list of {@link Condition} objects.<br>
+	 * If the internal list is {@code null}, a new {@code ArrayList} is created.
+	 * @return A {@code List} of all active conditions.
 	 */
 	public List<Condition> getConditions()
 	{
@@ -84,9 +87,17 @@ public class Conditions
 		{
 			conditions = new ArrayList<>();
 		}
+		
 		return conditions;
 	}
 	
+	/**
+	 * Checks if the provided {@link Skill} meets all required conditions.<br>
+	 * It iterates through every {@code Condition} in the list.<br>
+	 * If any condition fails, it returns {@code false}.
+	 * @param skill The {@code Skill} object to be validated.
+	 * @return {@code true} if all conditions are met, otherwise {@code false}.
+	 */
 	public boolean validate(Skill skill)
 	{
 		if (conditions != null)
@@ -99,9 +110,18 @@ public class Conditions
 				}
 			}
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if the current {@link IStatFunction} is valid for a specific statistic.<br>
+	 * It evaluates the conditions attached to the function.<br>
+	 * If no conditions exist, it returns {@code true}.
+	 * @param stat The {@code Stat2} object to check against.
+	 * @param statFunction The {@link IStatFunction} being validated.
+	 * @return {@code true} if the conditions are met or missing, {@code false} otherwise.
+	 */
 	public boolean validate(Stat2 stat, IStatFunction statFunction)
 	{
 		if (conditions != null)
@@ -114,9 +134,17 @@ public class Conditions
 				}
 			}
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if the {@code effect} meets all required conditions.<br>
+	 * It iterates through every {@link Condition} in the list.<br>
+	 * If any condition fails, it returns {@code false}.
+	 * @param effect The {@code Effect} object to validate.
+	 * @return {@code true} if all conditions are met, otherwise {@code false}.
+	 */
 	public boolean validate(Effect effect)
 	{
 		if (conditions != null)
@@ -129,6 +157,7 @@ public class Conditions
 				}
 			}
 		}
+		
 		return true;
 	}
 }

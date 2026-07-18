@@ -1,24 +1,26 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.utils.stats;
 
 import java.util.NoSuchElementException;
 
 /**
+ * Defines the types of rewards available for AP (Action Point) statistics.<br>
+ * This enumeration is used to categorize different reward categories within the game system.
  * @author Source
  */
 public enum APRewardEnum
@@ -42,24 +44,37 @@ public enum APRewardEnum
 	COMMANDER(17, 6.25f),
 	SUPREME_COMMANDER(18, 6.25f);
 	
-	private int playerRank;
+	private final int playerRank;
+	private final float rewardPercent;
 	
-	private float rewardPercent;
-	
+	/**
+	 * Creates a new instance of {@link APRewardEnum}.<br>
+	 * This constructor initializes the rank and reward values.
+	 * @param playerRank The numerical rank assigned to the player.
+	 * @param rewardPercent The percentage of the reward for this rank.
+	 */
 	private APRewardEnum(int playerRank, float rewardPercent)
 	{
 		this.playerRank = playerRank;
 		this.rewardPercent = rewardPercent;
 	}
 	
+	/**
+	 * Returns the reward percentage for this specific rank.<br>
+	 * This value is used to calculate rewards based on the {@code APRewardEnum}.
+	 * @return The reward percentage as a {@code float}.
+	 */
 	public float rewardPercent()
 	{
 		return rewardPercent;
 	}
 	
 	/**
-	 * @param playerRank current Abyss Rank
-	 * @return AP reward percentage
+	 * Calculates the AP reward based on a specific player rank.<br>
+	 * It returns the percentage associated with the {@code playerRank}.<br>
+	 * If the rank is out of bounds, it uses the nearest available value.
+	 * @param playerRank The numerical rank of the player.
+	 * @return The calculated reward as a {@code float}.
 	 */
 	public static float apReward(int playerRank)
 	{
@@ -67,6 +82,7 @@ public enum APRewardEnum
 		{
 			return GRADE9_SOLDIER.rewardPercent;
 		}
+		
 		if (playerRank > SUPREME_COMMANDER.playerRank)
 		{
 			return SUPREME_COMMANDER.rewardPercent;

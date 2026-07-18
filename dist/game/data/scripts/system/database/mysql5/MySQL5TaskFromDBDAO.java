@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.database.mysql5;
 
@@ -20,7 +20,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 
 import org.slf4j.Logger;
@@ -29,10 +28,15 @@ import org.slf4j.LoggerFactory;
 import com.aionemu.commons.database.DatabaseFactory;
 import com.aionemu.gameserver.dao.MySQL5DAOUtils;
 import com.aionemu.gameserver.dao.TaskFromDBDAO;
-import com.aionemu.gameserver.model.tasks.TaskFromDB;
+import com.aionemu.gameserver.taskmanager.fromdb.handler.TaskFromDBHandler;
+import com.aionemu.gameserver.taskmanager.fromdb.handler.TaskFromDBHandlerHolder;
+import com.aionemu.gameserver.taskmanager.fromdb.trigger.TaskFromDBTrigger;
+import com.aionemu.gameserver.taskmanager.fromdb.trigger.TaskFromDBTriggerHolder;
 
 /**
- * @author Divinity
+ * This class provides the Data Access Object (DAO) implementation for handling tasks retrieved from a {@code mysql5} database.<br>
+ * It extends {@link TaskFromDBDAO} to manage specific database operations for task-related data.
+ * @author nrg
  */
 public class MySQL5TaskFromDBDAO extends TaskFromDBDAO
 {
@@ -41,12 +45,17 @@ public class MySQL5TaskFromDBDAO extends TaskFromDBDAO
 	 */
 	private static final Logger log = LoggerFactory.getLogger(MySQL5TaskFromDBDAO.class);
 	private static final String SELECT_ALL_QUERY = "SELECT * FROM tasks ORDER BY id";
-	private static final String UPDATE_QUERY = "UPDATE tasks SET last_activation = ? WHERE id = ?";
 	
+	/**
+	 * Retrieves all task triggers from the database.<br>
+	 * This method executes a query to fetch every record in the tasks table.<br>
+	 * It creates new instances of {@link TaskFromDBTrigger} and their handlers dynamically.
+	 * @return An {@code ArrayList} containing all loaded {@link TaskFromDBTrigger} objects.
+	 */
 	@Override
-	public ArrayList<TaskFromDB> getAllTasks()
+	public ArrayList<TaskFromDBTrigger> getAllTasks()
 	{
-		final ArrayList<TaskFromDB> result = new ArrayList<>();
+		final ArrayList<TaskFromDBTrigger> result = new ArrayList<>();
 		
 		Connection con = null;
 		
@@ -60,7 +69,33 @@ public class MySQL5TaskFromDBDAO extends TaskFromDBDAO
 			
 			while (rset.next())
 			{
-				result.add(new TaskFromDB(rset.getInt("id"), rset.getString("task"), rset.getString("type"), rset.getTimestamp("last_activation"), rset.getString("start_time"), rset.getInt("delay"), rset.getString("param")));
+				try
+				{
+					final TaskFromDBTrigger trigger = TaskFromDBTriggerHolder.valueOf(rset.getString("trigger_type")).getTriggerClass().getDeclaredConstructor().newInstance();
+					final TaskFromDBHandler handler = TaskFromDBHandlerHolder.valueOf(rset.getString("task_type")).getTaskClass().getDeclaredConstructor().newInstance();
+					
+					handler.setTaskId(rset.getInt("id"));
+					
+					final String execParamsResult = rset.getString("exec_param");
+					if (execParamsResult != null)
+					{
+						handler.setParams(rset.getString("exec_param").split(" "));
+					}
+					
+					trigger.setHandlerToTrigger(handler);
+					
+					final String triggerParamsResult = rset.getString("trigger_param");
+					if (triggerParamsResult != null)
+					{
+						trigger.setParams(rset.getString("trigger_param").split(" "));
+					}
+					
+					result.add(trigger);
+				}
+				catch (ReflectiveOperationException ex)
+				{
+					log.error(ex.getMessage(), ex);
+				}
 			}
 			
 			rset.close();
@@ -68,7 +103,7 @@ public class MySQL5TaskFromDBDAO extends TaskFromDBDAO
 		}
 		catch (SQLException e)
 		{
-			log.error("getAllTasks", e);
+			log.error("Loading tasks failed: ", e);
 		}
 		finally
 		{
@@ -78,31 +113,14 @@ public class MySQL5TaskFromDBDAO extends TaskFromDBDAO
 		return result;
 	}
 	
-	@Override
-	public void setLastActivation(int id)
-	{
-		Connection con = null;
-		
-		PreparedStatement stmt = null;
-		try
-		{
-			con = DatabaseFactory.getConnection();
-			stmt = con.prepareStatement(UPDATE_QUERY);
-			
-			stmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-			stmt.setInt(2, id);
-			stmt.execute();
-		}
-		catch (SQLException e)
-		{
-			log.error("setLastActivation", e);
-		}
-		finally
-		{
-			DatabaseFactory.close(stmt, con);
-		}
-	}
-	
+	/**
+	 * Checks if the current database system supports a specific feature.<br>
+	 * This method delegates the check to {@code int, int)}.
+	 * @param s The name of the feature to check.
+	 * @param i The first integer parameter for the feature.
+	 * @param i1 The second integer parameter for the feature.
+	 * @return {@code true} if the feature is supported, {@code false} otherwise.
+	 */
 	@Override
 	public boolean supports(String s, int i, int i1)
 	{

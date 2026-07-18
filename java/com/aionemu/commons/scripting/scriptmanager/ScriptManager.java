@@ -1,33 +1,38 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting.scriptmanager;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,14 +41,18 @@ import com.aionemu.commons.scripting.ScriptContext;
 import com.aionemu.commons.scripting.ScriptContextFactory;
 import com.aionemu.commons.scripting.classlistener.ClassListener;
 import com.aionemu.commons.scripting.impl.javacompiler.ScriptCompilerImpl;
-import com.google.common.collect.Lists;
 
 /**
  * Class that represents managers of script contexts. It loads, reloads and unload script contexts. In the future it may be extended to support programatic manipulation of contexts, but for now it's not needed. <br />
  * Example:
- * <p/>
- * < pre> ScriptManager sm = new ScriptManager(); sm.load(new File(&quot;st/contexts.xml&quot;)); ... sm.shutdown();
+ * 
+ * <pre>
+ *      ScriptManager sm = new ScriptManager();
+ *      sm.load(new File(&quot;st/contexts.xml&quot;));
+ *      ...
+ *      sm.shutdown();
  * </pre>
+ * 
  * <br>
  * @author SoulKeeper, Aquanox
  */
@@ -67,9 +76,11 @@ public class ScriptManager
 	private ClassListener globalClassListener;
 	
 	/**
-	 * Loads script contexes from descriptor
-	 * @param scriptDescriptor xml file that describes contexes
-	 * @throws Exception if can't load file
+	 * Loads script contexts from a descriptor file.<br>
+	 * This method reads the {@code File} and initializes each context found inside.<br>
+	 * It uses {@code ScriptContext)} to build the new contexts.
+	 * @param scriptDescriptor The {@code File} containing the script definitions.
+	 * @throws Exception If there is an error reading or parsing the file.
 	 */
 	public synchronized void load(File scriptDescriptor) throws Exception
 	{
@@ -103,25 +114,39 @@ public class ScriptManager
 	}
 	
 	/**
-	 * Convenient method that is used to load all script files and libraries from specific directory.<br>
-	 * Descriptor is not required.<br>
-	 * <br>
-	 * <b>If you wish complex context hierarchy - you will have to use context descriptors</b> <br>
-	 * <br>
-	 * .java files are treated as sources.<br>
-	 * .jar files are treated as libraries.<br>
-	 * Both .java and .jar files will be loaded recursively
-	 * @param directory - directory with .java and .jar files
-	 * @throws RuntimeException if failed to load script context
-	 * @see #DEFAULT_COMPILER_CLASS
+	 * Loads all scripts and libraries from a specific folder.<br>
+	 * This method scans the {@code directory} for {@code jar} files.<br>
+	 * It uses the default compiler class to process the contents.
+	 * @param directory The {@code File} path where the scripts are located.
+	 * @throws RuntimeException If an error occurs while loading the directory.
 	 */
 	public synchronized void loadDirectory(File directory) throws RuntimeException
 	{
-		final Collection<File> libraries = FileUtils.listFiles(directory, new String[]
+		final String[] extensions =
 		{
 			"jar"
-		}, true);
-		final List<File> list = Lists.newArrayList(libraries);
+		};
+		final Collection<File> libraries;
+		try (Stream<Path> stream = Files.walk(directory.toPath(), Integer.MAX_VALUE))
+		{
+			libraries = stream.filter(Files::isRegularFile).filter(p ->
+			{
+				final String n = p.getFileName().toString();
+				for (String ext : extensions)
+				{
+					if (n.endsWith("." + ext))
+					{
+						return true;
+					}
+				}
+				return false;
+			}).map(Path::toFile).collect(Collectors.toList());
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException("Failed to load script context from directory " + directory.getAbsolutePath(), e);
+		}
+		final List<File> list = new ArrayList<>(libraries);
 		try
 		{
 			loadDirectory(directory, list, DEFAULT_COMPILER_CLASS.getName());
@@ -133,18 +158,15 @@ public class ScriptManager
 	}
 	
 	/**
-	 * Load scripts directly from<br>
-	 * <br>
-	 * <b>If you wish complex context hierarchy - you will have to use context descriptors</b> <br>
-	 * <br>
-	 * @param directory - directory with source files
-	 * @param libraries - collection with libraries to load
-	 * @param compilerClassName -
-	 * @throws Exception if failed to load script context
+	 * Loads scripts from a specific directory into the manager.<br>
+	 * This method initializes a new {@link ScriptContext} using the provided libraries and compiler class.
+	 * @param directory The folder containing the script files to load.
+	 * @param libraries A list of additional library files to include during compilation.
+	 * @param compilerClassName The name of the class used for compiling scripts.
+	 * @throws Exception If an error occurs during context creation or initialization.
 	 */
 	public synchronized void loadDirectory(File directory, List<File> libraries, String compilerClassName) throws Exception
 	{
-		
 		if (!directory.isDirectory())
 		{
 			throw new IllegalArgumentException("File should be directory");
@@ -162,11 +184,13 @@ public class ScriptManager
 	}
 	
 	/**
-	 * Creates new context and checks to not produce copies
-	 * @param si script context descriptor
-	 * @param parent parent script context
-	 * @return created script context
-	 * @throws Exception if can't create context
+	 * Creates a new {@link ScriptContext} based on the provided script information.<br>
+	 * This method initializes the context with libraries and compiler settings.<br>
+	 * It also recursively creates child contexts if they are defined in {@code si}.
+	 * @param si The information containing the scripts to be processed.
+	 * @param parent The parent context for this script, or {@code null} if it is a root context.
+	 * @return The created {@link ScriptContext}, or {@code null} if a duplicate root context is detected.
+	 * @throws Exception If an error occurs during context creation.
 	 */
 	protected ScriptContext createContext(ScriptInfo si, ScriptContext parent) throws Exception
 	{
@@ -197,7 +221,9 @@ public class ScriptManager
 	}
 	
 	/**
-	 * Initializes shutdown on all contexts
+	 * Shuts down all managed script contexts.<br>
+	 * This method calls {@code shutdown} on every context in the manager.<br>
+	 * It then clears the internal collection of contexts.
 	 */
 	public synchronized void shutdown()
 	{
@@ -210,7 +236,9 @@ public class ScriptManager
 	}
 	
 	/**
-	 * Reloads all contexts
+	 * Reloads all currently loaded script contexts.<br>
+	 * This method iterates through the {@code contexts} set.<br>
+	 * It calls {@code reloadContext} for each context.
 	 */
 	public synchronized void reload()
 	{
@@ -221,8 +249,9 @@ public class ScriptManager
 	}
 	
 	/**
-	 * Reloads specified context.
-	 * @param ctx Script context instance.
+	 * This method reloads a specific script context.<br>
+	 * It calls the {@code reload()} method on the provided {@code ScriptContext}.
+	 * @param ctx The {@code ScriptContext} to be reloaded.
 	 */
 	public void reloadContext(ScriptContext ctx)
 	{
@@ -230,8 +259,9 @@ public class ScriptManager
 	}
 	
 	/**
-	 * Returns unmodifiable set with script contexts
-	 * @return unmodifiable set of script contexts
+	 * Retrieves all currently loaded script contexts.<br>
+	 * This method returns an unmodifiable view of the internal context set.
+	 * @return A {@code Collection} containing all {@link ScriptContext} objects.
 	 */
 	public synchronized Collection<ScriptContext> getScriptContexts()
 	{
@@ -239,8 +269,10 @@ public class ScriptManager
 	}
 	
 	/**
-	 * Set Global class listener instance.
-	 * @param instance listener instance.
+	 * Sets the global listener for class events.<br>
+	 * This listener is used by every script context.<br>
+	 * It triggers after a successful compilation.
+	 * @param instance The {@code ClassListener} to set as the global listener.
 	 */
 	public void setGlobalClassListener(ClassListener instance)
 	{

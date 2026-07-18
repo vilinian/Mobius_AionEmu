@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.scene;
 
@@ -23,9 +23,9 @@ import com.aionemu.gameserver.geoEngine.scene.VertexBuffer.Type;
 import com.aionemu.gameserver.geoEngine.utils.BufferUtils;
 
 /**
- * A box with solid (filled) faces.
+ * Represents a geometric box with solid faces.<br>
+ * This class is used to define filled 3D volumes within the scene.
  * @author Mark Powell
- * @version $Revision: 4131 $, $Date: 2009-03-19 16:15:28 -0400 (Thu, 19 Mar 2009) $
  */
 public class Box extends AbstractBox
 {
@@ -145,12 +145,12 @@ public class Box extends AbstractBox
 	};
 	
 	/**
-	 * Creates a new box.
-	 * <p/>
-	 * The box has a center of 0,0,0 and extends in the out from the center by the given amount in <em>each</em> direction. So, for example, a box with extent of 0.5 would be the unit cube.
-	 * @param x the size of the box along the x axis, in both directions.
-	 * @param y the size of the box along the y axis, in both directions.
-	 * @param z the size of the box along the z axis, in both directions.
+	 * Creates a new {@link Box} centered at the origin.<br>
+	 * The dimensions are defined by the extent in each direction from the center.<br>
+	 * For example, using {@code 0.5f} for all parameters creates a unit cube.
+	 * @param x The size of the box along the x axis in both directions.
+	 * @param y The size of the box along the y axis in both directions.
+	 * @param z The size of the box along the z axis in both directions.
 	 */
 	public Box(float x, float y, float z)
 	{
@@ -159,13 +159,12 @@ public class Box extends AbstractBox
 	}
 	
 	/**
-	 * Creates a new box.
-	 * <p/>
-	 * The box has the given center and extends in the out from the center by the given amount in <em>each</em> direction. So, for example, a box with extent of 0.5 would be the unit cube.
-	 * @param center the center of the box.
-	 * @param x the size of the box along the x axis, in both directions.
-	 * @param y the size of the box along the y axis, in both directions.
-	 * @param z the size of the box along the z axis, in both directions.
+	 * Creates a new {@link Box} at a specific location.<br>
+	 * This constructor sets the center point and the dimensions of the box.
+	 * @param center The {@code Vector3f} position for the center of the box.
+	 * @param x The size of the box along the x axis in both directions.
+	 * @param y The size of the box along the y axis in both directions.
+	 * @param z The size of the box along the z axis in both directions.
 	 */
 	public Box(Vector3f center, float x, float y, float z)
 	{
@@ -174,11 +173,12 @@ public class Box extends AbstractBox
 	}
 	
 	/**
-	 * Constructor instantiates a new <code>Box</code> object.
-	 * <p/>
-	 * @param min the minimum point that defines the box.
-	 * @param max the maximum point that defines the box.
+	 * Creates a new {@link Box} using minimum and maximum coordinates.<br>
+	 * This constructor defines the boundaries of the box in 3D space.
+	 * @param min The minimum corner of the box as a {@code Vector3f}.
+	 * @param max The maximum corner of the box as a {@code Vector3f}.
 	 */
+	@SuppressWarnings("javadoc")
 	public Box(Vector3f min, Vector3f max)
 	{
 		super();
@@ -186,7 +186,8 @@ public class Box extends AbstractBox
 	}
 	
 	/**
-	 * Empty constructor for serialization only. Do not use.
+	 * Creates a new {@link Box} instance.<br>
+	 * This constructor initializes the box with default values.
 	 */
 	public Box()
 	{
@@ -194,9 +195,9 @@ public class Box extends AbstractBox
 	}
 	
 	/**
-	 * Creates a clone of this box.
-	 * <p/>
-	 * The cloned box will have '_clone' appended to it's name, but all other properties will be the same as this box.
+	 * Creates a copy of the current {@code Box} instance.<br>
+	 * This method returns a new object with the same dimensions and center.
+	 * @return A new {@code Box} object.
 	 */
 	@Override
 	public Box clone()
@@ -204,6 +205,11 @@ public class Box extends AbstractBox
 		return new Box(center.clone(), xExtent, yExtent, zExtent);
 	}
 	
+	/**
+	 * Updates the geometry index buffer for this box.<br>
+	 * This method checks if the {@code Type.Index} buffer is {@code null}.<br>
+	 * If it is missing, it initializes it using {@code GEOMETRY_INDICES_DATA}.
+	 */
 	@Override
 	protected void duUpdateGeometryIndices()
 	{
@@ -213,6 +219,11 @@ public class Box extends AbstractBox
 		}
 	}
 	
+	/**
+	 * Updates the geometry normals for this box.<br>
+	 * This method checks if the {@code Normal} buffer is {@code null}.<br>
+	 * If it is missing, it initializes the buffer using {@code GEOMETRY_NORMALS_DATA}.
+	 */
 	@Override
 	protected void duUpdateGeometryNormals()
 	{
@@ -222,6 +233,11 @@ public class Box extends AbstractBox
 		}
 	}
 	
+	/**
+	 * Updates the geometry vertex data for this box.<br>
+	 * This method calculates all vertices and stores them in a {@code FloatBuffer}.<br>
+	 * It sets the buffer to the {@code Position} type and updates the bounding volume.
+	 */
 	@Override
 	protected void duUpdateGeometryVertices()
 	{

@@ -1,26 +1,31 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aionemu.gameserver.configs.main.CustomConfig;
 import com.aionemu.gameserver.model.gameobjects.Npc;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
+import com.aionemu.gameserver.model.templates.teleport.TeleportLocation;
 import com.aionemu.gameserver.model.templates.teleport.TeleporterTemplate;
 import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
@@ -28,37 +33,76 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.world.World;
 
 /**
- * @author alexa026, orz
+ * This packet handles the teleportation of a {@link Player} to a new map.<br>
+ * It processes the destination data provided by the client and updates the player's location in the {@link World}.
+ * @author alexa026 , orz
  */
 public class SM_TELEPORT_MAP extends AionServerPacket
 {
-	private final int _targetObjectId;
-	private final Player _player;
-	private final TeleporterTemplate _teleportTemplate;
-	public Npc _npc;
-	
+	private final int targetObjectId;
+	private final Player player;
+	private final TeleporterTemplate teleport;
+	public Npc npc;
 	private static final Logger log = LoggerFactory.getLogger(SM_TELEPORT_MAP.class);
+	private static final List<Integer> disableTeleportNpcs = new ArrayList<>();
 	
+	/**
+	 * Handles the logic for a map teleportation request.<br>
+	 * This packet identifies the player and the destination object.<br>
+	 * It links the {@link Player} to a specific {@link TeleporterTemplate}.
+	 * @param player The {@code Player} who is initiating the teleport.
+	 * @param targetObjectId The unique ID of the target object in the world.
+	 * @param teleport The template containing the destination data.
+	 */
 	public SM_TELEPORT_MAP(Player player, int targetObjectId, TeleporterTemplate teleport)
 	{
-		_player = player;
-		_targetObjectId = targetObjectId;
-		_npc = (Npc) World.getInstance().findVisibleObject(targetObjectId);
-		_teleportTemplate = teleport;
+		this.player = player;
+		this.targetObjectId = targetObjectId;
+		npc = (Npc) World.getInstance().findVisibleObject(targetObjectId);
+		this.teleport = teleport;
 	}
 	
 	@Override
 	protected void writeImpl(AionConnection con)
 	{
-		if (_teleportTemplate != null)
+		for (String s : CustomConfig.DISABLE_TELEPORTER_NPCS.split(","))
 		{
-			writeD(_targetObjectId);
-			writeH(_teleportTemplate.getTeleportId());
+			disableTeleportNpcs.add(Integer.parseInt(s));
 		}
-		else if (_player.isGM())
+		
+		if ((teleport != null) && (teleport.getTeleportId() != 0))
 		{
-			PacketSendUtility.sendMessage(_player, "Missing info at npc_teleporter.xml with npcid: " + _npc.getNpcId());
-			log.info(String.format("Missing teleport info with npcid: %d", _npc.getNpcId()));
+			writeD(targetObjectId);
+			writeH(teleport.getTeleportId());
+			if (disableTeleportNpcs.contains(npc.getNpcId()))
+			{
+				for (Integer npcId : disableTeleportNpcs)
+				{
+					if (npc.getNpcId() == npcId)
+					{
+						writeH(teleport.getTeleLocIdData().getTelelocations().size());
+						for (TeleportLocation locationid : teleport.getTeleLocIdData().getTelelocations())
+						{
+							writeD(locationid.getLocId());
+						}
+					}
+					else
+					{
+						continue;
+					}
+				}
+			}
+			else
+			{
+				writeH(0);
+			}
 		}
+		else
+		{
+			PacketSendUtility.sendMessage(player, "Missing info at npc_teleporter.xml with npcid: " + npc.getNpcId());
+			log.info(String.format("Missing teleport info with npcid: %d", npc.getNpcId()));
+		}
+		
+		disableTeleportNpcs.clear();
 	}
 }

@@ -1,31 +1,31 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.model;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.utils.Rnd;
 import com.aionemu.gameserver.ai2.AISubState;
+import com.aionemu.gameserver.ai2.AbstractAI;
 import com.aionemu.gameserver.ai2.NpcAI2;
 import com.aionemu.gameserver.ai2.handler.ShoutEventHandler;
 import com.aionemu.gameserver.ai2.manager.SkillAttackManager;
@@ -39,20 +39,25 @@ import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.DescriptionId;
 import com.aionemu.gameserver.model.gameobjects.Creature;
 import com.aionemu.gameserver.model.gameobjects.Item;
+import com.aionemu.gameserver.model.gameobjects.Minion;
 import com.aionemu.gameserver.model.gameobjects.Npc;
 import com.aionemu.gameserver.model.gameobjects.VisibleObject;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
+import com.aionemu.gameserver.model.skinskill.SkillSkin;
 import com.aionemu.gameserver.model.stats.calc.Stat2;
 import com.aionemu.gameserver.model.stats.container.StatEnum;
 import com.aionemu.gameserver.model.templates.item.ItemTemplate;
+import com.aionemu.gameserver.network.aion.serverpackets.SM_ATTACK_STATUS;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_CASTSPELL;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_CASTSPELL_RESULT;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_ITEM_USAGE_ANIMATION;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_QUIT_RESPONSE;
+import com.aionemu.gameserver.network.aion.serverpackets.SM_SKILL_CANCEL;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.questEngine.QuestEngine;
 import com.aionemu.gameserver.questEngine.model.QuestEnv;
 import com.aionemu.gameserver.restrictions.RestrictionsManager;
+import com.aionemu.gameserver.services.MinionService;
 import com.aionemu.gameserver.services.MotionLoggingService;
 import com.aionemu.gameserver.services.abyss.AbyssService;
 import com.aionemu.gameserver.services.item.ItemPacketService.ItemUpdateType;
@@ -71,93 +76,93 @@ import com.aionemu.gameserver.utils.audit.AuditLogger;
 import com.aionemu.gameserver.world.geo.GeoService;
 
 /**
+ * Represents the core data model for a skill within the game engine.<br>
+ * This class stores all properties, effects, and requirements associated with a specific skill.<br>
+ * It is used by the {@link com.aionemu.gameserver.skillengine.SkillEngine} to process skill logic.
  * @author ATracer Modified by Wakzashi
+ * @Reworked Kill3r
  */
 public class Skill
 {
 	private SkillMethod skillMethod = SkillMethod.CAST;
-	
 	private final List<Creature> effectedList;
-	
 	private Creature firstTarget;
-	
-	private final Creature effector;
-	
+	protected Creature effector;
 	private final int skillLevel;
-	
 	private final int skillStackLvl;
-	
-	private final StartMovingListener conditionChangeListener;
-	
-	private SkillTemplate skillTemplate;
-	
+	protected StartMovingListener conditionChangeListener;
+	private final SkillTemplate skillTemplate;
 	private boolean firstTargetRangeCheck = true;
-	
 	private ItemTemplate itemTemplate;
 	private int itemObjectId = 0;
-	
 	private int targetType;
-	
 	private boolean chainSuccess;
-	
+	private boolean isCancelled = false;
 	private boolean blockedPenaltySkill = false;
-	
 	private float x;
 	private float y;
 	private float z;
 	private byte h;
-	
-	private int boostSkillCost;
-	
+	protected int boostSkillCost;
 	private FirstTargetAttribute firstTargetAttribute;
 	private TargetRangeAttribute targetRangeAttribute;
-	
-	private ChargeSkillTemplate chargeTemplate = null;
-	private Future<?> castingTask = null;
-	private long castStart = 0;
-	
+	private int skillskinId = 0;
+	private int skillskinHitTIme = 0;
 	/**
 	 * Duration that depends on BOOST_CASTING_TIME
 	 */
 	private int duration;
-	private int hitTime;// from CM_CASTSPELL
-	private int serverTime;// time when effect is applied
-	
+	private int hitTime; // from CM_CASTSPELL
+	private int serverTime; // time when effect is applied
+	private long castStartTime;
 	private String chainCategory = null;
 	private volatile boolean isMultiCast = false;
+	private final List<ChargedSkill> chargeSkillList = new ArrayList<>();
 	
 	public enum SkillMethod
 	{
 		CAST,
 		ITEM,
 		PASSIVE,
-		PROVOKED;
+		PROVOKED,
+		CHARGE;
 	}
 	
 	private final Logger log = LoggerFactory.getLogger(Skill.class);
 	
 	/**
-	 * Each skill is a separate object upon invocation Skill level will be populated from player SkillList
-	 * @param skillTemplate
-	 * @param effector
-	 * @param firstTarget
+	 * Creates a new {@link Skill} instance for a player.<br>
+	 * This constructor automatically determines the skill level from the player's data.
+	 * @param skillTemplate The template defining the skill properties.
+	 * @param effector The {@link Player} who is performing the skill.
+	 * @param firstTarget The initial {@link Creature} targeted by the skill.
 	 */
 	public Skill(SkillTemplate skillTemplate, Player effector, Creature firstTarget)
 	{
 		this(skillTemplate, effector, effector.getSkillList().getSkillLevel(skillTemplate.getSkillId()), firstTarget, null);
 	}
 	
+	/**
+	 * Creates a new {@code Skill} instance with a specific level.<br>
+	 * This constructor initializes the skill using the provided template and target.
+	 * @param skillTemplate The base data for the skill.
+	 * @param effector The player who is performing the skill.
+	 * @param firstTarget The primary creature targeted by the skill.
+	 * @param skillLevel The current level of the skill being used.
+	 */
 	public Skill(SkillTemplate skillTemplate, Player effector, Creature firstTarget, int skillLevel)
 	{
 		this(skillTemplate, effector, skillLevel, firstTarget, null);
 	}
 	
 	/**
-	 * @param skillTemplate
-	 * @param effector
-	 * @param skillLvl
-	 * @param firstTarget
-	 * @param itemTemplate
+	 * Creates a new {@link Skill} instance for a creature effector.<br>
+	 * This constructor initializes the skill properties and determines the execution method.
+	 * @param skillTemplate The template containing the base data for the skill.
+	 * @param effector The {@link Creature} that is performing the skill.
+	 * @param skillLvl The level of the skill being used.
+	 * @param firstTarget The primary {@link Creature} targeted by this skill.
+	 * @param itemTemplate The {@link ItemTemplate} required for the skill, or {@code null} if not needed.
 	 */
 	public Skill(SkillTemplate skillTemplate, Creature effector, int skillLvl, Creature firstTarget, ItemTemplate itemTemplate)
 	{
@@ -170,7 +175,6 @@ public class Skill
 		this.effector = effector;
 		duration = skillTemplate.getDuration();
 		this.itemTemplate = itemTemplate;
-		chargeTemplate = DataManager.CHARGE_SKILL_DATA.getChargeSkillTemplate(skillTemplate.getSkillId());
 		
 		if (itemTemplate != null)
 		{
@@ -184,11 +188,17 @@ public class Skill
 		{
 			skillMethod = SkillMethod.PROVOKED;
 		}
+		else if (skillTemplate.isCharge())
+		{
+			skillMethod = SkillMethod.CHARGE;
+		}
 	}
 	
 	/**
-	 * Check if the skill can be used
-	 * @return True if the skill can be used
+	 * Checks if the skill can be successfully executed.<br>
+	 * This method validates properties, pre-cast requirements, and target lists.<br>
+	 * It also handles specific logic for minion skills and counter skill chains.
+	 * @return {@code true} if all conditions are met; {@code false} otherwise.
 	 */
 	public boolean canUseSkill()
 	{
@@ -197,6 +207,17 @@ public class Skill
 		{
 			log.debug("properties failed");
 			return false;
+		}
+		
+		if (effector instanceof Player)
+		{
+			final Player player = (Player) effector;
+			final Minion minion = player.getMinion();
+			if (skillTemplate.isMinionSkill())
+			{
+				player.getCommonData().setMinionEnergy(0);
+				schedule(minion, player);
+			}
 		}
 		
 		if (!preCastCheck())
@@ -224,6 +245,7 @@ public class Skill
 				return false;
 			}
 		}
+		
 		if (!validateEffectedList())
 		{
 			return false;
@@ -232,6 +254,29 @@ public class Skill
 		return true;
 	}
 	
+	/**
+	 * Schedules a task to despawn the last used minion.<br>
+	 * This action occurs after a delay of {@code 1000} milliseconds.
+	 * @param minion The {@link Minion} object involved in the operation.
+	 * @param player The {@link Player} who owns the minion.
+	 */
+	private void schedule(Minion minion, Player player)
+	{
+		ThreadPoolManager.getInstance().schedule(() ->
+		{
+			if (player.getMinion() != null)
+			{
+				MinionService.getInstance().despawnMinion(player, player.getMinionList().getLastUsed());
+			}
+		}, 1000);
+	}
+	
+	/**
+	 * Validates the list of creatures affected by this skill.<br>
+	 * It removes targets that do not meet the required restrictions.<br>
+	 * It also checks if the skill is allowed to trigger based on its target type.
+	 * @return {@code true} if the skill validation passes, {@code false} otherwise.
+	 */
 	private boolean validateEffectedList()
 	{
 		final Iterator<Creature> effectedIter = effectedList.iterator();
@@ -270,24 +315,44 @@ public class Skill
 	}
 	
 	/**
-	 * Skill entry point
-	 * @return true if usage is successfull
+	 * Executes the skill logic for the character.<br>
+	 * It checks if the skill is available before starting.<br>
+	 * This method updates the {@link Player} state and triggers observers.
+	 * @return {@code true} if the skill was successfully started, otherwise {@code false}.
 	 */
 	public boolean useSkill()
 	{
 		return useSkill(true, true);
 	}
 	
+	/**
+	 * Executes a skill without playing its animation.<br>
+	 * This method calls {@code boolean)} with the first parameter set to {@code false}.<br>
+	 * It ensures that properties are still checked during execution.
+	 * @return {@code true} if the skill was successfully used, or {@code false} otherwise.
+	 */
 	public boolean useNoAnimationSkill()
 	{
 		return useSkill(false, true);
 	}
 	
+	/**
+	 * Checks if the skill can be used without animation or property checks.<br>
+	 * This method calls {@code boolean)} with both parameters set to {@code false}.
+	 * @return {@code true} if the skill is valid to use under these conditions, {@code false} otherwise.
+	 */
 	public boolean useWithoutPropSkill()
 	{
 		return useSkill(false, false);
 	}
 	
+	/**
+	 * Executes the skill logic based on specific validation flags.<br>
+	 * This method handles animation checks, property validation, and casting initialization.
+	 * @param checkAnimation Determines if the method should verify {@code checkAnimationTime()}.
+	 * @param checkproperties Determines if the method should validate requirements via {@code canUseSkill}.
+	 * @return {@code true} if the skill was successfully initiated, {@code false} otherwise.
+	 */
 	private boolean useSkill(boolean checkAnimation, boolean checkproperties)
 	{
 		if (checkproperties && !canUseSkill())
@@ -295,7 +360,10 @@ public class Skill
 			return false;
 		}
 		
-		calculateSkillDuration();
+		if (skillMethod != SkillMethod.CHARGE)
+		{
+			calculateSkillDuration();
+		}
 		
 		if (SecurityConfig.MOTION_TIME)
 		{
@@ -308,9 +376,10 @@ public class Skill
 		}
 		
 		boostSkillCost = 0;
+		getSkillSkinData();
 		
 		// notify skill use observers
-		if (skillMethod == SkillMethod.CAST)
+		if ((skillMethod == SkillMethod.CAST) || (skillMethod == SkillMethod.CHARGE))
 		{
 			effector.getObserveController().notifySkilluseObservers(this);
 		}
@@ -318,8 +387,7 @@ public class Skill
 		// start casting
 		effector.setCasting(this);
 		
-		// log skill time if effector instance of player
-		// TODO config
+		// Log skill time if the effector is an instance of a player (TODO: config).
 		if (effector instanceof Player)
 		{
 			if (((Player) effector).getAccessLevel() > 1)
@@ -328,40 +396,18 @@ public class Skill
 			}
 		}
 		
-		boolean setCooldowns = true;
-		if (effector instanceof Player)
-		{
-			if (isMulticast() && (((Player) effector).getChainSkills().getChainCount((Player) effector, getSkillTemplate(), chainCategory) != 0))
-			{
-				setCooldowns = false;
-			}
-		}
-		
-		if (setCooldowns)
-		{
-			setCooldowns();
-		}
-		
 		// send packets to start casting
-		if ((skillMethod == SkillMethod.CAST) || (skillMethod == SkillMethod.ITEM))
+		if ((skillMethod == SkillMethod.CAST) || (skillMethod == SkillMethod.ITEM) || (skillMethod == SkillMethod.CHARGE))
 		{
+			castStartTime = System.currentTimeMillis();
 			startCast();
 			if (effector instanceof Npc)
 			{
-				((NpcAI2) ((Npc) effector).getAi2()).setSubStateIfNot(AISubState.CAST);
+				((NpcAI2) effector.getAi2()).setSubStateIfNot(AISubState.CAST);
 			}
 		}
 		
 		effector.getObserveController().attach(conditionChangeListener);
-		
-		if (chargeTemplate != null)
-		{
-			duration = 0;
-			for (ChargeTemplate charge : chargeTemplate.getCharges())
-			{
-				duration += charge.getTime();
-			}
-		}
 		
 		if (duration > 0)
 		{
@@ -371,26 +417,42 @@ public class Skill
 		{
 			endCast();
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Updates the cooldown values for the current skill.<br>
+	 * It retrieves the base cooldown from the {@code effector}.<br>
+	 * The method applies any necessary adjustments via {@code int)}.<br>
+	 * Finally, it updates both the active and base cooldown timestamps on the {@code effector}.
+	 */
 	private void setCooldowns()
 	{
 		int cooldown = effector.getSkillCooldown(skillTemplate);
 		if (cooldown != 0)
 		{
 			cooldown = StigmaEnchantCoolDown(this, cooldown);
-			effector.setSkillCoolDown(skillTemplate.getDelayId(), (cooldown * 100) + duration + System.currentTimeMillis());
-			effector.setSkillCoolDownBase(skillTemplate.getDelayId(), System.currentTimeMillis());
+			effector.setSkillCoolDown(skillTemplate.getCooldownId(), (cooldown * 100) + System.currentTimeMillis());
+			effector.setSkillCoolDownBase(skillTemplate.getCooldownId(), System.currentTimeMillis());
 		}
 	}
 	
+	/**
+	 * Calculates the adjusted cooldown for specific skills based on their level.<br>
+	 * This method reduces the base {@code cooldown} by a value determined by the skill type.<br>
+	 * It returns the final calculated cooldown value.
+	 * @param skill The {@link Skill} object to check.
+	 * @param cooldown The base cooldown value.
+	 * @return The adjusted cooldown as an {@code int}.
+	 */
 	public int StigmaEnchantCoolDown(Skill skill, int cooldown)
 	{
 		if (skill == null)
 		{
 			return 0;
 		}
+		
 		final int SkillLevel = skill.getSkillLevel();
 		switch (skill.getSkillId())
 		{
@@ -590,9 +652,7 @@ public class Skill
 			case 4594: // Shadowfall
 			case 4595: // Shadowfall
 			case 4596: // Shadowfall
-			{
 				return cooldown - (6 * SkillLevel);
-			}
 			case 600: // Magical Defense
 			case 641: // Unraveling Assault
 			case 642: // Unraveling Assault
@@ -625,9 +685,7 @@ public class Skill
 			case 4185: // Enfeebling Burst
 			case 4186: // Enfeebling Burst
 			case 4187: // Enfeebling Burst
-			{
 				return cooldown - (9 * SkillLevel);
-			}
 			case 539: // Exhausting Wave
 			case 540: // Exhausting Wave
 			case 541: // Exhausting Wave
@@ -789,9 +847,7 @@ public class Skill
 			case 4636: // Healing Conduit
 			case 4637: // Healing Conduit
 			case 4638: // Healing Conduit
-			{
 				return cooldown - (24 * SkillLevel);
-			}
 			case 657: // Battle Banner
 			case 658: // Battle Banner
 			case 659: // Battle Banner
@@ -972,9 +1028,7 @@ public class Skill
 			case 4191: // Noble Grace
 			case 4192: // Noble Grace
 			case 4614: // Sensory Boost
-			{
 				return cooldown - (36 * SkillLevel);
-			}
 			case 683: // Howl
 			case 684: // Howl
 			case 685: // Howl
@@ -1024,33 +1078,31 @@ public class Skill
 			case 3909: // Summon Vexing Energy
 			case 3910: // Summon Vexing Energy
 			case 3911: // Summon Vexing Energy
-			{
 				return cooldown - (60 * SkillLevel);
-			}
 			case 2922: // Empyrean Providence
 			case 3904: // Reverse Condition
-			{
 				return cooldown - (120 * SkillLevel);
-			}
 			// ArchDaeva Transformation 5.1 [Elyos]
 			case 4752: // Transformation: Avatar Of Fire.
 			case 4757: // Transformation: Avatar Of Water.
 			case 4762: // Transformation: Avatar Of Earth.
-			case 4768: // Transformation: Avatar Of Wind.
-			{
-				// ArchDaeva Transformation 5.1 [Asmodians]
-			}
+			case 4768: // Transformation: Avatar Of Wind. ArchDaeva Transformation 5.1 [Asmodians]
 			case 4804: // Transformation: Avatar Of Fire.
 			case 4805: // Transformation: Avatar Of Water.
 			case 4806: // Transformation: Avatar Of Earth.
 			case 4807: // Transformation: Avatar Of Wind.
-			{
 				return cooldown - (300 * SkillLevel);
-			}
 		}
+		
 		return cooldown;
 	}
 	
+	/**
+	 * Calculates the final duration of a skill based on various modifiers.<br>
+	 * This method checks for fixed cast times and applies {@code BOOST_CASTING_TIME} stats.<br>
+	 * It handles specific sub-types like {@code SUMMON}, {@code HEAL}, and {@code ATTACK}.<br>
+	 * The logic also accounts for special caps, multicast rules, and ensures the duration is not negative.
+	 */
 	protected void calculateSkillDuration()
 	{
 		// Skills that are not affected by boost casting time
@@ -1060,46 +1112,40 @@ public class Skill
 			duration = skillTemplate.getDuration();
 			return;
 		}
+		
 		duration = effector.getGameStats().getPositiveReverseStat(StatEnum.BOOST_CASTING_TIME, skillTemplate.getDuration());
 		switch (skillTemplate.getSubType())
 		{
 			case SUMMON:
-			{
 				duration = effector.getGameStats().getPositiveReverseStat(StatEnum.BOOST_CASTING_TIME_SUMMON, duration);
 				break;
-			}
 			case SUMMONHOMING:
-			{
 				duration = effector.getGameStats().getPositiveReverseStat(StatEnum.BOOST_CASTING_TIME_SUMMONHOMING, duration);
 				break;
-			}
 			case SUMMONTRAP:
-			{
 				duration = effector.getGameStats().getPositiveReverseStat(StatEnum.BOOST_CASTING_TIME_TRAP, duration);
 				break;
-			}
 			case HEAL:
-			{
 				duration = effector.getGameStats().getPositiveReverseStat(StatEnum.BOOST_CASTING_TIME_HEAL, duration);
 				break;
-			}
 			case ATTACK:
-			{
 				if (skillTemplate.getType() == SkillType.MAGICAL)
 				{
 					duration = effector.getGameStats().getPositiveReverseStat(StatEnum.BOOST_CASTING_TIME_ATTACK, duration);
 				}
 				break;
-			}
 			default:
-			{
 				break;
-			}
 		}
 		
-		// 70% of base skill duration cap
-		// No cast speed cap for skill Summoning Alacrity I(skillId: 3779) and Nimble Fingers I(skillId: 913)
-		if (!effector.getEffectController().hasAbnormalEffect(3779) && !effector.getEffectController().hasAbnormalEffect(913)) // 4.8
+		// fix
+		if (skillTemplate.isBoostCastingTime())
+		{
+			duration = effector.getGameStats().getPositiveReverseStat(StatEnum.BOOST_CASTING_TIME, skillTemplate.getDuration());
+		}
+		
+		// Summoning Alacrity I (skillId: 3779) and Nimble Fingers I (skillId: 913) have a 70% base skill duration cap and no cast speed cap.
+		if (!effector.getEffectController().hasAbnormalEffect(3779) && !effector.getEffectController().hasAbnormalEffect(913))
 		{
 			final int baseDurationCap = Math.round(skillTemplate.getDuration() * 0.3f);
 			if (duration < baseDurationCap)
@@ -1122,12 +1168,20 @@ public class Skill
 		}
 	}
 	
+	/**
+	 * Validates the animation timing of a skill to detect potential cheats.<br>
+	 * It compares the client-provided hit time against the calculated server time.<br>
+	 * This method handles various exceptions like specific skills, traps, and weapon types.<br>
+	 * Returns {@code true} if the timing is valid or skipped, and {@code false} if a hack is detected.
+	 * @return {@code true} if the animation time is acceptable; {@code false} otherwise.
+	 */
 	private boolean checkAnimationTime()
 	{
-		if (!(effector instanceof Player) || (skillMethod != SkillMethod.CAST))
+		if (!(effector instanceof Player) || (skillMethod != SkillMethod.CAST))// TODO item skills?
 		{
 			return true;
 		}
+		
 		final Player player = (Player) effector;
 		
 		// if player is without weapon, dont check animation time
@@ -1137,10 +1191,10 @@ public class Skill
 		}
 		
 		/**
-		 * exceptions for certain skills -herb and mana treatment -traps
+		 * exceptions for certain skills -herb and mana treatment -traps Updated 4.8
 		 */
 		// dont check herb , mana treatment and concentration enhancement
-		switch (getSkillId()) // 4.8
+		switch (getSkillId())
 		{
 			case 245: // Bandage Heal
 			case 246: // Herb Treatment I
@@ -1175,10 +1229,9 @@ public class Skill
 			case 3894: // Prayer Of Focus VI
 			case 4783: // [ArchDaeva] Prayer Of Focus 5.1
 			case 11580: // Stigma Prayer Of Focus I
-			{
 				return true;
-			}
 		}
+		
 		if (getSkillTemplate().getSubType() == SkillSubType.SUMMONTRAP)
 		{
 			return true;
@@ -1188,15 +1241,18 @@ public class Skill
 		
 		if ((motion == null) || (motion.getName() == null))
 		{
+			log.warn("missing motion for skillId: " + getSkillId());
 			return true;
 		}
 		
 		if (motion.getInstantSkill() && (hitTime != 0))
 		{
+			log.warn("Instant and hitTime not 0! modified client_skills? player objectid: " + player.getObjectId());
 			return false;
 		}
 		else if (!motion.getInstantSkill() && (hitTime == 0))
 		{
+			log.warn("modified client_skills! player objectid: " + player.getObjectId());
 			return false;
 		}
 		
@@ -1204,6 +1260,7 @@ public class Skill
 		
 		if (motionTime == null)
 		{
+			log.warn("missing motiontime for motionName: " + motion.getName() + " skillId: " + getSkillId());
 			return true;
 		}
 		
@@ -1213,6 +1270,7 @@ public class Skill
 		
 		if (serverTime == 0)
 		{
+			log.warn("missing weapon time for motionName: " + motion.getName() + " weapons: " + weapons.toString() + " skillId: " + getSkillId());
 			return true;
 		}
 		
@@ -1221,8 +1279,9 @@ public class Skill
 		final double distance = MathUtil.getDistance(effector, firstTarget);
 		if (getSkillTemplate().getAmmoSpeed() != 0)
 		{
-			ammoTime = Math.round((distance / getSkillTemplate().getAmmoSpeed()) * 1000);// checked with client
+			ammoTime = Math.round((distance / getSkillTemplate().getAmmoSpeed()) * 1000); // checked with client
 		}
+		
 		clientTime -= ammoTime;
 		
 		// adjust servertime with motion play speed
@@ -1265,6 +1324,7 @@ public class Skill
 					final float clientTme = clientTime;
 					final float serverTme = serverTime;
 					final float checkTme = clientTme / serverTme;
+					
 					// check if values are too low
 					if ((clientTime < 0) || (checkTme < SecurityConfig.NO_ANIMATION_VALUE))
 					{
@@ -1273,18 +1333,29 @@ public class Skill
 							player.getClientConnection().close(new SM_QUIT_RESPONSE(), false);
 							AuditLogger.info(player, "Modified client_skills:" + getSkillId() + " (clientTime<finalTime:" + clientTime + "/" + finalTime + ") Kicking Player: " + player.getName());
 						}
+						else
+						{
+							AuditLogger.info(player, "Modified client_skills:" + getSkillId() + " (clientTime<finalTime:" + clientTime + "/" + finalTime + ")");
+						}
+						
 						return false;
 					}
 				}
+				
+				log.warn("Possible modified client_skills:" + getSkillId() + " (clientTime<finalTime:" + clientTime + "/" + finalTime + ") player Name: " + player.getName());
 			}
+			
 			this.serverTime = hitTime;
 		}
+		
 		player.setNextSkillUse(System.currentTimeMillis() + duration + finalTime);
 		return true;
 	}
 	
 	/**
-	 * Penalty success skill
+	 * Applies a penalty skill effect to the target.<br>
+	 * This method checks if the {@code skillTemplate} has a valid penalty skill ID.<br>
+	 * If an ID exists, it uses {@code applyEffectDirectly} to trigger the effect.
 	 */
 	private void startPenaltySkill()
 	{
@@ -1298,19 +1369,52 @@ public class Skill
 	}
 	
 	/**
-	 * Start casting of skill
+	 * Retrieves the active skin data for a specific skill.<br>
+	 * This method checks if the {@code effector} is a {@link Player}.<br>
+	 * It searches for an active {@link SkillSkin} that matches the current skill group.<br>
+	 * If found, it updates the local variables for ammo speed and skin ID.
 	 */
-	private void startCast()
+	private void getSkillSkinData()
+	{
+		if ((effector instanceof Player) && (((Player) effector).getSkillSkinList() != null))
+		{
+			for (SkillSkin skillSkin : ((Player) effector).getSkillSkinList().getSkillSkins())
+			{
+				if (skillSkin.getTemplate() != null)
+				{
+					if (skillSkin.getTemplate().getSkillGroup().equalsIgnoreCase(skillTemplate.getSkillGroup()) && (skillSkin.getIsActive() == 1))
+					{
+						skillskinHitTIme = skillSkin.getTemplate().getAmmoSpeed();
+						skillskinId = skillSkin.getId();
+						break;
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Initiates the casting process for a skill.<br>
+	 * This method sends the necessary network packets to start the animation or effect.<br>
+	 * It handles different target types such as players, coordinates, and out-of-sight targets.<br>
+	 * It also triggers specific NPC behaviors like shouting when applicable.
+	 */
+	protected void startCast()
 	{
 		final int targetObjId = firstTarget != null ? firstTarget.getObjectId() : 0;
 		
-		if (skillMethod == SkillMethod.CAST)
+		if ((skillMethod == SkillMethod.CAST) || (skillMethod == SkillMethod.CHARGE))
 		{
 			switch (targetType)
 			{
 				case 0: // PlayerObjectId as Target
-				{
-					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_CASTSPELL(effector.getObjectId(), skillTemplate.getSkillId(), skillLevel, targetType, targetObjId, duration));
+					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_CASTSPELL(effector.getObjectId(), skillTemplate.getSkillId(), skillLevel, targetType, targetObjId, duration, skillTemplate.isCharge(), skillskinId));
+					if (firstTarget.getObjectId() != effector.getObjectId())
+					{
+						PacketSendUtility.broadcastPacketAndReceive(effector, new SM_ATTACK_STATUS(effector, firstTarget, SM_ATTACK_STATUS.TYPE.ATTACK, 0, 0, SM_ATTACK_STATUS.LOG.ATTACK));
+						// effector.getMoveController().skillMovement();
+					}
+					
 					if ((effector instanceof Npc) && (firstTarget instanceof Player))
 					{
 						final NpcAI2 ai = (NpcAI2) effector.getAi2();
@@ -1320,90 +1424,59 @@ public class Skill
 						}
 					}
 					break;
-				}
+				
 				case 3: // Target not in sight?
-				{
-					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_CASTSPELL(effector.getObjectId(), skillTemplate.getSkillId(), skillLevel, targetType, 0, duration));
+					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_CASTSPELL(effector.getObjectId(), skillTemplate.getSkillId(), skillLevel, targetType, 0, duration, skillTemplate.isCharge(), skillskinId));
+					if (firstTarget.getObjectId() != effector.getObjectId())
+					{
+						PacketSendUtility.broadcastPacketAndReceive(effector, new SM_ATTACK_STATUS(effector, firstTarget, SM_ATTACK_STATUS.TYPE.ATTACK, 0, 0, SM_ATTACK_STATUS.LOG.ATTACK));
+						// effector.getMoveController().skillMovement();
+					}
 					break;
-				}
+				
 				case 1: // XYZ as Target
-				{
-					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_CASTSPELL(effector.getObjectId(), skillTemplate.getSkillId(), skillLevel, targetType, x, y, z, duration));
+					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_CASTSPELL(effector.getObjectId(), skillTemplate.getSkillId(), skillLevel, targetType, x, y, z, duration, skillskinId));
+					if (firstTarget.getObjectId() != effector.getObjectId())
+					{
+						PacketSendUtility.broadcastPacketAndReceive(effector, new SM_ATTACK_STATUS(effector, firstTarget, SM_ATTACK_STATUS.TYPE.ATTACK, 0, 0, SM_ATTACK_STATUS.LOG.ATTACK));
+						// effector.getMoveController().skillMovement();
+					}
 					break;
-				}
 			}
 		}
 		else if ((skillMethod == SkillMethod.ITEM) && (duration > 0))
 		{
-			PacketSendUtility.broadcastPacketAndReceive(effector, new SM_ITEM_USAGE_ANIMATION(effector.getObjectId(), firstTarget.getObjectId(), (itemObjectId == 0 ? 0 : itemObjectId), itemTemplate.getTemplateId(), duration, 0, 0));
+			PacketSendUtility.broadcastPacketAndReceive(effector, new SM_ITEM_USAGE_ANIMATION(effector.getObjectId(), firstTarget.getObjectId(), (itemObjectId == 0 ? 0 : itemObjectId), itemTemplate.getTemplateId(), duration, 0)); // For testing
+			// PacketSendUtility.broadcastPacketAndReceive(effector, new SM_ITEM_USAGE_ANIMATION(effector.getObjectId(), firstTarget.getObjectId(), (this.itemObjectId == 0 ? 0 : this.itemObjectId), itemTemplate.getTemplateId(), this.duration, 0, 0));
 		}
 	}
 	
 	/**
-	 * Set this skill as canceled
+	 * Cancels the current skill casting process.<br>
+	 * Sets the {@code isCancelled} flag to {@code true}.
 	 */
 	public void cancelCast()
 	{
-		if (castingTask != null)
-		{
-			castingTask.cancel(true);
-			castingTask = null;
-		}
+		isCancelled = true;
 	}
 	
 	/**
-	 * Apply effects and perform actions specified in skill template
+	 * Finalizes the skill casting process.<br>
+	 * Validates the target range and checks if the skill can be completed.<br>
+	 * Handles item consumption, effect calculation, and cooldown application.<br>
+	 * Schedules the final effects based on the calculated hit time.
 	 */
-	void endCast()
+	protected void endCast()
 	{
-		if (!effector.isCasting())
-		{
-			return;
-		}
-		
-		// charge skill 4.3
-		if (chargeTemplate != null)
-		{
-			int time = (int) (System.currentTimeMillis() - castStart);
-			time += 100; // 100ms leeway
-			
-			if (time < chargeTemplate.getMinCharge())
-			{
-				return;
-			}
-			
-			int skillId = skillTemplate.getSkillId();
-			for (ChargeTemplate charge : chargeTemplate.getCharges())
-			{
-				time -= charge.getTime();
-				skillId = charge.getId();
-				
-				if (time < 0)
-				{
-					break;
-				}
-			}
-			
-			skillTemplate = DataManager.SKILL_DATA.getSkillTemplate(skillId);
-			
-			effector.setSkillCoolDown(skillTemplate.getDelayId(), (skillTemplate.getCooldown() * 100) + System.currentTimeMillis());
-		}
-		
 		// if target out of range
-		if (skillTemplate == null)
+		if (!effector.isCasting() || isCancelled || (skillTemplate == null))
 		{
 			return;
 		}
 		
 		// Check if target is out of skill range
 		final Properties properties = skillTemplate.getProperties();
-		if ((properties != null) && !properties.endCastValidate(this))
-		{
-			effector.getController().cancelCurrentSkill();
-			return;
-		}
-		
-		if (!validateEffectedList())
+		if (((properties != null) && !properties.endCastValidate(this)) || !validateEffectedList())
 		{
 			effector.getController().cancelCurrentSkill();
 			return;
@@ -1431,6 +1504,7 @@ public class Skill
 			{
 				return;
 			}
+			
 			if (item.getActivationCount() > 1)
 			{
 				item.setActivationCount(item.getActivationCount() - 1);
@@ -1446,7 +1520,6 @@ public class Skill
 		/**
 		 * Create effects and precalculate result
 		 */
-		
 		int spellStatus = 0;
 		int dashStatus = 0;
 		int resistCount = 0;
@@ -1466,11 +1539,13 @@ public class Skill
 						blockedStance = true;
 					}
 				}
+				
 				// Force RESIST status if AOE spell spread must be blocked
 				if (blockAOESpread)
 				{
 					effect.setAttackStatus(AttackStatus.RESIST);
 				}
+				
 				effect.initialize();
 				final int worldId = effector.getWorldId();
 				final int instanceId = effector.getInstanceId();
@@ -1492,13 +1567,10 @@ public class Skill
 				}
 			}
 			
-			if (!effectedList.isEmpty())
+			if (resistCount == effectedList.size())
 			{
-				if (resistCount == effectedList.size())
-				{
-					blockedChain = true;
-					blockedPenaltySkill = true;
-				}
+				blockedChain = true;
+				blockedPenaltySkill = true;
 			}
 			
 			// exception for point point skills(example Ice Sheet)
@@ -1521,9 +1593,19 @@ public class Skill
 			{
 				playerEffector.getController().stopStance();
 			}
+			
 			if (skillTemplate.isStance() && !blockedStance)
 			{
 				playerEffector.getController().startStance(skillTemplate.getSkillId());
+			}
+		}
+		
+		boolean setCooldowns = true;
+		if (effector instanceof Player)
+		{
+			if (isMulticast() && (((Player) effector).getChainSkills().getChainCount((Player) effector, getSkillTemplate(), chainCategory) != 0))
+			{
+				setCooldowns = false;
 			}
 		}
 		
@@ -1557,7 +1639,10 @@ public class Skill
 		{
 			for (Action action : skillActions.getActions())
 			{
-				action.act(this);
+				if (!action.act(this))
+				{
+					return;
+				}
 			}
 		}
 		
@@ -1565,6 +1650,24 @@ public class Skill
 		{
 			final QuestEnv env = new QuestEnv(effector.getTarget(), (Player) effector, 0, 0);
 			QuestEngine.getInstance().onUseSkill(env, skillTemplate.getSkillId());
+		}
+		
+		if (setCooldowns)
+		{
+			setCooldowns();
+		}
+		
+		if (((skillMethod == SkillMethod.CAST) && (getSkillTemplate().getSubType() != SkillSubType.HEAL) && (hitTime <= 0)) || ((skillMethod == SkillMethod.CHARGE) && (getSkillTemplate().getSubType() != SkillSubType.HEAL)))
+		{
+			// double targetDis = MathUtil.getDistance(effector, firstTarget);
+			if (skillskinHitTIme > 0)
+			{
+				hitTime += (int) (skillskinHitTIme * effector.getDistanceToTarget() * 1.8F);
+			}
+			else
+			{
+				hitTime = ((int) ((int) (getSkillTemplate().getAmmoSpeed() * effector.getDistanceToTarget()) * 1.8F));
+			}
 		}
 		
 		if (hitTime == 0)
@@ -1575,17 +1678,26 @@ public class Skill
 		{
 			ThreadPoolManager.getInstance().schedule(() -> applyEffect(effects), hitTime);
 		}
-		if ((skillMethod == SkillMethod.CAST) || (skillMethod == SkillMethod.ITEM))
+		
+		if ((skillMethod == SkillMethod.CAST) || (skillMethod == SkillMethod.ITEM) || (skillMethod == SkillMethod.CHARGE))
 		{
 			sendCastspellEnd(spellStatus, dashStatus, effects);
 		}
 		
+		endCondCheck();
+		
 		if (effector instanceof Npc)
 		{
-			SkillAttackManager.afterUseSkill((NpcAI2) ((Npc) effector).getAi2());
+			SkillAttackManager.afterUseSkill((NpcAI2) effector.getAi2());
 		}
 	}
 	
+	/**
+	 * This method processes a list of {@code Effect} objects.<br>
+	 * It calls the {@code applyEffect} method for each item in the list.<br>
+	 * If the penalty skill is not blocked, it triggers {@code startPenaltySkill}.
+	 * @param effects The list of {@code Effect} objects to be applied.
+	 */
 	public void applyEffect(List<Effect> effects)
 	{
 		/**
@@ -1606,36 +1718,40 @@ public class Skill
 	}
 	
 	/**
-	 * @param spellStatus
-	 * @param dashStatus
-	 * @param effects
+	 * Sends the final cast results and attack statuses to the client.<br>
+	 * This method handles different target types for cast and charge skills.<br>
+	 * It also manages item usage animations when applicable.
+	 * @param spellStatus The status of the casted spell.
+	 * @param dashStatus The status of the dash effect.
+	 * @param effects The list of effects to be applied during the result broadcast.
 	 */
 	private void sendCastspellEnd(int spellStatus, int dashStatus, List<Effect> effects)
 	{
-		if (skillMethod == SkillMethod.CAST)
+		getSkillSkinData();
+		if ((skillMethod == SkillMethod.CAST) || (skillMethod == SkillMethod.CHARGE))
 		{
 			switch (targetType)
 			{
 				case 0: // PlayerObjectId as Target
-				{
-					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_CASTSPELL_RESULT(this, effects, serverTime, chainSuccess, spellStatus, dashStatus));
+					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_CASTSPELL_RESULT(this, effects, serverTime, chainSuccess, spellStatus, dashStatus, skillskinId));
+					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_ATTACK_STATUS(firstTarget, effector, SM_ATTACK_STATUS.TYPE.REGULAR, 0, 0, SM_ATTACK_STATUS.LOG.ATTACK));
 					break;
-				}
+				
 				case 3: // Target not in sight?
-				{
-					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_CASTSPELL_RESULT(this, effects, serverTime, chainSuccess, spellStatus, dashStatus));
+					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_CASTSPELL_RESULT(this, effects, serverTime, chainSuccess, spellStatus, dashStatus, skillskinId));
+					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_ATTACK_STATUS(firstTarget, effector, SM_ATTACK_STATUS.TYPE.REGULAR, 0, 0, SM_ATTACK_STATUS.LOG.ATTACK));
 					break;
-				}
+				
 				case 1: // XYZ as Target
-				{
-					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_CASTSPELL_RESULT(this, effects, serverTime, chainSuccess, spellStatus, dashStatus, targetType));
+					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_CASTSPELL_RESULT(this, effects, serverTime, chainSuccess, spellStatus, dashStatus, targetType, skillskinId));
+					PacketSendUtility.broadcastPacketAndReceive(effector, new SM_ATTACK_STATUS(firstTarget, effector, SM_ATTACK_STATUS.TYPE.REGULAR, 0, 0, SM_ATTACK_STATUS.LOG.ATTACK));
 					break;
-				}
 			}
 		}
 		else if (skillMethod == SkillMethod.ITEM)
 		{
-			PacketSendUtility.broadcastPacketAndReceive(effector, new SM_ITEM_USAGE_ANIMATION(effector.getObjectId(), firstTarget.getObjectId(), (itemObjectId == 0 ? 0 : itemObjectId), itemTemplate.getTemplateId(), 0, 1, 0));
+			PacketSendUtility.broadcastPacketAndReceive(effector, new SM_ITEM_USAGE_ANIMATION(effector.getObjectId(), firstTarget.getObjectId(), (itemObjectId == 0 ? 0 : itemObjectId), itemTemplate.getTemplateId(), 0, 1)); // TODO TESTING
+			// PacketSendUtility.broadcastPacketAndReceive(effector, new SM_ITEM_USAGE_ANIMATION(effector.getObjectId(), firstTarget.getObjectId(), (this.itemObjectId == 0 ? 0 : this.itemObjectId), itemTemplate.getTemplateId(), 0, 1, 0));
 			if (effector instanceof Player)
 			{
 				PacketSendUtility.sendPacket((Player) effector, SM_SYSTEM_MESSAGE.STR_USE_ITEM(new DescriptionId(getItemTemplate().getNameId())));
@@ -1644,29 +1760,45 @@ public class Skill
 	}
 	
 	/**
-	 * Schedule actions/effects of skill (channeled skills)
-	 * @param delay
+	 * Schedules a task to be executed after a specific time.<br>
+	 * This method handles the completion or cancellation of a skill cast.<br>
+	 * It uses {@code getInstance} to manage the execution.
+	 * @param delay The amount of time in milliseconds to wait before executing the task.
 	 */
 	private void schedule(int delay)
 	{
-		castingTask = ThreadPoolManager.getInstance().schedule(() -> endCast(), delay);
-		
-		castStart = System.currentTimeMillis();
+		ThreadPoolManager.getInstance().schedule(() ->
+		{
+			if (!isCancelled && (skillMethod == SkillMethod.CHARGE))
+			{
+				cancelCast();
+				effector.setCasting(null);
+				PacketSendUtility.broadcastPacketAndReceive(effector, new SM_SKILL_CANCEL(effector, skillTemplate.getSkillId()));
+				return;
+			}
+			
+			endCast();
+		}, delay);
 	}
 	
 	/**
-	 * Check all conditions before starting cast
-	 * @return
+	 * Checks if the current conditions for using a skill are met.<br>
+	 * It retrieves the start conditions from the {@code SkillTemplate}.<br>
+	 * If no conditions exist, it returns {@code true}.<br>
+	 * Otherwise, it validates the conditions against this skill instance.
+	 * @return {@code true} if the skill can be cast, {@code false} otherwise.
 	 */
-	private boolean preCastCheck()
+	protected boolean preCastCheck()
 	{
 		final Conditions skillConditions = skillTemplate.getStartconditions();
 		return skillConditions != null ? skillConditions.validate(this) : true;
 	}
 	
 	/**
-	 * Check all conditions before using skill
-	 * @return
+	 * Validates the conditions required to use a skill.<br>
+	 * It checks the {@code useconds} from the {@link SkillTemplate}.<br>
+	 * If no conditions exist, it returns {@code true}.
+	 * @return {@code true} if all conditions are met or none are defined; {@code false} otherwise.
 	 */
 	private boolean preUsageCheck()
 	{
@@ -1675,7 +1807,21 @@ public class Skill
 	}
 	
 	/**
-	 * @param value is the changeMpConsumptionValue to set
+	 * Checks if the current skill execution should end.<br>
+	 * It validates the conditions defined in the {@code SkillTemplate}.<br>
+	 * If no conditions are set, it returns {@code true}.
+	 * @return {@code true} if the skill should finish, {@code false} otherwise.
+	 */
+	private boolean endCondCheck()
+	{
+		final Conditions skillConditions = skillTemplate.getEndConditions();
+		return skillConditions != null ? skillConditions.validate(this) : true;
+	}
+	
+	/**
+	 * Sets the cost for using a boost skill.<br>
+	 * This updates the {@code boostSkillCost} field with a new value.
+	 * @param value The new cost to be assigned to the boost skill.
 	 */
 	public void setBoostSkillCost(int value)
 	{
@@ -1683,7 +1829,9 @@ public class Skill
 	}
 	
 	/**
-	 * @return the changeMpConsumptionValue
+	 * Retrieves the cost required to use a boost skill.<br>
+	 * This value is used to determine if the player has enough resources.
+	 * @return The {@code int} value representing the boost skill cost.
 	 */
 	public int getBoostSkillCost()
 	{
@@ -1691,7 +1839,8 @@ public class Skill
 	}
 	
 	/**
-	 * @return the effectedList
+	 * Retrieves the list of creatures affected by this skill.
+	 * @return a {@code List} containing all {@link Creature} objects impacted.
 	 */
 	public List<Creature> getEffectedList()
 	{
@@ -1699,7 +1848,9 @@ public class Skill
 	}
 	
 	/**
-	 * @return the effector
+	 * Retrieves the creature that performs the effect.<br>
+	 * This is the entity responsible for casting or triggering the skill.
+	 * @return the {@link Creature} acting as the effector.
 	 */
 	public Creature getEffector()
 	{
@@ -1707,7 +1858,9 @@ public class Skill
 	}
 	
 	/**
-	 * @return the skillLevel
+	 * Retrieves the current level of the skill.<br>
+	 * This value is used to determine the power of the action performed by the {@link AbstractAI}.
+	 * @return The integer level of the skill.
 	 */
 	public int getSkillLevel()
 	{
@@ -1715,7 +1868,9 @@ public class Skill
 	}
 	
 	/**
-	 * @return the skillId
+	 * Retrieves the unique identifier for the skill associated with this effect.<br>
+	 * This value is obtained from the {@link SkillTemplate}.
+	 * @return The {@code int} value of the skill ID.
 	 */
 	public int getSkillId()
 	{
@@ -1723,7 +1878,9 @@ public class Skill
 	}
 	
 	/**
-	 * @return the skillStackLvl
+	 * Retrieves the level of the skill stack.<br>
+	 * This value is obtained from the {@link SkillTemplate}.
+	 * @return The integer level of the skill stack.
 	 */
 	public int getSkillStackLvl()
 	{
@@ -1731,7 +1888,9 @@ public class Skill
 	}
 	
 	/**
-	 * @return the conditionChangeListener
+	 * Retrieves the listener for movement condition changes.<br>
+	 * This allows you to monitor when a character starts moving.
+	 * @return the {@link StartMovingListener} instance.
 	 */
 	public StartMovingListener getConditionChangeListener()
 	{
@@ -1739,7 +1898,9 @@ public class Skill
 	}
 	
 	/**
-	 * @return the skillTemplate
+	 * Retrieves the {@link SkillTemplate} associated with this skill.<br>
+	 * It uses the current {@code skillId} to fetch data from the {@code DataManager}.
+	 * @return The {@code SkillTemplate} object for this skill.
 	 */
 	public SkillTemplate getSkillTemplate()
 	{
@@ -1747,7 +1908,9 @@ public class Skill
 	}
 	
 	/**
-	 * @return the firstTarget
+	 * Retrieves the primary target for this skill.<br>
+	 * This is the {@code Creature} that will be affected by the action.
+	 * @return the {@code Creature} object representing the first target, or {@code null} if no target exists.
 	 */
 	public Creature getFirstTarget()
 	{
@@ -1755,7 +1918,9 @@ public class Skill
 	}
 	
 	/**
-	 * @param firstTarget the firstTarget to set
+	 * Sets the primary target for this skill.<br>
+	 * This method assigns a {@link Creature} to the {@code firstTarget} field.
+	 * @param firstTarget The {@link Creature} that will be targeted by the skill.
 	 */
 	public void setFirstTarget(Creature firstTarget)
 	{
@@ -1763,7 +1928,9 @@ public class Skill
 	}
 	
 	/**
-	 * @return true or false
+	 * Checks if the skill is a passive ability.<br>
+	 * This method retrieves the status from the {@link SkillTemplate}.
+	 * @return {@code true} if the skill is passive, {@code false} otherwise.
 	 */
 	public boolean isPassive()
 	{
@@ -1771,7 +1938,9 @@ public class Skill
 	}
 	
 	/**
-	 * @return the firstTargetRangeCheck
+	 * Checks if the skill requires a range validation for the first target.<br>
+	 * This is used to determine if the distance between the effector and the {@code firstTarget} is valid.
+	 * @return {@code true} if the first target range check is required, {@code false} otherwise.
 	 */
 	public boolean isFirstTargetRangeCheck()
 	{
@@ -1779,7 +1948,9 @@ public class Skill
 	}
 	
 	/**
-	 * @param firstTargetAttribute
+	 * Sets the attribute for the primary target of this skill.<br>
+	 * This method updates the {@code firstTargetAttribute} field.
+	 * @param firstTargetAttribute The new attribute to assign to the first target.
 	 */
 	public void setFirstTargetAttribute(FirstTargetAttribute firstTargetAttribute)
 	{
@@ -1787,7 +1958,10 @@ public class Skill
 	}
 	
 	/**
-	 * @return true if the present skill is a non-targeted, non-point AOE skill
+	 * Checks if the skill is an Area of Effect (AOE) attack targeting the self.<br>
+	 * This method verifies if the {@code firstTargetAttribute} is set to {@code ME}<br>
+	 * and the {@code targetRangeAttribute} is set to {@code AREA}.
+	 * @return {@code true} if both conditions are met, otherwise {@code false}.
 	 */
 	public boolean checkNonTargetAOE()
 	{
@@ -1795,7 +1969,9 @@ public class Skill
 	}
 	
 	/**
-	 * @return true if the present skill is a targeted AOE skill
+	 * Checks if the skill is an Area of Effect (AOE) attack.<br>
+	 * This method verifies that the target attribute is {@code TARGET} and the range attribute is {@code AREA}.
+	 * @return {@code true} if the skill is an AOE, otherwise {@code false}.
 	 */
 	public boolean isTargetAOE()
 	{
@@ -1803,7 +1979,10 @@ public class Skill
 	}
 	
 	/**
-	 * @return true if the present skill is a self buff includes items (such as scroll buffs)
+	 * Checks if the skill is a self-buff.<br>
+	 * This returns {@code true} if the skill targets the caster, has a single target range, and is of type {@code BUFF}.<br>
+	 * It also ensures the skill is not a deity avatar.
+	 * @return {@code true} if it is a self-buff, {@code false} otherwise.
 	 */
 	public boolean isSelfBuff()
 	{
@@ -1811,7 +1990,10 @@ public class Skill
 	}
 	
 	/**
-	 * @return true if the present skill has self as first target
+	 * Checks if the first target of this skill is the caster.<br>
+	 * It returns {@code true} if the target attribute is set to {@code ME}.<br>
+	 * Otherwise, it returns {@code false}.
+	 * @return {@code true} if the first target is self, {@code false} otherwise.
 	 */
 	public boolean isFirstTargetSelf()
 	{
@@ -1819,7 +2001,10 @@ public class Skill
 	}
 	
 	/**
-	 * @return true if the present skill is a Point skill
+	 * Checks if the skill targets a specific point in the world.<br>
+	 * This method returns {@code true} if the target attribute is set to {@code POINT}.<br>
+	 * Otherwise, it returns {@code false}.
+	 * @return {@code true} if the skill is a point skill, {@code false} otherwise.
 	 */
 	public boolean isPointSkill()
 	{
@@ -1827,7 +2012,9 @@ public class Skill
 	}
 	
 	/**
-	 * @param firstTargetRangeCheck the firstTargetRangeCheck to set
+	 * Sets whether the skill should check the range of the first target.<br>
+	 * This determines if a distance validation is required for the primary target.
+	 * @param firstTargetRangeCheck The boolean value to set for the range check.
 	 */
 	public void setFirstTargetRangeCheck(boolean firstTargetRangeCheck)
 	{
@@ -1835,30 +2022,50 @@ public class Skill
 	}
 	
 	/**
-	 * @param itemTemplate the itemTemplate to set
+	 * Sets the {@code ItemTemplate} for this trade item.<br>
+	 * This method updates the internal template used to define the item properties.
+	 * @param itemTemplate The {@link ItemTemplate} to assign to this object.
 	 */
 	public void setItemTemplate(ItemTemplate itemTemplate)
 	{
 		this.itemTemplate = itemTemplate;
 	}
 	
+	/**
+	 * Retrieves the {@link ItemTemplate} for this drop.<br>
+	 * It returns the cached {@code template} if it exists.<br>
+	 * If the {@code template} is {@code null}, it fetches the data from {@link DataManager}.
+	 * @return The {@link ItemTemplate} associated with this drop.
+	 */
 	public ItemTemplate getItemTemplate()
 	{
 		return itemTemplate;
 	}
 	
+	/**
+	 * Sets the unique identifier for an item.<br>
+	 * This updates the {@code itemObjectId} field with the provided value.
+	 * @param id The new unique ID to assign to the item.
+	 */
 	public void setItemObjectId(int id)
 	{
 		itemObjectId = id;
 	}
 	
+	/**
+	 * Retrieves the unique identifier for the item.<br>
+	 * This ID is used to identify which item this bonus belongs to.
+	 * @return The {@code int} value of the item object ID.
+	 */
 	public int getItemObjectId()
 	{
 		return itemObjectId;
 	}
 	
 	/**
-	 * @param targetRangeAttribute the targetRangeAttribute to set
+	 * Sets the {@code targetRangeAttribute} for this skill.<br>
+	 * This updates the range property used during attack calculations.
+	 * @param targetRangeAttribute The new {@link TargetRangeAttribute} to apply.
 	 */
 	public void setTargetRangeAttribute(TargetRangeAttribute targetRangeAttribute)
 	{
@@ -1866,10 +2073,12 @@ public class Skill
 	}
 	
 	/**
-	 * @param targetType
-	 * @param x
-	 * @param y
-	 * @param z
+	 * Sets the target type and its 3D coordinates.<br>
+	 * This method updates the position of the skill target.
+	 * @param targetType The category or ID of the target.
+	 * @param x The X coordinate of the target.
+	 * @param y The Y coordinate of the target.
+	 * @param z The Z coordinate of the target.
 	 */
 	public void setTargetType(int targetType, float x, float y, float z)
 	{
@@ -1880,11 +2089,12 @@ public class Skill
 	}
 	
 	/**
-	 * Calculated position after skill
-	 * @param x
-	 * @param y
-	 * @param z
-	 * @param h
+	 * Sets the target coordinates for the skill.<br>
+	 * This updates the internal position values of the current instance.
+	 * @param x The horizontal coordinate.
+	 * @param y The vertical coordinate.
+	 * @param z The depth coordinate.
+	 * @param h The height value.
 	 */
 	public void setTargetPosition(float x, float y, float z, byte h)
 	{
@@ -1894,33 +2104,60 @@ public class Skill
 		this.h = h;
 	}
 	
+	/**
+	 * Sets the duration of the skill.<br>
+	 * This method updates the {@code duration} field with a new value.
+	 * @param t The new duration to set.
+	 */
 	public void setDuration(int t)
 	{
 		duration = t;
 	}
 	
+	/**
+	 * Retrieves the X coordinate of the bookmark.<br>
+	 * This value represents the horizontal position in the world.
+	 * @return The {@code float} value of the X coordinate.
+	 */
 	public float getX()
 	{
 		return x;
 	}
 	
+	/**
+	 * Retrieves the vertical coordinate of the bookmark.<br>
+	 * This value represents the height in the game world.
+	 * @return The {@code float} value of the Y coordinate.
+	 */
 	public float getY()
 	{
 		return y;
 	}
 	
+	/**
+	 * Retrieves the vertical coordinate of the bookmark.<br>
+	 * This value represents the height in the game world.
+	 * @return The {@code float} value of the Z coordinate.
+	 */
 	public float getZ()
 	{
 		return z;
 	}
 	
-	public final byte getH()
+	/**
+	 * Retrieves the horizontal rotation value.<br>
+	 * This value represents the orientation of the {@code SummonGroup}.
+	 * @return The current {@code byte} value for {@code h}.
+	 */
+	public byte getH()
 	{
 		return h;
 	}
 	
 	/**
-	 * @return Returns the time.
+	 * Retrieves the time required for a skill to land a hit.<br>
+	 * This value is used to determine the delay before an attack connects.
+	 * @return The hit time as an {@code int}.
 	 */
 	public int getHitTime()
 	{
@@ -1928,7 +2165,9 @@ public class Skill
 	}
 	
 	/**
-	 * @param time The time to set.
+	 * Sets the specific time when a hit occurs.<br>
+	 * This value is used to synchronize the timing of skill effects.
+	 * @param time The {@code int} value representing the hit time.
 	 */
 	public void setHitTime(int time)
 	{
@@ -1936,15 +2175,18 @@ public class Skill
 	}
 	
 	/**
-	 * 4.8 Version
-	 * @return
+	 * Checks if the skill has a fixed cast time.<br>
+	 * This method returns {@code true} for non-cast skills or specific hardcoded IDs.<br>
+	 * It identifies skills that do not require variable casting logic.
+	 * @return {@code true} if the cast time is fixed, {@code false} otherwise.
 	 */
 	private boolean isCastTimeFixed()
 	{
-		if (skillMethod != SkillMethod.CAST)
+		if (skillMethod != SkillMethod.CAST) // only casted skills are affected
 		{
 			return true;
 		}
+		
 		switch (getSkillId())
 		{
 			case 17: // Sleep: Scarecrow
@@ -1984,56 +2226,51 @@ public class Skill
 			case 1416: // Curse Of Old Roots
 			case 1417: // Curse Of Roots
 			case 3589: // Fear Shriek
-			case 3775: // Fear
-			{
-				// ArchDaeva Transformation 5.1 [Elyos]
-			}
+			case 3775: // Fear ArchDaeva Transformation 5.1 [Elyos]
 			case 4752: // Transformation: Avatar Of Fire.
 			case 4757: // Transformation: Avatar Of Water.
 			case 4762: // Transformation: Avatar Of Earth.
-			case 4768: // Transformation: Avatar Of Wind.
-			{
-				// ArchDaeva Transformation 5.1 [Asmodians]
-			}
+			case 4768: // Transformation: Avatar Of Wind. ArchDaeva Transformation 5.1 [Asmodians]
 			case 4804: // Transformation: Avatar Of Fire.
 			case 4805: // Transformation: Avatar Of Water.
 			case 4806: // Transformation: Avatar Of Earth.
-			case 4807: // Transformation: Avatar Of Wind.
-			{
-				// Fissure Of Oblivion 5.1
-			}
+			case 4807: // Transformation: Avatar Of Wind. Fissure Of Oblivion 5.1
 			case 4808: // Transformation: Avatar Of Fire.
 			case 4813: // Transformation: Avatar Of Water.
 			case 4818: // Transformation: Avatar Of Earth.
-			case 4824: // Transformation: Avatar Of Wind.
-			{
-				// Elyos [Guardian General]
-			}
+			case 4824: // Transformation: Avatar Of Wind. Elyos [Guardian General]
 			case 11885: // Transformation: Guardian General I
 			case 11886: // Transformation: Guardian General II
 			case 11887: // Transformation: Guardian General III
 			case 11888: // Transformation: Guardian General IV
-			case 11889: // Transformation: Guardian General V
-			{
-				// Asmodians [Guardian General]
-			}
+			case 11889: // Transformation: Guardian General V Asmodians [Guardian General]
 			case 11890: // Transformation: Guardian General I
 			case 11891: // Transformation: Guardian General II
 			case 11892: // Transformation: Guardian General III
 			case 11893: // Transformation: Guardian General IV
 			case 11894: // Transformation: Guardian General V
-			{
 				return true;
-			}
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * Checks if the skill is a ground-based skill.<br>
+	 * This method retrieves the status from the {@code SkillTemplate}.
+	 * @return {@code true} if it is a ground skill, {@code false} otherwise.
+	 */
 	public boolean isGroundSkill()
 	{
 		return skillTemplate.isGroundSkill();
 	}
 	
+	/**
+	 * Checks if the skill effect can be applied to a specific target.<br>
+	 * It validates height requirements for ground skills and checks line of sight.
+	 * @param object The {@link VisibleObject} being checked for the effect.
+	 * @return {@code true} if the effect can be applied, {@code false} otherwise.
+	 */
 	public boolean shouldAffectTarget(VisibleObject object)
 	{
 		// If creature is at least 2 meters above the terrain, ground skill cannot be applied
@@ -2046,26 +2283,48 @@ public class Skill
 					return false;
 				}
 			}
+			
 			return GeoService.getInstance().canSee(getFirstTarget(), object);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Sets the category for the skill chain.<br>
+	 * This value determines how skills are grouped in a sequence.
+	 * @param chainCategory The {@code String} name of the chain category.
+	 */
 	public void setChainCategory(String chainCategory)
 	{
 		this.chainCategory = chainCategory;
 	}
 	
+	/**
+	 * Retrieves the category of the skill chain.<br>
+	 * This value identifies how the current skill relates to a sequence of actions.
+	 * @return The {@code String} representing the chain category.
+	 */
 	public String getChainCategory()
 	{
 		return chainCategory;
 	}
 	
+	/**
+	 * Retrieves the current {@code SkillMethod} associated with this skill.<br>
+	 * This method returns the specific way the skill is being executed.
+	 * @return the {@code SkillMethod} object.
+	 */
 	public SkillMethod getSkillMethod()
 	{
 		return skillMethod;
 	}
 	
+	/**
+	 * Checks if the skill is a point-to-point type.<br>
+	 * This method verifies that both the first target attribute and the target range are set to {@code POINT}.
+	 * @return {@code true} if the skill is a point-to-point skill, otherwise {@code false}.
+	 */
 	public boolean isPointPointSkill()
 	{
 		if ((getSkillTemplate().getProperties().getFirstTarget() == FirstTargetAttribute.POINT) && (getSkillTemplate().getProperties().getTargetType() == TargetRangeAttribute.POINT))
@@ -2076,25 +2335,44 @@ public class Skill
 		return false;
 	}
 	
+	/**
+	 * Checks if the skill can be cast multiple times.<br>
+	 * Returns {@code true} if it is a multicast skill.<br>
+	 * Returns {@code false} otherwise.
+	 * @return The multicast status of the skill.
+	 */
 	public boolean isMulticast()
 	{
 		return isMultiCast;
 	}
 	
+	/**
+	 * Sets whether the skill can be cast multiple times.<br>
+	 * This updates the {@code isMultiCast} field of the current skill instance.
+	 * @param isMultiCast The boolean value to set for multi-cast status.
+	 */
 	public void setIsMultiCast(boolean isMultiCast)
 	{
 		this.isMultiCast = isMultiCast;
 	}
 	
-	public void stopCharging()
+	/**
+	 * Retrieves the timestamp when the skill casting began.<br>
+	 * This value is used to track the duration of the current cast.
+	 * @return The {@code long} value representing the start time of the cast.
+	 */
+	public long getCastStartTime()
 	{
-		if (chargeTemplate == null)
-		{
-			return;
-		}
-		
-		cancelCast();
-		
-		endCast();
+		return castStartTime;
+	}
+	
+	/**
+	 * Retrieves the list of skills that require charging.<br>
+	 * This method returns all {@link ChargedSkill} objects currently stored in the internal list.
+	 * @return a {@code List} containing all {@code ChargedSkill} objects.
+	 */
+	public List<ChargedSkill> getChargeSkillList()
+	{
+		return chargeSkillList;
 	}
 }

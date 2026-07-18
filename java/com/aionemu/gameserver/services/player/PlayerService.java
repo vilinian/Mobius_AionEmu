@@ -1,24 +1,26 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.player;
 
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +34,8 @@ import com.aionemu.gameserver.controllers.effect.PlayerEffectController;
 import com.aionemu.gameserver.dao.AbyssRankDAO;
 import com.aionemu.gameserver.dao.BlockListDAO;
 import com.aionemu.gameserver.dao.CraftCooldownsDAO;
-import com.aionemu.gameserver.dao.F2pDAO;
+import com.aionemu.gameserver.dao.EventItemsDAO;
+import com.aionemu.gameserver.dao.Free2PlayDAO;
 import com.aionemu.gameserver.dao.FriendListDAO;
 import com.aionemu.gameserver.dao.HouseObjectCooldownsDAO;
 import com.aionemu.gameserver.dao.HousesDAO;
@@ -44,24 +47,26 @@ import com.aionemu.gameserver.dao.MotionDAO;
 import com.aionemu.gameserver.dao.OldNamesDAO;
 import com.aionemu.gameserver.dao.PlayerAppearanceDAO;
 import com.aionemu.gameserver.dao.PlayerBindPointDAO;
-import com.aionemu.gameserver.dao.PlayerCPDAO;
 import com.aionemu.gameserver.dao.PlayerCooldownsDAO;
+import com.aionemu.gameserver.dao.PlayerCubicsDAO;
 import com.aionemu.gameserver.dao.PlayerDAO;
 import com.aionemu.gameserver.dao.PlayerEffectsDAO;
 import com.aionemu.gameserver.dao.PlayerEmotionListDAO;
+import com.aionemu.gameserver.dao.PlayerEquipmentSettingDAO;
+import com.aionemu.gameserver.dao.PlayerEventsWindowDAO;
+import com.aionemu.gameserver.dao.PlayerGameStatsDAO;
 import com.aionemu.gameserver.dao.PlayerLifeStatsDAO;
+import com.aionemu.gameserver.dao.PlayerLunaShopDAO;
 import com.aionemu.gameserver.dao.PlayerMacrossesDAO;
 import com.aionemu.gameserver.dao.PlayerNpcFactionsDAO;
-import com.aionemu.gameserver.dao.PlayerPassportsDAO;
 import com.aionemu.gameserver.dao.PlayerPunishmentsDAO;
 import com.aionemu.gameserver.dao.PlayerQuestListDAO;
 import com.aionemu.gameserver.dao.PlayerRecipesDAO;
 import com.aionemu.gameserver.dao.PlayerRegisteredItemsDAO;
 import com.aionemu.gameserver.dao.PlayerSettingsDAO;
 import com.aionemu.gameserver.dao.PlayerSkillListDAO;
-import com.aionemu.gameserver.dao.PlayerStigmasEquippedDAO;
+import com.aionemu.gameserver.dao.PlayerSkillSkinListDAO;
 import com.aionemu.gameserver.dao.PlayerTitleListDAO;
-import com.aionemu.gameserver.dao.PlayerUpgradeArcadeDAO;
 import com.aionemu.gameserver.dao.PlayerVarsDAO;
 import com.aionemu.gameserver.dao.PlayerWardrobeDAO;
 import com.aionemu.gameserver.dao.PortalCooldownsDAO;
@@ -70,6 +75,7 @@ import com.aionemu.gameserver.dataholders.PlayerInitialData;
 import com.aionemu.gameserver.dataholders.PlayerInitialData.LocationData;
 import com.aionemu.gameserver.dataholders.PlayerInitialData.PlayerCreationData;
 import com.aionemu.gameserver.dataholders.PlayerInitialData.PlayerCreationData.ItemType;
+import com.aionemu.gameserver.model.Race;
 import com.aionemu.gameserver.model.account.Account;
 import com.aionemu.gameserver.model.account.PlayerAccountData;
 import com.aionemu.gameserver.model.gameobjects.Item;
@@ -102,42 +108,64 @@ import com.aionemu.gameserver.utils.collections.cachemap.CacheMapFactory;
 import com.aionemu.gameserver.world.World;
 import com.aionemu.gameserver.world.WorldPosition;
 import com.aionemu.gameserver.world.knownlist.KnownList;
-import com.aionemu.gameserver.world.knownlist.Visitor;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 /**
- * This class is designed to do all the work related with loading/storing players.<br>
- * Same with storing, {@link #storePlayer(com.aionemu.gameserver.model.gameobjects.player.Player)} stores all player data like appearance, items, etc...
+ * This class handles all operations related to loading and storing player data.<br>
+ * The {@code storePlayer} method saves comprehensive information such as appearance, items, and other persistent attributes.
  * @author SoulKeeper, Saelya, Cura
  */
 public class PlayerService
 {
 	private static final CacheMap<Integer, Player> playerCache = CacheMapFactory.createSoftCacheMap("Player", "player");
 	
+	/**
+	 * Checks if a specific name is available for use.<br>
+	 * This method verifies that the {@code name} is not already taken in the database.
+	 * @param name The name to check.
+	 * @return {@code true} if the name is free, {@code false} otherwise.
+	 */
 	public static boolean isFreeName(String name)
 	{
 		return !DAOManager.getDAO(PlayerDAO.class).isNameUsed(name);
 	}
 	
+	/**
+	 * Checks if the provided name is registered as an old name.<br>
+	 * This method queries the {@link OldNamesDAO} to verify the status.
+	 * @param name The character name to check.
+	 * @return {@code true} if the name is old, {@code false} otherwise.
+	 */
 	public static boolean isOldName(String name)
 	{
 		return DAOManager.getDAO(OldNamesDAO.class).isOldName(name);
 	}
 	
+	/**
+	 * Saves a new player to the database.<br>
+	 * This method stores common data, appearance, skills, and inventory.<br>
+	 * It returns {@code true} if all storage operations succeed.
+	 * @param player The {@link Player} object containing character data.
+	 * @param accountName The name of the associated account.
+	 * @param accountId The unique identifier for the account.
+	 * @return {@code true} if the player was saved successfully, otherwise {@code false}.
+	 */
 	public static boolean storeNewPlayer(Player player, String accountName, int accountId)
 	{
 		return DAOManager.getDAO(PlayerDAO.class).saveNewPlayer(player.getCommonData(), accountId, accountName) && DAOManager.getDAO(PlayerAppearanceDAO.class).store(player) && DAOManager.getDAO(PlayerSkillListDAO.class).storeSkills(player) && DAOManager.getDAO(InventoryDAO.class).store(player);
 	}
 	
+	/**
+	 * Saves all player data to the database.<br>
+	 * This method updates multiple tables including skills, inventory, and houses.<br>
+	 * It ensures that all persistent information for a {@code Player} is synchronized.
+	 * @param player The {@code Player} object containing the data to be saved.
+	 */
 	public static void storePlayer(Player player)
 	{
 		DAOManager.getDAO(PlayerDAO.class).storePlayer(player);
 		DAOManager.getDAO(PlayerSkillListDAO.class).storeSkills(player);
-		DAOManager.getDAO(PlayerStigmasEquippedDAO.class).storeItems(player);
 		DAOManager.getDAO(PlayerSettingsDAO.class).saveSettings(player);
 		DAOManager.getDAO(PlayerQuestListDAO.class).store(player);
-		DAOManager.getDAO(PlayerPassportsDAO.class).store(player);
 		DAOManager.getDAO(AbyssRankDAO.class).storeAbyssRank(player);
 		DAOManager.getDAO(PlayerPunishmentsDAO.class).storePlayerPunishments(player, PunishmentType.PRISON);
 		DAOManager.getDAO(PlayerPunishmentsDAO.class).storePlayerPunishments(player, PunishmentType.GATHER);
@@ -150,13 +178,24 @@ public class PlayerService
 				DAOManager.getDAO(PlayerRegisteredItemsDAO.class).store(house.getRegistry(), player.getCommonData().getPlayerObjId());
 			}
 		}
+		
 		DAOManager.getDAO(ItemStoneListDAO.class).save(player);
 		DAOManager.getDAO(MailDAO.class).storeMailbox(player);
 		DAOManager.getDAO(PortalCooldownsDAO.class).storePortalCooldowns(player);
 		DAOManager.getDAO(CraftCooldownsDAO.class).storeCraftCooldowns(player);
 		DAOManager.getDAO(PlayerNpcFactionsDAO.class).storeNpcFactions(player);
+		DAOManager.getDAO(PlayerLunaShopDAO.class).store(player);
+		DAOManager.getDAO(EventItemsDAO.class).loadItems(player);
 	}
 	
+	/**
+	 * Retrieves a {@link Player} object using the provided ID and account.<br>
+	 * This method checks the cache first before loading data from the database.<br>
+	 * It initializes all necessary components like inventory, skills, and stats.
+	 * @param playerObjId The unique identifier for the player object.
+	 * @param account The {@link Account} associated with the player.
+	 * @return The fully loaded {@link Player} instance.
+	 */
 	public static Player getPlayer(int playerObjId, Account account)
 	{
 		Player player = playerCache.get(playerObjId);
@@ -164,52 +203,71 @@ public class PlayerService
 		{
 			return player;
 		}
+		
+		/**
+		 * Player common data and appearance should be already loaded in account
+		 */
 		final PlayerAccountData playerAccountData = account.getPlayerAccountData(playerObjId);
 		final PlayerCommonData pcd = playerAccountData.getPlayerCommonData();
 		final PlayerAppearance appearance = playerAccountData.getAppereance();
+		
 		player = new Player(new PlayerController(), pcd, appearance, account);
 		final LegionMember legionMember = LegionService.getInstance().getLegionMember(player.getObjectId());
 		if (legionMember != null)
 		{
 			player.setLegionMember(legionMember);
 		}
+		
 		final MacroList macroses = DAOManager.getDAO(PlayerMacrossesDAO.class).restoreMacrosses(playerObjId);
 		player.setMacroList(macroses);
+		
 		player.setSkillList(DAOManager.getDAO(PlayerSkillListDAO.class).loadSkillList(playerObjId));
-		player.setEquipedStigmaList(DAOManager.getDAO(PlayerStigmasEquippedDAO.class).loadItemsList(playerObjId));
 		player.setKnownlist(new KnownList(player));
 		player.setFriendList(DAOManager.getDAO(FriendListDAO.class).load(player));
 		player.setBlockList(DAOManager.getDAO(BlockListDAO.class).load(player));
 		player.setTitleList(DAOManager.getDAO(PlayerTitleListDAO.class).loadTitleList(playerObjId));
-		player.setCP(DAOManager.getDAO(PlayerCPDAO.class).loadCP(player));
+		player.setEventWindow(DAOManager.getDAO(PlayerEventsWindowDAO.class).load(player));
 		player.setWardrobe(DAOManager.getDAO(PlayerWardrobeDAO.class).load(player));
-		DAOManager.getDAO(F2pDAO.class).loadF2pInfo(player);
+		DAOManager.getDAO(Free2PlayDAO.class).loadF2pInfo(player, account.getId());
 		DAOManager.getDAO(PlayerSettingsDAO.class).loadSettings(player);
 		DAOManager.getDAO(AbyssRankDAO.class).loadAbyssRank(player);
 		DAOManager.getDAO(PlayerNpcFactionsDAO.class).loadNpcFactions(player);
 		DAOManager.getDAO(MotionDAO.class).loadMotionList(player);
+		player.setMonsterCubic(DAOManager.getDAO(PlayerCubicsDAO.class).load(player));
 		player.setVars(DAOManager.getDAO(PlayerVarsDAO.class).load(player.getObjectId()));
+		player.setEffectController(new PlayerEffectController(player));
+		player.setFlyController(new FlyController(player));
+		PlayerStatFunctions.addPredefinedStatFunctions(player);
+		
+		player.setQuestStateList(DAOManager.getDAO(PlayerQuestListDAO.class).load(player));
+		player.setRecipeList(DAOManager.getDAO(PlayerRecipesDAO.class).load(player.getObjectId()));
+		player.setSkillSkinList(DAOManager.getDAO(PlayerSkillSkinListDAO.class).loadSkillSkinList(playerObjId));
+		player.getSkillSkinList().setOwner(player);
+		
+		/**
+		 * Account warehouse should be already loaded in account
+		 */
+		final Storage accWarehouse = account.getAccountWarehouse();
+		player.setStorage(accWarehouse, StorageType.ACCOUNT_WAREHOUSE);
+		
+		final Storage inventory = DAOManager.getDAO(InventoryDAO.class).loadStorage(playerObjId, StorageType.CUBE);
+		ItemService.loadItemStones(inventory.getItems());
+		
+		player.setStorage(inventory, StorageType.CUBE);
+		
 		final Equipment equipment = DAOManager.getDAO(InventoryDAO.class).loadEquipment(player);
 		ItemService.loadItemStones(equipment.getEquippedItemsWithoutStigma());
 		equipment.setOwner(player);
 		player.setEquipment(equipment);
-		player.setEffectController(new PlayerEffectController(player));
-		player.setFlyController(new FlyController(player));
-		PlayerStatFunctions.addPredefinedStatFunctions(player);
-		player.setQuestStateList(DAOManager.getDAO(PlayerQuestListDAO.class).load(player));
-		player.setRecipeList(DAOManager.getDAO(PlayerRecipesDAO.class).load(player.getObjectId()));
-		player.getCommonData().setCompletedPassports(DAOManager.getDAO(PlayerPassportsDAO.class).load(player));
-		final Storage accWarehouse = account.getAccountWarehouse();
-		player.setStorage(accWarehouse, StorageType.ACCOUNT_WAREHOUSE);
-		final Storage inventory = DAOManager.getDAO(InventoryDAO.class).loadStorage(playerObjId, StorageType.CUBE);
-		ItemService.loadItemStones(inventory.getItems());
-		player.setStorage(inventory, StorageType.CUBE);
+		
 		for (int petBagId = StorageType.PET_BAG_MIN; petBagId <= StorageType.PET_BAG_MAX; petBagId++)
 		{
 			final Storage petBag = DAOManager.getDAO(InventoryDAO.class).loadStorage(playerObjId, StorageType.getStorageTypeById(petBagId));
 			ItemService.loadItemStones(petBag.getItems());
+			
 			player.setStorage(petBag, StorageType.getStorageTypeById(petBagId));
 		}
+		
 		for (int houseWhId = StorageType.HOUSE_WH_MIN; houseWhId <= StorageType.HOUSE_WH_MAX; houseWhId++)
 		{
 			final StorageType whType = StorageType.getStorageTypeById(houseWhId);
@@ -220,9 +278,12 @@ public class PlayerService
 				player.setStorage(cabinet, StorageType.getStorageTypeById(houseWhId));
 			}
 		}
+		
 		final Storage warehouse = DAOManager.getDAO(InventoryDAO.class).loadStorage(playerObjId, StorageType.REGULAR_WAREHOUSE);
 		ItemService.loadItemStones(warehouse.getItems());
+		
 		player.setStorage(warehouse, StorageType.REGULAR_WAREHOUSE);
+		
 		HouseRegistry houseRegistry = null;
 		for (House house : player.getHouses())
 		{
@@ -232,41 +293,88 @@ public class PlayerService
 				break;
 			}
 		}
+		
 		player.setHouseRegistry(houseRegistry);
+		
+		/**
+		 * Apply equipment stats (items and manastones were loaded in account)
+		 */
 		player.getEquipment().onLoadApplyEquipmentStats();
+		
 		DAOManager.getDAO(PlayerPunishmentsDAO.class).loadPlayerPunishments(player, PunishmentType.PRISON);
 		DAOManager.getDAO(PlayerPunishmentsDAO.class).loadPlayerPunishments(player, PunishmentType.GATHER);
+		
+		// update passive stats after effect controller, stats and equipment are initialized
 		player.getController().updatePassiveStats();
+		
+		// load saved effects
 		DAOManager.getDAO(PlayerEffectsDAO.class).loadPlayerEffects(player);
+		
+		// load saved player cooldowns
 		DAOManager.getDAO(PlayerCooldownsDAO.class).loadPlayerCooldowns(player);
+		
+		// load item cooldowns
 		DAOManager.getDAO(ItemCooldownsDAO.class).loadItemCooldowns(player);
+		
+		// load portal cooldowns
 		DAOManager.getDAO(PortalCooldownsDAO.class).loadPortalCooldowns(player);
+		
+		// load house object use cooldowns
 		DAOManager.getDAO(HouseObjectCooldownsDAO.class).loadHouseObjectCooldowns(player);
+		
+		// load bind point
 		DAOManager.getDAO(PlayerBindPointDAO.class).loadBindPoint(player);
+		
+		// load craft cooldowns
 		DAOManager.getDAO(CraftCooldownsDAO.class).loadCraftCooldowns(player);
+		
+		// load luna items
+		DAOManager.getDAO(PlayerLunaShopDAO.class).load(player);
+		
+		// load event items
+		DAOManager.getDAO(EventItemsDAO.class).loadItems(player);
+		
 		if (player.getCommonData().getBonusTitleId() > 0)
 		{
-			TitleChangeListener.onBonusTitleChange(player.getGameStats(), player.getCommonData().getTitleId(), true);
+			TitleChangeListener.onBonusTitleChange(player.getGameStats(), player.getCommonData().getBonusTitleId(), true);
 		}
+		
 		DAOManager.getDAO(PlayerLifeStatsDAO.class).loadPlayerLifeStat(player);
 		DAOManager.getDAO(PlayerEmotionListDAO.class).loadEmotions(player);
-		DAOManager.getDAO(PlayerUpgradeArcadeDAO.class).load(player);
+		
 		if (CacheConfig.CACHE_PLAYERS)
 		{
 			playerCache.put(playerObjId, player);
 		}
+		
+		DAOManager.getDAO(PlayerEquipmentSettingDAO.class).loadEquipmentSetting(player);
 		return player;
 	}
 	
+	/**
+	 * Creates and initializes a new {@link Player} object.<br>
+	 * This method sets up the starting position, skills, storage, and equipment for a new character.<br>
+	 * It also handles initial item distribution based on the player class.
+	 * @param playerCommonData The common data associated with the player.
+	 * @param playerAppearance The appearance data of the player.
+	 * @param account The {@link Account} object linked to this character.
+	 * @return A fully initialized {@link Player} instance.
+	 */
 	public static Player newPlayer(PlayerCommonData playerCommonData, PlayerAppearance playerAppearance, Account account)
 	{
 		final PlayerInitialData playerInitialData = DataManager.PLAYER_INITIAL_DATA;
 		final LocationData ld = playerInitialData.getSpawnLocation(playerCommonData.getRace());
+		
 		final WorldPosition position = World.getInstance().createPosition(ld.getMapId(), ld.getX(), ld.getY(), ld.getZ(), ld.getHeading(), 0);
 		playerCommonData.setPosition(position);
+		
 		final Player newPlayer = new Player(new PlayerController(), playerCommonData, playerAppearance, account);
+		
+		// Starting skills
 		newPlayer.setSkillList(new PlayerSkillList());
 		SkillLearnService.addNewSkills(newPlayer);
+		
+		// Starting items
 		final PlayerCreationData playerCreationData = playerInitialData.getPlayerCreationData(playerCommonData.getPlayerClass());
 		final Storage playerInventory = new PlayerStorage(StorageType.CUBE);
 		final Storage regularWarehouse = new PlayerStorage(StorageType.REGULAR_WAREHOUSE);
@@ -274,19 +382,31 @@ public class PlayerService
 		newPlayer.setStorage(playerInventory, StorageType.CUBE);
 		newPlayer.setStorage(regularWarehouse, StorageType.REGULAR_WAREHOUSE);
 		newPlayer.setStorage(accountWarehouse, StorageType.ACCOUNT_WAREHOUSE);
+		
 		final Equipment equipment = new Equipment(newPlayer);
+		
 		if (playerCreationData != null)
 		{
+			// player transfer
 			final List<ItemType> items = playerCreationData.getItems();
 			for (ItemType itemType : items)
 			{
+				// check item is not PC_ALL and must equal to playerRace
+				if ((itemType.getRace() != Race.PC_ALL) && (itemType.getRace() != newPlayer.getRace()))
+				{
+					continue;
+				}
+				
 				final int itemId = itemType.getTemplate().getTemplateId();
 				final Item item = ItemFactory.newItem(itemId, itemType.getCount());
 				if (item == null)
 				{
 					continue;
 				}
+				
+				// When creating a new player, all equipment with slot values will be equipped; ensure the XML file does not contain more items than can be equipped.
 				final ItemTemplate itemTemplate = item.getItemTemplate();
+				
 				if ((itemTemplate.isArmor() || itemTemplate.isWeapon()) && !(equipment.isSlotEquipped(itemTemplate.getItemSlot())))
 				{
 					item.setEquipped(true);
@@ -300,16 +420,16 @@ public class PlayerService
 				}
 			}
 		}
-		newPlayer.setStorage(playerInventory, StorageType.CUBE);
-		newPlayer.setStorage(regularWarehouse, StorageType.REGULAR_WAREHOUSE);
-		newPlayer.setStorage(accountWarehouse, StorageType.ACCOUNT_WAREHOUSE);
+		
 		newPlayer.setEquipment(equipment);
 		newPlayer.setMailbox(new Mailbox(newPlayer));
+		
 		for (int petBagId = StorageType.PET_BAG_MIN; petBagId <= StorageType.PET_BAG_MAX; petBagId++)
 		{
 			final Storage petBag = new PlayerStorage(StorageType.getStorageTypeById(petBagId));
 			newPlayer.setStorage(petBag, StorageType.getStorageTypeById(petBagId));
 		}
+		
 		for (int houseWhId = StorageType.HOUSE_WH_MIN; houseWhId <= StorageType.HOUSE_WH_MAX; houseWhId++)
 		{
 			final StorageType whType = StorageType.getStorageTypeById(houseWhId);
@@ -320,42 +440,75 @@ public class PlayerService
 			}
 		}
 		
+		/**
+		 * Mark inventory and equipment as UPDATE_REQUIRED to be saved during character creation
+		 */
 		playerInventory.setPersistentState(PersistentState.UPDATE_REQUIRED);
 		equipment.setPersistentState(PersistentState.UPDATE_REQUIRED);
 		return newPlayer;
 	}
 	
+	/**
+	 * Cancels the scheduled deletion of a player account.<br>
+	 * This method checks if the {@code deletionDate} is in the future.<br>
+	 * If it is, the date is cleared and the cancellation is successful.
+	 * @param accData The {@link PlayerAccountData} object to check for deletion.
+	 * @return {@code true} if the deletion was successfully cancelled, {@code false} otherwise.
+	 */
 	public static boolean cancelPlayerDeletion(PlayerAccountData accData)
 	{
 		if (accData.getDeletionDate() == null)
 		{
 			return true;
 		}
+		
 		if (accData.getDeletionDate().getTime() > System.currentTimeMillis())
 		{
 			accData.setDeletionDate(null);
 			storeDeletionTime(accData);
 			return true;
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * Schedules a player account for deletion.<br>
+	 * This method sets a deletion timestamp in the future.<br>
+	 * It checks if the {@code accData} already has a deletion date before proceeding.
+	 * @param accData The {@link PlayerAccountData} object to be scheduled for deletion.
+	 */
 	public static void deletePlayer(PlayerAccountData accData)
 	{
 		if (accData.getDeletionDate() != null)
 		{
 			return;
 		}
+		
 		accData.setDeletionDate(new Timestamp(System.currentTimeMillis() + (5 * 60 * 1000)));
 		storeDeletionTime(accData);
 	}
 	
+	/**
+	 * Removes a player's data from the database.<br>
+	 * This method deletes items, general player records, and game statistics.<br>
+	 * It uses {@link DAOManager} to perform these deletions.
+	 * @param playerId The unique identifier of the player to remove.
+	 */
 	public static void deletePlayerFromDB(int playerId)
 	{
 		DAOManager.getDAO(InventoryDAO.class).deletePlayerItems(playerId);
 		DAOManager.getDAO(PlayerDAO.class).deletePlayer(playerId);
+		DAOManager.getDAO(PlayerGameStatsDAO.class).deletePlayerGameStat(playerId);
 	}
 	
+	/**
+	 * Deletes all characters associated with a specific account from the database.<br>
+	 * This method retrieves all character IDs for the given {@code accountId}.<br>
+	 * It then calls {@code deletePlayerFromDB} for each character found.
+	 * @param accountId The unique identifier of the account to clear.
+	 * @return The total number of characters that were deleted from the database.
+	 */
 	public static int deleteAccountsCharsFromDB(int accountId)
 	{
 		final List<Integer> charIds = DAOManager.getDAO(PlayerDAO.class).getPlayerOidsOnAccount(accountId);
@@ -363,31 +516,56 @@ public class PlayerService
 		{
 			deletePlayerFromDB(playerId);
 		}
+		
 		return charIds.size();
 	}
 	
+	/**
+	 * Updates the deletion timestamp in the database.<br>
+	 * This method uses {@link PlayerDAO} to save the date.
+	 * @param accData The account data containing the deletion information.
+	 */
 	private static void storeDeletionTime(PlayerAccountData accData)
 	{
 		DAOManager.getDAO(PlayerDAO.class).updateDeletionTime(accData.getPlayerCommonData().getPlayerObjId(), accData.getDeletionDate());
 	}
 	
+	/**
+	 * Saves the creation date for a specific object to the database.<br>
+	 * This method uses {@link PlayerDAO} to perform the update.
+	 * @param objectId The unique identifier of the object.
+	 * @param creationDate The {@code Timestamp} representing when the object was created.
+	 */
 	public static void storeCreationTime(int objectId, Timestamp creationDate)
 	{
 		DAOManager.getDAO(PlayerDAO.class).storeCreationTime(objectId, creationDate);
 	}
 	
-	public static void addMacro(Player player, int macroOrder, String macroXML)
+	/**
+	 * Adds a new macro or updates an existing one for a specific player.<br>
+	 * This method saves the data to both the memory and the database.
+	 * @param player The {@link Player} object who owns the macro.
+	 * @param macroPosition The index position where the macro should be placed.
+	 * @param macroXML The XML string containing the macro configuration.
+	 */
+	public static void addMacro(Player player, int macroPosition, String macroXML)
 	{
-		if (player.getMacroList().addMacro(macroOrder, macroXML))
+		if (player.getMacroList().addMacro(macroPosition, macroXML))
 		{
-			DAOManager.getDAO(PlayerMacrossesDAO.class).addMacro(player.getObjectId(), macroOrder, macroXML);
+			DAOManager.getDAO(PlayerMacrossesDAO.class).addMacro(player.getObjectId(), macroPosition, macroXML);
 		}
 		else
 		{
-			DAOManager.getDAO(PlayerMacrossesDAO.class).updateMacro(player.getObjectId(), macroOrder, macroXML);
+			DAOManager.getDAO(PlayerMacrossesDAO.class).updateMacro(player.getObjectId(), macroPosition, macroXML);
 		}
 	}
 	
+	/**
+	 * Removes a specific macro from the player's list.<br>
+	 * This method updates the {@code Player} object and deletes the entry from the database.
+	 * @param player The {@link Player} whose macros are being modified.
+	 * @param macroOrder The index or position of the macro to remove.
+	 */
 	public static void removeMacro(Player player, int macroOrder)
 	{
 		if (player.getMacroList().removeMacro(macroOrder))
@@ -396,36 +574,58 @@ public class PlayerService
 		}
 	}
 	
+	/**
+	 * Retrieves a {@link Player} object from the internal cache.<br>
+	 * This method uses the provided unique identifier to find the cached data.
+	 * @param playerObjectId The unique ID of the player to retrieve.
+	 * @return The {@link Player} object if found, or {@code null} otherwise.
+	 */
 	public static Player getCachedPlayer(int playerObjectId)
 	{
 		return playerCache.get(playerObjectId);
 	}
 	
+	/**
+	 * Retrieves the name of a specific player.<br>
+	 * This method uses {@code getPlayerNames} to find the result.
+	 * @param objectId The unique identifier for the player.
+	 * @return The name of the player as a {@code String}.
+	 */
 	public static String getPlayerName(Integer objectId)
 	{
 		return getPlayerNames(Collections.singleton(objectId)).get(objectId);
 	}
 	
+	/**
+	 * Retrieves the names of players based on a collection of object IDs.<br>
+	 * This method checks online players first before querying the database.<br>
+	 * It returns an empty {@code Map} if the input is null or blank.
+	 * @param playerObjIds The collection of unique identifiers for the players to look up.
+	 * @return A map where keys are object IDs and values are the corresponding player names.
+	 */
 	public static Map<Integer, String> getPlayerNames(Collection<Integer> playerObjIds)
 	{
+		// if there is no ids - return just empty map
 		if (GenericValidator.isBlankOrNull(playerObjIds))
 		{
 			return Collections.emptyMap();
 		}
-		final Map<Integer, String> result = Maps.newHashMap();
-		final Set<Integer> playerObjIdsCopy = Sets.newHashSet(playerObjIds);
-		World.getInstance().doOnAllPlayers(new Visitor<Player>()
+		
+		final Map<Integer, String> result = new HashMap<>();
+		
+		// Copy IDs to a separate set because modifying the input collection can have side effects.
+		final Set<Integer> playerObjIdsCopy = new HashSet<>(playerObjIds);
+		
+		// Get the names of all online players, ensuring that any names changed at runtime do not cause errors.
+		World.getInstance().doOnAllPlayers(object ->
 		{
-			@Override
-			public void visit(Player object)
+			if (playerObjIdsCopy.contains(object.getObjectId()))
 			{
-				if (playerObjIdsCopy.contains(object.getObjectId()))
-				{
-					result.put(object.getObjectId(), object.getName());
-					playerObjIdsCopy.remove(object.getObjectId());
-				}
+				result.put(object.getObjectId(), object.getName());
+				playerObjIdsCopy.remove(object.getObjectId());
 			}
 		});
+		
 		result.putAll(DAOManager.getDAO(PlayerDAO.class).getPlayerNames(playerObjIdsCopy));
 		return result;
 	}

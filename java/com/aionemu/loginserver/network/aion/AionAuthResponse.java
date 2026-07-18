@@ -1,23 +1,24 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.aion;
 
 /**
- * This class contains possible response that LoginServer may send to client if login fail etc.
+ * Represents the various responses that the {@link com.aionemu.loginserver.LoginServer} may send to a client.<br>
+ * These responses are typically triggered when a login attempt fails or other authentication errors occur.
  * @author KID
  */
 public enum AionAuthResponse
@@ -114,14 +115,16 @@ public enum AionAuthResponse
 	 * You cannot access the game through this IP.
 	 */
 	BAN_IP(22);
+	
 	/**
 	 * id of this enum that may be sent to client
 	 */
-	private int messageId;
+	private final int messageId;
 	
 	/**
-	 * Constructor.
-	 * @param msgId id of the message
+	 * This is a private constructor for the {@link AionAuthResponse} enum.<br>
+	 * It initializes the internal message ID value.
+	 * @param msgId The unique integer identifier for the response type.
 	 */
 	private AionAuthResponse(int msgId)
 	{
@@ -129,8 +132,9 @@ public enum AionAuthResponse
 	}
 	
 	/**
-	 * Message Id that may be sent to client.
-	 * @return message id
+	 * Retrieves the unique identifier for this response.<br>
+	 * This value is used to identify specific error types or statuses.
+	 * @return The {@code int} ID of the message.
 	 */
 	public int getMessageId()
 	{

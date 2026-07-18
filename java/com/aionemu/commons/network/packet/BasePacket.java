@@ -1,25 +1,24 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.network.packet;
 
 /**
- * Basic superclass for packets.
- * <p/>
- * Created on: 29.06.2009 17:59:25
+ * This class serves as the base superclass for all network packets.<br>
+ * It provides common functionality shared by all packet types in the system.
  * @author Aquanox
  */
 public abstract class BasePacket
@@ -42,9 +41,10 @@ public abstract class BasePacket
 	private int opcode;
 	
 	/**
-	 * Constructs a new packet with specified type and id.
-	 * @param packetType Type of packet
-	 * @param opcode Id of packet
+	 * Creates a new instance of a {@link BasePacket}.<br>
+	 * This constructor initializes the packet with a specific type and ID.
+	 * @param packetType The {@code PacketType} of the packet.
+	 * @param opcode The unique integer identifier for the packet.
 	 */
 	protected BasePacket(PacketType packetType, int opcode)
 	{
@@ -53,9 +53,9 @@ public abstract class BasePacket
 	}
 	
 	/**
-	 * Constructs a new packet with given type.<br>
-	 * If this constructor is used, then setOpcode() must be used just after it.
-	 * @param packetType
+	 * Initializes a new instance of a {@link BasePacket}.<br>
+	 * This constructor sets the internal {@code packetType} field.
+	 * @param packetType The type of the packet to be created.
 	 */
 	protected BasePacket(PacketType packetType)
 	{
@@ -63,9 +63,9 @@ public abstract class BasePacket
 	}
 	
 	/**
-	 * Sets opcode of this packet.<br>
-	 * <font color='red'>NOTICE: </font> Use only if BasePacket(PacketType) constructor was use
-	 * @param opcode
+	 * Sets the unique identifier for this packet.<br>
+	 * This updates the {@code opcode} field of the current instance.
+	 * @param opcode The new integer ID to assign to the packet.
 	 */
 	protected void setOpcode(int opcode)
 	{
@@ -73,34 +73,33 @@ public abstract class BasePacket
 	}
 	
 	/**
-	 * Returns packet opcode.
-	 * @return packet id
+	 * Retrieves the unique identifier for this packet.<br>
+	 * This value is stored in the {@code opcode} field.
+	 * @return The integer value of the packet's opcode.
 	 */
-	public final int getOpcode()
+	public int getOpcode()
 	{
 		return opcode;
 	}
 	
 	/**
-	 * Returns packet type.
-	 * @return type of this packet.
-	 * @see com.aionemu.commons.network.packet.BasePacket.PacketType
+	 * Retrieves the type of this packet.<br>
+	 * This method returns the {@code PacketType} associated with the current instance.
+	 * @return The {@code PacketType} of the packet.
 	 */
-	public final PacketType getPacketType()
+	public PacketType getPacketType()
 	{
 		return packetType;
 	}
 	
 	/**
-	 * Returns packet name.
-	 * <p/>
-	 * Actually packet name is a simple name of the underlying class.
-	 * @return packet name
-	 * @see Class#getSimpleName()
+	 * Returns the simple name of the packet class.<br>
+	 * This is useful for logging and debugging purposes.
+	 * @return The {@code String} name of the current class.
 	 */
 	public String getPacketName()
 	{
-		return getClass().getSimpleName();
+		return this.getClass().getSimpleName();
 	}
 	
 	/**
@@ -108,14 +107,10 @@ public abstract class BasePacket
 	 */
 	public static enum PacketType
 	{
-		
-		/**
-		 * Server packet
-		 */
+		/** Server packet */
 		SERVER("S"),
-		/**
-		 * Client packet
-		 */
+		
+		/** Client packet */
 		CLIENT("C");
 		
 		/**
@@ -143,11 +138,10 @@ public abstract class BasePacket
 	}
 	
 	/**
-	 * Returns string representation of this packet based on packet type, opcode and name.
-	 * @return packet type string
-	 * @see #TYPE_PATTERN
-	 * @see java.util.Formatter
-	 * @see String#format(String, Object[])
+	 * Returns a string representation of the packet.<br>
+	 * This method uses {@code TYPE_PATTERN} to format the output.<br>
+	 * It includes the packet type, opcode, and name.
+	 * @return A formatted string representing this packet.
 	 */
 	@Override
 	public String toString()

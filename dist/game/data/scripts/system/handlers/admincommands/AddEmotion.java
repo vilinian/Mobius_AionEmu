@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -24,19 +24,30 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 
 /**
+ * Handles the admin command to add an emotion to a player.<br>
+ * It allows administrators to trigger specific animations for {@link Player} objects.
  * @author ginho1, Damon
  */
 public class AddEmotion extends AdminCommand
 {
+	/**
+	 * Creates a new instance of the {@link AddEmotion} command.<br>
+	 * This class handles the logic for adding emotions to players.
+	 */
 	public AddEmotion()
 	{
 		super("addemotion");
 	}
 	
+	/**
+	 * Executes the command to give an emotion to a player.<br>
+	 * It allows adding a specific emotion ID with an optional expiration time.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings where the first element is the emotion ID and the second is the optional expire time in minutes.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
-		
 		long expireMinutes = 0;
 		int emotionId = 0;
 		VisibleObject target = null;
@@ -65,7 +76,7 @@ public class AddEmotion extends AdminCommand
 			return;
 		}
 		
-		if ((emotionId < 1) || ((emotionId > 35) && (emotionId < 64)) || (emotionId > 129))
+		if ((emotionId < 1) || ((emotionId > 35) && (emotionId < 64)) || (emotionId > 153))
 		{
 			PacketSendUtility.sendMessage(admin, "Invalid <emotion id>, must be in intervals : [1-35]U[64-129]");
 			return;
@@ -73,22 +84,18 @@ public class AddEmotion extends AdminCommand
 		
 		target = admin.getTarget();
 		
-		if (target == null)
-		{
-			finalTarget = admin;
-		}
-		else if (target instanceof Player)
+		if (target instanceof Player)
 		{
 			finalTarget = (Player) target;
 		}
 		else
 		{
-			return;
+			finalTarget = admin;
 		}
 		
 		if (finalTarget.getEmotions().contains(emotionId))
 		{
-			PacketSendUtility.sendMessage(admin, "Target has aldready this emotion!");
+			PacketSendUtility.sendMessage(admin, "Target has aldready this emotion !");
 			return;
 		}
 		

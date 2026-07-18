@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.database.mysql5;
 
@@ -33,21 +33,29 @@ import com.aionemu.gameserver.model.gameobjects.player.npcFaction.NpcFaction;
 import com.aionemu.gameserver.model.gameobjects.player.npcFaction.NpcFactions;
 
 /**
+ * This class provides the {@code MySQL5} database implementation for handling player NPC faction data.<br>
+ * It extends {@link PlayerNpcFactionsDAO} to perform specific SQL queries for saving and loading faction states.
  * @author MrPoke
  */
 public class MySQL5PlayerNpcFactionsDAO extends PlayerNpcFactionsDAO
 {
-	/** Logger */
+	/**
+	 * Logger
+	 */
 	private static final Logger log = LoggerFactory.getLogger(MySQL5PlayerNpcFactionsDAO.class);
-	
 	public static final String SELECT_QUERY = "SELECT `faction_id`, `active`, `time`, `state`, `quest_id` FROM player_npc_factions WHERE `player_id`=?";
 	public static final String INSERT_QUERY = "INSERT INTO player_npc_factions (`player_id`, `faction_id`, `active`, `time`, `state`, `quest_id`) VALUES (?,?,?,?,?,?)";
 	public static final String UPDATE_QUERY = "UPDATE player_npc_factions SET `active`=?, `time`=?, `state`=?, `quest_id`=?  WHERE `player_id`=? AND `faction_id`=?";
 	
+	/**
+	 * Loads the NPC faction data for a specific player from the database.<br>
+	 * This method retrieves all records associated with the {@code Player} object ID.<br>
+	 * It populates the {@link NpcFactions} collection within the player model.
+	 * @param player The {@code Player} whose faction data needs to be loaded.
+	 */
 	@Override
 	public void loadNpcFactions(Player player)
 	{
-		
 		Connection con = null;
 		try
 		{
@@ -68,6 +76,7 @@ public class MySQL5PlayerNpcFactionsDAO extends PlayerNpcFactionsDAO
 				faction.setPersistentState(PersistentState.UPDATED);
 				factions.addNpcFaction(faction);
 			}
+			
 			rset.close();
 			stmt.close();
 		}
@@ -81,6 +90,12 @@ public class MySQL5PlayerNpcFactionsDAO extends PlayerNpcFactionsDAO
 		}
 	}
 	
+	/**
+	 * Saves the NPC faction data for a specific player to the database.<br>
+	 * This method iterates through all {@link NpcFaction} objects owned by the player.<br>
+	 * It calls {@code insertNpcFaction} or {@code updateNpcFaction} based on the current state.
+	 * @param player The {@code Player} object whose faction data needs to be saved.
+	 */
 	@Override
 	public void storeNpcFactions(Player player)
 	{
@@ -89,19 +104,24 @@ public class MySQL5PlayerNpcFactionsDAO extends PlayerNpcFactionsDAO
 			switch (npcFaction.getPersistentState())
 			{
 				case NEW:
-				{
 					insertNpcFaction(player.getObjectId(), npcFaction);
 					break;
-				}
 				case UPDATE_REQUIRED:
-				{
 					updateNpcFaction(player.getObjectId(), npcFaction);
 					break;
-				}
+				default:
+					break;
 			}
 		}
 	}
 	
+	/**
+	 * Saves a new {@link NpcFaction} record into the database.<br>
+	 * This method uses the {@code INSERT_QUERY} to store faction data for a specific player.<br>
+	 * It handles the connection lifecycle and logs any errors that occur during execution.
+	 * @param playerObjectId The unique ID of the player.
+	 * @param faction The {@link NpcFaction} object containing the data to save.
+	 */
 	private void insertNpcFaction(int playerObjectId, NpcFaction faction)
 	{
 		Connection con = null;
@@ -128,6 +148,13 @@ public class MySQL5PlayerNpcFactionsDAO extends PlayerNpcFactionsDAO
 		}
 	}
 	
+	/**
+	 * Updates the database record for a specific NPC faction.<br>
+	 * This method synchronizes the current state of an {@link NpcFaction} with the database.<br>
+	 * It uses the {@code UPDATE_QUERY} to modify active status, time, and quest data.
+	 * @param playerObjectId The unique ID of the player.
+	 * @param faction The {@link NpcFaction} object containing updated information.
+	 */
 	private void updateNpcFaction(int playerObjectId, NpcFaction faction)
 	{
 		Connection con = null;
@@ -154,6 +181,14 @@ public class MySQL5PlayerNpcFactionsDAO extends PlayerNpcFactionsDAO
 		}
 	}
 	
+	/**
+	 * Checks if the current database configuration supports specific requirements.<br>
+	 * This method delegates the check to {@code int, int)}.
+	 * @param arg0 The first requirement string.
+	 * @param arg1 The first integer value.
+	 * @param arg2 The second integer value.
+	 * @return {@code true} if the requirements are met, otherwise {@code false}.
+	 */
 	@Override
 	public boolean supports(String arg0, int arg1, int arg2)
 	{

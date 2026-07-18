@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.aion.clientpackets;
 
@@ -29,6 +29,8 @@ import com.aionemu.loginserver.network.aion.serverpackets.SM_PLAY_FAIL;
 import com.aionemu.loginserver.network.aion.serverpackets.SM_PLAY_OK;
 
 /**
+ * This class handles the {@code CM_PLAY} packet sent by the client to start a game session.<br>
+ * It processes the request to enter the game world and triggers the appropriate response from the server.
  * @author -Nemesiss-
  */
 public class CM_PLAY extends AionClientPacket
@@ -46,14 +48,18 @@ public class CM_PLAY extends AionClientPacket
 	 */
 	private byte servId;
 	
+	/**
+	 * Handles the {@code CM_PLAY} packet received from a client.<br>
+	 * This method initializes the packet with the provided data.<br>
+	 * It uses the {@link LoginConnection} to manage the session.
+	 * @param buf The {@code ByteBuffer} containing the raw packet data.
+	 * @param client The {@link LoginConnection} associated with this request.
+	 */
 	public CM_PLAY(ByteBuffer buf, LoginConnection client)
 	{
 		super(buf, client, 0x02);
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void readImpl()
 	{
@@ -62,9 +68,6 @@ public class CM_PLAY extends AionClientPacket
 		servId = (byte) readC();
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void runImpl()
 	{
@@ -76,8 +79,7 @@ public class CM_PLAY extends AionClientPacket
 			if ((gsi == null) || !gsi.isOnline())
 			{
 				con.sendPacket(new SM_PLAY_FAIL(AionAuthResponse.SERVER_DOWN));
-			} // else if(serv gm only)
-				// con.sendPacket(new SM_PLAY_FAIL(AionAuthResponse.GM_ONLY));
+			} // else if(serv gm only) con.sendPacket(new SM_PLAY_FAIL(AionAuthResponse.GM_ONLY));
 			else if (gsi.isFull())
 			{
 				con.sendPacket(new SM_PLAY_FAIL(AionAuthResponse.SERVER_FULL));

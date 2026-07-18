@@ -1,35 +1,42 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
+
+import java.util.List;
 
 import com.aionemu.gameserver.model.gameobjects.HouseObject;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 
-import javolution.util.FastList;
-
 /**
+ * This packet handles the synchronization of house objects for a player.<br>
+ * It sends a list of {@link HouseObject} data to the client to populate the environment.
  * @author Rolandas
  */
 public class SM_HOUSE_OBJECTS extends AionServerPacket
 {
 	Player player;
 	
+	/**
+	 * Creates a new {@code SM_HOUSE_OBJECTS} packet.<br>
+	 * This constructor assigns the provided {@link Player} to the packet.
+	 * @param player The {@code Player} who will receive this packet.
+	 */
 	public SM_HOUSE_OBJECTS(Player player)
 	{
 		this.player = player;
@@ -38,7 +45,7 @@ public class SM_HOUSE_OBJECTS extends AionServerPacket
 	@Override
 	protected void writeImpl(AionConnection con)
 	{
-		final FastList<HouseObject<?>> objects = player.getHouseRegistry().getSpawnedObjects();
+		final List<HouseObject<?>> objects = player.getHouseRegistry().getSpawnedObjects();
 		writeH(objects.size());
 		for (HouseObject<?> obj : objects)
 		{

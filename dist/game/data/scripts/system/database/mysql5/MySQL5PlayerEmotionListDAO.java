@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.database.mysql5;
 
@@ -31,18 +31,27 @@ import com.aionemu.gameserver.model.gameobjects.player.emotion.Emotion;
 import com.aionemu.gameserver.model.gameobjects.player.emotion.EmotionList;
 
 /**
+ * This class provides the database access layer for managing player emotion lists using a {@code MySQL5} database.<br>
+ * It handles the persistence of {@link EmotionList} data for {@link Player} objects.
  * @author Mr. Poke
  */
 public class MySQL5PlayerEmotionListDAO extends PlayerEmotionListDAO
 {
-	/** Logger */
+	/**
+	 * Logger
+	 */
 	private static final Logger log = LoggerFactory.getLogger(PlayerEmotionListDAO.class);
 	public static final String INSERT_QUERY = "INSERT INTO `player_emotions` (`player_id`, `emotion`, `remaining`) VALUES (?,?,?)";
 	public static final String SELECT_QUERY = "SELECT `emotion`, `remaining` FROM `player_emotions` WHERE `player_id`=?";
 	public static final String DELETE_QUERY = "DELETE FROM `player_emotions` WHERE `player_id`=? AND `emotion`=?";
 	
 	/**
-	 * {@inheritDoc}
+	 * Checks if the current database is compatible with this DAO.<br>
+	 * It uses {@code int, int)} to verify the version.
+	 * @param databaseName The name of the database to check.
+	 * @param majorVersion The major version number of the database.
+	 * @param minorVersion The minor version number of the database.
+	 * @return {@code true} if the database is supported, {@code false} otherwise.
 	 */
 	@Override
 	public boolean supports(String databaseName, int majorVersion, int minorVersion)
@@ -50,6 +59,12 @@ public class MySQL5PlayerEmotionListDAO extends PlayerEmotionListDAO
 		return MySQL5DAOUtils.supports(databaseName, majorVersion, minorVersion);
 	}
 	
+	/**
+	 * Loads the emotion data for a specific player from the database.<br>
+	 * This method populates the {@link EmotionList} for the given {@code Player}.<br>
+	 * It uses the {@code SELECT_QUERY} to retrieve all associated emotions.
+	 * @param player The {@code Player} object whose emotions need to be loaded.
+	 */
 	@Override
 	public void loadEmotions(Player player)
 	{
@@ -67,6 +82,7 @@ public class MySQL5PlayerEmotionListDAO extends PlayerEmotionListDAO
 				final int remaining = rset.getInt("remaining");
 				emotions.add(emotionId, remaining, false);
 			}
+			
 			rset.close();
 			stmt.close();
 		}
@@ -78,9 +94,17 @@ public class MySQL5PlayerEmotionListDAO extends PlayerEmotionListDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		player.setEmotions(emotions);
 	}
 	
+	/**
+	 * Saves a new emotion to the database for a specific player.<br>
+	 * This method uses {@code INSERT_QUERY} to store the data.<br>
+	 * It handles the connection and statement lifecycle automatically.
+	 * @param player The {@code Player} object whose ID will be used as the key.
+	 * @param emotion The {@code Emotion} object containing the ID and expiration time to save.
+	 */
 	@Override
 	public void insertEmotion(Player player, Emotion emotion)
 	{
@@ -105,6 +129,13 @@ public class MySQL5PlayerEmotionListDAO extends PlayerEmotionListDAO
 		}
 	}
 	
+	/**
+	 * Removes a specific emotion from a player's list in the database.<br>
+	 * This method uses {@code DELETE_QUERY} to find the record.<br>
+	 * It handles the connection and statement lifecycle automatically.
+	 * @param playerId The unique identifier of the player.
+	 * @param emotionId The unique identifier of the emotion to remove.
+	 */
 	@Override
 	public void deleteEmotion(int playerId, int emotionId)
 	{

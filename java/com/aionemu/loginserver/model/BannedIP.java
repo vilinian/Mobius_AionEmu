@@ -1,25 +1,28 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.model;
 
 import java.sql.Timestamp;
 
+import com.aionemu.gameserver.model.templates.mail.MailPart;
+
 /**
- * This class represents banned ip
+ * Represents an IP address that has been banned from accessing the server.<br>
+ * It stores the necessary data to identify and block restricted connections.
  * @author SoulKeeper
  */
 public class BannedIP
@@ -38,8 +41,10 @@ public class BannedIP
 	private Timestamp timeEnd;
 	
 	/**
-	 * Checks if ban is still active
-	 * @return true if ban is still active
+	 * Checks if the IP ban is currently active.<br>
+	 * A ban is active if the expiration time is {@code null}.<br>
+	 * It is also active if the current time is before the expiration time.
+	 * @return {@code true} if the ban is still active, {@code false} otherwise.
 	 */
 	public boolean isActive()
 	{
@@ -47,8 +52,9 @@ public class BannedIP
 	}
 	
 	/**
-	 * Returns ban id
-	 * @return ban id
+	 * Retrieves the unique identifier for this {@link MailPart}.<br>
+	 * This value is used to distinguish different parts of a mail.
+	 * @return The {@code Integer} ID of the part, or {@code null} if not set.
 	 */
 	public Integer getId()
 	{
@@ -56,8 +62,8 @@ public class BannedIP
 	}
 	
 	/**
-	 * Sets ban id
-	 * @param id ban id
+	 * Sets the unique identifier.
+	 * @param id The identifier to assign.
 	 */
 	public void setId(Integer id)
 	{
@@ -65,8 +71,9 @@ public class BannedIP
 	}
 	
 	/**
-	 * Retuns ip mask
-	 * @return ip mask
+	 * Retrieves the IP mask associated with this ban.<br>
+	 * This value is used to identify the range of blocked addresses.
+	 * @return The {@code String} representation of the IP mask.
 	 */
 	public String getMask()
 	{
@@ -74,8 +81,9 @@ public class BannedIP
 	}
 	
 	/**
-	 * Sets ip mask
-	 * @param mask ip mask
+	 * Sets the IP mask for this banned entry.<br>
+	 * This updates the {@code mask} field of the {@link BannedIP} object.
+	 * @param mask The new mask string to assign.
 	 */
 	public void setMask(String mask)
 	{
@@ -83,8 +91,9 @@ public class BannedIP
 	}
 	
 	/**
-	 * Returns expiration time of ban
-	 * @return expiration time of ban
+	 * Retrieves the expiration date and time of the ban.<br>
+	 * This value is stored as a {@code Timestamp}.
+	 * @return the {@code Timestamp} representing when the ban ends.
 	 */
 	public Timestamp getTimeEnd()
 	{
@@ -92,8 +101,9 @@ public class BannedIP
 	}
 	
 	/**
-	 * Sets expiration time of ban
-	 * @param timeEnd expiration time of ban
+	 * Sets the expiration date and time for the ban.<br>
+	 * This updates the {@code timeEnd} field of this {@link BannedIP} instance.
+	 * @param timeEnd The new {@code Timestamp} to set.
 	 */
 	public void setTimeEnd(Timestamp timeEnd)
 	{
@@ -101,9 +111,10 @@ public class BannedIP
 	}
 	
 	/**
-	 * Returns true if this ip ban is equal to another. Based on {@link #mask}
-	 * @param o another ip ban
-	 * @return true if ban's are equals
+	 * Compares this {@link BannedIP} object with another object for equality.<br>
+	 * It checks if both objects represent the same mask.
+	 * @param o The object to compare this instance against.
+	 * @return {@code true} if the objects are equal, {@code false} otherwise.
 	 */
 	@Override
 	public boolean equals(Object o)
@@ -112,6 +123,7 @@ public class BannedIP
 		{
 			return true;
 		}
+		
 		if (!(o instanceof BannedIP))
 		{
 			return false;
@@ -123,8 +135,10 @@ public class BannedIP
 	}
 	
 	/**
-	 * Returns ban's hashcode. Based on mask
-	 * @return ban's hashcode
+	 * Returns a hash code value for this {@link BannedIP} object.<br>
+	 * This value is used to identify the object in collections like {@code HashSet}.<br>
+	 * It is calculated based on the {@code mask} field.
+	 * @return The integer hash code of this object.
 	 */
 	@Override
 	public int hashCode()

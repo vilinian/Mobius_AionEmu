@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting.impl.javacompiler;
 
@@ -21,18 +21,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Writer;
 import java.net.URI;
 
-import javax.tools.JavaFileObject;
-
-import com.sun.tools.javac.file.BaseFileObject;
+import javax.tools.SimpleJavaFileObject;
 
 /**
- * This class is just a hack to make javac compiler work with classes loaded by prevoius classloader. Also it's used as container for loaded class
+ * This class acts as a container for classes compiled in memory.<br>
+ * It implements {@code JavaFileObject} to allow the compiler to write bytes directly to memory instead of disk.<br>
+ * It also serves as a holder for the resulting loaded {@link Class}.
  * @author SoulKeeper
  */
-public class BinaryClass extends BaseFileObject
+public class BinaryClass extends SimpleJavaFileObject
 {
 	/**
 	 * ClassName
@@ -45,36 +44,27 @@ public class BinaryClass extends BaseFileObject
 	private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	
 	/**
-	 * Locaded class will be set here
+	 * Loaded class will be set here
 	 */
 	private Class<?> definedClass;
 	
 	/**
-	 * Constructor that accepts class name as parameter
-	 * @param name class name
+	 * Creates a new instance of {@link BinaryClass}.<br>
+	 * This constructor initializes the class with a specific name.<br>
+	 * It sets up the internal URI for in-memory storage.
+	 * @param name The fully qualified name of the class.
 	 */
 	protected BinaryClass(String name)
 	{
-		super(null);
+		super(URI.create("bytes:///" + name.replace('.', '/') + Kind.CLASS.extension), Kind.CLASS);
 		this.name = name;
 	}
 	
 	/**
-	 * Throws {@link UnsupportedOperationException}
-	 * @return nothing
+	 * Gets the fully qualified class name.<br>
+	 * This method returns the {@code name} field appended with the {@code .class} extension.
+	 * @return The name of the compiled class as a {@code String}.
 	 */
-	@Override
-	public URI toUri()
-	{
-		throw new UnsupportedOperationException();
-	}
-	
-	/**
-	 * Returns name of this class with ".class" suffix
-	 * @return name of this class with ".class" suffix
-	 * @deprecated
-	 */
-	@Deprecated
 	@Override
 	public String getName()
 	{
@@ -82,8 +72,9 @@ public class BinaryClass extends BaseFileObject
 	}
 	
 	/**
-	 * Creates new ByteArrayInputStream, it just wraps class binary data
-	 * @return input stream for class data
+	 * Opens a stream to read the compiled class bytes.<br>
+	 * This method returns a new {@code ByteArrayInputStream}.
+	 * @return an {@code InputStream} containing the byte data of the class.
 	 */
 	@Override
 	public InputStream openInputStream()
@@ -92,8 +83,9 @@ public class BinaryClass extends BaseFileObject
 	}
 	
 	/**
-	 * Opens ByteArrayOutputStream for class data
-	 * @return output stream
+	 * Opens the internal stream used to write class bytes.<br>
+	 * This method returns the {@code ByteArrayOutputStream} where compiled data is stored.
+	 * @return The {@link OutputStream} for writing binary data.
 	 */
 	@Override
 	public OutputStream openOutputStream()
@@ -102,71 +94,34 @@ public class BinaryClass extends BaseFileObject
 	}
 	
 	/**
-	 * Throws {@link UnsupportedOperationException}
-	 * @return nothing
+	 * Checks if the provided name and kind are compatible.<br>
+	 * This method returns {@code true} only if the {@code kind} is {@code CLASS}.
+	 * @param simpleName The simple name of the class.
+	 * @param kind The type of the object being checked.
+	 * @return {@code true} if the kind matches {@code CLASS}, otherwise {@code false}.
 	 */
 	@Override
-	public CharSequence getCharContent(boolean ignoreEncodingErrors)
+	public boolean isNameCompatible(String simpleName, Kind kind)
 	{
-		throw new UnsupportedOperationException();
+		return Kind.CLASS.equals(kind);
 	}
 	
 	/**
-	 * Throws {@link UnsupportedOperationException}
-	 * @return nothing
+	 * Determines the binary name based on a path of files.<br>
+	 * This method looks at the provided {@code Iterable} to find the correct name.<br>
+	 * It returns the internal {@code name} field.
+	 * @param path The collection of {@link File} objects to check.
+	 * @return The inferred binary name as a {@code String}.
 	 */
-	@Override
-	public Writer openWriter()
-	{
-		throw new UnsupportedOperationException();
-	}
-	
-	/**
-	 * Unsupported operation, always reutrns 0
-	 * @return 0
-	 */
-	@Override
-	public long getLastModified()
-	{
-		return 0;
-	}
-	
-	/**
-	 * Unsupported operation, returns false
-	 * @return false
-	 */
-	@Override
-	public boolean delete()
-	{
-		return false;
-	}
-	
-	/**
-	 * Returns class name
-	 * @param path doesn't matter
-	 * @return class name
-	 */
-	@Override
 	protected String inferBinaryName(Iterable<? extends File> path)
 	{
 		return name;
 	}
 	
 	/**
-	 * Returns true if {@link javax.tools.JavaFileObject.Kind#CLASS}
-	 * @param simpleName doesn't matter
-	 * @param kind kind to compare
-	 * @return true if Kind is {@link javax.tools.JavaFileObject.Kind#CLASS}
-	 */
-	@Override
-	public boolean isNameCompatible(String simpleName, JavaFileObject.Kind kind)
-	{
-		return JavaFileObject.Kind.CLASS.equals(kind);
-	}
-	
-	/**
-	 * Returns bytes of class
-	 * @return bytes of class
+	 * Retrieves the compiled class bytes from memory.<br>
+	 * This method returns the data stored in the internal {@code ByteArrayOutputStream}.
+	 * @return a {@code byte[]} array containing the class data.
 	 */
 	public byte[] getBytes()
 	{
@@ -174,8 +129,9 @@ public class BinaryClass extends BaseFileObject
 	}
 	
 	/**
-	 * Returns class that was loaded from binary data of this object
-	 * @return loaded class
+	 * Retrieves the {@link Class} object that was loaded into this container.<br>
+	 * This method returns the class associated with the compiled bytes.
+	 * @return The loaded {@code Class} object or {@code null}.
 	 */
 	public Class<?> getDefinedClass()
 	{
@@ -183,54 +139,43 @@ public class BinaryClass extends BaseFileObject
 	}
 	
 	/**
-	 * Sets class that was loaded by this object
-	 * @param definedClass class that was loaded
+	 * Sets the {@code Class} object for this compiled class.<br>
+	 * This method stores the loaded class in the {@code definedClass} field.<br>
+	 * Use this after the compilation process is complete.
+	 * @param definedClass The {@code Class} to be stored.
 	 */
 	public void setDefinedClass(Class<?> definedClass)
 	{
 		this.definedClass = definedClass;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see javax.tools.JavaFileObject#getKind()
-	 */
-	@Override
-	public JavaFileObject.Kind getKind()
-	{
-		return JavaFileObject.Kind.CLASS;
-	}
-	
-	/*
-	 * (non-Javadoc)
-	 * @see com.sun.tools.javac.file.BaseFileObject#equals(java.lang.Object)
+	/**
+	 * Compares this object with another object for equality.<br>
+	 * It checks if the other object is a {@link BinaryClass}.<br>
+	 * If it is, it compares their names.
+	 * @param arg0 The object to compare against.
+	 * @return {@code true} if the objects are equal, {@code false} otherwise.
 	 */
 	@Override
 	public boolean equals(Object arg0)
 	{
-		// TODO Auto-generated method stub
+		if (arg0 instanceof BinaryClass)
+		{
+			return ((BinaryClass) arg0).name.equals(name);
+		}
+		
 		return false;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see com.sun.tools.javac.file.BaseFileObject#getShortName()
-	 */
-	@Override
-	public String getShortName()
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	/*
-	 * (non-Javadoc)
-	 * @see com.sun.tools.javac.file.BaseFileObject#hashCode()
+	/**
+	 * Returns a hash code value for this {@link BinaryClass} object.<br>
+	 * This value is used to identify the object in collections like {@code HashSet}.<br>
+	 * It is calculated based on the {@code name} field.
+	 * @return The integer hash code of this object.
 	 */
 	@Override
 	public int hashCode()
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		return name.hashCode();
 	}
 }

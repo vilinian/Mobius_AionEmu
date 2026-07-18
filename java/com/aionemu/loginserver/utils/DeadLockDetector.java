@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.utils;
 
@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
 import com.aionemu.commons.utils.ExitCode;
 
 /**
+ * This class monitors the system for potential deadlocks between threads.<br>
+ * It periodically checks thread states to identify and log blocking issues.
  * @author -Nemesiss-
  */
 public class DeadLockDetector extends Thread
@@ -58,9 +60,10 @@ public class DeadLockDetector extends Thread
 	private final byte doWhenDL;
 	
 	/**
-	 * Create new DeadLockDetector with given values.
-	 * @param sleepTime
-	 * @param doWhenDL
+	 * Creates a new instance of the {@link DeadLockDetector}.<br>
+	 * This constructor initializes the thread and sets up the detection logic.
+	 * @param sleepTime The interval in seconds between each check.
+	 * @param doWhenDL The action to take when a deadlock is detected.
 	 */
 	public DeadLockDetector(int sleepTime, byte doWhenDL)
 	{
@@ -70,11 +73,8 @@ public class DeadLockDetector extends Thread
 		this.doWhenDL = doWhenDL;
 	}
 	
-	/**
-	 * Check if there is a DeadLock.
-	 */
 	@Override
-	public final void run()
+	public void run()
 	{
 		boolean deadlock = false;
 		while (!deadlock)
@@ -119,6 +119,7 @@ public class DeadLockDetector extends Thread
 							info += "\t" + dl.getThreadName() + " is waiting to lock " + dl.getLockInfo().toString() + " which is held by " + dl.getLockOwnerName() + "\n";
 						}
 					}
+					
 					log.warn(info);
 					
 					if (doWhenDL == RESTART)
@@ -126,6 +127,7 @@ public class DeadLockDetector extends Thread
 						System.exit(ExitCode.CODE_RESTART);
 					}
 				}
+				
 				Thread.sleep(sleepTime);
 			}
 			catch (Exception e)

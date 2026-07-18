@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services;
 
@@ -32,10 +32,23 @@ import com.aionemu.gameserver.utils.audit.AuditLogger;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * This service handles the logic for changing a player's character name.<br>
+ * It validates new names and updates the records in {@link OldNamesDAO}.<br>
+ * It also manages sending {@link SM_RENAME} packets to the client.
  * @author ATracer modified cura
  */
 public class RenameService
 {
+	/**
+	 * Changes the name of a {@link Player}.<br>
+	 * This method validates the new name and checks for required items.<br>
+	 * It updates the database and notifies all online players.
+	 * @param player The {@code Player} object to rename.
+	 * @param oldName The current name of the player.
+	 * @param newName The desired new name for the player.
+	 * @param item The item ID required to perform the rename.
+	 * @return {@code true} if the rename was successful, otherwise {@code false}.
+	 */
 	public static boolean renamePlayer(Player player, String oldName, String newName, int item)
 	{
 		if (!NameRestrictionService.isValidName(newName))
@@ -43,36 +56,44 @@ public class RenameService
 			PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400151));
 			return false;
 		}
+		
 		if (NameRestrictionService.isForbiddenWord(newName))
 		{
-			PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400153));
+			PacketSendUtility.sendMessage(player, "You are trying to use a forbidden name. Choose another one!");
 			return false;
 		}
+		
 		if (!PlayerService.isFreeName(newName))
 		{
 			PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400155));
 			return false;
 		}
+		
 		if (player.getName().equals(newName))
 		{
 			PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400153));
 			return false;
 		}
+		
 		if (!CustomConfig.OLD_NAMES_COUPON_DISABLED && PlayerService.isOldName(newName))
 		{
 			PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400155));
 			return false;
 		}
+		
 		if (((player.getInventory().getItemByObjId(item).getItemId() != 169670000) && (player.getInventory().getItemByObjId(item).getItemId() != 169670001)) || (!player.getInventory().decreaseByObjectId(item, 1)))
 		{
 			AuditLogger.info(player, "Try rename youself without coupon.");
 			return false;
 		}
+		
 		if (!CustomConfig.OLD_NAMES_COUPON_DISABLED)
 		{
 			DAOManager.getDAO(OldNamesDAO.class).insertNames(player.getObjectId(), player.getName(), newName);
-			player.getCommonData().setName(newName);
 		}
+		
+		player.getCommonData().setName(newName);
+		
 		final Iterator<Player> onlinePlayers = World.getInstance().getPlayersIterator();
 		while (onlinePlayers.hasNext())
 		{
@@ -82,42 +103,59 @@ public class RenameService
 				PacketSendUtility.sendPacket(p, new SM_RENAME(player.getObjectId(), oldName, newName));
 			}
 		}
+		
 		DAOManager.getDAO(PlayerDAO.class).storePlayer(player);
+		
 		return true;
 	}
 	
+	/**
+	 * Renames the legion of a specific {@link Player}.<br>
+	 * This method checks for valid names and required items.
+	 * @param player The {@code Player} who owns the legion.
+	 * @param name The new name to assign to the legion.
+	 * @param item The object ID of the coupon used for renaming.
+	 * @return {@code true} if the rename was successful, otherwise {@code false}.
+	 */
 	public static boolean renameLegion(Player player, String name, int item)
 	{
 		if (!player.isLegionMember())
 		{
 			return false;
 		}
+		
 		if (!LegionService.getInstance().isValidName(name))
 		{
 			PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400152));
 			return false;
 		}
+		
 		if (NameRestrictionService.isForbiddenWord(name))
 		{
-			PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400160));
+			PacketSendUtility.sendMessage(player, "You are trying to use a forbidden name. Choose another one!");
 			return false;
 		}
+		
 		if (DAOManager.getDAO(LegionDAO.class).isNameUsed(name))
 		{
 			PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400156));
 			return false;
 		}
+		
 		if (player.getLegion().getLegionName().equals(name))
 		{
 			PacketSendUtility.sendPacket(player, new SM_SYSTEM_MESSAGE(1400154));
 			return false;
 		}
+		
 		if (((player.getInventory().getItemByObjId(item).getItemId() != 169680000) && (player.getInventory().getItemByObjId(item).getItemId() != 169680001)) || (!player.getInventory().decreaseByObjectId(item, 1)))
 		{
 			AuditLogger.info(player, "Try rename legion without coupon.");
 			return false;
 		}
+		
 		LegionService.getInstance().setLegionName(player.getLegion(), name, true);
+		
 		return true;
 	}
 }

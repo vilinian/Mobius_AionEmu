@@ -1,19 +1,3 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
 import com.aionemu.gameserver.model.gameobjects.player.Player;
@@ -21,11 +5,23 @@ import com.aionemu.gameserver.network.aion.AionClientPacket;
 import com.aionemu.gameserver.network.aion.AionConnection.State;
 import com.aionemu.gameserver.services.LegionService;
 
+/**
+ * Handles the client request to search for a specific legion.<br>
+ * This packet allows players to query information about legions within the game world.
+ * @author CoolyT
+ */
 public class CM_LEGION_SEARCH extends AionClientPacket
 {
 	private int type;
 	private String legionName;
 	
+	/**
+	 * This constructor initializes a new {@link CM_LEGION_SEARCH} packet.<br>
+	 * It sets the required network properties for the request.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state of the sender.
+	 * @param restStates A variable number of additional states associated with the connection.
+	 */
 	public CM_LEGION_SEARCH(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -46,6 +42,7 @@ public class CM_LEGION_SEARCH extends AionClientPacket
 		{
 			return;
 		}
+		
 		LegionService.getInstance().handleLegionSearch(player, type, legionName);
 	}
 }

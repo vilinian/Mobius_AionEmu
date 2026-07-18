@@ -1,22 +1,25 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.gameobjects.player;
 
 /**
+ * This class represents the visual appearance of a {@link com.aionemu.gameserver.model.gameobjects.player.Player}.<br>
+ * It stores data related to the character's physical look, such as costumes and equipment.<br>
+ * Use this model to manage how a player is rendered in the game world.
  * @author SoulKeeper, srx47, alexa026
  */
 public class PlayerAppearance implements Cloneable
@@ -88,8 +91,9 @@ public class PlayerAppearance implements Cloneable
 	private float height;
 	
 	/**
-	 * Returns character face
-	 * @return character face
+	 * Retrieves the current face value of the player.<br>
+	 * This method returns the {@code int} stored in the {@code face} field.
+	 * @return The integer value representing the character's face.
 	 */
 	public int getFace()
 	{
@@ -97,8 +101,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets character's face
-	 * @param face characters face
+	 * Sets the character's face ID.<br>
+	 * This updates the {@code face} field in the {@link PlayerAppearance} object.
+	 * @param face The new face identifier to assign.
 	 */
 	public void setFace(int face)
 	{
@@ -106,8 +111,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns character's hair
-	 * @return characters hair
+	 * Retrieves the current hairstyle of the player.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the player's hair style ID.
 	 */
 	public int getHair()
 	{
@@ -115,8 +121,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets charaxcters hair
-	 * @param hair characters hair
+	 * Updates the hairstyle of the player character.<br>
+	 * This method sets the {@code hair} field to a new value.
+	 * @param hair The new hairstyle identifier to apply.
 	 */
 	public void setHair(int hair)
 	{
@@ -124,8 +131,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns dunno what is this
-	 * @return some crap, ask Neme what it is
+	 * Retrieves the decoration value for the player.<br>
+	 * This method returns the current {@code deco} integer.
+	 * @return the decoration value
 	 */
 	public int getDeco()
 	{
@@ -133,8 +141,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets some crap, ask Neme what it is
-	 * @param deco crap
+	 * Sets the decoration value for the player.<br>
+	 * This updates the {@code deco} field in the {@link PlayerAppearance} object.
+	 * @param deco The new decoration value to set.
 	 */
 	public void setDeco(int deco)
 	{
@@ -142,8 +151,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns sexy tattoo
-	 * @return sexy tattoo
+	 * Retrieves the current tattoo ID of the player.<br>
+	 * This value is stored in the {@code tattoo} field.
+	 * @return the integer ID of the player's tattoo
 	 */
 	public int getTattoo()
 	{
@@ -151,9 +161,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Set's sexy tattoo.<br>
-	 * Not sexy will throw NotSexyTattooException. Just kidding ;)
-	 * @param tattoo some tattoo
+	 * Sets the tattoo ID for the player.<br>
+	 * This updates the {@code tattoo} field in the {@link PlayerAppearance} object.
+	 * @param tattoo The unique identifier for the tattoo to apply.
 	 */
 	public void setTattoo(int tattoo)
 	{
@@ -161,7 +171,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @return the faceContour
+	 * Retrieves the face contour value of the player.<br>
+	 * This value defines the shape of the character's facial structure.
+	 * @return the {@code int} value representing the face contour.
 	 */
 	public int getFaceContour()
 	{
@@ -169,7 +181,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @param faceContour the faceContour to set
+	 * Sets the contour of the player's face.<br>
+	 * This updates the {@code faceContour} field in the {@link PlayerAppearance} object.
+	 * @param faceContour The new value for the face contour.
 	 */
 	public void setFaceContour(int faceContour)
 	{
@@ -177,7 +191,8 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @return the expression
+	 * Retrieves the current facial expression of the player.
+	 * @return the {@code int} value representing the expression.
 	 */
 	public int getExpression()
 	{
@@ -185,7 +200,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @param expression the expression to set
+	 * Sets the facial expression of the player.<br>
+	 * This updates the {@code expression} field with a new value.
+	 * @param expression The new expression ID to set.
 	 */
 	public void setExpression(int expression)
 	{
@@ -193,7 +210,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @return the pupilShape
+	 * Retrieves the shape of the player's pupils.<br>
+	 * This value is used to determine the visual style of the eyes.
+	 * @return the {@code int} value representing the pupil shape
 	 */
 	public int getPupilShape()
 	{
@@ -201,7 +220,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @param pupilShape the pupilShape to set
+	 * Sets the shape of the character's pupils.<br>
+	 * This updates the {@code pupilShape} field in the player appearance.
+	 * @param pupilShape The new shape value for the pupils.
 	 */
 	public void setPupilShape(int pupilShape)
 	{
@@ -209,7 +230,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @return the removeMane
+	 * Retrieves the value for removing the mane.<br>
+	 * This value determines if the character's mane is hidden.
+	 * @return the {@code removeMane} integer value.
 	 */
 	public int getRemoveMane()
 	{
@@ -217,7 +240,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @param removeMane the removeMane to set
+	 * Sets the value for removing the mane.<br>
+	 * This updates the {@code removeMane} field in the player appearance.
+	 * @param removeMane The new value to set for the mane removal.
 	 */
 	public void setRemoveMane(int removeMane)
 	{
@@ -225,7 +250,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @return the rightEyeRGB
+	 * Retrieves the RGB color value for the player's right eye.<br>
+	 * This value is used to determine the specific color of the right eye.
+	 * @return the {@code int} representing the right eye RGB color.
 	 */
 	public int getRightEyeRGB()
 	{
@@ -233,7 +260,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @param rightEyeRGB the rightEyeRGB to set
+	 * Sets the RGB color value for the player's right eye.<br>
+	 * This updates the {@code rightEyeRGB} field in the {@link PlayerAppearance} object.
+	 * @param rightEyeRGB The new RGB color value to assign.
 	 */
 	public void setRightEyeRGB(int rightEyeRGB)
 	{
@@ -241,7 +270,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @return the eyeLashshape
+	 * Retrieves the current shape of the player's eyelashes.<br>
+	 * This value is used to determine the visual style of the eyes.
+	 * @return the {@code int} value representing the eyelash shape
 	 */
 	public int getEyeLashShape()
 	{
@@ -249,7 +280,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @param eyeLashshape the eyeLashshape to set
+	 * Sets the shape of the player's eyelashes.<br>
+	 * This updates the {@code eyeLashshape} field in the {@link PlayerAppearance} object.
+	 * @param eyeLashshape The new shape value for the eyelashes.
 	 */
 	public void setEyeLashShape(int eyeLashshape)
 	{
@@ -257,7 +290,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @return the pupilSize
+	 * Retrieves the size of the character's pupils.<br>
+	 * This value is used to determine how large the eyes appear on the model.
+	 * @return the current {@code pupilSize} as an {@code int}
 	 */
 	public int getPupilSize()
 	{
@@ -265,7 +300,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @param pupilSize the pupilSize to set
+	 * Updates the size of the character's pupils.<br>
+	 * This method sets the {@code pupilSize} field to a new value.
+	 * @param pupilSize The new size for the pupils.
 	 */
 	public void setPupilSize(int pupilSize)
 	{
@@ -273,7 +310,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @return the upperTorso
+	 * Retrieves the upper torso value of the player.<br>
+	 * This value defines a specific physical attribute of the character's body.
+	 * @return the {@code int} value representing the upper torso.
 	 */
 	public int getUpperTorso()
 	{
@@ -281,7 +320,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @param upperTorso the upperTorso to set
+	 * Sets the upper torso value for the player appearance.<br>
+	 * This updates the {@code upperTorso} field in this object.
+	 * @param upperTorso The new integer value for the upper torso.
 	 */
 	public void setUpperTorso(int upperTorso)
 	{
@@ -289,7 +330,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @return the foreArmThickness
+	 * Retrieves the thickness of the player's forearm.<br>
+	 * This value is used to determine the character's physical appearance.
+	 * @return the {@code int} value representing forearm thickness
 	 */
 	public int getForeArmThickness()
 	{
@@ -297,7 +340,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @param foreArmThickness the foreArmThickness to set
+	 * Sets the thickness of the player's forearm.<br>
+	 * This updates the {@code foreArmThickness} value in the appearance model.
+	 * @param foreArmThickness The new thickness value for the forearm.
 	 */
 	public void setForeArmThickness(int foreArmThickness)
 	{
@@ -305,7 +350,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @return the handSpan
+	 * Retrieves the current hand span of the player.<br>
+	 * This value represents a specific physical attribute of the character's appearance.
+	 * @return the {@code int} value of the hand span
 	 */
 	public int getHandSpan()
 	{
@@ -313,7 +360,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @param handSpan the handSpan to set
+	 * Sets the width of the player's hand span.<br>
+	 * This updates the {@code handSpan} field in the {@link PlayerAppearance} object.
+	 * @param handSpan The new value for the hand span.
 	 */
 	public void setHandSpan(int handSpan)
 	{
@@ -321,7 +370,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @return the calfThickness
+	 * Retrieves the thickness of the character's calves.<br>
+	 * This value is used to determine the physical appearance of the legs.
+	 * @return the {@code int} value representing calf thickness
 	 */
 	public int getCalfThickness()
 	{
@@ -329,7 +380,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @param calfThickness the calfThickness to set
+	 * Sets the thickness of the player's calves.<br>
+	 * This updates the {@code calfThickness} field in the {@link PlayerAppearance} object.
+	 * @param calfThickness The new thickness value for the calves.
 	 */
 	public void setCalfThickness(int calfThickness)
 	{
@@ -337,7 +390,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @return the jawLine
+	 * Retrieves the current jaw line value for the player.<br>
+	 * This value defines a specific facial feature of the character.
+	 * @return the {@code int} value representing the jaw line.
 	 */
 	public int getJawLine()
 	{
@@ -345,7 +400,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * @param jawLine the jawLine to set
+	 * Sets the jaw line value for the player appearance.<br>
+	 * This updates the {@code jawLine} field in the current object.
+	 * @param jawLine The new value to set for the jaw line.
 	 */
 	public void setJawLine(int jawLine)
 	{
@@ -353,8 +410,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Skin color, let's create pink lesbians :D
-	 * @return skin color
+	 * Retrieves the RGB color value of the player's skin.<br>
+	 * This value is used to determine the skin tone of the character.
+	 * @return the {@code int} representing the skin RGB color.
 	 */
 	public int getSkinRGB()
 	{
@@ -362,8 +420,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Here is the valid place to make lesbians skin pink
-	 * @param skinRGB skin color
+	 * Sets the RGB color value for the player's skin.<br>
+	 * This updates the {@code skinRGB} field in the {@link PlayerAppearance} object.
+	 * @param skinRGB The new RGB color value to apply.
 	 */
 	public void setSkinRGB(int skinRGB)
 	{
@@ -371,8 +430,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Hair color, personally i prefer brunettes
-	 * @return har color
+	 * Retrieves the RGB color value of the player's hair.<br>
+	 * This value is used to determine the hair color in the game.
+	 * @return the {@code int} representing the hair RGB color.
 	 */
 	public int getHairRGB()
 	{
@@ -380,8 +440,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets hair colors. Blonds must pass IQ test ;)
-	 * @param hairRGB Hair color
+	 * Sets the RGB color value for the player's hair.<br>
+	 * This updates the {@code hairRGB} field in the {@link PlayerAppearance} object.
+	 * @param hairRGB The new RGB color value to assign to the hair.
 	 */
 	public void setHairRGB(int hairRGB)
 	{
@@ -389,8 +450,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Eye colour
-	 * @param eyeRGB
+	 * Sets the RGB color value for the player's eyes.<br>
+	 * This updates the {@code eyeRGB} field in the {@link PlayerAppearance} object.
+	 * @param eyeRGB The integer value representing the eye color.
 	 */
 	public void setEyeRGB(int eyeRGB)
 	{
@@ -398,8 +460,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets eye colour
-	 * @return
+	 * Retrieves the RGB color value of the player's eyes.<br>
+	 * This value is used to determine the eye color in the game.
+	 * @return the {@code int} representing the eye RGB color.
 	 */
 	public int getEyeRGB()
 	{
@@ -407,8 +470,8 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Lips color.
-	 * @return lips color
+	 * Retrieves the RGB color value of the player's lips.
+	 * @return the {@code int} value representing the lip color.
 	 */
 	public int getLipRGB()
 	{
@@ -416,8 +479,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets lips color
-	 * @param lipRGB face shape
+	 * Sets the RGB color value for the player's lips.<br>
+	 * This updates the {@code lipRGB} field in the {@link PlayerAppearance} object.
+	 * @param lipRGB The new RGB color value to assign.
 	 */
 	public void setLipRGB(int lipRGB)
 	{
@@ -425,8 +489,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns face shape
-	 * @return face shape
+	 * Retrieves the current face shape of the player.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the face shape value.
 	 */
 	public int getFaceShape()
 	{
@@ -434,8 +499,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets face shape
-	 * @param faceShape face shape
+	 * Sets the shape of the player's face.<br>
+	 * This updates the {@code faceShape} field in the {@link PlayerAppearance} object.
+	 * @param faceShape The new face shape value to assign.
 	 */
 	public void setFaceShape(int faceShape)
 	{
@@ -443,8 +509,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns forehead
-	 * @return forehead
+	 * Retrieves the current forehead value.<br>
+	 * This value is part of the {@link PlayerAppearance} model.
+	 * @return the integer value of the forehead
 	 */
 	public int getForehead()
 	{
@@ -452,8 +519,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets forehead
-	 * @param forehead size
+	 * Updates the forehead value for the player appearance.<br>
+	 * This method sets the {@code forehead} field to a new integer value.
+	 * @param forehead The new value to set for the forehead.
 	 */
 	public void setForehead(int forehead)
 	{
@@ -461,8 +529,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns eye heigth
-	 * @return eye height
+	 * Retrieves the height of the character's eyes.<br>
+	 * This value is used to determine the vertical position of the eyes on the face.
+	 * @return the current {@code eyeHeight} value.
 	 */
 	public int getEyeHeight()
 	{
@@ -470,8 +539,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets eye heigth
-	 * @param eyeHeight eye heigth
+	 * Sets the height of the character's eyes.<br>
+	 * This updates the {@code eyeHeight} field in the {@link PlayerAppearance} object.
+	 * @param eyeHeight The new height value for the eyes.
 	 */
 	public void setEyeHeight(int eyeHeight)
 	{
@@ -479,8 +549,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Eye space
-	 * @return eye space
+	 * Retrieves the spacing between the eyes of the character.<br>
+	 * This value is used to determine the facial layout.
+	 * @return the current {@code eyeSpace} value as an {@code int}
 	 */
 	public int getEyeSpace()
 	{
@@ -488,8 +559,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Eye space
-	 * @param eyeSpace someting connected to eyes
+	 * Sets the spacing between the eyes for the player character.<br>
+	 * This updates the {@code eyeSpace} field in the {@link PlayerAppearance} object.
+	 * @param eyeSpace The new value for the distance between the eyes.
 	 */
 	public void setEyeSpace(int eyeSpace)
 	{
@@ -497,8 +569,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns eye width
-	 * @return eye width
+	 * Retrieves the width of the player's eyes.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the current eye width.
 	 */
 	public int getEyeWidth()
 	{
@@ -506,8 +579,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets eye width
-	 * @param eyeWidth eye width
+	 * Sets the width of the player's eyes.<br>
+	 * This updates the {@code eyeWidth} field in the {@link PlayerAppearance} object.
+	 * @param eyeWidth The new width value for the eyes.
 	 */
 	public void setEyeWidth(int eyeWidth)
 	{
@@ -515,8 +589,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns eye size. Hentai girls usually have very big eyes
-	 * @return eyes
+	 * Retrieves the size of the character's eyes.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the current eye size.
 	 */
 	public int getEyeSize()
 	{
@@ -524,9 +599,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Set's eye size.<br>
-	 * Can be . o O ;)
-	 * @param eyeSize eye size,
+	 * Sets the size of the player's eyes.<br>
+	 * This updates the {@code eyeSize} field in the {@link PlayerAppearance} object.
+	 * @param eyeSize The new size value for the eyes.
 	 */
 	public void setEyeSize(int eyeSize)
 	{
@@ -534,8 +609,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Return eye shape
-	 * @return eye shape
+	 * Retrieves the current shape of the player's eyes.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the eye shape value.
 	 */
 	public int getEyeShape()
 	{
@@ -543,9 +619,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets Eye shape.<br>
-	 * Can be . _ | 0 o O etc :)
-	 * @param eyeShape eye shape
+	 * Sets the shape of the player's eyes.<br>
+	 * This updates the {@code eyeShape} field in the {@link PlayerAppearance} object.
+	 * @param eyeShape The new shape value for the eyes.
 	 */
 	public void setEyeShape(int eyeShape)
 	{
@@ -553,8 +629,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Return eye angle
-	 * @return eye angle
+	 * Retrieves the current angle of the character's eyes.<br>
+	 * This value is used to determine the tilt of the eyes in the appearance model.
+	 * @return the {@code int} value representing the eye angle.
 	 */
 	public int getEyeAngle()
 	{
@@ -562,8 +639,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets eye angle, / | \.
-	 * @param eyeAngle eye angle
+	 * Sets the angle of the character's eyes.<br>
+	 * This updates the {@code eyeAngle} field in the player appearance.
+	 * @param eyeAngle The new angle value for the eyes.
 	 */
 	public void setEyeAngle(int eyeAngle)
 	{
@@ -571,8 +649,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Rerturn brow heigth
-	 * @return brow heigth
+	 * Retrieves the height of the player's eyebrows.<br>
+	 * This value is used to determine the facial appearance.
+	 * @return the current {@code browHeight} value.
 	 */
 	public int getBrowHeight()
 	{
@@ -580,8 +659,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Brow heigth
-	 * @param browHeight brow heigth
+	 * Sets the height of the player's eyebrows.<br>
+	 * This updates the {@code browHeight} field in the {@link PlayerAppearance} object.
+	 * @param browHeight The new height value for the eyebrows.
 	 */
 	public void setBrowHeight(int browHeight)
 	{
@@ -589,8 +669,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns brow angle
-	 * @return brow angle
+	 * Retrieves the current angle of the player's eyebrows.<br>
+	 * This value is used to determine the facial expression.
+	 * @return the {@code int} value representing the eyebrow angle
 	 */
 	public int getBrowAngle()
 	{
@@ -598,8 +679,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets brow angle
-	 * @param browAngle brow angle
+	 * Sets the angle of the character's eyebrows.<br>
+	 * This updates the {@code browAngle} field in the player appearance.
+	 * @param browAngle The new angle value for the eyebrows.
 	 */
 	public void setBrowAngle(int browAngle)
 	{
@@ -607,8 +689,8 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns brow shape
-	 * @return brow shape
+	 * Retrieves the shape of the player's eyebrows.
+	 * @return the {@code int} value representing the eyebrow shape.
 	 */
 	public int getBrowShape()
 	{
@@ -616,8 +698,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * ***************************************************************************************************************** Sets brow shape
-	 * @param browShape brow shape
+	 * Sets the shape of the player's eyebrows.<br>
+	 * This updates the {@code browShape} field in the {@link PlayerAppearance} object.
+	 * @param browShape The integer value representing the new eyebrow shape.
 	 */
 	public void setBrowShape(int browShape)
 	{
@@ -625,8 +708,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns nose
-	 * @return nose
+	 * Retrieves the character's nose value.<br>
+	 * This method returns the current {@code int} value for the nose property.
+	 * @return the nose value
 	 */
 	public int getNose()
 	{
@@ -634,8 +718,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets nose
-	 * @param nose nose
+	 * Sets the nose shape for the player.<br>
+	 * This updates the {@code nose} field in the appearance model.
+	 * @param nose The new nose value to assign.
 	 */
 	public void setNose(int nose)
 	{
@@ -643,8 +728,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns nose bridge
-	 * @return nose bridge
+	 * Retrieves the bridge height of the player's nose.<br>
+	 * This value is used to determine the facial structure.
+	 * @return the {@code int} value representing the nose bridge.
 	 */
 	public int getNoseBridge()
 	{
@@ -652,8 +738,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets nose bridge
-	 * @param noseBridge nose bridge
+	 * Sets the bridge of the character's nose.<br>
+	 * This updates the {@code noseBridge} field in the player appearance.
+	 * @param noseBridge The new value for the nose bridge.
 	 */
 	public void setNoseBridge(int noseBridge)
 	{
@@ -661,8 +748,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns nose width
-	 * @return nose width
+	 * Retrieves the width of the player's nose.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the current nose width.
 	 */
 	public int getNoseWidth()
 	{
@@ -670,8 +758,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets nose width
-	 * @param noseWidth nose width
+	 * Sets the width of the player's nose.<br>
+	 * This updates the {@code noseWidth} field in the character appearance.
+	 * @param noseWidth The new width value for the nose.
 	 */
 	public void setNoseWidth(int noseWidth)
 	{
@@ -679,8 +768,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns noce tip
-	 * @return noce tip
+	 * Retrieves the current value of the player's nose tip.<br>
+	 * This value is used to determine the shape of the character's nose.
+	 * @return the {@code int} value representing the nose tip.
 	 */
 	public int getNoseTip()
 	{
@@ -688,8 +778,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets noce tip
-	 * @param noseTip noce tip
+	 * Sets the shape of the character's nose tip.<br>
+	 * This updates the {@code noseTip} field in the player appearance.
+	 * @param noseTip The new value for the nose tip.
 	 */
 	public void setNoseTip(int noseTip)
 	{
@@ -697,8 +788,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns cheeks
-	 * @return cheeks
+	 * Retrieves the current cheek value of the player.<br>
+	 * This value is part of the {@link PlayerAppearance} model.
+	 * @return the integer value of the cheek
 	 */
 	public int getCheek()
 	{
@@ -706,8 +798,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets cheeks
-	 * @param cheek checks
+	 * Sets the cheek value for the player appearance.<br>
+	 * This updates the internal {@code cheek} field.
+	 * @param cheek The new value to set for the cheeks.
 	 */
 	public void setCheek(int cheek)
 	{
@@ -715,8 +808,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns lip heigth
-	 * @return lip heigth
+	 * Retrieves the height of the player's lips.<br>
+	 * This value is part of the {@link PlayerAppearance} model.
+	 * @return the current lip height as an {@code int}
 	 */
 	public int getLipHeight()
 	{
@@ -724,8 +818,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets lip heigth
-	 * @param lipHeight lip heith
+	 * Sets the height of the player's lips.<br>
+	 * This updates the {@code lipHeight} field in the {@link PlayerAppearance} object.
+	 * @param lipHeight The new height value for the lips.
 	 */
 	public void setLipHeight(int lipHeight)
 	{
@@ -733,8 +828,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns mouth size
-	 * @return mouth size
+	 * Retrieves the size of the player's mouth.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the current mouth size.
 	 */
 	public int getMouthSize()
 	{
@@ -742,8 +838,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets mouth size
-	 * @param mouthSize mouth size
+	 * Sets the size of the player's mouth.<br>
+	 * This updates the {@code mouthSize} field in the {@link PlayerAppearance} object.
+	 * @param mouthSize The new size value for the mouth.
 	 */
 	public void setMouthSize(int mouthSize)
 	{
@@ -751,8 +848,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns lips size
-	 * @return lips size
+	 * Retrieves the size of the player's lips.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the current lip size.
 	 */
 	public int getLipSize()
 	{
@@ -760,8 +858,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets lips size
-	 * @param lipSize lips size
+	 * Sets the size of the player's lips.<br>
+	 * This updates the {@code lipSize} field in the appearance model.
+	 * @param lipSize The new size value for the lips.
 	 */
 	public void setLipSize(int lipSize)
 	{
@@ -769,8 +868,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns smile
-	 * @return smile
+	 * Retrieves the current smile value of the player.<br>
+	 * This value is used to determine the character's facial expression.
+	 * @return the {@code int} value representing the smile.
 	 */
 	public int getSmile()
 	{
@@ -778,8 +878,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets smile
-	 * @param smile smile
+	 * Updates the player's smile value.<br>
+	 * This method sets the {@code smile} field for the character appearance.
+	 * @param smile The new smile value to apply.
 	 */
 	public void setSmile(int smile)
 	{
@@ -787,8 +888,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns lips shape
-	 * @return lips shape
+	 * Retrieves the current shape of the player's lips.<br>
+	 * This value is used to determine the visual appearance of the mouth.
+	 * @return the {@code int} value representing the lip shape.
 	 */
 	public int getLipShape()
 	{
@@ -796,8 +898,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets lips shape
-	 * @param lipShape lips shape
+	 * Sets the shape of the player's lips.<br>
+	 * This updates the {@code lipShape} field in the character model.
+	 * @param lipShape The new shape value for the lips.
 	 */
 	public void setLipShape(int lipShape)
 	{
@@ -805,8 +908,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns jaws height
-	 * @return jaws height
+	 * Retrieves the height of the player's jaw.<br>
+	 * This value is used to determine the facial structure.
+	 * @return the {@code int} value representing the jaw height.
 	 */
 	public int getJawHeigh()
 	{
@@ -814,8 +918,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets jaws height
-	 * @param jawHeigh jaws height
+	 * Sets the height of the player's jaw.<br>
+	 * This updates the {@code jawHeigh} field in the {@link PlayerAppearance} object.
+	 * @param jawHeigh The new value for the jaw height.
 	 */
 	public void setJawHeigh(int jawHeigh)
 	{
@@ -823,8 +928,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns chin jut
-	 * @return chin jut
+	 * Retrieves the chin jut value of the player.<br>
+	 * This value defines a specific facial feature for the character appearance.
+	 * @return the {@code int} value representing the chin jut.
 	 */
 	public int getChinJut()
 	{
@@ -832,8 +938,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets chin jut
-	 * @param chinJut chin jut
+	 * Sets the chin jut value for the player appearance.<br>
+	 * This updates the {@code chinJut} field with a new integer value.
+	 * @param chinJut The new value to set for the chin jut.
 	 */
 	public void setChinJut(int chinJut)
 	{
@@ -841,8 +948,8 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns ear shape
-	 * @return ear shape
+	 * Retrieves the current shape of the player's ears.
+	 * @return the {@code int} value representing the ear shape.
 	 */
 	public int getEarShape()
 	{
@@ -850,8 +957,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets ear shape
-	 * @param earShape ear shape
+	 * Sets the shape of the player's ears.<br>
+	 * This updates the {@code earShape} field in the {@link PlayerAppearance} object.
+	 * @param earShape The integer value representing the desired ear shape.
 	 */
 	public void setEarShape(int earShape)
 	{
@@ -859,8 +967,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns head size
-	 * @return head size
+	 * Retrieves the size of the player's head.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the current head size.
 	 */
 	public int getHeadSize()
 	{
@@ -868,8 +977,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets head size
-	 * @param headSize head size
+	 * Sets the size of the player's head.<br>
+	 * This updates the {@code headSize} field in the {@link PlayerAppearance} object.
+	 * @param headSize The new size value for the head.
 	 */
 	public void setHeadSize(int headSize)
 	{
@@ -877,8 +987,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns neck
-	 * @return neck
+	 * Retrieves the neck value of the player appearance.<br>
+	 * This returns the current {@code int} stored for the neck property.
+	 * @return the neck value
 	 */
 	public int getNeck()
 	{
@@ -886,8 +997,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets neck
-	 * @param neck neck
+	 * Sets the neck value for the player appearance.<br>
+	 * This updates the {@code neck} field in this object.
+	 * @param neck The new neck value to set.
 	 */
 	public void setNeck(int neck)
 	{
@@ -895,8 +1007,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns neck length
-	 * @return neck length
+	 * Retrieves the length of the player's neck.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the current neck length.
 	 */
 	public int getNeckLength()
 	{
@@ -904,8 +1017,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets neck length, just curious, is it possible to create a giraffe?
-	 * @param neckLength neck length
+	 * Sets the length of the player's neck.<br>
+	 * This updates the {@code neckLength} field in the {@link PlayerAppearance} object.
+	 * @param neckLength The new length value for the neck.
 	 */
 	public void setNeckLength(int neckLength)
 	{
@@ -913,8 +1027,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Shoulders
-	 * @return shouldeers
+	 * Retrieves the shoulder value of the player appearance.<br>
+	 * This value is used to determine the character's physical build.
+	 * @return the current {@code int} value for shoulders
 	 */
 	public int getShoulders()
 	{
@@ -922,8 +1037,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Shoulders
-	 * @param shoulders shoulders
+	 * Sets the shoulder width for the player character.<br>
+	 * This updates the {@code shoulders} field in the {@link PlayerAppearance} object.
+	 * @param shoulders The new value for the shoulder width.
 	 */
 	public void setShoulders(int shoulders)
 	{
@@ -931,8 +1047,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Shoulder Size
-	 * @return shouldeerSize
+	 * Retrieves the size of the player's shoulders.<br>
+	 * This value is part of the {@link PlayerAppearance} model.
+	 * @return the shoulder size as an {@code int}
 	 */
 	public int getShoulderSize()
 	{
@@ -940,8 +1057,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Shoulder Size
-	 * @param shoulderSize shoulderSize
+	 * Sets the size of the player's shoulders.<br>
+	 * This updates the {@code shoulderSize} field in the {@link PlayerAppearance} object.
+	 * @param shoulderSize The new size value for the shoulders.
 	 */
 	public void setShoulderSize(int shoulderSize)
 	{
@@ -949,8 +1067,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Torso
-	 * @return torso
+	 * Retrieves the torso value of the player appearance.<br>
+	 * This returns the current {@code int} stored in the torso field.
+	 * @return the torso value
 	 */
 	public int getTorso()
 	{
@@ -958,8 +1077,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets torso
-	 * @param torso torso
+	 * Sets the torso value for the player appearance.<br>
+	 * This updates the {@code torso} field with a new integer value.
+	 * @param torso The new value to set for the torso.
 	 */
 	public void setTorso(int torso)
 	{
@@ -967,8 +1087,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns tits
-	 * @return tits
+	 * Retrieves the character's chest value.<br>
+	 * This method returns the current {@code chest} property.
+	 * @return the integer value of the chest
 	 */
 	public int getChest()
 	{
@@ -976,8 +1097,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets tits
-	 * @param chest tits
+	 * Sets the character's chest value.<br>
+	 * This updates the {@code chest} field in the {@link PlayerAppearance} object.
+	 * @param chest The new value for the chest attribute.
 	 */
 	public void setChest(int chest)
 	{
@@ -985,8 +1107,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns waist
-	 * @return waist
+	 * Retrieves the current waist size of the player.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the waist size.
 	 */
 	public int getWaist()
 	{
@@ -994,8 +1117,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * sets waist
-	 * @param waist waist
+	 * Sets the waist size for the player appearance.<br>
+	 * This updates the {@code waist} field in the current object.
+	 * @param waist The new value for the waist size.
 	 */
 	public void setWaist(int waist)
 	{
@@ -1003,8 +1127,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns hips
-	 * @return hips
+	 * Retrieves the hip width of the player character.<br>
+	 * This value is used to determine the body shape.
+	 * @return the current {@code hips} value as an {@code int}.
 	 */
 	public int getHips()
 	{
@@ -1012,8 +1137,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets hips
-	 * @param hips hips
+	 * Sets the hip width for the player character.<br>
+	 * This updates the {@code hips} field in the {@link PlayerAppearance} object.
+	 * @param hips The new value for the hip size.
 	 */
 	public void setHips(int hips)
 	{
@@ -1021,8 +1147,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns arm thickness
-	 * @return arm thickness
+	 * Retrieves the thickness of the player's arms.<br>
+	 * This value is used to determine the character's physical build.
+	 * @return the current {@code armThickness} value.
 	 */
 	public int getArmThickness()
 	{
@@ -1030,8 +1157,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets arm thickness
-	 * @param armThickness arm thickness
+	 * Sets the thickness of the player's arms.<br>
+	 * This updates the {@code armThickness} field in the {@link PlayerAppearance} object.
+	 * @param armThickness The new thickness value for the arms.
 	 */
 	public void setArmThickness(int armThickness)
 	{
@@ -1039,8 +1167,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns arm length
-	 * @return arm length
+	 * Retrieves the length of the player's arms.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the current arm length.
 	 */
 	public int getArmLength()
 	{
@@ -1048,8 +1177,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets arm length
-	 * @param armLength arm length
+	 * Sets the length of the player's arms.<br>
+	 * This updates the {@code armLength} field in the {@link PlayerAppearance} object.
+	 * @param armLength The new length value for the arms.
 	 */
 	public void setArmLength(int armLength)
 	{
@@ -1057,8 +1187,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns hand size
-	 * @return hand size
+	 * Retrieves the size of the player's hand.<br>
+	 * This value is stored in the {@code handSize} field.
+	 * @return the current hand size as an {@code int}.
 	 */
 	public int getHandSize()
 	{
@@ -1066,8 +1197,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets hand size
-	 * @param handSize hand size
+	 * Sets the size of the player's hands.<br>
+	 * This updates the {@code handSize} field in the {@link PlayerAppearance} object.
+	 * @param handSize The new size value for the hands.
 	 */
 	public void setHandSize(int handSize)
 	{
@@ -1075,8 +1207,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns legs thickness
-	 * @return leg thickness
+	 * Retrieves the thickness of the player's legs.<br>
+	 * This value is used to determine the character's physical build.
+	 * @return the {@code int} value representing leg thickness
 	 */
 	public int getLegThickness()
 	{
@@ -1084,8 +1217,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets leg thickness
-	 * @param legThickness leg thickness
+	 * Sets the thickness of the player's legs.<br>
+	 * This updates the {@code legThickness} field in the {@link PlayerAppearance} object.
+	 * @param legThickness The new thickness value for the legs.
 	 */
 	public void setLegThickness(int legThickness)
 	{
@@ -1093,8 +1227,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns legs Length
-	 * @return leg Length
+	 * Retrieves the length of the player's legs.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the current leg length.
 	 */
 	public int getLegLength()
 	{
@@ -1102,8 +1237,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets leg length
-	 * @param legLength leg length
+	 * Sets the length of the player's legs.<br>
+	 * This updates the {@code legLength} field in the {@link PlayerAppearance} object.
+	 * @param legLength The new length value for the legs.
 	 */
 	public void setLegLength(int legLength)
 	{
@@ -1111,8 +1247,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns foot size
-	 * @return foot size
+	 * Retrieves the current size of the player's feet.<br>
+	 * This value is stored as an {@code int}.
+	 * @return the foot size of the character.
 	 */
 	public int getFootSize()
 	{
@@ -1120,8 +1257,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets foot size
-	 * @param footSize foot size
+	 * Sets the size of the player's feet.<br>
+	 * This updates the {@code footSize} field in the {@link PlayerAppearance} object.
+	 * @param footSize The new size value for the feet.
 	 */
 	public void setFootSize(int footSize)
 	{
@@ -1129,8 +1267,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Retunrs facial rate
-	 * @return facial rate
+	 * Retrieves the current facial rate of the player.<br>
+	 * This value is stored in the {@code facialRate} field.
+	 * @return the integer value of the facial rate.
 	 */
 	public int getFacialRate()
 	{
@@ -1138,8 +1277,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets facial rate
-	 * @param facialRate facial rate
+	 * Sets the facial rate for the player appearance.<br>
+	 * This updates the {@code facialRate} field in this object.
+	 * @param facialRate The new value to set for the facial rate.
 	 */
 	public void setFacialRate(int facialRate)
 	{
@@ -1147,8 +1287,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns sexy voice
-	 * @return sexy voice
+	 * Retrieves the current voice type of the player.<br>
+	 * This value is stored as an {@code int}.
+	 * @return The player's voice identifier.
 	 */
 	public int getVoice()
 	{
@@ -1156,8 +1297,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets sexy voice
-	 * @param voice sexy voice
+	 * Sets the character's voice type.<br>
+	 * This updates the {@code voice} field in the {@link PlayerAppearance} object.
+	 * @param voice The new voice identifier to assign.
 	 */
 	public void setVoice(int voice)
 	{
@@ -1165,8 +1307,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Returns height
-	 * @return height
+	 * Retrieves the current height of the player.<br>
+	 * This value is stored as a {@code float}.
+	 * @return The player's height.
 	 */
 	public float getHeight()
 	{
@@ -1174,8 +1317,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Sets height
-	 * @param height height
+	 * Sets the character's height.<br>
+	 * This updates the {@code height} field in the {@link PlayerAppearance} object.
+	 * @param height The new height value to set.
 	 */
 	public void setHeight(float height)
 	{
@@ -1183,8 +1327,9 @@ public class PlayerAppearance implements Cloneable
 	}
 	
 	/**
-	 * Allow to copy the object
-	 * @author Divinity
+	 * Creates and returns a copy of this {@link PlayerAppearance} object.<br>
+	 * This method uses the default cloning mechanism provided by the {@code Cloneable} interface.
+	 * @return A new {@code Object} that is a copy of this instance, or {@code null} if cloning fails.
 	 */
 	@Override
 	public Object clone()

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -21,6 +21,8 @@ import com.aionemu.gameserver.network.aion.AionClientPacket;
 import com.aionemu.gameserver.network.aion.AionConnection.State;
 
 /**
+ * This packet is sent by the client to request the removal of an altered state.<br>
+ * It handles the synchronization of status effects or modifications on a {@link Player}.
  * @author dragoon112
  */
 public class CM_REMOVE_ALTERED_STATE extends AionClientPacket
@@ -28,35 +30,27 @@ public class CM_REMOVE_ALTERED_STATE extends AionClientPacket
 	private int skillid;
 	
 	/**
-	 * @param opcode
-	 * @param state
-	 * @param restStates
+	 * Removes an altered state from a character.<br>
+	 * This method updates the current status of the player.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary {@link State} to be removed.
+	 * @param restStates A variable number of additional {@link State} objects to remove.
 	 */
 	public CM_REMOVE_ALTERED_STATE(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see com.aionemu.commons.network.packet.BaseClientPacket#readImpl()
-	 */
 	@Override
 	protected void readImpl()
 	{
 		skillid = readH();
-		readC();// 4.3
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see com.aionemu.commons.network.packet.BaseClientPacket#runImpl()
-	 */
 	@Override
 	protected void runImpl()
 	{
 		final Player player = getConnection().getActivePlayer();
 		player.getEffectController().removeEffect(skillid);
 	}
-	
 }

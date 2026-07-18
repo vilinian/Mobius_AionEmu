@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -20,7 +20,8 @@ import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 
 /**
- * Responses to block list related requests
+ * This packet handles the server response for block list related requests.<br>
+ * It informs the client of the result when a user attempts to manage their blocked list.
  * @author Ben
  */
 public class SM_BLOCK_RESPONSE extends AionServerPacket
@@ -45,14 +46,14 @@ public class SM_BLOCK_RESPONSE extends AionServerPacket
 	 * You cannot block yourself.
 	 */
 	public static final int CANT_BLOCK_SELF = 4;
-	
 	private final int code;
 	private final String playerName;
 	
 	/**
-	 * Constructs a new block request response packet
-	 * @param code Message code to use - see class constants
-	 * @param playerName Parameters inserted into message. Usually the target player's name
+	 * Creates a new {@link SM_BLOCK_RESPONSE} packet.<br>
+	 * This method initializes the response with a specific status and target name.
+	 * @param code The result code from the class constants.
+	 * @param playerName The name of the player involved in the block action.
 	 */
 	public SM_BLOCK_RESPONSE(int code, String playerName)
 	{
@@ -65,6 +66,5 @@ public class SM_BLOCK_RESPONSE extends AionServerPacket
 	{
 		writeS(playerName);
 		writeD(code);
-		
 	}
 }

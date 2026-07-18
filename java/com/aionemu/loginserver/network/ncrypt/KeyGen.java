@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.ncrypt;
 
@@ -30,7 +30,8 @@ import org.slf4j.LoggerFactory;
 import com.aionemu.commons.utils.Rnd;
 
 /**
- * Key generator. It generates keys or keyPairs for Blowfish and RSA
+ * This utility class provides functionality to generate cryptographic keys.<br>
+ * It supports generating both {@code SecretKey} objects for the Blowfish algorithm and {@code KeyPair} objects for RSA encryption.
  * @author -Nemesiss-
  */
 public class KeyGen
@@ -49,8 +50,10 @@ public class KeyGen
 	private static EncryptedRSAKeyPair[] encryptedRSAKeyPairs;
 	
 	/**
-	 * Initialize Key Generator (Blowfish keygen and RSA keygen)
-	 * @throws GeneralSecurityException
+	 * Initializes the {@code KeyGen} class.<br>
+	 * This method sets up the Blowfish and RSA key generators.<br>
+	 * It also pre-generates a set of {@link EncryptedRSAKeyPair} objects.
+	 * @throws GeneralSecurityException If an error occurs during security initialization.
 	 */
 	public static void init() throws GeneralSecurityException
 	{
@@ -75,8 +78,9 @@ public class KeyGen
 	}
 	
 	/**
-	 * Generate and return blowfish key
-	 * @return Random generated blowfish key
+	 * Generates a new {@code SecretKey} for the Blowfish algorithm.<br>
+	 * This method uses the internal {@code KeyGenerator}.
+	 * @return A newly generated {@code SecretKey}.
 	 */
 	public static SecretKey generateBlowfishKey()
 	{
@@ -84,8 +88,9 @@ public class KeyGen
 	}
 	
 	/**
-	 * Get common RSA Public/Static Key Pair with encrypted modulus N
-	 * @return encryptedRSAkeypairs
+	 * Retrieves a random RSA key pair from the pre-generated list.<br>
+	 * This method uses {@code nextInt} to select an index.
+	 * @return A randomly selected {@link EncryptedRSAKeyPair} object.
 	 */
 	public static EncryptedRSAKeyPair getEncryptedRSAKeyPair()
 	{

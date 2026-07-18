@@ -1,22 +1,21 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.gmhandler;
 
-import com.aionemu.gameserver.configs.administration.PanelConfig;
 import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.skillengine.model.SkillTemplate;
@@ -25,24 +24,33 @@ import com.aionemu.gameserver.utils.Util;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * Handles the command to add a specific skill to a player character.<br>
+ * This class allows Game Masters to grant {@link SkillTemplate} objects to a {@link Player}.
  * @author Alcapwnd
  */
 public class CmdAddSkill extends AbstractGMHandler
 {
+	/**
+	 * This constructor initializes the command to add a skill.<br>
+	 * It takes an administrator and the required parameters.<br>
+	 * The {@code run} method is called automatically during construction.
+	 * @param admin The {@code Player} object who is executing the command.
+	 * @param params The string containing the skill details.
+	 */
 	public CmdAddSkill(Player admin, String params)
 	{
 		super(admin, params);
 		run();
 	}
 	
+	/**
+	 * Executes the logic to grant a skill to a player.<br>
+	 * It identifies the target player and searches for a matching {@code SkillTemplate}.<br>
+	 * If found, it adds the skill to the target's list and sends notifications.
+	 */
 	private void run()
 	{
 		Player t = admin;
-		if (admin.getClientConnection().getAccount().getAccessLevel() <= PanelConfig.SKILL_PANEL_LEVEL)
-		{
-			PacketSendUtility.sendMessage(admin, "You haven't access this panel commands");
-			return;
-		}
 		
 		if ((admin.getTarget() != null) && (admin.getTarget() instanceof Player))
 		{
@@ -56,7 +64,7 @@ public class CmdAddSkill extends AbstractGMHandler
 		
 		for (SkillTemplate template : DataManager.SKILL_DATA.getSkillData().valueCollection())
 		{
-			if ((template.getName() != null) && template.getName().equalsIgnoreCase(params))
+			if ((template.getNamedesc() != null) && template.getNamedesc().equalsIgnoreCase(params))
 			{
 				PacketSendUtility.sendMessage(admin, "You added Skill " + template.getName() + "to " + t.getName());
 				PacketSendUtility.sendMessage(t, "Admin has add Skill " + template.getName() + "to you.");

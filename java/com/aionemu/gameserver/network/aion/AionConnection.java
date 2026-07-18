@@ -1,23 +1,25 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -36,18 +38,17 @@ import com.aionemu.gameserver.model.account.Account;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.network.Crypt;
 import com.aionemu.gameserver.network.PacketFloodFilter;
+import com.aionemu.gameserver.network.PacketLoggerService;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_KEY;
 import com.aionemu.gameserver.network.factories.AionPacketHandlerFactory;
-import com.aionemu.gameserver.network.ls.LoginServer;
-import com.aionemu.gameserver.network.ls.serverpackets.SM_MAC;
+import com.aionemu.gameserver.network.loginserver.LoginServer;
+import com.aionemu.gameserver.network.loginserver.serverpackets.SM_MAC;
 import com.aionemu.gameserver.services.player.PlayerLeaveWorldService;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
-import com.google.common.base.Preconditions;
-
-import javolution.util.FastList;
 
 /**
- * Object representing connection between GameServer and Aion Client.
+ * Represents the network connection between the {@code GameServer} and an Aion client.<br>
+ * This class handles communication, packet processing, and session management for a single player.
  * @author -Nemesiss-
  */
 public class AionConnection extends AConnection
@@ -56,9 +57,7 @@ public class AionConnection extends AConnection
 	 * Logger for this class.
 	 */
 	private static final Logger log = LoggerFactory.getLogger(AionConnection.class);
-	
 	private static final PacketProcessor<AionConnection> packetProcessor = new PacketProcessor<>(NetworkConfig.PACKET_PROCESSOR_MIN_THREADS, NetworkConfig.PACKET_PROCESSOR_MAX_THREADS, NetworkConfig.PACKET_PROCESSOR_THREAD_SPAWN_THRESHOLD, NetworkConfig.PACKET_PROCESSOR_THREAD_KILL_THRESHOLD, new ExecuteWrapper());
-	
 	private String hdd_serial;
 	private String ipv4list;
 	private String local_ip;
@@ -69,75 +68,147 @@ public class AionConnection extends AConnection
 	private int winEncode;
 	private String traceroute;
 	
+	/**
+	 * Retrieves the country code for the current connection.<br>
+	 * This method returns a specific value if the IP matches a hardcoded address.<br>
+	 * Otherwise, it returns the stored {@code countryCode}.
+	 * @return The integer representing the country code.
+	 */
 	public int getCountryCode()
 	{
 		if (getIP().equals("109.87.238.83"))
 		{
 			return 7;
 		}
+		
 		return countryCode;
 	}
 	
+	/**
+	 * Sets the country code for the current connection.<br>
+	 * This value is used to identify the player's geographic region.
+	 * @param countryCode The unique integer identifier for the country.
+	 */
 	public void setCountryCode(int countryCode)
 	{
 		this.countryCode = countryCode;
 	}
 	
+	/**
+	 * Sets the local IP address for this connection.<br>
+	 * This value is stored in the {@code local_ip} field.
+	 * @param local_ip The IP address to set.
+	 */
 	public void setLocalIP(String local_ip)
 	{
 		this.local_ip = local_ip;
 	}
 	
+	/**
+	 * Updates the list of IPv4 addresses for this connection.<br>
+	 * The {@code iplist} string is stored in the internal field.
+	 * @param iplist The new list of IPv4 addresses to set.
+	 */
 	public void setIPv4List(String iplist)
 	{
 		ipv4list = iplist;
 	}
 	
+	/**
+	 * Sets the hard drive serial number for this connection.<br>
+	 * This value is used to identify the hardware of the client.
+	 * @param hdd_serial The {@code String} representing the hard drive serial.
+	 */
 	public void setHDDSerial(String hdd_serial)
 	{
 		this.hdd_serial = hdd_serial;
 	}
 	
+	/**
+	 * Sets the operating system identifier for this connection.<br>
+	 * This value is used to identify the client's environment.
+	 * @param windows The name of the operating system to set.
+	 */
 	public void setWindows(String windows)
 	{
 		this.windows = windows;
 	}
 	
+	/**
+	 * Updates the memory value for this connection.<br>
+	 * This method sets the {@code memory} field to a new integer value.
+	 * @param memory The new memory value to assign.
+	 */
 	public void setMemoryPC(int memory)
 	{
 		this.memory = memory;
 	}
 	
+	/**
+	 * Sets the connection string for the {@code AionBin}.<br>
+	 * This value is used to identify the specific binary connection.
+	 * @param AionBinConnection The connection string to be assigned.
+	 */
 	public void setAionBin(String AionBinConnection)
 	{
 		aionBin = AionBinConnection;
 	}
 	
+	/**
+	 * Retrieves the path to the Aion binary executable.<br>
+	 * This value is used to identify the client application.
+	 * @return The {@code String} representing the Aion binary path.
+	 */
 	public String getAionBin()
 	{
 		return aionBin;
 	}
 	
+	/**
+	 * Retrieves the amount of memory associated with this connection.<br>
+	 * This value is typically used for hardware identification.
+	 * @return The memory value as an {@code int}.
+	 */
 	public int getMemory()
 	{
 		return memory;
 	}
 	
+	/**
+	 * Sets the character encoding used for Windows systems.<br>
+	 * This value is stored in the {@code winEncode} field.
+	 * @param enc The integer code representing the desired encoding.
+	 */
 	public void setWindowsEncoding(int enc)
 	{
 		winEncode = enc;
 	}
 	
+	/**
+	 * Retrieves the current Windows encoding value.<br>
+	 * This value is used to identify the character encoding of the client system.
+	 * @return The integer value representing the Windows encoding.
+	 */
 	public int getWindowsEncoding()
 	{
 		return winEncode;
 	}
 	
+	/**
+	 * Retrieves the IP address used for the traceroute.<br>
+	 * This value is stored in the {@code traceroute} field.
+	 * @return The traceroute IP address as a {@code String}.
+	 */
 	public String getTracerouteIP()
 	{
 		return traceroute;
 	}
 	
+	/**
+	 * Sets the IP address used for traceroute.<br>
+	 * This updates the {@code traceroute} field with the provided value.
+	 * @param ips The IP address to be stored as the traceroute target.
+	 */
 	public void setTracerouteIP(String ips)
 	{
 		traceroute = ips;
@@ -165,60 +236,60 @@ public class AionConnection extends AConnection
 	/**
 	 * Server Packet "to send" Queue
 	 */
-	private final FastList<AionServerPacket> sendMsgQueue = new FastList<>();
-	
+	private final Deque<AionServerPacket> sendMsgQueue = new ArrayDeque<>();
 	/**
 	 * Current state of this connection
 	 */
 	private volatile State state;
-	
 	/**
 	 * AionClient is authenticating by passing to GameServer id of account.
 	 */
 	private Account account;
-	
 	/**
 	 * Crypt that will encrypt/decrypt packets.
 	 */
 	private final Crypt crypt = new Crypt();
-	
 	/**
 	 * active Player that owner of this connection is playing [entered game]
 	 */
 	private final AtomicReference<Player> activePlayer = new AtomicReference<>();
 	private String lastPlayerName = "";
-	
 	private final AionPacketHandler aionPacketHandler;
 	private long lastPingTimeMS;
-	
 	private int nbInvalidPackets = 0;
+	
 	// TODO! why there is no any comments what is this doing? i have no clue what is it for [Nemesiss]
-	private static final int MAX_INVALID_PACKETS = 3;
-	
+	private final static int MAX_INVALID_PACKETS = 3;
 	private String macAddress;
-	
-	/** Ping checker - for detecting hanged up connections **/
+	/**
+	 * Ping checker - for detecting hanged up connections *
+	 */
 	private final PingChecker pingChecker;
-	
-	/** packet flood filter **/
+	/**
+	 * packet flood filter *
+	 */
 	private int[] pff;
 	private long[] pffRequests;
 	
 	/**
-	 * Constructor
-	 * @param sc
-	 * @param d
+	 * Creates a new {@link AionConnection} instance.<br>
+	 * This constructor initializes the connection with specific buffer sizes.<br>
+	 * It sets up the packet handler and starts the ping checker.<br>
+	 * It also enables the flood filter if it is configured in the security settings.
+	 * @param sc The {@code SocketChannel} used for network communication.
+	 * @param d The {@code Dispatcher} used to handle asynchronous tasks.
 	 */
 	public AionConnection(SocketChannel sc, Dispatcher d)
 	{
 		super(sc, d, 8192 * 4, 8192 * 4);
+		
 		final AionPacketHandlerFactory aionPacketHandlerFactory = AionPacketHandlerFactory.getInstance();
 		aionPacketHandler = aionPacketHandlerFactory.getPacketHandler();
 		
 		state = State.CONNECTED;
 		
 		final String ip = getIP();
-		log.debug("connection from: " + ip);
+		log.info("connection from: " + ip);
 		
 		pingChecker = new PingChecker();
 		pingChecker.start();
@@ -230,41 +301,51 @@ public class AionConnection extends AConnection
 		}
 	}
 	
+	/**
+	 * This method performs the initial setup for the connection.<br>
+	 * It sends the {@code SM_KEY} packet to the client.
+	 */
 	@Override
 	protected void initialized()
 	{
-		/** Send SM_KEY packet */
+		/**
+		 * Send SM_KEY packet
+		 */
 		sendPacket(new SM_KEY());
 	}
 	
 	/**
-	 * Enable crypt key - generate random key that will be used to encrypt second server packet [first one is unencrypted] and decrypt client packets. This method is called from SM_KEY server packet, that packet sends key to aion client.
-	 * @return "false key" that should by used by aion client to encrypt/decrypt packets.
+	 * Enables the encryption key for this connection.<br>
+	 * This method calls {@code enableKey}.
+	 * @return The result of the key enablement process as an {@code int}.
 	 */
-	public final int enableCryptKey()
+	public int enableCryptKey()
 	{
 		return crypt.enableKey();
 	}
 	
 	/**
-	 * Called by Dispatcher. ByteBuffer data contains one packet that should be processed.
-	 * @param data
-	 * @return True if data was processed correctly, False if some error occurred and connection should be closed NOW.
+	 * Decrypts and processes incoming data from the client.<br>
+	 * It validates the packet structure and checks for flooding.<br>
+	 * If the packet is valid, it executes the corresponding logic.
+	 * @param data The {@code ByteBuffer} containing the raw packet data.
+	 * @return {@code true} if the data was processed successfully or skipped due to decryption failure; {@code false} otherwise.
 	 */
 	@Override
-	protected final boolean processData(ByteBuffer data)
+	protected boolean processData(ByteBuffer data)
 	{
 		try
 		{
 			if (!crypt.decrypt(data))
 			{
 				nbInvalidPackets++;
-				log.debug("[" + nbInvalidPackets + "/" + MAX_INVALID_PACKETS + "] Decrypt fail, client packet passed...");
+				log.info("[" + nbInvalidPackets + "/" + MAX_INVALID_PACKETS + "] Decrypt fail, client packet passed...");
 				if (nbInvalidPackets >= MAX_INVALID_PACKETS)
 				{
 					log.warn("Decrypt fail!");
 					return false;
 				}
+				
 				return true;
 			}
 		}
@@ -308,13 +389,9 @@ public class AionConnection extends AConnection
 								switch (SecurityConfig.PFF_LEVEL)
 								{
 									case 1: // disconnect
-									{
 										return false;
-									}
 									case 2:
-									{
 										break;
-									}
 								}
 							}
 							else
@@ -326,6 +403,8 @@ public class AionConnection extends AConnection
 				}
 			}
 			
+			PacketLoggerService.getInstance().logPacketCM(pck.getPacketName());
+			
 			if (pck.read())
 			{
 				packetProcessor.executePacket(pck);
@@ -336,12 +415,15 @@ public class AionConnection extends AConnection
 	}
 	
 	/**
-	 * This method will be called by Dispatcher, and will be repeated till return false.
-	 * @param data
-	 * @return True if data was written to buffer, False indicating that there are not any more data to write.
+	 * Sends the provided data to the client.<br>
+	 * This method retrieves a packet from the internal queue and writes it.<br>
+	 * It returns {@code true} if the write was successful.<br>
+	 * It returns {@code false} if there are no packets left in the queue.
+	 * @param data The {@code ByteBuffer} containing the information to be sent.
+	 * @return {@code true} if a packet was successfully written, otherwise {@code false}.
 	 */
 	@Override
-	protected final boolean writeData(ByteBuffer data)
+	protected boolean writeData(ByteBuffer data)
 	{
 		synchronized (guard)
 		{
@@ -350,7 +432,9 @@ public class AionConnection extends AConnection
 			{
 				return false;
 			}
+			
 			final AionServerPacket packet = sendMsgQueue.removeFirst();
+			PacketLoggerService.getInstance().logPacketSM(packet.getPacketName());
 			try
 			{
 				packet.write(this, data);
@@ -365,20 +449,24 @@ public class AionConnection extends AConnection
 	}
 	
 	/**
-	 * This method is called by Dispatcher when connection is ready to be closed.
-	 * @return time in ms after witch onDisconnect() method will be called. Always return 0.
+	 * Retrieves the delay before a disconnection occurs.<br>
+	 * This method returns the current timeout value in milliseconds.
+	 * @return The disconnection delay as a {@code long}.
 	 */
 	@Override
-	protected final long getDisconnectionDelay()
+	protected long getDisconnectionDelay()
 	{
 		return 0;
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Handles the cleanup logic when a client disconnects.<br>
+	 * Stops the {@code pingChecker}.<br>
+	 * Notifies the {@link LoginServer} if an account is logged in.<br>
+	 * Triggers the world leave process for the active player.
 	 */
 	@Override
-	protected final void onDisconnect()
+	protected void onDisconnect()
 	{
 		/**
 		 * Client starts authentication procedure
@@ -389,6 +477,7 @@ public class AionConnection extends AConnection
 			LoginServer.getInstance().aionClientDisconnected(getAccount().getId());
 			LoginServer.getInstance().sendPacket(new SM_MAC(getAccount().getId(), macAddress, hdd_serial));
 		}
+		
 		final Player player = getActivePlayer();
 		if (player != null)
 		{
@@ -397,29 +486,36 @@ public class AionConnection extends AConnection
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Handles the logic when the server is shutting down.<br>
+	 * This method forces the connection to close immediately.<br>
+	 * It calls {@code boolean)} with a {@code true} flag.
 	 */
 	@Override
-	protected final void onServerClose()
+	protected void onServerClose()
 	{
 		// TODO mb some packet should be send to client before closing?
 		close(/* packet, */true);
 	}
 	
 	/**
-	 * Encrypt packet.
-	 * @param buf
+	 * Encrypts the data contained within a {@code ByteBuffer}.<br>
+	 * This method checks if encryption is enabled before processing.<br>
+	 * If it is not enabled, it enables it and returns early.<br>
+	 * Otherwise, it calls the {@code encrypt} method.
+	 * @param buf The {@code ByteBuffer} to be encrypted.
 	 */
-	public final void encrypt(ByteBuffer buf)
+	public void encrypt(ByteBuffer buf)
 	{
 		crypt.encrypt(buf);
 	}
 	
 	/**
-	 * Sends AionServerPacket to this client.
-	 * @param bp AionServerPacket to be sent.
+	 * Sends a packet to the connected client.<br>
+	 * This method adds the {@code AionServerPacket} to the outgoing message queue.<br>
+	 * It ensures that the connection is active before attempting to send data.
+	 * @param bp The {@code AionServerPacket} object to be sent.
 	 */
-	public final void sendPacket(AionServerPacket bp)
+	public void sendPacket(AionServerPacket bp)
 	{
 		synchronized (guard)
 		{
@@ -437,12 +533,13 @@ public class AionConnection extends AConnection
 	}
 	
 	/**
-	 * Its guaranteed that closePacket will be sent before closing connection, but all past and future packets wont. Connection will be closed [by Dispatcher Thread], and onDisconnect() method will be called to clear all other things. forced means that server shouldn't wait with removing this
-	 * connection.
-	 * @param closePacket Packet that will be send before closing.
-	 * @param forced have no effect in this implementation.
+	 * Closes the connection and prepares it for disconnection.<br>
+	 * This method sets a pending close flag and clears the outgoing message queue.<br>
+	 * It also adds the specified {@code closePacket} to the queue.
+	 * @param closePacket The packet to send before closing the connection.
+	 * @param forced Whether the closure should be treated as a forced disconnection.
 	 */
-	public final void close(AionServerPacket closePacket, boolean forced)
+	public void close(AionServerPacket closePacket, boolean forced)
 	{
 		synchronized (guard)
 		{
@@ -460,17 +557,19 @@ public class AionConnection extends AConnection
 	}
 	
 	/**
-	 * Current state of this connection
-	 * @return state
+	 * Retrieves the current connection status.<br>
+	 * This method returns the {@code State} of the current connection.
+	 * @return The current {@code State} of this connection.
 	 */
-	public final State getState()
+	public State getState()
 	{
 		return state;
 	}
 	
 	/**
-	 * Sets the state of this connection
-	 * @param state state of this connection
+	 * Updates the current connection state.<br>
+	 * This method sets the {@code state} field to the provided value.
+	 * @param state The new {@code State} to apply to this connection.
 	 */
 	public void setState(State state)
 	{
@@ -478,8 +577,8 @@ public class AionConnection extends AConnection
 	}
 	
 	/**
-	 * Returns account object associated with this connection
-	 * @return account object associated with this connection
+	 * Retrieves the {@link Account} associated with this connection.
+	 * @return The current {@code Account} object.
 	 */
 	public Account getAccount()
 	{
@@ -487,19 +586,26 @@ public class AionConnection extends AConnection
 	}
 	
 	/**
-	 * Sets account object associated with this connection
-	 * @param account account object associated with this connection
+	 * Sets the {@link Account} associated with this connection.<br>
+	 * This method updates the internal account reference.<br>
+	 * The provided {@code account} parameter must not be {@code null}.
+	 * @param account The {@link Account} object to set.
 	 */
 	public void setAccount(Account account)
 	{
-		Preconditions.checkArgument(account != null, "Account can't be null");
+		if (!(account != null))
+		{
+			throw new IllegalArgumentException("Account can't be null");
+		}
 		this.account = account;
 	}
 	
 	/**
-	 * Sets Active player to new value. Update connection state to correct value.
-	 * @param player
-	 * @return True if active player was set to new value.
+	 * Sets the current active {@link Player} for this connection.<br>
+	 * Updates the connection state based on whether a player is provided.<br>
+	 * Returns {@code true} if the operation succeeded.
+	 * @param player The {@link Player} object to set as active.
+	 * @return {@code true} if the player was successfully set, otherwise {@code false}.
 	 */
 	public boolean setActivePlayer(Player player)
 	{
@@ -517,12 +623,14 @@ public class AionConnection extends AConnection
 		{
 			return false;
 		}
+		
 		return true;
 	}
 	
 	/**
-	 * Return active player or null.
-	 * @return active player or null.
+	 * Retrieves the {@link Player} currently associated with this connection.<br>
+	 * This method returns the player object stored in the internal atomic reference.
+	 * @return The current {@code Player} object or {@code null} if no player is active.
 	 */
 	public Player getActivePlayer()
 	{
@@ -530,7 +638,9 @@ public class AionConnection extends AConnection
 	}
 	
 	/**
-	 * @return the lastPingTimeMS
+	 * Retrieves the timestamp of the most recent ping received.<br>
+	 * The value is measured in milliseconds.
+	 * @return the time of the last ping as a {@code long}.
 	 */
 	public long getLastPingTimeMS()
 	{
@@ -538,48 +648,90 @@ public class AionConnection extends AConnection
 	}
 	
 	/**
-	 * @param lastPingTimeMS the lastPingTimeMS to set
+	 * Updates the timestamp of the last received ping.<br>
+	 * This value is stored in milliseconds.
+	 * @param lastPingTimeMS The time of the last ping in {@code long} format.
 	 */
 	public void setLastPingTimeMS(long lastPingTimeMS)
 	{
 		this.lastPingTimeMS = lastPingTimeMS;
 	}
 	
+	/**
+	 * Closes the current connection immediately.<br>
+	 * This method calls {@code boolean)} with a {@code false} value for the forced parameter.
+	 */
 	public void closeNow()
 	{
-		close(false);
+		this.close(false);
 	}
 	
+	/**
+	 * Sets the hardware MAC address for this connection.<br>
+	 * This value is used to identify the client device.
+	 * @param mac The {@code String} representing the MAC address.
+	 */
 	public void setMacAddress(String mac)
 	{
 		macAddress = mac;
 	}
 	
+	/**
+	 * Retrieves the unique MAC address of the connected client.<br>
+	 * This value is used for hardware identification.
+	 * @return The {@code String} representation of the MAC address.
+	 */
 	public String getMacAddress()
 	{
 		return macAddress;
 	}
 	
+	/**
+	 * Retrieves the hard drive serial number.<br>
+	 * This value was previously set using {@code setHDDSerial}.
+	 * @return The {@code String} representing the hardware serial.
+	 */
 	public String getHddSerial()
 	{
 		return hdd_serial;
 	}
 	
+	/**
+	 * Retrieves the list of IPv4 addresses.<br>
+	 * This method returns the {@code ipv4list} string associated with this connection.
+	 * @return The string containing the IPv4 list.
+	 */
 	public String getIpv4list()
 	{
 		return ipv4list;
 	}
 	
+	/**
+	 * Retrieves the local IP address of the connection.<br>
+	 * This value was previously set using {@code setLocalIP}.
+	 * @return The local IP address as a {@code String}.
+	 */
 	public String getLocalIP()
 	{
 		return local_ip;
 	}
 	
+	/**
+	 * Retrieves the Windows operating system information.<br>
+	 * This value is stored in the {@code windows} field.
+	 * @return The string representing the Windows version or name.
+	 */
 	public String getWindows()
 	{
 		return windows;
 	}
 	
+	/**
+	 * Returns a string representation of the {@code AionConnection}.<br>
+	 * This method includes details about the connection state, account, and player information.<br>
+	 * If no active player is found, it returns an empty string.
+	 * @return A formatted string containing connection details or an empty string.
+	 */
 	@Override
 	public String toString()
 	{
@@ -588,30 +740,28 @@ public class AionConnection extends AConnection
 		{
 			return "AionConnection [state=" + state + ", account=" + account + ", getObjectId()=" + player.getObjectId() + ", lastPlayerName=" + lastPlayerName + ", macAddress=" + macAddress + ",hddSerial=" + hdd_serial + ", getIP()=" + getIP() + "]";
 		}
+		
 		return "";
 	}
 	
 	private class PingChecker implements Runnable
 	{
-		
-		// we don't have to detect hanged connections immediately
-		// its rather some very rare case so 10 minutes check should be enough
+		// We do not have to detect hung connections immediately as it is a very rare case, so a ten-minute check should be sufficient.
 		private static final int checkTime = 10 * 60 * 1000;
 		private ScheduledFuture<?> task;
 		private boolean started;
 		
-		public PingChecker()
+		private void start()
 		{
-		}
-		
-		void start()
-		{
-			Preconditions.checkState(!started, "PingChecker can be started only one time!");
+			if (!(!started))
+			{
+				throw new IllegalStateException("PingChecker can be started only one time!");
+			}
 			started = true;
 			task = ThreadPoolManager.getInstance().scheduleAtFixedRate(this, checkTime, checkTime);
 		}
 		
-		void stop()
+		private void stop()
 		{
 			task.cancel(false);
 		}
@@ -621,8 +771,8 @@ public class AionConnection extends AConnection
 		{
 			if ((System.currentTimeMillis() - getLastPingTimeMS()) > checkTime)
 			{
-				// log.info("Found hanged up client: " + AionConnection.this + " - closing now :)");
-				// closeNow();
+				log.info("Found hanged up client: " + AionConnection.this + " - closing now :)");
+				closeNow();
 			}
 		}
 	}

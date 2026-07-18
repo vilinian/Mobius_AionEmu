@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.ai.portals;
 
@@ -31,13 +31,22 @@ import com.aionemu.gameserver.services.teleport.TeleportService2;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
- * @author Rinzler (Encom)
+ * Handles the artificial intelligence for the {@code infiltration_rift} NPC.<br>
+ * This class manages specific behaviors and interactions for this portal entity.
+ * @author xTz
  */
 @AIName("infiltration_rift")
 public class Infiltration_RiftAI2 extends NpcAI2
 {
 	private final int CANCEL_DIALOG_METERS = 10;
 	
+	/**
+	 * This method is called when a dialog starts with an NPC.<br>
+	 * It checks if the {@code player} meets the level requirement to use the portal.<br>
+	 * If valid, it adds a request to handle teleportation based on the player's race.<br>
+	 * Otherwise, it sends a system message regarding the level limit.
+	 * @param player The {@link Player} who initiated the interaction.
+	 */
 	@Override
 	protected void handleDialogStart(Player player)
 	{
@@ -54,57 +63,38 @@ public class Infiltration_RiftAI2 extends NpcAI2
 					{
 						switch (getNpcId())
 						{
-							case 702721: // Infiltration Rift.
-							{
+							case 702721: // Infiltration Rift
 								if (responder.getCommonData().getRace() == Race.ELYOS)
 								{
 									switch (Rnd.get(1, 9))
 									{
 										case 1:
-										{
 											TeleportService2.teleportTo(responder, 220080000, 152.02060f, 2572.3533f, 134.02466f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 2:
-										{
 											TeleportService2.teleportTo(responder, 220080000, 1305.3157f, 2422.7840f, 279.51456f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 3:
-										{
 											TeleportService2.teleportTo(responder, 220080000, 2307.4660f, 1204.8960f, 325.00000f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 4:
-										{
 											TeleportService2.teleportTo(responder, 220080000, 172.35520f, 1450.8087f, 306.80670f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 5:
-										{
 											TeleportService2.teleportTo(responder, 220080000, 1076.3921f, 620.23596f, 218.67900f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 6:
-										{
 											TeleportService2.teleportTo(responder, 220080000, 2370.0980f, 193.97507f, 242.38257f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 7:
-										{
 											TeleportService2.teleportTo(responder, 220080000, 2849.7524f, 2445.2960f, 176.62500f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 8:
-										{
 											TeleportService2.teleportTo(responder, 220080000, 104.40256f, 156.43721f, 165.69632f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 9:
-										{
 											TeleportService2.teleportTo(responder, 220080000, 1742.1217f, 1212.8824f, 211.69537f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 									}
 								}
 								else if (responder.getCommonData().getRace() == Race.ASMODIANS)
@@ -112,55 +102,37 @@ public class Infiltration_RiftAI2 extends NpcAI2
 									switch (Rnd.get(1, 9))
 									{
 										case 1:
-										{
 											TeleportService2.teleportTo(responder, 210070000, 2669.0242f, 438.01553f, 576.44300f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 2:
-										{
 											TeleportService2.teleportTo(responder, 210070000, 1695.2113f, 118.30494f, 541.34860f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 3:
-										{
 											TeleportService2.teleportTo(responder, 210070000, 780.76843f, 1797.6338f, 457.70422f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 4:
-										{
 											TeleportService2.teleportTo(responder, 210070000, 2108.6462f, 1445.7365f, 428.34204f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 5:
-										{
 											TeleportService2.teleportTo(responder, 210070000, 1928.2786f, 2594.9610f, 315.02524f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 6:
-										{
 											TeleportService2.teleportTo(responder, 210070000, 783.88990f, 2369.2110f, 296.66055f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 7:
-										{
 											TeleportService2.teleportTo(responder, 210070000, 423.68884f, 861.77814f, 415.61945f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 8:
-										{
 											TeleportService2.teleportTo(responder, 210070000, 2911.7507f, 2899.1367f, 270.23444f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 										case 9:
-										{
 											TeleportService2.teleportTo(responder, 210070000, 1990.0380f, 1688.9974f, 195.12500f, (byte) 0, TeleportAnimation.BEAM_ANIMATION);
 											break;
-										}
 									}
 								}
 								break;
-							}
 						}
+						
 						decisionTaken = true;
 					}
 				}
@@ -178,6 +150,11 @@ public class Infiltration_RiftAI2 extends NpcAI2
 		}
 	}
 	
+	/**
+	 * This method handles the logic after a dialog ends.<br>
+	 * It is called when a {@link Player} finishes interacting with an NPC.
+	 * @param player The {@code Player} who finished the dialog.
+	 */
 	@Override
 	protected void handleDialogFinish(Player player)
 	{

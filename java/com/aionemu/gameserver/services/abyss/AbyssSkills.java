@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.abyss;
 
@@ -21,6 +21,10 @@ import org.slf4j.LoggerFactory;
 import com.aionemu.gameserver.model.Race;
 import com.aionemu.gameserver.utils.stats.AbyssRankEnum;
 
+/**
+ * This class defines the set of skills available for players in the {@link Race} abyss.<br>
+ * It maps specific skill identifiers to their respective mechanics and requirements.
+ */
 enum AbyssSkills
 {
 	SUPREME_COMMANDER(Race.ELYOS, AbyssRankEnum.SUPREME_COMMANDER, new int[]
@@ -96,10 +100,17 @@ enum AbyssSkills
 		11895
 	});
 	
-	private int[] skills;
-	private AbyssRankEnum rankenum;
-	private Race race;
+	private final int[] skills;
+	private final AbyssRankEnum rankenum;
+	private final Race race;
 	
+	/**
+	 * Creates a new instance of {@code AbyssSkills}.<br>
+	 * This constructor initializes the required data for an abyss skill.
+	 * @param race The {@link Race} type associated with this skill.
+	 * @param rankEnum The {@link AbyssRankEnum} level of the skill.
+	 * @param skills An array of integers representing the specific skill IDs.
+	 */
 	private AbyssSkills(Race race, AbyssRankEnum rankEnum, int[] skills)
 	{
 		this.race = race;
@@ -107,16 +118,34 @@ enum AbyssSkills
 		this.skills = skills;
 	}
 	
+	/**
+	 * Retrieves the {@code Race} of the player.<br>
+	 * This method returns the current character race.
+	 * @return The {@link Race} of the player.
+	 */
 	public Race getRace()
 	{
 		return race;
 	}
 	
+	/**
+	 * Retrieves the list of skill IDs associated with this access level.<br>
+	 * These values are used to determine specific permissions.
+	 * @return an {@code int[]} array containing the skill identifiers.
+	 */
 	public int[] getSkills()
 	{
 		return skills;
 	}
 	
+	/**
+	 * Retrieves the skill IDs for a specific race and rank.<br>
+	 * This method searches through all available {@link AbyssSkills}.<br>
+	 * It returns an empty array if no matching skills are found.
+	 * @param race The {@code Race} of the character.
+	 * @param rank The {@code AbyssRankEnum} level reached.
+	 * @return An {@code int[]} containing the skill IDs.
+	 */
 	public static int[] getSkills(Race race, AbyssRankEnum rank)
 	{
 		for (AbyssSkills aSkills : values())
@@ -126,6 +155,7 @@ enum AbyssSkills
 				return aSkills.skills;
 			}
 		}
+		
 		LoggerFactory.getLogger(AbyssSkills.class).warn("No abyss skills for: " + race + " " + rank);
 		return new int[0];
 	}

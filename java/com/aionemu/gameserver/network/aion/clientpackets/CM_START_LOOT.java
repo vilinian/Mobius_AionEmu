@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -22,6 +22,8 @@ import com.aionemu.gameserver.network.aion.AionConnection.State;
 import com.aionemu.gameserver.services.drop.DropService;
 
 /**
+ * Handles the request from a client to begin looting an object.<br>
+ * This packet triggers the {@link DropService} to process the loot interaction.
  * @author alexa026, Correted by Metos, ATracer
  */
 public class CM_START_LOOT extends AionClientPacket
@@ -29,45 +31,42 @@ public class CM_START_LOOT extends AionClientPacket
 	/**
 	 * Target object id that client wants to TALK WITH or 0 if wants to unselect
 	 */
-	
 	private int targetObjectId;
 	private int action;
 	
 	/**
-	 * Constructs new instance of <tt>CM_CM_REQUEST_DIALOG </tt> packet
-	 * @param opcode
-	 * @param state
-	 * @param restStates
+	 * Initializes a new {@code CM_START_LOOT} packet.<br>
+	 * This method sets up the initial data for starting a loot action.<br>
+	 * It passes the required states to the parent class.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary state of the packet.
+	 * @param restStates A variable number of additional states for the packet.
 	 */
 	public CM_START_LOOT(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void readImpl()
 	{
-		targetObjectId = readD();// empty
+		targetObjectId = readD();
 		action = readC();
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void runImpl()
 	{
 		final Player player = getConnection().getActivePlayer();
 		
-		if (action == 0) // open
+		if (action == 0)
 		{
+			// open
 			DropService.getInstance().requestDropList(player, targetObjectId);
 		}
-		else if (action == 1) // close
+		else if (action == 1)
 		{
+			// close
 			DropService.getInstance().closeDropList(player, targetObjectId);
 		}
 	}

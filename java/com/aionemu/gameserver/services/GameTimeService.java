@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services;
 
@@ -29,39 +29,54 @@ import com.aionemu.gameserver.utils.gametime.GameTimeManager;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * Manages the synchronization and broadcasting of game time to all connected clients.<br>
+ * It works with {@link GameTimeManager} to ensure consistent timing across the server.
  * @author ATracer
  */
 public class GameTimeService
 {
 	private static Logger log = LoggerFactory.getLogger(GameTimeService.class);
 	
+	/**
+	 * Retrieves the global instance of the {@link GameTimeService}.<br>
+	 * This method follows the singleton pattern.<br>
+	 * Use this to access game time functionality throughout the application.
+	 * @return The single shared instance of {@code GameTimeService}.
+	 */
 	public static GameTimeService getInstance()
 	{
 		return SingletonHolder.instance;
 	}
 	
-	private static final int GAMETIME_UPDATE = 3 * 60000;
+	private final static int GAMETIME_UPDATE = 3 * 60000;
 	
+	/**
+	 * Private constructor for the {@link GameTimeService} class.<br>
+	 * This prevents other classes from creating new instances of this service.<br>
+	 * It initializes the periodic task to update players with the current game time.
+	 */
 	private GameTimeService()
 	{
-		ThreadPoolManager.getInstance().scheduleAtFixedRate(new Runnable()
+		/**
+		 * Update players with current game time
+		 */
+		ThreadPoolManager.getInstance().scheduleAtFixedRate(() ->
 		{
-			@Override
-			public void run()
+			log.debug("[GameTimeService] Sending current game time to all players");
+			final Iterator<Player> iterator = World.getInstance().getPlayersIterator();
+			while (iterator.hasNext())
 			{
-				final Iterator<Player> iterator = World.getInstance().getPlayersIterator();
-				while (iterator.hasNext())
-				{
-					final Player next = iterator.next();
-					PacketSendUtility.sendPacket(next, new SM_GAME_TIME());
-				}
-				GameTimeManager.saveTime();
+				final Player next = iterator.next();
+				PacketSendUtility.sendPacket(next, new SM_GAME_TIME());
 			}
+			
+			// Save game time.
+			GameTimeManager.saveTime();
 		}, GAMETIME_UPDATE, GAMETIME_UPDATE);
-		log.info("GameTimeService started. Update interval:" + GAMETIME_UPDATE);
+		
+		log.info("[GameTimeService] GameTimeService started. Update interval: every " + ((GAMETIME_UPDATE / 1000) / 60) + " minutes.");
 	}
 	
-	@SuppressWarnings("synthetic-access")
 	private static class SingletonHolder
 	{
 		protected static final GameTimeService instance = new GameTimeService();

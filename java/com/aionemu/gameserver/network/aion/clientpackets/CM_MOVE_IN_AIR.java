@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -24,7 +24,8 @@ import com.aionemu.gameserver.network.aion.AionConnection.State;
 import com.aionemu.gameserver.world.World;
 
 /**
- * Packet about player flying teleport movement.
+ * This packet handles the movement of a player while they are in a flying state.<br>
+ * It is used to process teleportation movements occurring in the air.
  * @author -Nemesiss-, Sweetkr, KID
  */
 public class CM_MOVE_IN_AIR extends AionClientPacket
@@ -37,19 +38,17 @@ public class CM_MOVE_IN_AIR extends AionClientPacket
 	private int worldId;
 	
 	/**
-	 * Constructs new instance of <tt>CM_MOVE_IN_AIR </tt> packet
-	 * @param opcode
-	 * @param state
-	 * @param restStates
+	 * Creates a new instance of the {@link CM_MOVE_IN_AIR} packet.<br>
+	 * This method handles movement while the player is in the air.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary connection state.
+	 * @param restStates Additional states associated with the packet.
 	 */
 	public CM_MOVE_IN_AIR(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void readImpl()
 	{
@@ -61,14 +60,10 @@ public class CM_MOVE_IN_AIR extends AionClientPacket
 		distance = readD();
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void runImpl()
 	{
 		final Player player = getConnection().getActivePlayer();
-		
 		if (player.isInState(CreatureState.FLIGHT_TELEPORT))
 		{
 			if (player.isUsingFlyTeleport())
@@ -79,6 +74,7 @@ public class CM_MOVE_IN_AIR extends AionClientPacket
 			{
 				player.windstreamPath.distance = distance;
 			}
+			
 			World.getInstance().updatePosition(player, x, y, z, (byte) 0);
 			player.getMoveController().updateLastMove();
 		}

@@ -1,30 +1,38 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.configs.main;
 
 import com.aionemu.commons.configuration.Property;
 
 /**
+ * This class manages the configuration settings for the housing system.<br>
+ * It provides access to various properties used to define house behaviors and limits.
  * @author Rolandas
  */
 public class HousingConfig
 {
+	/**
+	 * Distance Visibility
+	 */
 	@Property(key = "gameserver.housing.visibility.distance", defaultValue = "200")
 	public static float VISIBILITY_DISTANCE = 200f;
+	/**
+	 * Show house door editor id
+	 */
 	@Property(key = "gameserver.housedoor.showid", defaultValue = "true")
 	public static boolean ENABLE_SHOW_HOUSE_DOORID;
 	@Property(key = "gameserver.housedoor.accesslevel", defaultValue = "3")
@@ -39,6 +47,9 @@ public class HousingConfig
 	public static String HOUSE_REGISTER_END;
 	@Property(key = "gameserver.housing.maintain.time", defaultValue = "0 0 0 ? * MON")
 	public static String HOUSE_MAINTENANCE_TIME;
+	/**
+	 * Auction default bid prices *
+	 */
 	@Property(key = "gameserver.housing.auction.default_bid.house", defaultValue = "12000000")
 	public static int HOUSE_MIN_BID;
 	@Property(key = "gameserver.housing.auction.default_bid.mansion", defaultValue = "112000000")
@@ -47,6 +58,9 @@ public class HousingConfig
 	public static int ESTATE_MIN_BID;
 	@Property(key = "gameserver.housing.auction.default_bid.palace", defaultValue = "1000000000")
 	public static int PALACE_MIN_BID;
+	/**
+	 * Auction minimal level required for bidding *
+	 */
 	@Property(key = "gameserver.housing.auction.bidding.min_level.house", defaultValue = "21")
 	public static int HOUSE_MIN_BID_LEVEL;
 	@Property(key = "gameserver.housing.auction.bidding.min_level.mansion", defaultValue = "30")

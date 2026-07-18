@@ -1,24 +1,22 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
 import java.util.Collection;
-
-import org.apache.commons.lang.StringUtils;
 
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.team2.alliance.PlayerAlliance;
@@ -28,6 +26,8 @@ import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 
 /**
+ * This packet sends alliance information to the client.<br>
+ * It contains details regarding members and status for a specific {@link PlayerAlliance}.
  * @author Sarynth, xTz
  */
 public class SM_ALLIANCE_INFO extends AionServerPacket
@@ -38,26 +38,31 @@ public class SM_ALLIANCE_INFO extends AionServerPacket
 	private final int groupid;
 	private final int messageId;
 	private final String message;
-	// Alliance
-	// %0 is now Vice Captain of the alliance.
 	public static final int FORCE_PROMOTE_MANAGER = 1300984;
-	// %0 has been demoted to member from Vice Captain.
 	public static final int FORCE_DEMOTE_MANAGER = 1300985;
-	// League
-	// Your Alliance has joined %0's League.
 	public static final int UNION_ENTER = 1400560;
-	// %0's Alliance has left the League.
 	public static final int UNION_LEAVE = 1400572;
-	// You have expelled %0's alliance from the Alliance League.
 	public static final int UNION_BAN_HIM = 1400574;
-	// %0 has expelled your alliance from the Alliance League.
 	public static final int UNION_BAN_ME = 1400576;
 	
+	/**
+	 * Creates a new {@code SM_ALLIANCE_INFO} packet for a specific alliance.<br>
+	 * This constructor initializes the packet with default values for messages.<br>
+	 * It uses the provided {@link PlayerAlliance} object to populate the data.
+	 * @param alliance The {@code PlayerAlliance} associated with this packet.
+	 */
 	public SM_ALLIANCE_INFO(PlayerAlliance alliance)
 	{
-		this(alliance, 0, StringUtils.EMPTY);
+		this(alliance, 0, "");
 	}
 	
+	/**
+	 * Creates a new {@link SM_ALLIANCE_INFO} packet with specific details.<br>
+	 * This constructor initializes the alliance data and the custom message content.
+	 * @param alliance The {@code PlayerAlliance} object containing the group information.
+	 * @param messageId The unique identifier for the message type.
+	 * @param message The text content to be sent with the packet.
+	 */
 	public SM_ALLIANCE_INFO(PlayerAlliance alliance, int messageId, String message)
 	{
 		this.alliance = alliance;
@@ -75,16 +80,18 @@ public class SM_ALLIANCE_INFO extends AionServerPacket
 		writeH(alliance.groupSize());
 		writeD(groupid);
 		writeD(leaderid);
-		writeD(player.getWorldId());
+		writeD(player.getWorldId()); // 4.9 mapid
 		final Collection<Integer> ids = alliance.getViceCaptainIds();
 		for (Integer id : ids)
 		{
 			writeD(id);
 		}
+		
 		for (int i = 0; i < (4 - ids.size()); i++)
 		{
 			writeD(0);
 		}
+		
 		writeD(lootRules.getLootRule().getId());
 		writeD(lootRules.getMisc());
 		writeD(lootRules.getCommonItemAbove());
@@ -92,38 +99,48 @@ public class SM_ALLIANCE_INFO extends AionServerPacket
 		writeD(lootRules.getHeroicItemAbove());
 		writeD(lootRules.getFabledItemAbove());
 		writeD(lootRules.getEthernalItemAbove());
-		writeD(lootRules.getAutodistribution().getId());
+		writeD(lootRules.getMythicItemAbove());
+		writeD(lootRules.getAncientItemAbove());
+		writeD(lootRules.getRelicItemAbove());
+		writeD(lootRules.getFinalityItemAbove());
 		writeD(0x02);
 		writeC(0x00);
-		writeD(alliance.getTeamType().getType());
-		writeD(alliance.getTeamType().getSubType());
+		writeD(alliance.getTeamType().getType()); // Need to update 3F to FF ?
+		writeD(alliance.getTeamType().getSubType()); // 3.5
 		writeD(alliance.isInLeague() ? alliance.getLeague().getTeamId() : 0);
 		for (int a = 0; a < 4; a++)
 		{
-			writeD(a);
-			writeD(1000 + a);
+			writeD(a); // group num
+			writeD(1000 + a); // group id
 		}
-		writeD(messageId);
-		writeS(messageId != 0 ? message : StringUtils.EMPTY);
+		
+		writeD(messageId); // System message ID
+		writeS(messageId != 0 ? message : ""); // System message
 		if (alliance.isInLeague())
 		{
+			// TODO LootRules !!
 			lootRules = alliance.getLeague().getLootGroupRules();
 			writeH(alliance.getLeague().size());
-			writeD(lootRules.getLootRule().getId());
-			writeD(lootRules.getAutodistribution().getId());
-			writeD(lootRules.getCommonItemAbove());
-			writeD(lootRules.getSuperiorItemAbove());
-			writeD(lootRules.getHeroicItemAbove());
-			writeD(lootRules.getFabledItemAbove());
-			writeD(lootRules.getEthernalItemAbove());
-			writeD(0);
-			writeD(0);
+			writeD(lootRules.getLootRule().getId()); // loot rule type - 0 freeforall, 1 roundrobin, 2 leader
+			writeD(lootRules.getAutodistribution().getId()); // autoDistribution - 0 or 1
+			writeD(lootRules.getCommonItemAbove()); // this.common_item_above); - 0 normal 2 roll 3 bid
+			writeD(lootRules.getSuperiorItemAbove()); // this.superior_item_above); - 0 normal 2 roll 3 bid
+			writeD(lootRules.getHeroicItemAbove()); // this.heroic_item_above); - 0 normal 2 roll 3 bid
+			writeD(lootRules.getFabledItemAbove()); // this.fabled_item_above); - 0 normal 2 roll 3 bid
+			writeD(lootRules.getEthernalItemAbove()); // this.ethernal_item_above); - 0 normal 2 roll 3 bid
+			writeD(2); // this.over_ethernal); - 0 normal 2 roll 3 bid
+			writeD(2); // this.over_over_ethernal); - 0 normal 2 roll 3 bid
+			writeD(226); // Todo check if it is always 226
+			writeD(4);
+			writeC(0);
 			for (LeagueMember leagueMember : alliance.getLeague().getSortedMembers())
 			{
 				writeD(leagueMember.getLeaguePosition());
 				writeD(leagueMember.getObjectId());
 				writeD(leagueMember.getObject().size());
 				writeS(leagueMember.getObject().getLeaderObject().getName());
+				writeD(leagueMember.getObject().getLeaderObject().getWorldId()); // TODO Looks like some ObjId and not mapId
+				writeD(leagueMember.getObject().getObjectId());
 			}
 		}
 	}

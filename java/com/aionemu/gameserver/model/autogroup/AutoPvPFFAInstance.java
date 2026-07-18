@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.autogroup;
 
@@ -23,10 +23,20 @@ import com.aionemu.gameserver.services.AutoGroupService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Represents an instance specifically for the {@code AutoPvP} FFA mode.<br>
+ * It handles the logic and data associated with this specific game type.
  * @author xTz
  */
 public class AutoPvPFFAInstance extends AutoInstance
 {
+	/**
+	 * Adds a {@link Player} to the current instance.<br>
+	 * This method checks if the player meets all requirements for entry.<br>
+	 * It handles both individual and group entry logic.
+	 * @param player The {@link Player} attempting to join.
+	 * @param searchInstance The {@link SearchInstance} containing the request details.
+	 * @return An {@link AGQuestion} representing the result of the addition.
+	 */
 	@Override
 	public AGQuestion addPlayer(Player player, SearchInstance searchInstance)
 	{
@@ -37,6 +47,7 @@ public class AutoPvPFFAInstance extends AutoInstance
 			{
 				return AGQuestion.FAILED;
 			}
+			
 			players.put(player.getObjectId(), new AGPlayer(player));
 			return instance != null ? AGQuestion.ADDED : (players.size() == agt.getPlayerSize() ? AGQuestion.READY : AGQuestion.ADDED);
 		}
@@ -46,13 +57,27 @@ public class AutoPvPFFAInstance extends AutoInstance
 		}
 	}
 	
+	/**
+	 * Handles the logic when a {@link Player} presses enter to join the instance.<br>
+	 * It triggers the cooldown for the player.<br>
+	 * It also moves the player to the correct starting position.
+	 * @param player The {@code Player} who is entering the instance.
+	 */
 	@Override
 	public void onPressEnter(Player player)
 	{
 		super.onPressEnter(player);
-		if (agt.isGloryArena())
+		if (agt.isPvPFFAArena() || agt.isPvPSoloArena() || agt.isGloryArena())
 		{
-			if (!decrease(player, 186000185, 4))
+			long size = 1;
+			int itemId = 186000135;
+			if (agt.isGloryArena())
+			{
+				size = 3;
+				itemId = 186000185;
+			}
+			
+			if (!decrease(player, itemId, size))
 			{
 				players.remove(player.getObjectId());
 				PacketSendUtility.sendPacket(player, new SM_AUTO_GROUP(instanceMaskId, 5));
@@ -63,10 +88,16 @@ public class AutoPvPFFAInstance extends AutoInstance
 				return;
 			}
 		}
+		
 		((PvPArenaReward) instance.getInstanceHandler().getInstanceReward()).portToPosition(player);
 		instance.register(player.getObjectId());
 	}
 	
+	/**
+	 * Handles the logic when a {@link Player} leaves this instance.<br>
+	 * This method is called to clean up any specific data for the player.
+	 * @param player The {@code Player} object who is leaving the instance.
+	 */
 	@Override
 	public void onLeaveInstance(Player player)
 	{

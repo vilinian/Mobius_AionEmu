@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect;
 
@@ -30,19 +30,30 @@ import com.aionemu.gameserver.skillengine.model.Effect;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
 
 /**
+ * Handles area-of-effect logic for skills that summon a {@link Servant}.<br>
+ * This class manages how the summoned entity interacts with its surrounding area.<br>
+ * It extends {@link SummonServantEffect} to provide specific spatial behavior.
  * @author ATracer
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "SummonSkillAreaEffect")
 public class SummonSkillAreaEffect extends SummonServantEffect
 {
+	/**
+	 * Applies a specific {@code Effect} to the game world.<br>
+	 * This method calculates coordinates and handles special logic for various skill IDs.<br>
+	 * It spawns a {@link Servant} and schedules periodic skill usage tasks.
+	 * @param effect The {@code Effect} object to be applied.
+	 */
 	@Override
 	public void applyEffect(Effect effect)
 	{
+		// should only be set if player has no target to avoid errors
 		if (effect.getEffector().getTarget() == null)
 		{
 			effect.getEffector().setTarget(effect.getEffector());
 		}
+		
 		float x = effect.getX();
 		float y = effect.getY();
 		float z = effect.getZ();
@@ -53,6 +64,8 @@ public class SummonSkillAreaEffect extends SummonServantEffect
 			y = effected.getY();
 			z = effected.getZ();
 		}
+		
+		// Fix the summon whirlwind issue; revisit later to find a better solution (kecimis).
 		int useTime = time;
 		switch (effect.getSkillId())
 		{
@@ -73,17 +86,13 @@ public class SummonSkillAreaEffect extends SummonServantEffect
 			case 1321:
 			case 1322:
 			case 1323:
-			{
 				useTime = 15;
 				break;
-			}
 			// Mounting Explosion 4.8
 			case 1431:
 			case 1432:
-			{
 				useTime = 30;
 				break;
-			}
 			// Manifest Tornado 4.8
 			case 1460:
 			case 1461:
@@ -101,26 +110,21 @@ public class SummonSkillAreaEffect extends SummonServantEffect
 			case 1473:
 			case 1474:
 			case 1475:
-			{
 				useTime = 3;
 				break;
-			}
 			// Battle Call 4.8
 			case 3036:
 			case 3037:
-			{
 				useTime = 11;
 				break;
-			}
 			// Field Of Lightning 5.1
 			case 4770:
 			case 4771:
 			case 4826:
-			{
 				useTime = 9;
 				break;
-			}
 		}
+		
 		final Servant servant = spawnServant(effect, useTime, NpcObjectType.SKILLAREA, x, y, z);
 		final int finalSkillId = servant.getSkillList() != null ? servant.getSkillList().getRandomSkill().getSkillId() : 0;
 		final Future<?> task = ThreadPoolManager.getInstance().scheduleAtFixedRate(new Runnable()

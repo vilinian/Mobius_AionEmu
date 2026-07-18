@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.database.mysql5;
 
@@ -26,14 +26,15 @@ import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.database.DB;
 import com.aionemu.commons.database.DatabaseFactory;
-import com.aionemu.commons.database.IUStH;
+import com.aionemu.gameserver.dao.MySQL5DAOUtils;
 import com.aionemu.gameserver.dao.PlayerLunaShopDAO;
 import com.aionemu.gameserver.model.gameobjects.PersistentState;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.gameobjects.player.PlayerLunaShop;
 
 /**
- * Created by wanke on 13/02/2017.
+ * This class provides the {@code MySQL5} database implementation for handling player Luna Shop data.<br>
+ * It extends {@link PlayerLunaShopDAO} to perform specific SQL queries for shop persistence.
  */
 public class MySQL5PlayerLunaShopDAO extends PlayerLunaShopDAO
 {
@@ -44,6 +45,12 @@ public class MySQL5PlayerLunaShopDAO extends PlayerLunaShopDAO
 	public static final String DELETE_QUERY = "DELETE FROM `player_luna_shop`";
 	public static final String UPDATE_QUERY = "UPDATE player_luna_shop set `free_under`=?, `free_munition`=?, `free_chest`=? WHERE `player_id`=?";
 	
+	/**
+	 * Loads the {@link PlayerLunaShop} data for a specific player from the database.<br>
+	 * This method retrieves shop settings and attaches them to the provided {@code Player}.<br>
+	 * If no record is found, the player will not have a shop assigned.
+	 * @param player The {@code Player} object whose shop data needs to be loaded.
+	 */
 	@Override
 	public void load(Player player)
 	{
@@ -63,6 +70,7 @@ public class MySQL5PlayerLunaShopDAO extends PlayerLunaShopDAO
 				pls.setPersistentState(PersistentState.UPDATED);
 				player.setPlayerLunaShop(pls);
 			}
+			
 			rset.close();
 			stmt.close();
 		}
@@ -76,38 +84,50 @@ public class MySQL5PlayerLunaShopDAO extends PlayerLunaShopDAO
 		}
 	}
 	
+	/**
+	 * Adds a new entry to the player luna shop table.<br>
+	 * This method saves the shop status for a specific player.
+	 * @param playerId The unique identifier of the player.
+	 * @param freeUnderpath Set to {@code true} if the underpath is free.
+	 * @param freeFactory Set to {@code true} if the factory is free.
+	 * @param freeChest Set to {@code true} if the chest is free.
+	 * @return {@code true} if the insertion was successful, otherwise {@code false}.
+	 */
 	@Override
 	public boolean add(int playerId, boolean freeUnderpath, boolean freeFactory, boolean freeChest)
 	{
-		return DB.insertUpdate(ADD_QUERY, new IUStH()
+		return DB.insertUpdate(ADD_QUERY, ps ->
 		{
-			@Override
-			public void handleInsertUpdate(PreparedStatement ps) throws SQLException
-			{
-				ps.setInt(1, playerId);
-				ps.setBoolean(2, freeUnderpath);
-				ps.setBoolean(3, freeFactory);
-				ps.setBoolean(4, freeChest);
-				ps.execute();
-				ps.close();
-			}
+			ps.setInt(1, playerId);
+			ps.setBoolean(2, freeUnderpath);
+			ps.setBoolean(3, freeFactory);
+			ps.setBoolean(4, freeChest);
+			ps.execute();
+			ps.close();
 		});
 	}
 	
+	/**
+	 * Removes all records from the player luna shop table.<br>
+	 * This method executes the {@code DELETE_QUERY}.
+	 * @return {@code true} if the deletion was successful, {@code false} otherwise.
+	 */
 	@Override
 	public boolean delete()
 	{
-		return DB.insertUpdate(DELETE_QUERY, new IUStH()
+		return DB.insertUpdate(DELETE_QUERY, ps ->
 		{
-			@Override
-			public void handleInsertUpdate(PreparedStatement ps) throws SQLException
-			{
-				ps.execute();
-				ps.close();
-			}
+			ps.execute();
+			ps.close();
 		});
 	}
 	
+	/**
+	 * Saves the modified items of a {@link Player} to the database.<br>
+	 * This method identifies all dirty items and persists them using the player's unique IDs.
+	 * @param player The {@code Player} object containing the items to be saved.
+	 * @return {@code true} if the save operation was successful, or {@code false} otherwise.
+	 */
 	@Override
 	public boolean store(Player player)
 	{
@@ -122,16 +142,13 @@ public class MySQL5PlayerLunaShopDAO extends PlayerLunaShopDAO
 			{
 				case UPDATE_REQUIRED:
 				case NEW:
-				{
 					insert = updateLunaShop(con, player);
-					log.info("DB updated.");
+					log.info("LunaShop DB updated.");
 					break;
-				}
 				default:
-				{
 					break;
-				}
 			}
+			
 			bind.setPersistentState(PersistentState.UPDATED);
 		}
 		catch (SQLException e)
@@ -142,9 +159,18 @@ public class MySQL5PlayerLunaShopDAO extends PlayerLunaShopDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return insert;
 	}
 	
+	/**
+	 * Updates the Luna Shop data for a specific player in the database.<br>
+	 * This method uses the {@code UPDATE_QUERY} to save current shop settings.<br>
+	 * It commits the changes to the database if successful.
+	 * @param con The active {@code Connection} used to execute the query.
+	 * @param player The {@link Player} object containing the Luna Shop data to be saved.
+	 * @return {@code true} if the update was successful, or {@code false} if an error occurred.
+	 */
 	public boolean updateLunaShop(Connection con, Player player)
 	{
 		PreparedStatement stmt = null;
@@ -153,7 +179,7 @@ public class MySQL5PlayerLunaShopDAO extends PlayerLunaShopDAO
 			stmt = con.prepareStatement(UPDATE_QUERY);
 			final PlayerLunaShop lr = player.getPlayerLunaShop();
 			stmt.setBoolean(1, lr.isFreeUnderpath());
-			stmt.setBoolean(2, lr.isFreeChest());
+			stmt.setBoolean(2, lr.isFreeFactory());
 			stmt.setBoolean(3, lr.isFreeChest());
 			stmt.setInt(4, player.getObjectId());
 			stmt.addBatch();
@@ -169,9 +195,19 @@ public class MySQL5PlayerLunaShopDAO extends PlayerLunaShopDAO
 		{
 			DatabaseFactory.close(stmt);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Updates the Luna Shop settings for a specific object ID.<br>
+	 * This method modifies the free underpath, factory, and chest statuses in the database.
+	 * @param obj The unique identifier of the object to update.
+	 * @param freeUnderpath Set to {@code true} if the underpath is free.
+	 * @param freeFactory Set to {@code true} if the factory is free.
+	 * @param freeChest Set to {@code true} if the chest is free.
+	 * @return {@code true} if the update was successful, or {@code false} if an error occurred.
+	 */
 	@Override
 	public boolean setLunaShopByObjId(int obj, boolean freeUnderpath, boolean freeFactory, boolean freeChest)
 	{
@@ -195,9 +231,18 @@ public class MySQL5PlayerLunaShopDAO extends PlayerLunaShopDAO
 		{
 			DatabaseFactory.close(con);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks if the current database is compatible with this DAO.<br>
+	 * It uses {@code int, int)} to verify the version.
+	 * @param databaseName The name of the database to check.
+	 * @param majorVersion The major version number of the database.
+	 * @param minorVersion The minor version number of the database.
+	 * @return {@code true} if the database is supported, {@code false} otherwise.
+	 */
 	@Override
 	public boolean supports(String databaseName, int majorVersion, int minorVersion)
 	{

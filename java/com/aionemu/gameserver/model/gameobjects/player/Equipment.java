@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.gameobjects.player;
 
@@ -66,20 +66,20 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
 import com.aionemu.gameserver.utils.stats.AbyssRankEnum;
 
-import javolution.util.FastList;
-
 /**
+ * Represents the equipment currently worn by a {@link com.aionemu.gameserver.model.gameobjects.player.Player}.<br>
+ * This class manages the collection of items equipped in specific slots and handles their associated effects.<br>
+ * It provides data for calculating player stats and updating visual appearances.
  * @author Avol, ATracer, kosyachok
  * @modified cura
  */
 public class Equipment
 {
-	Player owner;
+	private static final Logger log = LoggerFactory.getLogger(Equipment.class);
+	private final SortedMap<Long, Item> equipment = new TreeMap<>();
+	private Player owner;
 	private final Set<Long> markedFreeSlots = new HashSet<>();
 	private PersistentState persistentState = PersistentState.UPDATED;
-	private final SortedMap<Long, Item> equipment = new TreeMap<>();
-	private static final Logger log = LoggerFactory.getLogger(Equipment.class);
-	
 	private static final long[] ARMOR_SLOTS = new long[]
 	{
 		ItemSlot.BOOTS.getSlotIdMask(),
@@ -89,102 +89,120 @@ public class Equipment
 		ItemSlot.TORSO.getSlotIdMask()
 	};
 	
+	/**
+	 * Creates a new {@code Equipment} instance for a specific player.<br>
+	 * This constructor sets the owner of the equipment to the provided {@link Player}.
+	 * @param player The {@link Player} who will own this equipment.
+	 */
 	public Equipment(Player player)
 	{
 		owner = player;
 	}
 	
+	/**
+	 * Equips a specific item to the player's equipment.<br>
+	 * This method validates if the player meets all requirements such as class, level, race, and gender.<br>
+	 * It also checks for slot availability and handles soul binding logic.
+	 * @param itemUniqueId The unique identifier of the {@link Item} to equip.
+	 * @param slot The target equipment slot ID.
+	 * @return The successfully equipped {@link Item}, or {@code null} if the action fails.
+	 */
 	public Item equipItem(int itemUniqueId, long slot)
 	{
 		final Item item = owner.getInventory().getItemByObjId(itemUniqueId);
+		
 		if (item == null)
 		{
 			return null;
 		}
-		/*
-		 * TO DO //Your nationality prevents you from using this item. PacketSendUtility.sendPacket(owner, SM_SYSTEM_MESSAGE.STR_CANNOT_USE_ITEM_INVALID_NATION); return null;
-		 */
+		
 		final ItemTemplate itemTemplate = item.getItemTemplate();
-		if (item.getItemTemplate().isClassSpecific(owner.getCommonData().getPlayerClass()) == false)
+		
+		if (!item.getItemTemplate().isClassSpecific(owner.getCommonData().getPlayerClass()))
 		{
-			// Your Class cannot use the selected item.
+			// Your Class cannot use the selected item
 			PacketSendUtility.sendPacket(owner, SM_SYSTEM_MESSAGE.STR_CANNOT_USE_ITEM_INVALID_CLASS);
 			return null;
 		}
+		
 		final int requiredLevel = item.getItemTemplate().getRequiredLevel(owner.getCommonData().getPlayerClass()) - item.getReductionLevel();
 		if ((requiredLevel == -1) || (requiredLevel > owner.getLevel()))
 		{
-			// You cannot use %1 until you reach level %0.
+			// You cannot use %1 until you reach level %0
 			PacketSendUtility.sendPacket(owner, SM_SYSTEM_MESSAGE.STR_CANNOT_USE_ITEM_TOO_LOW_LEVEL_MUST_BE_THIS_LEVEL(item.getNameId(), itemTemplate.getLevel()));
 			return null;
 		}
+		
 		if ((itemTemplate.getRace() != Race.PC_ALL) && (itemTemplate.getRace() != owner.getRace()))
 		{
-			// Your race cannot use this item.
+			// Your race cannot use this item
 			PacketSendUtility.sendPacket(owner, SM_SYSTEM_MESSAGE.STR_CANNOT_USE_ITEM_INVALID_RACE);
 			return null;
 		}
+		
 		final ItemUseLimits limits = itemTemplate.getUseLimits();
 		if ((limits.getGenderPermitted() != null) && (limits.getGenderPermitted() != owner.getGender()))
 		{
-			// This item cannot be used by your gender.
+			// This item cannot be used by your gender
 			PacketSendUtility.sendPacket(owner, SM_SYSTEM_MESSAGE.STR_CANNOT_USE_ITEM_INVALID_GENDER);
 			return null;
 		}
+		
 		if (!verifyRankLimits(item))
 		{
-			// You cannot use the selected item until you reach the %0 rank.
+			// You cannot use the selected item until you reach the %0 rank
 			PacketSendUtility.sendPacket(owner, SM_SYSTEM_MESSAGE.STR_CANNOT_USE_ITEM_INVALID_RANK(AbyssRankEnum.getRankById(limits.getMinRank()).getDescriptionId()));
 			return null;
 		}
+		
 		long itemSlotToEquip = 0;
+		
 		synchronized (equipment)
 		{
 			markedFreeSlots.clear();
+			
+			// validate item against current equipment and mark free slots
 			final long oldSlot = item.getEquipmentSlot();
 			item.setEquipmentSlot(slot);
 			switch (item.getEquipmentType())
 			{
 				case ARMOR:
-				{
 					if (!validateEquippedArmor(item, true))
 					{
 						item.setEquipmentSlot(oldSlot);
 						return null;
 					}
 					break;
-				}
 				case WEAPON:
-				{
 					if (!validateEquippedWeapon(item, true))
 					{
 						item.setEquipmentSlot(oldSlot);
 						return null;
 					}
 					break;
-				}
 				default:
-				{
 					break;
-				}
 			}
+			
+			// check whether there is already item in specified slot
 			long itemSlotMask = 0;
-			switch (item.getEquipmentType())
+			switch (item.getItemTemplate().getCategory())
 			{
 				case STIGMA:
-				{
+				case ESTIMA:
 					itemSlotMask = slot;
 					break;
-				}
 				default:
-				{
 					itemSlotMask = itemTemplate.getItemSlot();
 					break;
-				}
 			}
+			
 			final ItemSlot[] possibleSlots = ItemSlot.getSlotsFor(itemSlotMask);
-			for (ItemSlot possibleSlot : possibleSlots)
+			
+			// find correct slot
+			for (int i = 0; i < possibleSlots.length; i++)
 			{
+				final ItemSlot possibleSlot = possibleSlots[i];
 				final long slotId = possibleSlot.getSlotIdMask();
 				if ((equipment.get(slotId) == null) || markedFreeSlots.contains(slotId))
 				{
@@ -199,47 +217,59 @@ public class Equipment
 					}
 				}
 			}
+			
 			if (item.getItemTemplate().isTwoHandWeapon())
 			{
 				if (itemSlotMask != 0)
 				{
 					return null;
 				}
+				
 				itemSlotToEquip = itemTemplate.getItemSlot();
 			}
+			
 			if (!StigmaService.notifyEquipAction(owner, item, slot))
 			{
 				return null;
 			}
+			
+			// equip first occupied slot if there is no free
 			if (itemSlotToEquip == 0)
 			{
 				itemSlotToEquip = possibleSlots[0].getSlotIdMask();
 			}
 		}
+		
 		if (itemSlotToEquip == 0)
 		{
 			return null;
 		}
+		
 		if (itemTemplate.isSoulBound() && !item.isSoulBound())
 		{
 			soulBindItem(owner, item, itemSlotToEquip);
 			return null;
 		}
+		
 		return equip(itemSlotToEquip, item);
 	}
 	
 	/**
-	 * @param itemSlotToEquip - must be slot combination for dual weapons
-	 * @param item
-	 * @return
+	 * Equips a specific {@code Item} into the designated slot.<br>
+	 * This method handles inventory removal, unequip logic for existing items, and validation.<br>
+	 * It also updates player stats and notifies relevant systems after successful equipment.
+	 * @param itemSlotToEquip The unique identifier for the equipment slot.
+	 * @param item The {@code Item} object to be equipped.
+	 * @return The successfully equipped {@code Item}, or {@code null} if the operation fails.
 	 */
-	Item equip(long itemSlotToEquip, Item item)
+	private Item equip(long itemSlotToEquip, Item item)
 	{
 		if (item.getOptionalSocket() == -1)
 		{
 			log.warn("item can't be equiped because hasTune" + item.getObjectId());
 			return null;
 		}
+		
 		synchronized (equipment)
 		{
 			final ItemSlot[] allSlots = ItemSlot.getSlotsFor(itemSlotToEquip);
@@ -271,19 +301,13 @@ public class Equipment
 			switch (item.getEquipmentType())
 			{
 				case ARMOR:
-				{
 					validateEquippedArmor(item, false);
 					break;
-				}
 				case WEAPON:
-				{
 					validateEquippedWeapon(item, false);
 					break;
-				}
 				default:
-				{
 					break;
-				}
 			}
 			
 			if (equipment.get(allSlots[0].getSlotIdMask()) != null)
@@ -297,6 +321,7 @@ public class Equipment
 			{
 				equipment.put(slot.getSlotIdMask(), item);
 			}
+			
 			item.setEquipped(true);
 			item.setEquipmentSlot(itemSlotToEquip);
 			ItemPacketService.updateItemAfterEquip(owner, item);
@@ -306,10 +331,17 @@ public class Equipment
 			owner.getLifeStats().updateCurrentStats();
 			setPersistentState(PersistentState.UPDATE_REQUIRED);
 			QuestEngine.getInstance().onEquipItem(new QuestEnv(null, owner, 0, 0), item.getItemId());
+			
 			return item;
 		}
 	}
 	
+	/**
+	 * Updates the game state when a player puts on an item.<br>
+	 * This method triggers listeners and notifies observers.<br>
+	 * It also refreshes the stats for any active summons.
+	 * @param item The {@code Item} that was just equipped.
+	 */
 	private void notifyItemEquipped(Item item)
 	{
 		ItemEquipmentListener.onItemEquipment(item, owner);
@@ -317,6 +349,11 @@ public class Equipment
 		tryUpdateSummonStats();
 	}
 	
+	/**
+	 * Notifies the system that an item has been removed from equipment.<br>
+	 * This method triggers listeners and updates summon statistics.
+	 * @param item The {@code Item} object that was unequipped.
+	 */
 	private void notifyItemUnequip(Item item)
 	{
 		ItemEquipmentListener.onItemUnequipment(item, owner);
@@ -324,6 +361,11 @@ public class Equipment
 		tryUpdateSummonStats();
 	}
 	
+	/**
+	 * Updates the statistics of the player's summon.<br>
+	 * This method checks if the owner has a {@link Summon}.<br>
+	 * If a summon exists, it calls {@code updateStatsAndSpeedVisually()} on its game stats.
+	 */
 	private void tryUpdateSummonStats()
 	{
 		final Summon summon = owner.getSummon();
@@ -334,10 +376,12 @@ public class Equipment
 	}
 	
 	/**
-	 * Called when CM_EQUIP_ITEM packet arrives with action 1
-	 * @param itemUniqueId
-	 * @param slot
-	 * @return item or null in case of failure
+	 * Removes an equipped item from the player and returns it.<br>
+	 * This method checks if the inventory has enough space before proceeding.<br>
+	 * It also handles special logic for off-hand weapons and power shards.
+	 * @param itemUniqueId The unique identifier of the item to remove.
+	 * @param slot The equipment slot where the item is located.
+	 * @return The {@code Item} that was removed, or {@code null} if the action failed.
 	 */
 	public Item unEquipItem(int itemUniqueId, long slot)
 	{
@@ -376,12 +420,13 @@ public class Equipment
 					{
 						return null;
 					}
+					
 					unEquip(ItemSlot.SUB_HAND.getSlotIdMask());
 				}
 			}
 			
 			// if unequip power shard
-			if (itemToUnequip.getItemTemplate().isArmor() && (itemToUnequip.getItemTemplate().getArmorType() != ArmorType.SHARD))
+			if (itemToUnequip.getItemTemplate().isArmor() && (itemToUnequip.getItemTemplate().getCategory() == ItemCategory.SHARD))
 			{
 				owner.unsetState(CreatureState.POWERSHARD);
 				PacketSendUtility.sendPacket(owner, new SM_EMOTION(owner, EmotionType.POWERSHARD_OFF, 0, 0));
@@ -399,15 +444,18 @@ public class Equipment
 	}
 	
 	/**
-	 * @param slot - Must be composite for dual weapons
+	 * Removes an item from a specific equipment slot.<br>
+	 * This method updates the player stats and moves the item back to the inventory.<br>
+	 * It handles composite slots like two-handed weapons automatically.
+	 * @param slot The unique identifier for the equipment slot.
 	 */
 	private void unEquip(long slot)
 	{
 		final ItemSlot[] allSlots = ItemSlot.getSlotsFor(slot);
 		final Item item = equipment.remove(allSlots[0].getSlotIdMask());
-		// NPE check, there is no item in the given slot.
 		if (item == null)
 		{
+			// NPE check, there is no item in the given slot.
 			return;
 		}
 		
@@ -418,6 +466,7 @@ public class Equipment
 				equipment.put(allSlots[0].getSlotIdMask(), item);
 				throw new IllegalArgumentException("slot can not be composite!");
 			}
+			
 			equipment.remove(allSlots[1].getSlotIdMask());
 		}
 		
@@ -431,8 +480,9 @@ public class Equipment
 	}
 	
 	/**
-	 * TODO: Move to SkillEngine Use skill stack SKILL_P_EQUIP_DUAL to check that instead
-	 * @return true if player can equip two one-handed weapons
+	 * Checks if the player has any dual wielding skills.<br>
+	 * It looks for specific skill IDs in the player's skill list.
+	 * @return {@code true} if at least one dual wielding skill is present, {@code false} otherwise.
 	 */
 	private boolean hasDualWieldingSkills()
 	{
@@ -440,13 +490,21 @@ public class Equipment
 	}
 	
 	/**
-	 * Used during equip process and analyzes equipped slots
-	 * @param item
-	 * @param validateOnly
-	 * @return
+	 * Validates if a weapon can be equipped based on skills, slot availability, and item types.<br>
+	 * It checks for two-handed weapon restrictions and dual-wielding requirements.<br>
+	 * If {@code validateOnly} is {@code false}, it will automatically unequip conflicting items.
+	 * @param item The {@link Item} to be validated.
+	 * @param validateOnly Set to {@code true} to check validity without modifying the equipment.
+	 * @return {@code true} if the weapon can be equipped, {@code false} otherwise.
 	 */
 	private boolean validateEquippedWeapon(Item item, boolean validateOnly)
 	{
+		// Disable arrow equipment
+		if (item.getItemTemplate().getArmorType() == ArmorType.ARROW)
+		{
+			return false;
+		}
+		
 		// check present skill
 		final int[] requiredSkills = item.getItemTemplate().getWeaponType().getRequiredSkills();
 		
@@ -514,6 +572,7 @@ public class Equipment
 						unEquip(rightSlot);
 					}
 				}
+				
 				if (itemInLeftHand != null)
 				{
 					if (validateOnly)
@@ -535,6 +594,7 @@ public class Equipment
 			{
 				// main hand is already occupied
 				final boolean addingLeftHand = (item.getEquipmentSlot() & ItemSlot.LEFT_HAND.getSlotIdMask()) != 0;
+				
 				// if occupied by 2H weapon, we have to unequip both slots, skills are not required
 				if (mainIsTwoHand)
 				{
@@ -548,13 +608,25 @@ public class Equipment
 					{
 						unEquip(rightSlot | leftSlot);
 					}
+					
 				} // main hand is already occupied and adding unknown hand, needs skills to be checked
 				else if (hasDualWieldingSkills())
 				{
 					// if adding to empty left hand that is ok
 					if ((itemInLeftHand == null) && addingLeftHand)
 					{
-						return true;
+						switch (owner.getPlayerClass())
+						{
+							case SCOUT:
+							case ASSASSIN:
+							case RANGER:
+							case GUNNER:
+							case GLADIATOR:
+								return true;
+							default:
+								unEquip(rightSlot);
+								return false;
+						}
 					}
 					
 					final long switchSlot = addingLeftHand ? leftSlot : rightSlot;
@@ -579,26 +651,24 @@ public class Equipment
 						{
 							markedFreeSlots.add(leftSlot);
 						}
-						else
-						{
-							unEquip(leftSlot);
-						}
+						
+						// Dual weapons occupy two slots, and players cannot equip two one-handed weapons between versions 4.9 and 5.1.
+						return false;
+						// unEquip(leftSlot);
+					}
+					
+					// Replace the main hand regardless of which slot is equipped, as the client sends slot 2 even for a double-click.
+					if (validateOnly)
+					{
+						markedFreeSlots.add(rightSlot);
 					}
 					else
 					{
-						// replace main hand, doesn't matter which slot is equiped
-						// client sends slot 2 even for double-click
-						if (validateOnly)
-						{
-							markedFreeSlots.add(rightSlot);
-						}
-						else
-						{
-							unEquip(rightSlot);
-						}
-						item.setEquipmentSlot(rightSlot);
-						return true;
+						unEquip(rightSlot);
 					}
+					
+					item.setEquipmentSlot(rightSlot);
+					return true;
 				}
 			}
 		}
@@ -608,8 +678,10 @@ public class Equipment
 	}
 	
 	/**
-	 * @param requiredSkills
-	 * @return
+	 * Checks if the player possesses any of the required skills.<br>
+	 * Returns {@code true} if no skills are required or if at least one skill is found.
+	 * @param requiredSkills An array of {@code int} IDs representing the necessary skills.
+	 * @return {@code true} if a valid skill is present, otherwise {@code false}.
 	 */
 	private boolean checkAvailableEquipSkills(int[] requiredSkills)
 	{
@@ -629,14 +701,16 @@ public class Equipment
 				break;
 			}
 		}
+		
 		return isSkillPresent;
 	}
 	
 	/**
-	 * Used during equip process and analyzes equipped slots
-	 * @param item
-	 * @param validateOnly
-	 * @return
+	 * Checks if an item can be equipped as armor.<br>
+	 * It verifies required skills and handles conflicts with two-handed weapons.
+	 * @param item The {@code Item} to validate.
+	 * @param validateOnly If {@code true}, only checks validity without removing items.
+	 * @return {@code true} if the item can be equipped, {@code false} otherwise.
 	 */
 	private boolean validateEquippedArmor(Item item, boolean validateOnly)
 	{
@@ -646,6 +720,12 @@ public class Equipment
 		{
 			return true;
 		}
+		
+		if (armorType == ArmorType.ARROW)
+		{
+			return false;
+		}
+		
 		// check present skill
 		final int[] requiredSkills = armorType.getRequiredSkills();
 		if (!checkAvailableEquipSkills(requiredSkills))
@@ -670,6 +750,7 @@ public class Equipment
 				{
 					return false;
 				}
+				
 				markedFreeSlots.add(slotToCheck1.getSlotIdMask());
 				markedFreeSlots.add(slotToCheck2.getSlotIdMask());
 			}
@@ -679,13 +760,16 @@ public class Equipment
 				unEquip(slotToCheck1.getSlotIdMask() | slotToCheck2.getSlotIdMask());
 			}
 		}
+		
 		return true;
 	}
 	
 	/**
-	 * Will look item in equipment item set
-	 * @param value
-	 * @return Item
+	 * Finds an equipped {@link Item} based on its unique object ID.<br>
+	 * This method searches through all currently equipped items.<br>
+	 * It returns the matching item if found, or {@code null} otherwise.
+	 * @param value The unique object ID of the item to find.
+	 * @return The {@link Item} with the matching ID, or {@code null}.
 	 */
 	public Item getEquippedItemByObjId(int value)
 	{
@@ -704,8 +788,10 @@ public class Equipment
 	}
 	
 	/**
-	 * @param value
-	 * @return List<Item>
+	 * Retrieves a list of items currently equipped by the player that match a specific template ID.<br>
+	 * This method searches through all equipped slots to find matching {@link Item} objects.
+	 * @param value The unique template ID to search for.
+	 * @return A {@code List<Item>} containing all equipped items with the specified ID, or an empty list if none are found.
 	 */
 	public List<Item> getEquippedItemsByItemId(int value)
 	{
@@ -725,19 +811,26 @@ public class Equipment
 	}
 	
 	/**
-	 * @return List<Item>
+	 * Retrieves all items currently equipped by the player.<br>
+	 * This method collects every {@link Item} from the equipment slots.
+	 * @return A {@code List} of all equipped {@link Item} objects.
 	 */
 	public List<Item> getEquippedItems()
 	{
 		final HashSet<Item> equippedItems = new HashSet<>();
-		equippedItems.addAll(equipment.values());
+		for (Item i : equipment.values())
+		{
+			equippedItems.add(i);
+		}
 		
 		return Arrays.asList(equippedItems.toArray(new Item[0]));
 	}
 	
 	/**
-	 * @return List<Integer>
-	 * @usage return all equipped items at the same time
+	 * Retrieves a list of unique IDs for all currently equipped items.<br>
+	 * This method iterates through the {@code equipment} map to collect every {@code Item}.<br>
+	 * It returns the IDs as a {@code List<Integer>}.
+	 * @return A {@code List<Integer>} containing the IDs of all equipped items.
 	 */
 	public List<Integer> getEquippedItemIds()
 	{
@@ -746,15 +839,19 @@ public class Equipment
 		{
 			equippedIds.add(i.getItemId());
 		}
+		
 		return Arrays.asList(equippedIds.toArray(new Integer[0]));
 	}
 	
 	/**
-	 * @return List<Item>
+	 * Retrieves a list of items currently equipped by the player.<br>
+	 * This method excludes any items located in {@code isStigma} slots.<br>
+	 * It also ensures that only one two-handed weapon is included in the result.
+	 * @return A {@code List} containing the filtered {@link Item} objects.
 	 */
-	public FastList<Item> getEquippedItemsWithoutStigma()
+	public List<Item> getEquippedItemsWithoutStigma()
 	{
-		final FastList<Item> equippedItems = FastList.newInstance();
+		final List<Item> equippedItems = new ArrayList<>();
 		Item twoHanded = null;
 		for (Item item : equipment.values())
 		{
@@ -766,17 +863,26 @@ public class Equipment
 					{
 						continue;
 					}
+					
 					twoHanded = item;
 				}
+				
 				equippedItems.add(item);
 			}
 		}
+		
 		return equippedItems;
 	}
 	
-	public FastList<Item> getEquippedItemsWithoutStigmaOld()
+	/**
+	 * Retrieves a list of currently equipped items.<br>
+	 * This method excludes items located in {@code Stigma} slots.<br>
+	 * It also handles logic to prevent multiple two-handed weapons from being counted.
+	 * @return A {@code List} containing the filtered {@link Item} objects.
+	 */
+	public List<Item> getEquippedItemsWithoutStigmaOld()
 	{
-		final FastList<Item> equippedItems = FastList.newInstance();
+		final List<Item> equippedItems = new ArrayList<>();
 		Item twoHanded = null;
 		Item offTwoHanded = null;
 		for (Item item : equipment.values())
@@ -793,6 +899,7 @@ public class Equipment
 					{
 						offTwoHanded = item;
 					}
+					
 					if (((item.getEquipmentSlot() & ItemSlot.MAIN_OFF_OR_SUB_OFF.getSlotIdMask()) == 0) && (twoHanded != null))
 					{
 						continue;
@@ -802,25 +909,30 @@ public class Equipment
 						twoHanded = item;
 					}
 				}
+				
 				equippedItems.add(item);
 			}
 		}
+		
 		return equippedItems;
 	}
 	
 	/**
-	 * @return ItemSlots
+	 * Retrieves a list of items currently equipped for appearance.<br>
+	 * This method filters out specific stigma slots and handles two-handed weapon logic.<br>
+	 * It ensures that only one two-handed weapon is included in the resulting list.
+	 * @return A {@code List} containing the filtered {@link Item} objects.
 	 */
-	public FastList<Item> getEquippedForApparence()
+	public List<Item> getEquippedForApparence()
 	{
-		final FastList<Item> equippedItems = FastList.newInstance();
+		final List<Item> equippedItems = new ArrayList<>();
 		Item twoHanded = null;
 		for (Item item : equipment.values())
 		{
 			final long slot = item.getEquipmentSlot();
-			if (!ItemSlot.isStigma(slot))
+			if (!ItemSlot.isStigma(slot) || (slot > ItemSlot.GLYPH.getSlotIdMask()))
 			{
-				if (slot <= ItemSlot.PLUME.getSlotIdMask())
+				if (slot <= ItemSlot.BRACELET.getSlotIdMask())
 				{
 					if (item.getItemTemplate().isTwoHandWeapon())
 					{
@@ -828,8 +940,10 @@ public class Equipment
 						{
 							continue;
 						}
+						
 						twoHanded = item;
 					}
+					
 					equippedItems.add(item);
 				}
 			}
@@ -839,7 +953,10 @@ public class Equipment
 	}
 	
 	/**
-	 * @return List<Item>
+	 * Retrieves all items currently equipped in stigma slots.<br>
+	 * This method filters the player's equipment to find specific types.<br>
+	 * It checks each item against {@code isStigma}.
+	 * @return A {@code List} of {@link Item} objects that are equipped in stigma slots.
 	 */
 	public List<Item> getEquippedItemsAllStigma()
 	{
@@ -851,9 +968,15 @@ public class Equipment
 				equippedItems.add(item);
 			}
 		}
+		
 		return equippedItems;
 	}
 	
+	/**
+	 * Retrieves the IDs of all items currently equipped in stigma slots.<br>
+	 * This method filters the equipment to only include those marked as stigma by {@link ItemSlot}.
+	 * @return A {@code List<Integer>} containing the item IDs.
+	 */
 	public List<Integer> getEquippedItemsAllStigmaIds()
 	{
 		final List<Integer> equippedItemIds = new ArrayList<>();
@@ -864,11 +987,14 @@ public class Equipment
 				equippedItemIds.add(item.getItemId());
 			}
 		}
+		
 		return equippedItemIds;
 	}
 	
 	/**
-	 * @return List<Item>
+	 * Retrieves a list of items currently equipped in regular stigma slots.<br>
+	 * This method filters the player's equipment to include only those matching {@code isRegularStigma}.
+	 * @return A {@code List} of {@link Item} objects that are equipped in regular stigma slots.
 	 */
 	public List<Item> getEquippedItemsRegularStigma()
 	{
@@ -880,12 +1006,73 @@ public class Equipment
 				equippedItems.add(item);
 			}
 		}
+		
 		return equippedItems;
 	}
 	
 	/**
-	 * @param itemSetTemplateId
-	 * @return Number of parts equipped belonging to requested itemset
+	 * Retrieves a list of items currently equipped in advanced stigma slots.<br>
+	 * This method filters the player's equipment to find specific slot types.
+	 * @return A {@code List} of {@link Item} objects that are in advanced stigma slots.
+	 */
+	public List<Item> getEquippedItemsAdvancedStigma()
+	{
+		final List<Item> equippedItems = new ArrayList<>();
+		for (Item item : equipment.values())
+		{
+			if (ItemSlot.isAdvancedStigma(item.getEquipmentSlot()))
+			{
+				equippedItems.add(item);
+			}
+		}
+		
+		return equippedItems;
+	}
+	
+	/**
+	 * Retrieves a list of items currently equipped in major stigma slots.<br>
+	 * This method filters the player's equipment based on {@code isMajorStigma}.
+	 * @return A {@code List} of {@code Item} objects that are equipped in major stigma slots.
+	 */
+	public List<Item> getEquippedItemsMajorStigma()
+	{
+		final List<Item> equippedItems = new ArrayList<>();
+		for (Item item : equipment.values())
+		{
+			if (ItemSlot.isMajorStigma(item.getEquipmentSlot()))
+			{
+				equippedItems.add(item);
+			}
+		}
+		
+		return equippedItems;
+	}
+	
+	/**
+	 * Retrieves a list of items currently equipped in special stigma slots.<br>
+	 * This method filters the player's equipment to find specific slot types.
+	 * @return A {@code List} of {@link Item} objects that are equipped in special stigma slots.
+	 */
+	public List<Item> getEquippedItemsSpecialStigma()
+	{
+		final List<Item> equippedItems = new ArrayList<>();
+		for (Item item : equipment.values())
+		{
+			if (ItemSlot.isSpecialStigma(item.getEquipmentSlot()))
+			{
+				equippedItems.add(item);
+			}
+		}
+		
+		return equippedItems;
+	}
+	
+	/**
+	 * Counts how many parts of a specific item set are currently equipped.<br>
+	 * This method ignores items in the main or sub off-hand slots.<br>
+	 * It also ensures that only one two-handed weapon is counted toward the total.
+	 * @param itemSetTemplateId The unique identifier for the {@code ItemSetTemplate} to check.
+	 * @return The number of equipped items belonging to the specified set.
 	 */
 	public int itemSetPartsEquipped(int itemSetTemplateId)
 	{
@@ -898,14 +1085,17 @@ public class Equipment
 			{
 				continue;
 			}
+			
 			if (item.getItemTemplate().isTwoHandWeapon())
 			{
 				if (twoHanded != null)
 				{
 					continue;
 				}
+				
 				twoHanded = item;
 			}
+			
 			final ItemSetTemplate setTemplate = item.getItemTemplate().getItemSet();
 			if ((setTemplate != null) && (setTemplate.getId() == itemSetTemplateId))
 			{
@@ -917,14 +1107,17 @@ public class Equipment
 	}
 	
 	/**
-	 * Should be called only when loading from DB for items isEquipped=1
-	 * @param item
+	 * Handles the logic for loading an {@code Item} into the equipment slots.<br>
+	 * This method validates if the item can be equipped based on its type.<br>
+	 * It also handles special cases like two-handed weapons and duplicate slot checks.<br>
+	 * If validation fails, the item is returned to the inventory.
+	 * @param item The {@code Item} object to be loaded into equipment.
 	 */
 	public void onLoadHandler(Item item)
 	{
 		final ItemTemplate template = item.getItemTemplate();
-		// unequip arrows during upgrade to 4.0, and put back to inventory
-		// do some check for item level as well
+		
+		// Unequip arrows during the 4.0 upgrade and return them to the inventory while checking their item levels.
 		if (template.getArmorType() != null)
 		{
 			if (!validateEquippedArmor(item, true))
@@ -933,6 +1126,7 @@ public class Equipment
 				return;
 			}
 		}
+		
 		if (template.getWeaponType() != null)
 		{
 			if (!validateEquippedWeapon(item, true))
@@ -941,6 +1135,7 @@ public class Equipment
 				return;
 			}
 		}
+		
 		if (template.isTwoHandWeapon())
 		{
 			ItemSlot[] oldSlots = ItemSlot.getSlotsFor(item.getEquipmentSlot());
@@ -956,20 +1151,24 @@ public class Equipment
 				{
 					item.setEquipmentSlot(ItemSlot.MAIN_OFF_OR_SUB_OFF.getSlotIdMask());
 				}
+				
 				if (currentSlot != item.getEquipmentSlot())
 				{
 					setPersistentState(PersistentState.UPDATE_REQUIRED);
 				}
+				
 				oldSlots = ItemSlot.getSlotsFor(item.getEquipmentSlot());
 			}
+			
 			for (ItemSlot sl : oldSlots)
 			{
 				if (equipment.containsKey(sl.getSlotIdMask()))
 				{
-					log.warn("Duplicate equipped item in slot : " + sl.getSlotIdMask() + " item_id: " + item.getItemTemplate().getId() + " owner: " + owner.getObjectId());
+					log.warn("Duplicate equipped item in slot : " + sl.getSlotIdMask() + " " + owner.getObjectId());
 					putItemBackToInventory(item);
 					break;
 				}
+				
 				equipment.put(sl.getSlotIdMask(), item);
 			}
 			return;
@@ -977,13 +1176,19 @@ public class Equipment
 		
 		if (equipment.containsKey(item.getEquipmentSlot()))
 		{
-			log.warn("Duplicate equipped item in slot: " + item.getEquipmentSlot() + " item_id: " + item.getItemTemplate().getId() + " owner: " + owner.getObjectId());
+			log.warn("Duplicate equipped item in slot: " + item.getEquipmentSlot() + " " + owner.getObjectId());
 			putItemBackToInventory(item);
 			return;
 		}
+		
 		equipment.put(item.getEquipmentSlot(), item);
 	}
 	
+	/**
+	 * Removes an item from the equipment slots and returns it to the player's inventory.<br>
+	 * This method updates the {@code Item} state and marks it for a database update.
+	 * @param item The {@code Item} object to be moved back to the inventory.
+	 */
 	private void putItemBackToInventory(Item item)
 	{
 		item.setEquipped(false);
@@ -993,7 +1198,10 @@ public class Equipment
 	}
 	
 	/**
-	 * Should be called only when equipment object totally constructed on player loading. Applies every equipped item stats modificators
+	 * Applies statistics for all currently equipped items.<br>
+	 * This method iterates through the {@code equipment} map to update player stats.<br>
+	 * It ensures that only one two-handed weapon is processed at a time.<br>
+	 * It also triggers {@code Player)} for each valid item.
 	 */
 	public void onLoadApplyEquipmentStats()
 	{
@@ -1008,13 +1216,16 @@ public class Equipment
 					{
 						continue;
 					}
+					
 					twoHanded = item;
 				}
+				
 				if (item.getOptionalSocket() == -1)
 				{
 					log.warn("on load all eqipment, item can't be equiped because hasTune" + item.getObjectId());
 					continue;
 				}
+				
 				ItemEquipmentListener.onItemEquipment(item, owner);
 				owner.getLifeStats().synchronizeWithMaxStats();
 			}
@@ -1022,7 +1233,10 @@ public class Equipment
 	}
 	
 	/**
-	 * @return true or false
+	 * Checks if the player currently has a shield equipped.<br>
+	 * It looks for an item in the {@code SUB_HAND} slot.<br>
+	 * The item must have an {@link ArmorType} of {@code SHIELD}.
+	 * @return {@code true} if a shield is equipped, otherwise {@code false}
 	 */
 	public boolean isShieldEquipped()
 	{
@@ -1030,12 +1244,24 @@ public class Equipment
 		return (subHandItem != null) && (subHandItem.getItemTemplate().getArmorType() == ArmorType.SHIELD);
 	}
 	
+	/**
+	 * Retrieves the shield currently equipped by the player.<br>
+	 * This method checks the {@code SUB_HAND} slot for an item.<br>
+	 * It verifies if the item's {@code ArmorType} is a {@code SHIELD}.
+	 * @return the {@code Item} object if a shield is equipped, otherwise {@code null}
+	 */
 	public Item getEquippedShield()
 	{
 		final Item subHandItem = equipment.get(ItemSlot.SUB_HAND.getSlotIdMask());
 		return ((subHandItem != null) && (subHandItem.getItemTemplate().getArmorType() == ArmorType.SHIELD)) ? subHandItem : null;
 	}
 	
+	/**
+	 * Retrieves the currently equipped plume item.<br>
+	 * This method checks if an item is placed in the {@code PLUME} slot.<br>
+	 * It verifies that the item belongs to the {@code PLUME} category.
+	 * @return the {@link Item} object if a valid plume is equipped, otherwise {@code null}.
+	 */
 	public Item getEquipedPlume()
 	{
 		final Item plume = equipment.get(ItemSlot.PLUME.getSlotIdMask());
@@ -1043,8 +1269,11 @@ public class Equipment
 	}
 	
 	/**
-	 * @param type
-	 * @return true if player is equipping the requested ArmorType
+	 * Checks if a specific type of armor is currently equipped.<br>
+	 * This method iterates through all equipment to find a match.<br>
+	 * It ignores items that are weapons or in the sub-off-hand slot.
+	 * @param type The {@code ArmorType} to check for.
+	 * @return {@code true} if the armor type is equipped, otherwise {@code false}.
 	 */
 	public boolean isArmorTypeEquipped(ArmorType type)
 	{
@@ -1054,17 +1283,22 @@ public class Equipment
 			{
 				continue;
 			}
+			
 			// TODO: Check it! Not sure for dual hand
 			if ((item.getItemTemplate().getArmorType() == type) && item.isEquipped() && (item.getEquipmentSlot() != ItemSlot.SUB_OFF_HAND.getSlotIdMask()))
 			{
 				return true;
 			}
 		}
+		
 		return false;
 	}
 	
 	/**
-	 * @return <tt>WeaponType</tt> of current weapon in main hand or null
+	 * Retrieves the type of weapon currently held in the main hand.<br>
+	 * This method checks if a weapon is equipped in the {@code ItemSlot.MAIN_HAND}.<br>
+	 * If no item is found, it returns {@code null}.
+	 * @return The {@code WeaponType} of the main hand item, or {@code null} if empty.
 	 */
 	public WeaponType getMainHandWeaponType()
 	{
@@ -1078,7 +1312,11 @@ public class Equipment
 	}
 	
 	/**
-	 * @return <tt>WeaponType</tt> of current weapon in off hand or null
+	 * Retrieves the type of weapon held in the off-hand slot.<br>
+	 * This method checks if an item exists in the {@code SUB_HAND} slot.<br>
+	 * It ensures the item is not the same as the main hand weapon.<br>
+	 * It returns the {@code WeaponType} only if the item is a valid weapon.
+	 * @return The {@code WeaponType} of the off-hand weapon, or {@code null} if no weapon is equipped.
 	 */
 	public WeaponType getOffHandWeaponType()
 	{
@@ -1088,6 +1326,7 @@ public class Equipment
 		{
 			offHandItem = null;
 		}
+		
 		if ((offHandItem != null) && offHandItem.getItemTemplate().isWeapon())
 		{
 			return offHandItem.getItemTemplate().getWeaponType();
@@ -1096,6 +1335,28 @@ public class Equipment
 		return null;
 	}
 	
+	/**
+	 * Checks if the player currently has an arrow equipped.<br>
+	 * It looks for an item in the {@code SUB_HAND} slot.<br>
+	 * The item must have an {@link ArmorType} of {@code ARROW}.
+	 * @return {@code true} if an arrow is equipped, otherwise {@code false}
+	 */
+	public boolean isArrowEquipped()
+	{
+		final Item arrow = equipment.get(ItemSlot.SUB_HAND.getSlotIdMask());
+		if ((arrow != null) && (arrow.getItemTemplate().getArmorType() == ArmorType.ARROW))
+		{
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Checks if the player has any power shards equipped.<br>
+	 * This method looks for items in both the left and right power shard slots.
+	 * @return {@code true} if at least one power shard is equipped, otherwise {@code false}.
+	 */
 	public boolean isPowerShardEquipped()
 	{
 		final Item leftPowershard = equipment.get(ItemSlot.POWER_SHARD_LEFT.getSlotIdMask());
@@ -1113,21 +1374,45 @@ public class Equipment
 		return false;
 	}
 	
+	/**
+	 * Retrieves the power shard equipped in the right hand slot.<br>
+	 * This method checks the {@code equipment} map for a specific slot mask.<br>
+	 * It returns the {@code Item} if it exists, otherwise it returns {@code null}.
+	 * @return The {@code Item} in the right power shard slot or {@code null} if empty.
+	 */
 	public Item getMainHandPowerShard()
 	{
 		final Item mainHandPowerShard = equipment.get(ItemSlot.POWER_SHARD_RIGHT.getSlotIdMask());
-		return mainHandPowerShard;
-	}
-	
-	public Item getOffHandPowerShard()
-	{
-		final Item offHandPowerShard = equipment.get(ItemSlot.POWER_SHARD_LEFT.getSlotIdMask());
-		return offHandPowerShard;
+		if (mainHandPowerShard != null)
+		{
+			return mainHandPowerShard;
+		}
+		
+		return null;
 	}
 	
 	/**
-	 * @param powerShardItem
-	 * @param count
+	 * Retrieves the item equipped in the left power shard slot.<br>
+	 * This method checks if an {@code Item} exists in that specific slot.
+	 * @return the {@code Item} from the left power shard slot, or {@code null} if empty.
+	 */
+	public Item getOffHandPowerShard()
+	{
+		final Item offHandPowerShard = equipment.get(ItemSlot.POWER_SHARD_LEFT.getSlotIdMask());
+		if (offHandPowerShard != null)
+		{
+			return offHandPowerShard;
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * Consumes a specific amount of power shards from an item.<br>
+	 * If the stack becomes empty, it tries to equip the next available shard.<br>
+	 * If no more shards are found, it removes the power shard state and sends a system message.
+	 * @param powerShardItem The {@code Item} object representing the power shard to use.
+	 * @param count The number of shards to consume from the stack.
 	 */
 	public void usePowerShard(Item powerShardItem, int count)
 	{
@@ -1149,15 +1434,17 @@ public class Equipment
 	}
 	
 	/**
-	 * increase item count and return left count
-	 * @param item
-	 * @param count
-	 * @return
+	 * Increases the count of a specific {@link Item} if it is a shard.<br>
+	 * This method updates the item's internal count and triggers a stats update.<br>
+	 * If the item is not a shard, no changes are made to the item.
+	 * @param item The {@link Item} object to modify.
+	 * @param count The amount to increase by.
+	 * @return The remaining count of the item after the increase.
 	 */
 	public long increaseEquippedItemCount(Item item, long count)
 	{
 		// Only Shards can be increased
-		if (item.getItemTemplate().getArmorType() != ArmorType.SHARD)
+		if (item.getItemTemplate().getCategory() != ItemCategory.SHARD)
 		{
 			return count;
 		}
@@ -1168,12 +1455,19 @@ public class Equipment
 		return leftCount;
 	}
 	
+	/**
+	 * Reduces the count of a specific shard item currently equipped by the player.<br>
+	 * This method checks if the item is a {@code SHARD} before making any changes.<br>
+	 * If the count reaches zero, the item is removed from the equipment slot and deleted.
+	 * @param itemObjId The unique object ID of the item to modify.
+	 * @param count The amount by which to decrease the item count.
+	 */
 	private void decreaseEquippedItemCount(int itemObjId, int count)
 	{
 		final Item equippedItem = getEquippedItemByObjId(itemObjId);
 		
 		// Only Shards can be decreased
-		if (equippedItem.getItemTemplate().getArmorType() != ArmorType.SHARD)
+		if (equippedItem.getItemTemplate().getCategory() != ItemCategory.SHARD)
 		{
 			return;
 		}
@@ -1199,7 +1493,10 @@ public class Equipment
 	}
 	
 	/**
-	 * Switch OFF and MAIN hands
+	 * Swaps the equipment between the left and right hands.<br>
+	 * This method identifies all currently equipped weapons.<br>
+	 * It unequips them, swaps their hand positions, and re-equips them.<br>
+	 * Finally, it updates the player stats and removes any active stance effects.
 	 */
 	public void switchHands()
 	{
@@ -1214,14 +1511,17 @@ public class Equipment
 		{
 			equippedWeapon.add(mainHandItem);
 		}
+		
 		if ((subHandItem != null) && (subHandItem != mainHandItem))
 		{
 			equippedWeapon.add(subHandItem);
 		}
+		
 		if (mainOffHandItem != null)
 		{
 			equippedWeapon.add(mainOffHandItem);
 		}
+		
 		if ((subOffHandItem != null) && (subOffHandItem != mainOffHandItem))
 		{
 			equippedWeapon.add(subOffHandItem);
@@ -1241,6 +1541,7 @@ public class Equipment
 			{
 				equipment.remove(item.getEquipmentSlot());
 			}
+			
 			item.setEquipped(false);
 			PacketSendUtility.sendPacket(owner, new SM_INVENTORY_UPDATE_ITEM(owner, item, ItemUpdateType.EQUIP_UNEQUIP));
 			if (owner.getGameStats() != null)
@@ -1259,10 +1560,12 @@ public class Equipment
 			{
 				oldSlots ^= ItemSlot.RIGHT_HAND.getSlotIdMask();
 			}
+			
 			if ((oldSlots & ItemSlot.LEFT_HAND.getSlotIdMask()) != 0)
 			{
 				oldSlots ^= ItemSlot.LEFT_HAND.getSlotIdMask();
 			}
+			
 			item.setEquipmentSlot(oldSlots);
 		}
 		
@@ -1280,6 +1583,7 @@ public class Equipment
 			{
 				equipment.put(item.getEquipmentSlot(), item);
 			}
+			
 			item.setEquipped(true);
 			ItemPacketService.updateItemAfterEquip(owner, item);
 		}
@@ -1308,26 +1612,28 @@ public class Equipment
 	}
 	
 	/**
-	 * @param weaponType
-	 * @return
+	 * Checks if the player has a specific type of weapon equipped.<br>
+	 * This method looks at both the main hand and sub hand slots.<br>
+	 * It returns {@code true} if either slot contains the specified {@code WeaponType}.
+	 * @param weaponType The type of weapon to check for.
+	 * @return {@code true} if a matching weapon is equipped, otherwise {@code false}.
 	 */
 	public boolean isWeaponEquipped(WeaponType weaponType)
 	{
-		if ((equipment.get(ItemSlot.MAIN_HAND.getSlotIdMask()) != null) && (equipment.get(ItemSlot.MAIN_HAND.getSlotIdMask()).getItemTemplate().getWeaponType() == weaponType))
+		if (((equipment.get(ItemSlot.MAIN_HAND.getSlotIdMask()) != null) && (equipment.get(ItemSlot.MAIN_HAND.getSlotIdMask()).getItemTemplate().getWeaponType() == weaponType)) || ((equipment.get(ItemSlot.SUB_HAND.getSlotIdMask()) != null) && (equipment.get(ItemSlot.SUB_HAND.getSlotIdMask()).getItemTemplate().getWeaponType() == weaponType)))
 		{
 			return true;
 		}
-		if ((equipment.get(ItemSlot.SUB_HAND.getSlotIdMask()) != null) && (equipment.get(ItemSlot.SUB_HAND.getSlotIdMask()).getItemTemplate().getWeaponType() == weaponType))
-		{
-			return true;
-		}
+		
 		return false;
 	}
 	
 	/**
-	 * Checks if dual one-handed weapon is equiped in any slot combination
-	 * @param slot masks
-	 * @return
+	 * Checks if the player has a dual weapon equipped in the specified slot.<br>
+	 * It verifies that the items are not two-handed weapons.<br>
+	 * This method returns {@code true} if at least one valid weapon is found.
+	 * @param slot The {@link ItemSlot} to check for dual weapons.
+	 * @return {@code true} if a dual weapon is equipped, {@code false} otherwise.
 	 */
 	public boolean hasDualWeaponEquipped(ItemSlot slot)
 	{
@@ -1336,6 +1642,7 @@ public class Equipment
 		{
 			return false;
 		}
+		
 		for (ItemSlot s : slotValues)
 		{
 			final Item weapon = equipment.get(s.getSlotIdMask());
@@ -1343,17 +1650,22 @@ public class Equipment
 			{
 				continue;
 			}
+			
 			if (weapon.getItemTemplate().getWeaponType() != null)
 			{
 				return true;
 			}
 		}
+		
 		return false;
 	}
 	
 	/**
-	 * @param armorType
-	 * @return
+	 * Checks if the player is currently wearing a specific type of armor.<br>
+	 * This method iterates through all available {@code ARMOR_SLOTS}.<br>
+	 * It returns {@code true} if any equipped item matches the provided {@code armorType}.
+	 * @param armorType The {@link ArmorType} to check for.
+	 * @return {@code true} if the armor type is equipped, otherwise {@code false}.
 	 */
 	public boolean isArmorEquipped(ArmorType armorType)
 	{
@@ -1361,6 +1673,7 @@ public class Equipment
 		{
 			return false;
 		}
+		
 		for (long slot : ARMOR_SLOTS)
 		{
 			if ((equipment.get(slot) != null) && (equipment.get(slot).getItemTemplate().getArmorType() == armorType))
@@ -1368,24 +1681,55 @@ public class Equipment
 				return true;
 			}
 		}
+		
 		return false;
 	}
 	
 	/**
-	 * Only used for new Player creation. Although invalid, but fits its purpose
-	 * @param slot
-	 * @return
+	 * Checks if the player is currently using a Keyblade.<br>
+	 * This method looks for a weapon in the main hand slot.<br>
+	 * It verifies if the item type matches {@code WeaponType.KEYBLADE_2H}.
+	 * @return {@code true} if a Keyblade is equipped, otherwise {@code false}
+	 */
+	public boolean isKeybladeEquipped()
+	{
+		final Item keyblade = getMainHandWeapon(); // equipment.get(ItemSlot.MAIN_HAND.getSlotIdMask());
+		
+		if ((keyblade != null) && (keyblade.getItemTemplate().getWeaponType() == WeaponType.KEYBLADE_2H))
+		{
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Checks if a specific equipment slot is currently occupied.<br>
+	 * This method returns {@code true} if there is an item in the slot.<br>
+	 * It returns {@code false} if the slot is empty.
+	 * @param slot The unique identifier for the equipment slot to check.
+	 * @return {@code true} if the slot has an item, otherwise {@code false}.
 	 */
 	public boolean isSlotEquipped(long slot)
 	{
 		return !(equipment.get(slot) == null);
 	}
 	
+	/**
+	 * Retrieves the item currently equipped in the main hand.<br>
+	 * This method looks up the {@code Item} using the {@code ItemSlot.MAIN_HAND} mask.
+	 * @return The {@code Item} object in the main hand slot, or {@code null} if empty.
+	 */
 	public Item getMainHandWeapon()
 	{
 		return equipment.get(ItemSlot.MAIN_HAND.getSlotIdMask());
 	}
 	
+	/**
+	 * Retrieves the weapon currently equipped in the off-hand slot.<br>
+	 * This method returns {@code null} if the item in that slot is the same as the main-hand weapon.
+	 * @return The {@link Item} in the off-hand slot, or {@code null} if it matches the main-hand weapon.
+	 */
 	public Item getOffHandWeapon()
 	{
 		final Item result = equipment.get(ItemSlot.SUB_HAND.getSlotIdMask());
@@ -1393,11 +1737,14 @@ public class Equipment
 		{
 			return null;
 		}
+		
 		return result;
 	}
 	
 	/**
-	 * @return the persistentState
+	 * Retrieves the current state of this challenge.<br>
+	 * This information is saved between game sessions.
+	 * @return the {@link PersistentState} object.
 	 */
 	public PersistentState getPersistentState()
 	{
@@ -1405,7 +1752,9 @@ public class Equipment
 	}
 	
 	/**
-	 * @param persistentState the persistentState to set
+	 * Updates the {@code persistentState} of this decoration.<br>
+	 * This method assigns a new {@link PersistentState} to the object.
+	 * @param persistentState The new {@link PersistentState} to assign.
 	 */
 	public void setPersistentState(PersistentState persistentState)
 	{
@@ -1413,7 +1762,9 @@ public class Equipment
 	}
 	
 	/**
-	 * @param player
+	 * Sets the owner of this object to a specific {@link Player}.<br>
+	 * This method updates the internal {@code owner} field.
+	 * @param player The {@code Player} who will become the new owner.
 	 */
 	public void setOwner(Player player)
 	{
@@ -1421,10 +1772,13 @@ public class Equipment
 	}
 	
 	/**
-	 * @param player
-	 * @param item
-	 * @param slot
-	 * @return
+	 * Checks if a player can soul bind an item to their character.<br>
+	 * Validates the player's current state and inventory before showing a confirmation window.<br>
+	 * If successful, it triggers an animation and equips the item to the specified slot.
+	 * @param player The {@link Player} attempting to perform the action.
+	 * @param item The {@link Item} that will be soul bound.
+	 * @param slot The equipment slot where the item should be placed.
+	 * @return {@code false} because this method initiates an asynchronous request process.
 	 */
 	private boolean soulBindItem(Player player, Item item, long slot)
 	{
@@ -1432,6 +1786,7 @@ public class Equipment
 		{
 			return false;
 		}
+		
 		if (CreatureActions.isAlreadyDead(player))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SOUL_BOUND_INVALID_STANCE(2800119));
@@ -1462,32 +1817,42 @@ public class Equipment
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SOUL_BOUND_INVALID_STANCE(2800159));
 			return false;
 		}
+		
 		final RequestResponseHandler responseHandler = new RequestResponseHandler(player)
 		{
 			@Override
 			public void acceptRequest(Creature requester, Player responder)
 			{
 				player.getController().cancelUseItem();
-				PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), item.getObjectId(), item.getItemId(), 5000, 4), true);
+				
+				PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), 0, item.getObjectId(), item.getItemId(), 5000, 4), true);
+				
 				player.getController().cancelTask(TaskId.ITEM_USE);
+				
 				final ActionObserver moveObserver = new ActionObserver(ObserverType.MOVE)
 				{
+					
 					@Override
 					public void moved()
 					{
 						player.getController().cancelTask(TaskId.ITEM_USE);
 						PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SOUL_BOUND_ITEM_CANCELED(item.getNameId()));
-						PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), item.getObjectId(), item.getItemId(), 0, 8), true);
+						PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), 0, item.getObjectId(), item.getItemId(), 0, 8), true);
 					}
 				};
 				player.getObserveController().attach(moveObserver);
+				
+				// item usage animation
 				player.getController().addTask(TaskId.ITEM_USE, ThreadPoolManager.getInstance().schedule(() ->
 				{
 					player.getObserveController().removeObserver(moveObserver);
-					PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), item.getObjectId(), item.getItemId(), 0, 6), true);
+					
+					PacketSendUtility.broadcastPacket(player, new SM_ITEM_USAGE_ANIMATION(player.getObjectId(), 0, item.getObjectId(), item.getItemId(), 0, 6), true);
 					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SOUL_BOUND_ITEM_SUCCEED(item.getNameId()));
+					
 					item.setSoulBound(true);
 					ItemPacketService.updateItemAfterInfoChange(owner, item);
+					
 					equip(slot, item);
 					PacketSendUtility.broadcastPacket(player, new SM_UPDATE_PLAYER_APPEARANCE(player.getObjectId(), getEquippedForApparence()), true);
 				}, 5000));
@@ -1509,9 +1874,17 @@ public class Equipment
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_SOUL_BOUND_CLOSE_OTHER_MSG_BOX_AND_RETRY);
 		}
+		
 		return false;
 	}
 	
+	/**
+	 * Checks if the player has a high enough rank to use an item.<br>
+	 * This method compares the owner's abyss rank against the limits defined in the {@code ItemTemplate}.<br>
+	 * It also checks the requirements for fusioned items if they exist.
+	 * @param item The {@code Item} being checked for rank restrictions.
+	 * @return {@code true} if the player meets the rank requirements, {@code false} otherwise.
+	 */
 	private boolean verifyRankLimits(Item item)
 	{
 		final int rank = owner.getAbyssRank().getRank().getId();
@@ -1519,13 +1892,20 @@ public class Equipment
 		{
 			return false;
 		}
+		
 		if (item.getFusionedItemTemplate() != null)
 		{
 			return item.getFusionedItemTemplate().getUseLimits().verifyRank(rank);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Checks all currently equipped items against their rank requirements.<br>
+	 * If an item exceeds its allowed rank, it is automatically unequipped.<br>
+	 * A system message is sent to the player for each removed item.
+	 */
 	public void checkRankLimitItems()
 	{
 		for (Item item : getEquippedItems())

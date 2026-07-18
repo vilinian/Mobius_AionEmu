@@ -1,22 +1,24 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model;
 
 /**
+ * Represents the different pages available in a dialogue sequence.<br>
+ * This enum is used to manage and navigate through various conversation steps.
  * @author Rolandas
  */
 public enum DialogPage
@@ -24,6 +26,17 @@ public enum DialogPage
 	NULL(DialogAction.NULL, 0),
 	STIGMA(DialogAction.OPEN_STIGMA_WINDOW, 1),
 	CREATE_LEGION(DialogAction.CREATE_LEGION, 2),
+	ASK_QUEST_ACCEPT_WINDOW(4),
+	SELECT_QUEST_REWARD_WINDOW1(5),
+	SELECT_QUEST_REWARD_WINDOW2(6),
+	SELECT_QUEST_REWARD_WINDOW3(7),
+	SELECT_QUEST_REWARD_WINDOW4(8),
+	SELECT_QUEST_REWARD_WINDOW5(45),
+	SELECT_QUEST_REWARD_WINDOW6(46),
+	SELECT_QUEST_REWARD_WINDOW7(47),
+	SELECT_QUEST_REWARD_WINDOW8(48),
+	SELECT_QUEST_REWARD_WINDOW9(49),
+	SELECT_QUEST_REWARD_WINDOW10(50),
 	VENDOR(DialogAction.OPEN_VENDOR, 13),
 	RETRIEVE_CHAR_WAREHOUSE(DialogAction.RETRIEVE_CHAR_WAREHOUSE, 14),
 	DEPOSIT_CHAR_WAREHOUSE(DialogAction.DEPOSIT_CHAR_WAREHOUSE, 15),
@@ -37,50 +50,88 @@ public enum DialogPage
 	LOOT(DialogAction.NULL, 24),
 	LEGION_WAREHOUSE(DialogAction.OPEN_LEGION_WAREHOUSE, 25),
 	PERSONAL_WAREHOUSE(DialogAction.OPEN_PERSONAL_WAREHOUSE, 26),
+	NO_RIGHT(27),
+	COMBINETASK_WINDOW(DialogAction.CRAFT, 28),
 	COMPOUND_WEAPON(DialogAction.COMPOUND_WEAPON, 29),
 	DECOMPOUND_WEAPON(DialogAction.DECOMPOUND_WEAPON, 30),
-	HOUSING_MARKER(DialogAction.NULL, 32),
-	HOUSING_LIFETIME(DialogAction.NULL, 33),
-	CHARGE_ITEM(DialogAction.NULL, 35),
+	HOUSING_MARKER(DialogAction.NULL, 32), // Unknown
+	HOUSING_LIFETIME(DialogAction.NULL, 33), // Unknown
+	CHARGE_ITEM(DialogAction.NULL, 35), // Actually, two choices
 	HOUSING_FRIENDLIST(DialogAction.HOUSING_FRIENDLIST, 36),
-	HOUSING_POST(DialogAction.NULL, 37),
+	HOUSING_POST(DialogAction.NULL, 37), // Unknown
 	HOUSING_AUCTION(DialogAction.HOUSING_PERSONAL_AUCTION, 38),
 	HOUSING_PAY_RENT(DialogAction.HOUSING_PAY_RENT, 39),
 	HOUSING_KICK(DialogAction.HOUSING_KICK, 40),
 	HOUSING_CONFIG(DialogAction.HOUSING_CONFIG, 41),
-	TOWN_CHALLENGE_TASK(DialogAction.QUEST_BOARD, 43),
-	MOVE_ITEM_SKIN(DialogAction.MOVE_ITEM_SKIN, 51),
-	ITEM_UPGRADE(DialogAction.ITEM_UPGRADE, 52),
-	OPEN_STIGMA_ENCHANT(DialogAction.OPEN_STIGMA_ENCHANT, 53);
+	TOWN_CHALLENGE_TASK(43);
 	
-	private int id;
+	private final int id;
 	private DialogAction action;
 	
+	/**
+	 * Creates a new {@link DialogPage} instance using a specific ID.<br>
+	 * This constructor is used to initialize the internal ID field.
+	 * @param id The unique identifier for the dialog page.
+	 */
+	private DialogPage(int id)
+	{
+		this.id = id;
+	}
+	
+	/**
+	 * Creates a new {@link DialogPage} instance.<br>
+	 * This constructor initializes the page with a specific action and ID.
+	 * @param action The {@code DialogAction} associated with this page.
+	 * @param id The unique integer identifier for the page.
+	 */
 	private DialogPage(DialogAction action, int id)
 	{
 		this.id = id;
 		this.action = action;
 	}
 	
+	/**
+	 * Retrieves the unique identifier for this {@link DialogAction}.<br>
+	 * This value corresponds to the internal ID used by the game engine.
+	 * @return The integer ID of the action.
+	 */
 	public int id()
 	{
 		return id;
 	}
 	
+	/**
+	 * Retrieves the unique identifier for the associated {@code DialogAction}.<br>
+	 * This value is used to identify specific actions within a dialog page.
+	 * @return The integer ID of the action.
+	 */
 	public int actionId()
 	{
 		return action.id();
 	}
 	
+	/**
+	 * Finds a {@link DialogPage} based on its unique action ID.<br>
+	 * It searches through all available pages to find a match.<br>
+	 * Returns {@code DialogPage#NULL} if no matching page is found.
+	 * @param dialogId The unique identifier for the dialog action.
+	 * @return The corresponding {@link DialogPage} or {@code null}.
+	 */
 	public static DialogPage getPageByAction(int dialogId)
 	{
-		for (DialogPage page : values())
+		for (DialogPage page : DialogPage.values())
 		{
+			if (page.action == null)
+			{
+				continue;
+			}
+			
 			if (page.actionId() == dialogId)
 			{
 				return page;
 			}
 		}
-		return NULL;
+		
+		return DialogPage.NULL;
 	}
 }

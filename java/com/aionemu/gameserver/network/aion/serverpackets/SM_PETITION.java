@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -22,17 +22,29 @@ import com.aionemu.gameserver.network.aion.AionServerPacket;
 import com.aionemu.gameserver.services.PetitionService;
 
 /**
+ * This packet handles the communication for {@link Petition} objects.<br>
+ * It is used to synchronize petition data between the server and the client.
  * @author zdead
  */
 public class SM_PETITION extends AionServerPacket
 {
 	private final Petition petition;
 	
+	/**
+	 * Creates a new instance of the {@code SM_PETITION} packet.<br>
+	 * This constructor initializes the {@code petition} field to {@code null}.<br>
+	 * Use this when no specific {@link Petition} data is required.
+	 */
 	public SM_PETITION()
 	{
 		petition = null;
 	}
 	
+	/**
+	 * Creates a new {@code SM_PETITION} packet.<br>
+	 * This constructor initializes the packet with a specific {@link Petition}.
+	 * @param petition The {@code Petition} object to be included in the packet.
+	 */
 	public SM_PETITION(Petition petition)
 	{
 		this.petition = petition;
@@ -52,14 +64,18 @@ public class SM_PETITION extends AionServerPacket
 		}
 		else
 		{
-			writeC(0x01);
-			writeD(100);
-			writeH(PetitionService.getInstance().getWaitingPlayers(con.getActivePlayer().getObjectId()));
-			writeS(Integer.toString(petition.getPetitionId()));
+			writeC(0x01); // Action ID ?
+			writeD(100); // unk (total online players ?)
+			writeH(PetitionService.getInstance().getWaitingPlayers(con.getActivePlayer().getObjectId())); // Users
+			
+			// Waiting for support.
+			writeS(Integer.toString(petition.getPetitionId())); // Ticket ID
 			writeH(0x00);
-			writeC(50);
-			writeC(49);
-			writeH(PetitionService.getInstance().calculateWaitTime(petition.getPlayerObjId()));
+			writeC(50); // Total Petitions
+			writeC(49); // Remaining Petitions
+			writeH(PetitionService.getInstance().calculateWaitTime(petition.getPlayerObjId())); // Estimated minutes
+			
+			// before GM reply
 			writeD(0x00);
 		}
 	}

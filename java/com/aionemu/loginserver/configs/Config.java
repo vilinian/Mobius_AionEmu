@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.configs;
 
@@ -28,6 +28,9 @@ import com.aionemu.commons.configuration.Property;
 import com.aionemu.commons.utils.PropertiesUtils;
 
 /**
+ * This class manages the global configuration settings for the login server.<br>
+ * It provides a centralized way to access and manipulate various {@code Properties}.<br>
+ * You can use this class to retrieve values required by other components in the system.
  * @author -Nemesiss-
  * @author SoulKeeper
  */
@@ -114,7 +117,10 @@ public class Config
 	public static String EXCLUDED_IP;
 	
 	/**
-	 * Load configs from files.
+	 * Loads all game server configurations from the config directory.<br>
+	 * This method reads properties for administration, main, and network settings.<br>
+	 * It applies overrides from {@code myls.properties} if they exist.<br>
+	 * If any error occurs during loading, it throws an {@code Error}.
 	 */
 	public static void load()
 	{

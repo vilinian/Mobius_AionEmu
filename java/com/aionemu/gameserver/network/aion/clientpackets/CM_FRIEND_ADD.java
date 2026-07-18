@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -26,46 +26,47 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_FRIEND_RESPONSE;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_QUESTION_WINDOW;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.services.SocialService;
+import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.world.World;
 
 /**
- * Received when a user tries to add someone as his friend
+ * This packet is received when a user attempts to send a friend request to another player.<br>
+ * It handles the initial request to initiate a new friendship connection.
  * @author Ben
  */
 public class CM_FRIEND_ADD extends AionClientPacket
 {
-	String targetName;
+	private String targetName;
 	
+	/**
+	 * This method initializes a new {@code CM_FRIEND_ADD} packet.<br>
+	 * It sets the required network states for the request.<br>
+	 * Use this to create a friend request from a client.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary state of the connection.
+	 * @param restStates Additional states associated with the packet.
+	 */
 	public CM_FRIEND_ADD(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void readImpl()
 	{
 		targetName = readS();
-		
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void runImpl()
 	{
-		
 		final Player activePlayer = getConnection().getActivePlayer();
 		final Player targetPlayer = World.getInstance().findPlayer(targetName);
 		
 		if (targetName.equalsIgnoreCase(activePlayer.getName()))
 		{
 			// Adding self to friend list not allowed - Its blocked by the client by default, so no need to send an error
-		}
-		// if offline
+		} // if offline
 		else if (targetPlayer == null)
 		{
 			sendPacket(new SM_FRIEND_RESPONSE(targetName, SM_FRIEND_RESPONSE.TARGET_OFFLINE));
@@ -98,7 +99,6 @@ public class CM_FRIEND_ADD extends AionClientPacket
 		{
 			final RequestResponseHandler responseHandler = new RequestResponseHandler(activePlayer)
 			{
-				
 				@Override
 				public void acceptRequest(Creature requester, Player responder)
 				{
@@ -113,6 +113,7 @@ public class CM_FRIEND_ADD extends AionClientPacket
 					else
 					{
 						SocialService.makeFriends((Player) requester, responder);
+						sendPacket(new SM_SYSTEM_MESSAGE(1300885, responder.getName()));
 					}
 					
 				}
@@ -121,11 +122,13 @@ public class CM_FRIEND_ADD extends AionClientPacket
 				public void denyRequest(Creature requester, Player responder)
 				{
 					sendPacket(new SM_FRIEND_RESPONSE(targetName, SM_FRIEND_RESPONSE.TARGET_DENIED));
-					
+					sendPacket(new SM_SYSTEM_MESSAGE(1300886, responder.getName()));
+					PacketSendUtility.sendPacket(responder, new SM_SYSTEM_MESSAGE(1401517, requester.getName()));
 				}
 			};
 			
 			final boolean requested = targetPlayer.getResponseRequester().putRequest(SM_QUESTION_WINDOW.STR_BUDDYLIST_ADD_BUDDY_REQUEST, responseHandler);
+			
 			// If the player is busy and could not be asked
 			if (!requested)
 			{
@@ -138,10 +141,10 @@ public class CM_FRIEND_ADD extends AionClientPacket
 					sendPacket(SM_SYSTEM_MESSAGE.STR_MSG_REJECTED_FRIEND(targetPlayer.getName()));
 					return;
 				}
+				
 				// Send question packet to buddy
 				targetPlayer.getClientConnection().sendPacket(new SM_QUESTION_WINDOW(SM_QUESTION_WINDOW.STR_BUDDYLIST_ADD_BUDDY_REQUEST, activePlayer.getObjectId(), 0, activePlayer.getName()));
 			}
 		}
 	}
-	
 }

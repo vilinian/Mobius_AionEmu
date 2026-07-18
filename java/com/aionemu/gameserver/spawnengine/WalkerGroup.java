@@ -1,28 +1,26 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.spawnengine;
 
-import static ch.lambdaj.Lambda.on;
-import static ch.lambdaj.Lambda.sort;
-import static ch.lambdaj.Lambda.sum;
-
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,47 +34,60 @@ import com.aionemu.gameserver.model.templates.spawns.SpawnTemplate;
 import com.aionemu.gameserver.model.templates.zone.Point2D;
 
 /**
+ * Manages a collection of {@link Npc} entities that move together as a group.<br>
+ * It coordinates the walking behavior and synchronization for multiple NPCs simultaneously.
  * @author vlog
  * @modified Rolandas
  */
 public class WalkerGroup
 {
 	private static final Logger log = LoggerFactory.getLogger(WalkerGroup.class);
-	
 	private final List<ClusteredNpc> members;
 	private final WalkerGroupType type;
 	private final float walkerXpos;
 	private final float walkerYpos;
 	private final int[] memberSteps;
 	private volatile int groupStep;
+	private final String versionId;
+	private boolean isSpawned;
 	
+	/**
+	 * Creates a new {@link WalkerGroup} from a list of NPCs.<br>
+	 * This constructor sorts the members by their walker index.<br>
+	 * It initializes the group's position and walk type based on the first member.
+	 * @param members The list of {@link ClusteredNpc} objects to include in this group.
+	 */
 	public WalkerGroup(List<ClusteredNpc> members)
 	{
-		this.members = sort(members, on(ClusteredNpc.class).getWalkerIndex());
+		this.members = members.stream().sorted(Comparator.comparingInt(ClusteredNpc::getWalkerIndex)).collect(Collectors.toList());
 		memberSteps = new int[members.size()];
 		walkerXpos = members.get(0).getX();
 		walkerYpos = members.get(0).getY();
 		type = members.get(0).getWalkTemplate().getType();
+		versionId = members.get(0).getWalkTemplate().getVersionId();
 	}
 	
+	/**
+	 * Arranges the group members into a specific formation.<br>
+	 * This method calculates positions based on the {@code WalkerGroupType}.<br>
+	 * It handles {@code SQUARE} formations by calculating row and sagittal distances.<br>
+	 * Each member is assigned a position and a {@link WalkerGroupShift}.
+	 */
 	public void form()
 	{
 		if (getWalkType() == WalkerGroupType.SQUARE)
 		{
 			final int[] rows = members.get(0).getWalkTemplate().getRows();
-			if (sum(ArrayUtils.toObject(rows), on(Integer.class)) != members.size())
+			if (IntStream.of(rows).sum() != members.size())
 			{
 				log.warn("Invalid row sizes for walk cluster " + members.get(0).getWalkTemplate().getRouteId());
 			}
+			
 			if (rows.length == 1)
 			{
 				// Line formation: distance 2 meters from each other (divide by 2 and multiple by 2)
 				// negative at left hand and positive at the right hand
-				float bounds = 0;
-				for (ClusteredNpc member : members)
-				{
-					bounds += member.getNpc().getObjectTemplate().getBoundRadius().getSide();
-				}
+				final float bounds = (float) members.stream().mapToDouble(m -> m.getNpc().getObjectTemplate().getBoundRadius().getSide()).sum();
 				float distance = ((1 - members.size()) / 2f) * (WalkerGroupShift.DISTANCE + bounds);
 				final Point2D origin = new Point2D(walkerXpos, walkerYpos);
 				final Point2D destination = new Point2D(members.get(0).getWalkTemplate().getRouteStep(2).getX(), members.get(0).getWalkTemplate().getRouteStep(2).getY());
@@ -106,8 +117,10 @@ public class WalkerGroup
 					{
 						rowDistances[i] = WalkerGroupShift.DISTANCE;
 					}
+					
 					coronalDist -= rowDistances[i];
 				}
+				
 				final Point2D origin = new Point2D(walkerXpos, walkerYpos);
 				final Point2D destination = new Point2D(members.get(0).getWalkTemplate().getRouteStep(2).getX(), members.get(0).getWalkTemplate().getRouteStep(2).getY());
 				int index = 0;
@@ -120,6 +133,7 @@ public class WalkerGroup
 						{
 							break;
 						}
+						
 						final WalkerGroupShift shift = new WalkerGroupShift(sagittalDist, coronalDist);
 						final Point2D loc = getLinePoint(origin, destination, shift);
 						final ClusteredNpc cnpc = members.get(index++);
@@ -128,13 +142,12 @@ public class WalkerGroup
 						cnpc.getNpc().setWalkerGroup(this);
 						cnpc.getNpc().setWalkerGroupShift(shift);
 					}
+					
 					if (i < (rows.length - 1))
 					{
 						coronalDist += rowDistances[i];
 					}
 				}
-				
-				// TODO: reorder in rows and set the npc with highest HpGauge on the front
 			}
 		}
 		else if (getWalkType() == WalkerGroupType.CIRCLE)
@@ -147,6 +160,14 @@ public class WalkerGroup
 		}
 	}
 	
+	/**
+	 * Calculates the extra side value for a specific range of rows.<br>
+	 * This method currently returns a default value of {@code 0}.
+	 * @param rows The array of row data to process.
+	 * @param startIndex The starting index within the {@code rows} array.
+	 * @param endIndex The ending index within the {@code rows} array.
+	 * @return The calculated extra side value as a {@code float}.
+	 */
 	@SuppressWarnings("unused")
 	private float getSidesExtra(int[] rows, int startIndex, int endIndex)
 	{
@@ -154,12 +175,13 @@ public class WalkerGroup
 	}
 	
 	/**
-	 * Returns coordinates of NPC in 2D from the initial spawn location
-	 * @param origin - initial spawn location
-	 * @param destination - point of next move
-	 * @param shift - distance from origin located in lines perpendicular to destination; for SagittalShift if negative then located to the left from origin, otherwise, to the right for CoronalShift if negative then located to back, otherwise to the front
-	 * @return
-	 * @category TODO: move to MathUtil when all kinds of WalkerGroupType are implemented.
+	 * Calculates a new position based on an origin and destination point.<br>
+	 * This method applies a specific shift to determine the resulting {@code Point2D}.<br>
+	 * It handles horizontal, vertical, and diagonal movements using {@link WalkerGroupShift}.
+	 * @param origin The starting {@code Point2D} coordinate.
+	 * @param destination The target {@code Point2D} coordinate.
+	 * @param shift The {@code WalkerGroupShift} values to apply to the calculation.
+	 * @return A new {@code Point2D} representing the shifted position.
 	 */
 	public static Point2D getLinePoint(Point2D origin, Point2D destination, WalkerGroupShift shift)
 	{
@@ -187,6 +209,7 @@ public class WalkerGroup
 				result = new Point2D((float) (origin.getX() + dx), (float) (origin.getY() - (dx * slope)));
 			}
 		}
+		
 		if (shift.getCoronalShift() != 0)
 		{
 			Point2D rotatedShift = null;
@@ -241,11 +264,19 @@ public class WalkerGroup
 				}
 			}
 		}
+		
 		return result;
 	}
 	
 	/*
 	 * Return a normalized direction vector
+	 */
+	/**
+	 * Calculates the direction of movement between two points.<br>
+	 * It determines the horizontal and vertical signs based on the difference in coordinates.
+	 * @param origin The starting {@code Point2D}.
+	 * @param destination The target {@code Point2D}.
+	 * @return A new {@link WalkerGroupShift} containing the direction signs.
 	 */
 	private static WalkerGroupShift getShiftSigns(Point2D origin, Point2D destination)
 	{
@@ -254,6 +285,12 @@ public class WalkerGroup
 		return new WalkerGroupShift(dx, dy);
 	}
 	
+	/**
+	 * Updates the movement step for a specific {@link Npc} within this group.<br>
+	 * This method also updates the overall {@code groupStep} if the new value is higher.
+	 * @param member The {@link Npc} object to update.
+	 * @param step The new integer step value to assign.
+	 */
 	public void setStep(Npc member, int step)
 	{
 		int currentStep = 0;
@@ -263,18 +300,26 @@ public class WalkerGroup
 			{
 				currentStep = memberSteps[i];
 			}
+			
 			if (members.get(i).getNpc().equals(member))
 			{
 				AI2Logger.info(members.get(i).getNpc().getAi2(), "Setting step to " + step);
 				memberSteps[i] = step;
 			}
 		}
+		
 		if ((step > currentStep) || (step == 1))
 		{
 			groupStep = step;
 		}
 	}
 	
+	/**
+	 * Updates the state of NPCs when a target destination is reached.<br>
+	 * This method checks if all members in the group have arrived at their positions.<br>
+	 * It handles movement transitions and notifies the {@link WalkManager}.
+	 * @param npcAI The {@code NpcAI2} instance to update.
+	 */
 	public void targetReached(NpcAI2 npcAI)
 	{
 		synchronized (members)
@@ -300,12 +345,31 @@ public class WalkerGroup
 					npcAI.setSubStateIfNot(AISubState.WALK_WAIT_GROUP);
 					continue;
 				}
+				
 				npcAI = (NpcAI2) (snpc.getNpc().getAi2());
-				WalkManager.targetReached(npcAI);
+				if (npcAI.getSubState() == AISubState.WALK_WAIT_GROUP)
+				{
+					WalkManager.targetReached(npcAI);
+				}
 			}
 		}
 	}
 	
+	/**
+	 * Checks if the current position of this object is a valid spawn point.<br>
+	 * This method delegates the check to the {@code isSpawned} method.
+	 * @return {@code true} if the position is spawned, {@code false} otherwise.
+	 */
+	public boolean isSpawned()
+	{
+		return isSpawned;
+	}
+	
+	/**
+	 * Spawns all members of the group into the game world.<br>
+	 * This method calculates the height for each {@link ClusteredNpc} and calls its spawn method.<br>
+	 * It sets the {@code isSpawned} flag to {@code true} after completion.
+	 */
 	public void spawn()
 	{
 		for (ClusteredNpc snpc : members)
@@ -313,8 +377,16 @@ public class WalkerGroup
 			final float height = getHeight(snpc.getX(), snpc.getY(), snpc.getNpc().getSpawn());
 			snpc.spawn(height);
 		}
+		
+		isSpawned = true;
 	}
 	
+	/**
+	 * Updates a member of the group with a new {@link Npc} instance.<br>
+	 * This method replaces an old NPC in the internal list with the provided one.<br>
+	 * It resets the step count for that specific member to {@code 1}.
+	 * @param npc The new {@link Npc} object to assign to the group.
+	 */
 	public void respawn(Npc npc)
 	{
 		for (int index = 0; index < members.size(); index++)
@@ -332,6 +404,37 @@ public class WalkerGroup
 		}
 	}
 	
+	/**
+	 * Removes all members of this group from the game world.<br>
+	 * This method calls {@code despawn()} on every {@link ClusteredNpc} in the group.<br>
+	 * It resets the group positions and sets {@code isSpawned} to {@code false}.
+	 */
+	public void despawn()
+	{
+		for (ClusteredNpc snpc : members)
+		{
+			snpc.despawn();
+			
+			// reset positions
+			form();
+			for (int index = 0; index < memberSteps.length; index++)
+			{
+				memberSteps[index] = 1;
+			}
+			
+			groupStep = 1;
+		}
+		
+		isSpawned = false;
+	}
+	
+	/**
+	 * Finds the {@link ClusteredNpc} data for a specific NPC.<br>
+	 * It searches through all members of this group.<br>
+	 * Returns {@code null} if the NPC is not found.
+	 * @param npc The {@code Npc} object to search for.
+	 * @return The matching {@code ClusteredNpc} or {@code null}.
+	 */
 	public ClusteredNpc getClusterData(Npc npc)
 	{
 		for (ClusteredNpc snpc : members)
@@ -341,9 +444,18 @@ public class WalkerGroup
 				return snpc;
 			}
 		}
+		
 		return null;
 	}
 	
+	/**
+	 * Calculates the height value for a specific location.<br>
+	 * This method uses the {@code z} coordinate from the provided {@link SpawnTemplate}.
+	 * @param x The horizontal position.
+	 * @param y The vertical position.
+	 * @param template The {@code SpawnTemplate} containing height data.
+	 * @return The height value as a {@code float}.
+	 */
 	private float getHeight(float x, float y, SpawnTemplate template)
 	{
 		/*
@@ -352,25 +464,40 @@ public class WalkerGroup
 		return template.getZ();
 	}
 	
+	/**
+	 * Retrieves the total number of members in this group.<br>
+	 * This value represents the size of the {@code members} list.
+	 * @return The integer count of NPCs in the pool.
+	 */
 	public int getPool()
 	{
 		return members.size();
 	}
 	
 	/**
-	 * @return the type
+	 * Retrieves the movement type of this group.<br>
+	 * This tells you how the members in the {@code WalkerGroup} should walk.
+	 * @return The {@code WalkerGroupType} assigned to this group.
 	 */
 	public WalkerGroupType getWalkType()
 	{
 		return type;
 	}
 	
+	/**
+	 * Checks if an {@link Npc} is positioned in a linear row.<br>
+	 * This only applies to groups of type {@code WalkerGroupType.SQUARE}.<br>
+	 * It returns {@code true} if the NPC belongs to a template with exactly 1 row.
+	 * @param npc The {@link Npc} to check.
+	 * @return {@code true} if the NPC is linearly positioned, otherwise {@code false}.
+	 */
 	public boolean isLinearlyPositioned(Npc npc)
 	{
 		if (type != WalkerGroupType.SQUARE)
 		{
 			return false;
 		}
+		
 		for (ClusteredNpc snpc : members)
 		{
 			if (snpc.getNpc().equals(npc))
@@ -378,15 +505,27 @@ public class WalkerGroup
 				return snpc.getWalkTemplate().getRows().length == 1;
 			}
 		}
+		
 		return false;
 	}
 	
 	/**
-	 * @return the groupStep
+	 * Retrieves the current step of the group.<br>
+	 * This value tracks the progress of the {@link WalkerGroup}.
+	 * @return The current integer step of the group.
 	 */
 	public int getGroupStep()
 	{
 		return groupStep;
 	}
 	
+	/**
+	 * Retrieves the unique identifier for this group's version.<br>
+	 * This ID is used to distinguish between different configurations of the same group.
+	 * @return The {@code String} representing the version ID.
+	 */
+	public String getVersionId()
+	{
+		return versionId;
+	}
 }

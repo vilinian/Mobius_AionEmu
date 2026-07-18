@@ -1,5 +1,4 @@
 @ECHO off
-REM mode con:cols=150 
 REM color 1B
 TITLE AionEmu - Game Server Panel
 :MENU
@@ -23,12 +22,12 @@ CALL AionEmu-GameServer.bat
 )
 IF %OPTION% == 2 (
 SET MODE=PRODUCTION
-SET JAVA_OPTS=-Xms1536m -Xmx1536m -server
+SET JAVA_OPTS=-server -Dfile.encoding=UTF-8 -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=warn -XX:+UseZGC -Xms2g -Xmx4g
 CALL AionEmu-GameServer.bat
 )
 IF %OPTION% == 3 (
 SET MODE=PRODUCTION X2
-SET JAVA_OPTS=-Xms3872m -Xmx3872m -server
+SET JAVA_OPTS=-server -Dfile.encoding=UTF-8 -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=warn -XX:+UseZGC -Xms4g -Xmx8g
 CALL AionEmu-GameServer.bat
 )
 IF %OPTION% == 4 (

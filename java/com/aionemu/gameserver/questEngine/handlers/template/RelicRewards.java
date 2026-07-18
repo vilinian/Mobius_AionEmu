@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.template;
 
@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.aionemu.gameserver.model.DialogAction;
 import com.aionemu.gameserver.model.gameobjects.Npc;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_DIALOG_WINDOW;
@@ -32,6 +33,9 @@ import com.aionemu.gameserver.services.QuestService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * This class handles the distribution of rewards for relic-related quests.<br>
+ * It manages how {@link Player} objects receive items or other benefits upon completion.<br>
+ * It extends {@link QuestHandler} to integrate with the core quest engine.
  * @author Bobobear
  */
 public class RelicRewards extends QuestHandler
@@ -44,6 +48,17 @@ public class RelicRewards extends QuestHandler
 	private final int relicVar4;
 	private int relicCount;
 	
+	/**
+	 * Creates a new {@link RelicRewards} handler for specific quest rewards.<br>
+	 * This constructor initializes the required variables and NPC IDs.
+	 * @param questId The unique identifier for the quest.
+	 * @param startNpcIds A list of NPC IDs to be used as starting points.
+	 * @param relicVar1 The first variable associated with the relic reward.
+	 * @param relicVar2 The second variable associated with the relic reward.
+	 * @param relicVar3 The third variable associated with the relic reward.
+	 * @param relicVar4 The fourth variable associated with the relic reward.
+	 * @param relicCount The total count of relics to be awarded.
+	 */
 	public RelicRewards(int questId, List<Integer> startNpcIds, int relicVar1, int relicVar2, int relicVar3, int relicVar4, int relicCount)
 	{
 		super(questId);
@@ -57,6 +72,11 @@ public class RelicRewards extends QuestHandler
 		this.relicCount = relicCount;
 	}
 	
+	/**
+	 * Registers the required quest events.<br>
+	 * This method tells the system which actions to listen for.<br>
+	 * You should add your specific event listeners inside this method.
+	 */
 	@Override
 	public void register()
 	{
@@ -69,6 +89,13 @@ public class RelicRewards extends QuestHandler
 		}
 	}
 	
+	/**
+	 * Handles dialog events for the quest.<br>
+	 * This method checks the current {@link QuestState} and {@code targetId}.<br>
+	 * It determines which dialog to send based on the {@link DialogAction}.
+	 * @param env The environment containing player data and current quest context.
+	 * @return {@code true} if the event was handled, otherwise {@code false}.
+	 */
 	@Override
 	public boolean onDialogEvent(QuestEnv env)
 	{
@@ -78,7 +105,9 @@ public class RelicRewards extends QuestHandler
 		{
 			targetId = ((Npc) env.getVisibleObject()).getNpcId();
 		}
+		
 		final QuestState qs = player.getQuestStateList().getQuestState(questId);
+		
 		if ((qs == null) || (qs.getStatus() == QuestStatus.NONE) || qs.canRepeat())
 		{
 			if (startNpcs.contains(targetId))
@@ -94,10 +123,14 @@ public class RelicRewards extends QuestHandler
 								QuestService.startQuest(env);
 								return sendQuestDialog(env, 1011);
 							}
+							
 							return sendQuestDialog(env, 3398);
 						}
+						
 						return sendQuestDialog(env, 3398);
 					}
+					default:
+						break;
 				}
 			}
 		}
@@ -109,14 +142,12 @@ public class RelicRewards extends QuestHandler
 				{
 					relicCount = 1;
 				}
+				
 				switch (env.getDialog())
 				{
 					case USE_OBJECT:
-					{
 						return sendQuestDialog(env, 1011);
-					}
 					case SELECT_ACTION_1011:
-					{
 						if (player.getInventory().getItemCountByItemId(relicVar1) >= relicCount)
 						{
 							removeQuestItem(env, relicVar1, relicCount);
@@ -126,10 +157,9 @@ public class RelicRewards extends QuestHandler
 							updateQuestStatus(env);
 							return sendQuestDialog(env, 5);
 						}
+						
 						return sendQuestDialog(env, 1009);
-					}
 					case SELECT_ACTION_1352:
-					{
 						if (player.getInventory().getItemCountByItemId(relicVar2) >= relicCount)
 						{
 							removeQuestItem(env, relicVar2, relicCount);
@@ -139,10 +169,9 @@ public class RelicRewards extends QuestHandler
 							updateQuestStatus(env);
 							return sendQuestDialog(env, 6);
 						}
+						
 						return sendQuestDialog(env, 1009);
-					}
 					case SELECT_ACTION_1693:
-					{
 						if (player.getInventory().getItemCountByItemId(relicVar3) >= relicCount)
 						{
 							removeQuestItem(env, relicVar3, relicCount);
@@ -152,10 +181,9 @@ public class RelicRewards extends QuestHandler
 							updateQuestStatus(env);
 							return sendQuestDialog(env, 7);
 						}
+						
 						return sendQuestDialog(env, 1009);
-					}
 					case SELECT_ACTION_2034:
-					{
 						if (player.getInventory().getItemCountByItemId(relicVar4) >= relicCount)
 						{
 							removeQuestItem(env, relicVar4, relicCount);
@@ -165,8 +193,10 @@ public class RelicRewards extends QuestHandler
 							updateQuestStatus(env);
 							return sendQuestDialog(env, 8);
 						}
+						
 						return sendQuestDialog(env, 1009);
-					}
+					default:
+						break;
 				}
 			}
 		}
@@ -178,7 +208,6 @@ public class RelicRewards extends QuestHandler
 				switch (env.getDialog())
 				{
 					case USE_OBJECT:
-					{
 						if (var == 1)
 						{
 							return sendQuestDialog(env, 5);
@@ -195,16 +224,16 @@ public class RelicRewards extends QuestHandler
 						{
 							return sendQuestDialog(env, 8);
 						}
-					}
-					case SELECT_NO_REWARD:
-					{
+					case SELECTED_QUEST_NOREWARD:
 						QuestService.finishQuest(env, qs.getQuestVars().getQuestVars() - 1);
 						PacketSendUtility.sendPacket(player, new SM_DIALOG_WINDOW(env.getVisibleObject().getObjectId(), 10));
 						return true;
-					}
+					default:
+						break;
 				}
 			}
 		}
+		
 		return false;
 	}
 }

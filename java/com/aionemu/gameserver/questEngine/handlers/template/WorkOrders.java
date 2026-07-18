@@ -1,24 +1,25 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.questEngine.handlers.template;
 
 import java.util.Iterator;
 
 import com.aionemu.gameserver.dataholders.DataManager;
+import com.aionemu.gameserver.model.DialogAction;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.templates.QuestTemplate;
 import com.aionemu.gameserver.model.templates.quest.CollectItem;
@@ -28,7 +29,6 @@ import com.aionemu.gameserver.model.templates.quest.QuestWorkItems;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_DIALOG_WINDOW;
 import com.aionemu.gameserver.questEngine.handlers.QuestHandler;
 import com.aionemu.gameserver.questEngine.handlers.models.WorkOrdersData;
-import com.aionemu.gameserver.questEngine.model.QuestDialog;
 import com.aionemu.gameserver.questEngine.model.QuestEnv;
 import com.aionemu.gameserver.questEngine.model.QuestState;
 import com.aionemu.gameserver.questEngine.model.QuestStatus;
@@ -38,18 +38,32 @@ import com.aionemu.gameserver.services.item.ItemService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * This class handles the logic for quest work orders.<br>
+ * It manages how players interact with and complete specific tasks defined in {@link QuestTemplate}.<br>
+ * It serves as a template handler within the {@link QuestHandler} system.
  * @author Mr. Poke reworked Bobobear
  */
 public class WorkOrders extends QuestHandler
 {
 	private final WorkOrdersData workOrdersData;
 	
+	/**
+	 * Creates a new instance of the {@link WorkOrders} handler.<br>
+	 * This constructor initializes the handler using the provided data.<br>
+	 * It sets the internal state based on the {@code workOrdersData} object.
+	 * @param workOrdersData The data used to configure this specific work order.
+	 */
 	public WorkOrders(WorkOrdersData workOrdersData)
 	{
 		super(workOrdersData.getId());
 		this.workOrdersData = workOrdersData;
 	}
 	
+	/**
+	 * Registers the required quest events.<br>
+	 * This method tells the system which actions to listen for.<br>
+	 * You should add your specific event listeners inside this method.
+	 */
 	@Override
 	public void register()
 	{
@@ -62,6 +76,13 @@ public class WorkOrders extends QuestHandler
 		}
 	}
 	
+	/**
+	 * Handles dialog events for the quest.<br>
+	 * This method checks the current {@link QuestState} and {@code targetId}.<br>
+	 * It determines which dialog to send based on the {@link DialogAction}.
+	 * @param env The environment containing player data and current quest context.
+	 * @return {@code true} if the event was handled, otherwise {@code false}.
+	 */
 	@Override
 	public boolean onDialogEvent(QuestEnv env)
 	{
@@ -74,11 +95,11 @@ public class WorkOrders extends QuestHandler
 			{
 				switch (env.getDialog())
 				{
-					case START_DIALOG:
+					case QUEST_SELECT:
 					{
 						return sendQuestDialog(env, 4);
 					}
-					case ACCEPT_QUEST:
+					case QUEST_ACCEPT_1:
 					{
 						if (RecipeService.validateNewRecipe(player, workOrdersData.getRecipeId()) != null)
 						{
@@ -89,20 +110,28 @@ public class WorkOrders extends QuestHandler
 									RecipeService.addRecipe(player, workOrdersData.getRecipeId(), false);
 									PacketSendUtility.sendPacket(player, new SM_DIALOG_WINDOW(env.getVisibleObject().getObjectId(), 0));
 								}
+								
 								return true;
 							}
 						}
 					}
+					case CRAFT:
+					{
+						PacketSendUtility.sendPacket(player, new SM_DIALOG_WINDOW(env.getVisibleObject().getObjectId(), 28));
+						return true;
+					}
+					default:
+						break;
 				}
 			}
 			else if (qs.getStatus() == QuestStatus.START)
 			{
-				if (env.getDialog() == QuestDialog.START_DIALOG)
+				if (env.getDialog() == DialogAction.QUEST_SELECT)
 				{
 					final int var = qs.getQuestVarById(0);
 					if (QuestService.collectItemCheck(env, false))
 					{
-						changeQuestStep(env, var, var, true);
+						changeQuestStep(env, var, var, true); // reward
 						final QuestWorkItems qwi = DataManager.QUEST_DATA.getQuestById(workOrdersData.getId()).getQuestWorkItems();
 						if (qwi != null)
 						{
@@ -119,8 +148,10 @@ public class WorkOrders extends QuestHandler
 								}
 							}
 						}
+						
 						return sendQuestDialog(env, 5);
 					}
+					
 					return sendQuestSelectionDialog(env);
 				}
 			}
@@ -137,6 +168,7 @@ public class WorkOrders extends QuestHandler
 						player.getInventory().decreaseByItemId(collectItem.getItemId(), count);
 					}
 				}
+				
 				player.getRecipeList().deleteRecipe(player, workOrdersData.getRecipeId());
 				if (env.getDialogId() == -1)
 				{
@@ -144,9 +176,11 @@ public class WorkOrders extends QuestHandler
 					env.setQuestId(workOrdersData.getId());
 					return sendQuestDialog(env, 1008);
 				}
+				
 				return sendQuestEndDialog(env);
 			}
 		}
+		
 		return false;
 	}
 }

@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.ai;
 
@@ -43,6 +43,9 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.world.WorldType;
 
 /**
+ * Handles the logic for NPCs that provide resurrection services to players.<br>
+ * It manages player interactions and processes requests via {@link AI2Actions}.<br>
+ * This class ensures that resurrected entities are handled correctly within the game world.
  * @author ATracer
  */
 @AIName("resurrect")
@@ -50,6 +53,12 @@ public class ResurrectAI2 extends NpcAI2
 {
 	private static Logger log = LoggerFactory.getLogger(ResurrectAI2.class);
 	
+	/**
+	 * This method is called when a dialog starts with an NPC.<br>
+	 * It handles the logic for registering a new resurrection bind point for the {@code player}.<br>
+	 * The method checks for valid distance, faction requirements, and specific world IDs before calling {@code BindPointTemplate)}.
+	 * @param player The {@link Player} who initiated the interaction.
+	 */
 	@Override
 	protected void handleDialogStart(Player player)
 	{
@@ -60,11 +69,13 @@ public class ResurrectAI2 extends NpcAI2
 			log.info("There is no bind point template for npc: " + getNpcId());
 			return;
 		}
+		
 		if ((player.getBindPoint() != null) && (player.getBindPoint().getMapId() == getPosition().getMapId()) && (MathUtil.getDistance(player.getBindPoint().getX(), player.getBindPoint().getY(), player.getBindPoint().getZ(), getPosition().getX(), getPosition().getY(), getPosition().getZ()) < 20))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_ALREADY_REGISTER_THIS_RESURRECT_POINT);
 			return;
 		}
+		
 		final WorldType worldType = player.getWorldType();
 		if (!CustomConfig.ENABLE_CROSS_FACTION_BINDING && !getTribe().equals(TribeClass.FIELD_OBJECT_ALL))
 		{
@@ -74,23 +85,31 @@ public class ResurrectAI2 extends NpcAI2
 				return;
 			}
 		}
+		
 		if (worldType == WorldType.PRISON)
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_CANNOT_REGISTER_RESURRECT_POINT_FAR_FROM_NPC);
 			return;
 		}
+		
 		switch (player.getWorldId())
 		{
 			case 600090000: // Kaldor.
 			case 600100000: // Levinshor.
-			{
 				newBind(player, bindPointTemplate);
 				break;
-			}
 		}
+		
 		bindHere(player, bindPointTemplate);
 	}
 	
+	/**
+	 * Handles the logic for a player registering a new resurrection point.<br>
+	 * It checks for sufficient kinah and proximity to the NPC.<br>
+	 * If successful, it updates the {@link Player} bind point in the database.
+	 * @param player The {@link Player} who is attempting to register the point.
+	 * @param bindPointTemplate The {@link BindPointTemplate} containing the price and data.
+	 */
 	private void bindHere(Player player, BindPointTemplate bindPointTemplate)
 	{
 		final String price = Integer.toString(bindPointTemplate.getPrice());
@@ -99,8 +118,10 @@ public class ResurrectAI2 extends NpcAI2
 			@Override
 			public void acceptRequest(Creature requester, Player responder)
 			{
+				// check if this both creatures are in same world
 				if (responder.getWorldId() == requester.getWorldId())
 				{
+					// check enough kinah
 					if (responder.getInventory().getKinah() < bindPointTemplate.getPrice())
 					{
 						PacketSendUtility.sendPacket(responder, SM_SYSTEM_MESSAGE.STR_CANNOT_REGISTER_RESURRECT_POINT_NOT_ENOUGH_FEE);
@@ -111,6 +132,7 @@ public class ResurrectAI2 extends NpcAI2
 						PacketSendUtility.sendPacket(responder, SM_SYSTEM_MESSAGE.STR_CANNOT_REGISTER_RESURRECT_POINT_FAR_FROM_NPC);
 						return;
 					}
+					
 					BindPointPosition old = responder.getBindPoint();
 					final BindPointPosition bpp = new BindPointPosition(requester.getWorldId(), responder.getX(), responder.getY(), responder.getZ(), responder.getHeading());
 					bpp.setPersistentState(old == null ? PersistentState.NEW : PersistentState.UPDATE_REQUIRED);
@@ -120,7 +142,7 @@ public class ResurrectAI2 extends NpcAI2
 						responder.getInventory().decreaseKinah(bindPointTemplate.getPrice());
 						TeleportService2.sendSetBindPoint(responder);
 						PacketSendUtility.broadcastPacket(responder, new SM_LEVEL_UPDATE(responder.getObjectId(), 2, responder.getCommonData().getLevel()), true);
-						PacketSendUtility.sendPacket(responder, SM_SYSTEM_MESSAGE.STR_DEATH_REGISTER_RESURRECT_POINT(""));
+						PacketSendUtility.sendPacket(responder, SM_SYSTEM_MESSAGE.STR_DEATH_REGISTER_RESURRECT_POINT("")); // TODO
 						old = null;
 					}
 					else
@@ -132,6 +154,13 @@ public class ResurrectAI2 extends NpcAI2
 		}, price);
 	}
 	
+	/**
+	 * Handles the process of registering a new resurrection point for a player.<br>
+	 * It checks if the player has enough Kinah and is close enough to the NPC.<br>
+	 * If successful, it updates the player's bind point in the database.
+	 * @param player The {@link Player} who is requesting the new bind point.
+	 * @param bindPointTemplate The {@link BindPointTemplate} containing the price and data.
+	 */
 	private void newBind(Player player, BindPointTemplate bindPointTemplate)
 	{
 		final String price = Integer.toString(bindPointTemplate.getPrice());
@@ -152,6 +181,7 @@ public class ResurrectAI2 extends NpcAI2
 						PacketSendUtility.sendPacket(responder, SM_SYSTEM_MESSAGE.STR_CANNOT_REGISTER_RESURRECT_POINT_FAR_FROM_NPC);
 						return;
 					}
+					
 					BindPointPosition old = responder.getBindPoint();
 					final BindPointPosition bpp = new BindPointPosition(requester.getWorldId(), requester.getX(), requester.getY(), requester.getZ(), requester.getHeading());
 					bpp.setPersistentState(old == null ? PersistentState.NEW : PersistentState.UPDATE_REQUIRED);

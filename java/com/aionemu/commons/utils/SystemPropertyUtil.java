@@ -1,47 +1,40 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.utils;
 
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A collection of utility methods to retrieve and parse the values of the Java system properties.
+ * This class provides a set of utility methods for retrieving and parsing {@code java.lang.System} properties.<br>
+ * It simplifies access to configuration values throughout the application.
  */
 public final class SystemPropertyUtil
 {
-	@SuppressWarnings("all")
-	private static boolean initializedLogger;
-	private static final Logger logger;
+	private static final Logger logger = LoggerFactory.getLogger(SystemPropertyUtil.class);
 	private static boolean loggedException;
 	
-	static
-	{
-		logger = LoggerFactory.getLogger(SystemPropertyUtil.class);
-		initializedLogger = true;
-	}
-	
 	/**
-	 * Returns {@code true} if and only if the system property with the specified {@code key} exists.
-	 * @param key
-	 * @return
+	 * Checks if a specific system property exists.<br>
+	 * This method calls {@code get} to verify the value.
+	 * @param key The name of the system property to check.
+	 * @return {@code true} if the property is found, or {@code false} otherwise.
 	 */
 	public static boolean contains(String key)
 	{
@@ -49,9 +42,10 @@ public final class SystemPropertyUtil
 	}
 	
 	/**
-	 * Returns the value of the Java system property with the specified {@code key}, while falling back to {@code null} if the property access fails.
-	 * @param key
-	 * @return the property value or {@code null}
+	 * Retrieves the value of a system property using its unique key.<br>
+	 * This method returns {@code null} if the key does not exist.
+	 * @param key The name of the system property to look up.
+	 * @return The string value of the property, or {@code null}.
 	 */
 	public static String get(String key)
 	{
@@ -59,10 +53,11 @@ public final class SystemPropertyUtil
 	}
 	
 	/**
-	 * Returns the value of the Java system property with the specified {@code key}, while falling back to the specified default value if the property access fails.
-	 * @param key
-	 * @param def
-	 * @return the property value. {@code def} if there's no such property or if an access to the specified property is not allowed.
+	 * Retrieves a system property value based on the provided {@code key}.<br>
+	 * If the property does not exist, it returns the default value.
+	 * @param key The name of the system property to retrieve.
+	 * @param def The default value to return if the property is missing.
+	 * @return The value of the property or the {@code def} string.
 	 */
 	public static String get(String key, String def)
 	{
@@ -70,6 +65,7 @@ public final class SystemPropertyUtil
 		{
 			throw new NullPointerException("key");
 		}
+		
 		if (key.isEmpty())
 		{
 			throw new IllegalArgumentException("key must not be empty.");
@@ -98,10 +94,13 @@ public final class SystemPropertyUtil
 	}
 	
 	/**
-	 * Returns the value of the Java system property with the specified {@code key}, while falling back to the specified default value if the property access fails.
-	 * @param key
-	 * @param def
-	 * @return the property value. {@code def} if there's no such property or if an access to the specified property is not allowed.
+	 * Retrieves a boolean value from the system properties.<br>
+	 * It returns {@code true} for values like {@code true}, {@code yes}, or {@code 1}.<br>
+	 * It returns {@code false} for values like {@code false}, {@code no}, or {@code 0}.<br>
+	 * If the key is missing or invalid, it returns the default value.
+	 * @param key The name of the system property to look up.
+	 * @param def The default value to return if the property is not found or cannot be parsed.
+	 * @return The boolean value associated with the key, or the default value.
 	 */
 	public static boolean getBoolean(String key, boolean def)
 	{
@@ -112,12 +111,7 @@ public final class SystemPropertyUtil
 		}
 		
 		value = value.trim().toLowerCase();
-		if (value.isEmpty())
-		{
-			return true;
-		}
-		
-		if ("true".equals(value) || "yes".equals(value) || "1".equals(value))
+		if (value.isEmpty() || "true".equals(value) || "yes".equals(value) || "1".equals(value))
 		{
 			return true;
 		}
@@ -135,10 +129,12 @@ public final class SystemPropertyUtil
 	private static final Pattern INTEGER_PATTERN = Pattern.compile("-?[0-9]+");
 	
 	/**
-	 * Returns the value of the Java system property with the specified {@code key}, while falling back to the specified default value if the property access fails.
-	 * @param key
-	 * @param def
-	 * @return the property value. {@code def} if there's no such property or if an access to the specified property is not allowed.
+	 * Retrieves an integer value from a system property.<br>
+	 * It returns the default value if the key is missing or invalid.<br>
+	 * The method automatically trims and converts the string to lowercase.
+	 * @param key The name of the system property to look up.
+	 * @param def The default value to return if no valid integer is found.
+	 * @return The parsed integer value or the provided default.
 	 */
 	public static int getInt(String key, int def)
 	{
@@ -167,10 +163,12 @@ public final class SystemPropertyUtil
 	}
 	
 	/**
-	 * Returns the value of the Java system property with the specified {@code key}, while falling back to the specified default value if the property access fails.
-	 * @param key
-	 * @param def
-	 * @return the property value. {@code def} if there's no such property or if an access to the specified property is not allowed.
+	 * Retrieves a {@code long} value from the system properties.<br>
+	 * It uses the provided {@code key} to find the property.<br>
+	 * If the property is missing or not a valid number, it returns the {@code def} value.
+	 * @param key The name of the system property to retrieve.
+	 * @param def The default value to return if the property is not found or invalid.
+	 * @return The parsed {@code long} value or the default value.
 	 */
 	public static long getLong(String key, long def)
 	{
@@ -198,32 +196,29 @@ public final class SystemPropertyUtil
 		return def;
 	}
 	
+	/**
+	 * Logs a warning message.
+	 * @param msg The message to be logged.
+	 */
 	private static void log(String msg)
 	{
-		if (initializedLogger)
-		{
-			logger.warn(msg);
-		}
-		else
-		{
-			// Use JDK logging if logger was not initialized yet.
-			java.util.logging.Logger.getLogger(SystemPropertyUtil.class.getName()).log(Level.WARNING, msg);
-		}
+		logger.warn(msg);
 	}
 	
+	/**
+	 * Logs a warning message and an associated exception.
+	 * @param msg The message to be logged.
+	 * @param e The exception to be logged.
+	 */
 	private static void log(String msg, Exception e)
 	{
-		if (initializedLogger)
-		{
-			logger.warn(msg, e);
-		}
-		else
-		{
-			// Use JDK logging if logger was not initialized yet.
-			java.util.logging.Logger.getLogger(SystemPropertyUtil.class.getName()).log(Level.WARNING, msg, e);
-		}
+		logger.warn(msg, e);
 	}
 	
+	/**
+	 * Private constructor for the {@link SystemPropertyUtil} class.<br>
+	 * This prevents other classes from creating new instances of this utility class.
+	 */
 	private SystemPropertyUtil()
 	{
 		// Unused

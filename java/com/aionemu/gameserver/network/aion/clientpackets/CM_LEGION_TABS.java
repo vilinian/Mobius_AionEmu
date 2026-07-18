@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -29,15 +29,23 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_LEGION_TABS;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles the client request to retrieve information about legion tabs.<br>
+ * This packet allows the server to process requests for specific {@link LegionHistory} data.
  * @author Simple, xTz
  */
 public class CM_LEGION_TABS extends AionClientPacket
 {
 	private static final Logger log = LoggerFactory.getLogger(CM_LEGION_TABS.class);
-	
 	private int page;
 	private int tab;
 	
+	/**
+	 * This constructor initializes a new {@code CM_LEGION_TABS} packet.<br>
+	 * It sets the required network states for the packet.
+	 * @param opcode The unique identifier for this packet type.
+	 * @param state The primary state of the connection.
+	 * @param restStates Additional states associated with the connection.
+	 */
 	public CM_LEGION_TABS(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -57,7 +65,6 @@ public class CM_LEGION_TABS extends AionClientPacket
 		
 		if (activePlayer.getLegion() != null)
 		{
-			
 			/**
 			 * Max page is 16 for legion history
 			 */
@@ -68,12 +75,11 @@ public class CM_LEGION_TABS extends AionClientPacket
 			
 			switch (tab)
 			{
-				/**
-				 * History Tab
-				 */
-				case 0: // legion history
-				case 2: // legion WH history
-				{
+					/**
+					 * History Tab
+					 */
+					case 0: // legion history
+					case 2: // legion WH history
 					final Collection<LegionHistory> history = activePlayer.getLegion().getLegionHistoryByTabId(tab);
 					/**
 					 * If history size is less than page*8 return
@@ -82,20 +88,18 @@ public class CM_LEGION_TABS extends AionClientPacket
 					{
 						return;
 					}
+					
 					if (!history.isEmpty())
 					{
 						PacketSendUtility.sendPacket(activePlayer, new SM_LEGION_TABS(history, page, tab));
 					}
 					break;
-				}
 				/**
 				 * Reward Tab
 				 */
 				case 1:
-				{
 					// TODO Reward Tab Page
 					break;
-				}
 			}
 		}
 		else

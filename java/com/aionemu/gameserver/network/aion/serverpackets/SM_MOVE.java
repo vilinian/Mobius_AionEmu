@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -24,7 +24,8 @@ import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 
 /**
- * This packet is displaying movement of players etc.
+ * This packet handles the synchronization of movement for players and other entities.<br>
+ * It informs clients about position updates and animations within the game world.
  * @author -Nemesiss-
  */
 public class SM_MOVE extends AionServerPacket
@@ -34,6 +35,11 @@ public class SM_MOVE extends AionServerPacket
 	 */
 	private final Creature creature;
 	
+	/**
+	 * This method creates a new {@code SM_MOVE} packet.<br>
+	 * It sets the moving entity to the provided {@link Creature}.
+	 * @param creature The {@code Creature} that is performing the movement.
+	 */
 	public SM_MOVE(Creature creature)
 	{
 		this.creature = creature;
@@ -69,10 +75,12 @@ public class SM_MOVE extends AionServerPacket
 					writeF(moveData.getTargetZ2());
 				}
 			}
+			
 			if ((moveData.getMovementMask() & MovementMask.GLIDE) == MovementMask.GLIDE)
 			{
 				writeC(playermoveData.glideFlag);
 			}
+			
 			if ((moveData.getMovementMask() & MovementMask.VEHICLE) == MovementMask.VEHICLE)
 			{
 				writeD(playermoveData.unk1);
@@ -80,6 +88,24 @@ public class SM_MOVE extends AionServerPacket
 				writeF(playermoveData.vectorX);
 				writeF(playermoveData.vectorY);
 				writeF(playermoveData.vectorZ);
+			}
+			
+			if ((moveData.getMovementMask() & MovementMask.STARTMOVE_NEW) == MovementMask.STARTMOVE_NEW)
+			{
+				if ((moveData.getMovementMask() & MovementMask.MOUSE) == 0)
+				{
+					writeF(playermoveData.vectorX);
+					writeF(playermoveData.vectorY);
+					writeF(playermoveData.vectorZ);
+					writeC(0); // heading
+				}
+				else
+				{
+					writeF(moveData.getTargetX2());
+					writeF(moveData.getTargetY2());
+					writeF(moveData.getTargetZ2());
+					writeC(0); // heading
+				}
 			}
 		}
 		else
@@ -89,13 +115,6 @@ public class SM_MOVE extends AionServerPacket
 				writeF(moveData.getTargetX2());
 				writeF(moveData.getTargetY2());
 				writeF(moveData.getTargetZ2());
-			}
-			else if ((moveData.getMovementMask() & MovementMask.NPC_RUN_SLOW) == MovementMask.NPC_RUN_SLOW)
-			{
-				writeF(moveData.getTargetX2());
-				writeF(moveData.getTargetY2());
-				writeF(moveData.getTargetZ2());
-				writeC(0x00);
 			}
 		}
 	}

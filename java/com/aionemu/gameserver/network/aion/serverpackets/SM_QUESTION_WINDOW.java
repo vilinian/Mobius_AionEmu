@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -22,7 +22,8 @@ import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 
 /**
- * Opens a yes/no question window on the client. Question based on the code given, defined in client_strings.xml
+ * Opens a yes/no question window on the game client.<br>
+ * The specific text displayed is determined by a code mapped in {@code client_strings.xml}.
  * @author Ben, avol, Lyahim
  */
 public class SM_QUESTION_WINDOW extends AionServerPacket
@@ -48,6 +49,7 @@ public class SM_QUESTION_WINDOW extends AionServerPacket
 	public static final int STR_QUEST_GIVEUP = 150000;
 	public static final int STR_QUEST_GIVEUP_WHEN_DELETE_QUEST_ITEM = 150001;
 	public static final int STR_ASK_RECOVER_EXPERIENCE = 160011;
+	public static final int STR_ASK_RECOVER_EXPERIENCE2 = 1404454;
 	public static final int STR_ASK_REGISTER_RESURRECT_POINT = 160012;
 	public static final int STR_ASK_GROUP_GATE_DO_YOU_ACCEPT_MOVE = 160014;
 	public static final int STR_ASK_USE_ARTIFACT = 160016;
@@ -173,12 +175,28 @@ public class SM_QUESTION_WINDOW extends AionServerPacket
 	 */
 	public static final int STR_PERSONAL_SHOP_DISABLED_CHATRESTRICT_MODE = 905089;
 	
+	public static final int STR_ASK_ROUND_RETURN_ITEM_DO_YOU_ACCEPT_MOVE = 907535;
+	
+	public static final int STR_ASK_ROUND_RETURN_ITEM_ACCEPT_MOVE_DONT_RETURN = 907536;
+	
+	public static final int STR_HOTSPOT_CONFIRM_NO_COST = 905097;
+	
+	public static final int STR_INFINITY_INDUN_RESURRECT = 913809;
+	
 	private final int code;
 	private final int senderId;
 	private final int range;
 	private final Object[] params;
 	private ArtifactLocation artifact;
 	
+	/**
+	 * Creates a new question window for the client.<br>
+	 * This packet displays a yes/no prompt based on a specific string code.
+	 * @param code The unique identifier for the question text.
+	 * @param senderId The ID of the player sending the request.
+	 * @param range The distance range for the interaction.
+	 * @param params Additional data required to process the question.
+	 */
 	public SM_QUESTION_WINDOW(int code, int senderId, int range, Object... params)
 	{
 		this.code = code;
@@ -191,7 +209,7 @@ public class SM_QUESTION_WINDOW extends AionServerPacket
 	protected void writeImpl(AionConnection con)
 	{
 		writeD(code);
-		// Beshmundir Temple (Easy-Hard Mode).
+		
 		if (code == STR_INSTANCE_DUNGEON_WITH_DIFFICULTY_ENTER_CONFIRM)
 		{
 			writeH(0x33);
@@ -205,13 +223,13 @@ public class SM_QUESTION_WINDOW extends AionServerPacket
 			writeH(0x30);
 			writeH(0x00);
 		}
+		
 		for (Object param : params)
 		{
 			if (param instanceof DescriptionId)
 			{
 				writeH(0x24);
 				writeD(((DescriptionId) param).getValue());
-				writeH(0x00);
 			}
 			else if (param instanceof ArtifactLocation)
 			{
@@ -222,6 +240,7 @@ public class SM_QUESTION_WINDOW extends AionServerPacket
 				writeS(String.valueOf(param));
 			}
 		}
+		
 		// Guardian Stone Activation Window
 		if (code == STR_ASK_DOOR_REPAIR_POPUPDIALOG)
 		{
@@ -229,12 +248,11 @@ public class SM_QUESTION_WINDOW extends AionServerPacket
 			writeD(0x00);
 			writeD(0x00);
 			writeH(0x00);
-			writeC(1);
+			writeC(0x01);
 			writeD(senderId);
 			writeD(0x05);
-		}
-		// Artifact Location Activation Window
-		else if (code == STR_ASK_ARTIFACT_POPUPDIALOG)
+		} // ArtifactLocation Activation Window
+		else if (code == 160028)
 		{
 			writeD(0x00);
 			writeD(0x00);
@@ -247,7 +265,7 @@ public class SM_QUESTION_WINDOW extends AionServerPacket
 			}
 			else
 			{
-				writeD(artifact.getCoolDown());
+				writeD(artifact.getCoolDown()); // ArtifactLocation reuse
 			}
 		}
 		else if (code == STR_BUDDYLIST_ADD_BUDDY_REQUEST)
@@ -262,14 +280,23 @@ public class SM_QUESTION_WINDOW extends AionServerPacket
 			writeD(senderId);
 			writeD(0x05);
 		}
+		else if (code == STR_ASK_RECOVER_EXPERIENCE2)
+		{
+			System.out.println("RECOVER 2");
+			writeD(0x00); // unk
+			writeD(0x00); // unk
+			writeC(range > 0 ? 0x01 : 0x00); // unk maybe boolean for rangecheck?
+			writeD(senderId);
+			writeD(range); // range within the Question is valid
+		}
 		else
 		{
-			writeD(0x00);
-			writeD(0);
-			writeH(0x00);
-			writeC(range > 0 ? 1 : 0);
+			writeD(0x00); // unk
+			writeD(0x00); // unk
+			writeH(0x00); // unk
+			writeC(range > 0 ? 0x01 : 0x00); // unk maybe boolean for rangecheck?
 			writeD(senderId);
-			writeD(range);
+			writeD(range); // range within the Question is valid
 		}
 	}
 }

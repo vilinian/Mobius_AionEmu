@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services;
 
@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import com.aionemu.commons.database.dao.DAOManager;
 import com.aionemu.gameserver.dao.InventoryDAO;
 import com.aionemu.gameserver.model.gameobjects.Item;
-import com.aionemu.gameserver.model.gameobjects.Npc;
 import com.aionemu.gameserver.model.gameobjects.PersistentState;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.templates.item.ItemQuality;
@@ -33,13 +32,84 @@ import com.aionemu.gameserver.services.trade.PricesService;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
- * This class is responsible of Armsfusion-related tasks (fusion,breaking)
+ * This class handles all logic related to the {@code Armsfusion} system.<br>
+ * It manages core tasks such as item fusion and breaking processes.
  * @author Wakizashi modified by Source & xTz
  */
 public class ArmsfusionService
 {
 	private static final Logger log = LoggerFactory.getLogger(ArmsfusionService.class);
 	
+	/**
+	 * Calculates the multiplier for a specific item quality.<br>
+	 * This value determines how much the rarity affects the outcome.
+	 * @param rarity The {@link ItemQuality} of the item to check.
+	 * @return The numeric multiplier as a {@code double}.
+	 */
+	private static double rarityRate(ItemQuality rarity)
+	{
+		switch (rarity)
+		{
+			case COMMON:
+				return 1.0;
+			case RARE:
+				return 1.25;
+			case LEGEND:
+				return 1.5;
+			case UNIQUE:
+				return 2.0;
+			case EPIC:
+				return 2.5;
+			case MYTHIC:
+				return 3.0;
+			default:
+				return 1.0;
+		}
+	}
+	
+	/**
+	 * Breaks down a weapon that has been fused.<br>
+	 * This method removes the fusion status and all stones from the item.<br>
+	 * It updates the database and sends a success message to the {@link Player}.
+	 * @param player The {@link Player} who owns the weapon.
+	 * @param weaponToBreakUniqueId The unique ID of the weapon to be broken.
+	 */
+	public static void breakWeapons(Player player, int weaponToBreakUniqueId)
+	{
+		Item weaponToBreak = player.getInventory().getItemByObjId(weaponToBreakUniqueId);
+		if (weaponToBreak == null)
+		{
+			weaponToBreak = player.getEquipment().getEquippedItemByObjId(weaponToBreakUniqueId);
+		}
+		
+		if (weaponToBreak == null)
+		{
+			return;
+		}
+		
+		if (!weaponToBreak.hasFusionedItem())
+		{
+			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_DECOMPOUND_ERROR_NOT_AVAILABLE(weaponToBreak.getNameId()));
+			return;
+		}
+		
+		weaponToBreak.setFusionedItem(null);
+		ItemSocketService.removeAllFusionStone(player, weaponToBreak);
+		DAOManager.getDAO(InventoryDAO.class).store(weaponToBreak, player);
+		
+		ItemPacketService.updateItemAfterInfoChange(player, weaponToBreak);
+		
+		PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_COMPOUNDED_ITEM_DECOMPOUND_SUCCESS(weaponToBreak.getNameId()));
+	}
+	
+	/**
+	 * Combines two weapons into a single fused item.<br>
+	 * This method checks for required conditions such as level, type, and price.<br>
+	 * It updates the first weapon with properties from the second one.
+	 * @param player The {@link Player} performing the fusion action.
+	 * @param firstItemUniqueId The unique ID of the primary weapon to be fused into.
+	 * @param secondItemUniqueId The unique ID of the secondary weapon to be consumed.
+	 */
 	public static void fusionWeapons(Player player, int firstItemUniqueId, int secondItemUniqueId)
 	{
 		Item firstItem = player.getInventory().getItemByObjId(firstItemUniqueId);
@@ -47,57 +117,82 @@ public class ArmsfusionService
 		{
 			firstItem = player.getEquipment().getEquippedItemByObjId(firstItemUniqueId);
 		}
+		
 		Item secondItem = player.getInventory().getItemByObjId(secondItemUniqueId);
 		if (secondItem == null)
 		{
 			secondItem = player.getEquipment().getEquippedItemByObjId(secondItemUniqueId);
 		}
-		if ((firstItem == null) || (secondItem == null) || !(player.getTarget() instanceof Npc))
+		
+		/*
+		 * Check if item is in bag
+		 */
+		if ((firstItem == null) || (secondItem == null))
 		{
 			return;
 		}
+		
 		final double priceRate = PricesService.getGlobalPrices(player.getRace()) * .01;
 		final double taxRate = PricesService.getTaxes(player.getRace()) * .01;
 		final double rarity = rarityRate(firstItem.getItemTemplate().getItemQuality());
 		final int priceMod = PricesService.getGlobalPricesModifier() * 2;
 		final int level = firstItem.getItemTemplate().getLevel();
+		
 		final int price = (int) (priceMod * priceRate * taxRate * rarity * level * level);
+		log.debug("Rarete: " + rarity + " Prix Ratio: " + priceRate + " Tax: " + taxRate + " Mod: " + priceMod + " NiveauDeLArme: " + level);
+		log.debug("Prix: " + price);
+		
 		if (player.getInventory().getKinah() < price)
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_COMPOUND_ERROR_NOT_ENOUGH_MONEY(firstItem.getNameId(), secondItem.getNameId()));
 			return;
 		}
+		
+		/*
+		 * Fusioned weapons must be not fusioned
+		 */
 		if (firstItem.hasFusionedItem())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_COMPOUND_ERROR_NOT_AVAILABLE(firstItem.getNameId()));
 			return;
 		}
+		
 		if (secondItem.hasFusionedItem())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_COMPOUND_ERROR_NOT_AVAILABLE(secondItem.getNameId()));
 			return;
 		}
+		
 		if (!firstItem.getItemTemplate().isCanFuse() || !secondItem.getItemTemplate().isCanFuse())
 		{
 			PacketSendUtility.sendMessage(player, "You performed illegal operation, admin will catch you");
 			log.info("[AUDIT] Client hack with item fusion, player: " + player.getName());
 			return;
 		}
+		
 		if (!firstItem.getItemTemplate().isTwoHandWeapon())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_COMPOUND_ERROR_NOT_AVAILABLE(firstItem.getNameId()));
 			return;
 		}
+		
+		// Fusioned weapons must have same type
 		if (firstItem.getItemTemplate().getWeaponType() != secondItem.getItemTemplate().getWeaponType())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_COMPOUND_ERROR_DIFFERENT_TYPE);
 			return;
 		}
+		
+		/*
+		 * Second weapon must have inferior or equal lvl. in relation to first weapon
+		 */
 		if (secondItem.getItemTemplate().getLevel() > firstItem.getItemTemplate().getLevel())
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_COMPOUND_ERROR_MAIN_REQUIRE_HIGHER_LEVEL);
 			return;
 		}
+		
+		// You can not combine Conditioning and Augmenting
 		if ((firstItem.getImprovement() != null) && (secondItem.getImprovement() != null))
 		{
 			if (firstItem.getImprovement().getChargeWay() != secondItem.getImprovement().getChargeWay())
@@ -106,8 +201,11 @@ public class ArmsfusionService
 				return;
 			}
 		}
+		
 		firstItem.setFusionedItem(secondItem.getItemTemplate());
+		
 		ItemSocketService.removeAllFusionStone(player, firstItem);
+		
 		if (secondItem.hasOptionalSocket())
 		{
 			firstItem.setOptionalFusionSocket(secondItem.getOptionalSocket());
@@ -116,73 +214,18 @@ public class ArmsfusionService
 		{
 			firstItem.setOptionalFusionSocket(0);
 		}
+		
 		ItemSocketService.copyFusionStones(secondItem, firstItem);
 		firstItem.setPersistentState(PersistentState.UPDATE_REQUIRED);
 		DAOManager.getDAO(InventoryDAO.class).store(firstItem, player);
+		
 		if (!player.getInventory().decreaseByObjectId(secondItemUniqueId, 1))
 		{
 			return;
 		}
+		
 		ItemPacketService.updateItemAfterInfoChange(player, firstItem);
 		player.getInventory().decreaseKinah(price);
 		PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_COMPOUND_SUCCESS(firstItem.getNameId(), secondItem.getNameId()));
-	}
-	
-	private static double rarityRate(ItemQuality rarity)
-	{
-		switch (rarity)
-		{
-			case COMMON:
-			{
-				return 1.0;
-			}
-			case RARE:
-			{
-				return 1.25;
-			}
-			case LEGEND:
-			{
-				return 1.5;
-			}
-			case UNIQUE:
-			{
-				return 2.0;
-			}
-			case EPIC:
-			{
-				return 2.5;
-			}
-			case MYTHIC:
-			{
-				return 3.0;
-			}
-			default:
-			{
-				return 1.0;
-			}
-		}
-	}
-	
-	public static void breakWeapons(Player player, int weaponToBreakUniqueId)
-	{
-		Item weaponToBreak = player.getInventory().getItemByObjId(weaponToBreakUniqueId);
-		if (weaponToBreak == null)
-		{
-			weaponToBreak = player.getEquipment().getEquippedItemByObjId(weaponToBreakUniqueId);
-		}
-		if ((weaponToBreak == null) || !(player.getTarget() instanceof Npc))
-		{
-			return;
-		}
-		if (!weaponToBreak.hasFusionedItem())
-		{
-			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_DECOMPOUND_ERROR_NOT_AVAILABLE(weaponToBreak.getNameId()));
-			return;
-		}
-		weaponToBreak.setFusionedItem(null);
-		ItemSocketService.removeAllFusionStone(player, weaponToBreak);
-		DAOManager.getDAO(InventoryDAO.class).store(weaponToBreak, player);
-		ItemPacketService.updateItemAfterInfoChange(player, weaponToBreak);
-		PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_COMPOUNDED_ITEM_DECOMPOUND_SUCCESS(weaponToBreak.getNameId()));
 	}
 }

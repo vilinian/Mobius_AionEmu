@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.gmhandler;
 
@@ -23,16 +23,30 @@ import com.aionemu.gameserver.services.teleport.TeleportService2;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * Handles the command to teleport a player to a specific named NPC.<br>
+ * It uses {@link TeleportService2} to process the movement request.
  * @author Alcapwnd
  */
 public class CmdTeleportToNamed extends AbstractGMHandler
 {
+	/**
+	 * This constructor initializes the command to teleport a player to a named location.<br>
+	 * It takes an {@code admin} and a string of {@code params}.<br>
+	 * The method calls {@code run} to execute the logic.
+	 * @param admin The {@code Player} who is executing the command.
+	 * @param params The arguments provided for the teleportation target.
+	 */
 	public CmdTeleportToNamed(Player admin, String params)
 	{
 		super(admin, params);
 		run();
 	}
 	
+	/**
+	 * Executes the command to teleport a player to a specific NPC.<br>
+	 * It attempts to find an NPC by its ID or its description string.<br>
+	 * If successful, it uses {@code int)} to move the admin.
+	 */
 	public void run()
 	{
 		int npcId = 0;
@@ -51,7 +65,7 @@ public class CmdTeleportToNamed extends AbstractGMHandler
 			
 			for (NpcTemplate template : DataManager.NPC_DATA.getNpcData().valueCollection())
 			{
-				if ((template.getName() != null) && template.getName().equalsIgnoreCase(npcDesc))
+				if ((template.getDesc() != null) && template.getDesc().equalsIgnoreCase(npcDesc))
 				{
 					TeleportService2.teleportToNpc(admin, template.getTemplateId());
 					message = "Teleporting to Npc: " + template.getTemplateId();
@@ -70,14 +84,17 @@ public class CmdTeleportToNamed extends AbstractGMHandler
 			{
 				message = "Teleporting to Npc: " + npcId;
 			}
+			
 			PacketSendUtility.sendMessage(admin, message);
 			TeleportService2.teleportToNpc(admin, npcId);
 		}
 	}
 	
 	/**
-	 * @param admin
-	 * @param message
+	 * This method is called when an {@code execute} command fails.<br>
+	 * It sends a failure notification to the administrator.
+	 * @param admin The {@code Player} who attempted the command.
+	 * @param message The error message to display.
 	 */
 	public void onFail(Player admin, String message)
 	{

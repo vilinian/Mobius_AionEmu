@@ -3,7 +3,7 @@
 	<xs:element name="import">
 		<xs:annotation>
 			<xs:documentation>
-				<![CDATA[
+<![CDATA[
 				Attributes:
 				'file' :
 					Required attribute.
@@ -21,9 +21,9 @@
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
-			<xs:attribute type="xs:string" name="file" use="required"/>
-			<xs:attribute type="xs:boolean" name="skipRoot" use="optional" default="false"/>
-			<xs:attribute type="xs:boolean" name="recursiveImport" use="optional" default="true"/>
+			<xs:attribute type="xs:string" name="file" use="required" />
+			<xs:attribute type="xs:boolean" name="skipRoot" use="optional" default="false" />
+			<xs:attribute type="xs:boolean" name="recursiveImport" use="optional" default="true" />
 		</xs:complexType>
 	</xs:element>
 </xs:schema>

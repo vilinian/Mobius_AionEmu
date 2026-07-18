@@ -1,33 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-	Volatile Rift 시그니아 4.8
-	Made By Encom
- -->
 <spawns>
 	<spawn_map map_id="210070000">
 		<!-- Rift -->
-		<spawn npc_id="700137" handler="RIFT">
-		    <spot x="2669.0242" y="438.01553" z="576.44300" anchor="CYGNEA_AM"/>
-			<spot x="1695.2113" y="118.30494" z="541.34860" anchor="CYGNEA_BM"/>
-			<spot x="780.76843" y="1797.6338" z="457.70422" anchor="CYGNEA_CM"/>
-			<spot x="2108.6462" y="1445.7365" z="428.34204" anchor="CYGNEA_DM"/>
-			<spot x="1928.2786" y="2594.9610" z="315.02524" anchor="CYGNEA_EM"/>
-			<spot x="783.88990" y="2369.2110" z="296.66055" anchor="CYGNEA_FM"/>
-			<spot x="2674.3784" y="592.28790" z="555.33340" anchor="CYGNEA_AS"/>
-            <spot x="1814.7332" y="306.04382" z="556.33890" anchor="CYGNEA_BS"/>
-            <spot x="347.00986" y="1513.1348" z="458.63156" anchor="CYGNEA_CS"/>
-            <spot x="1969.6664" y="1219.6482" z="439.87613" anchor="CYGNEA_DS"/>
-            <spot x="2181.1685" y="2428.1775" z="297.47020" anchor="CYGNEA_ES"/>
-            <spot x="420.22183" y="2435.8315" z="268.76385" anchor="CYGNEA_FS"/>
+		<spawn npc_id="700137" handler="RIFT"> <!-- Entrys in Cygnea -->
+			<spot x="2680.2886" y="363.25845" z="573.548" h="30" anchor="CYGNEA_AM" /> <!-- checked -->
+			<spot x="1746.409" y="140.65057" z="542.1664" h="15" anchor="CYGNEA_BM" /> <!-- checked -->
+			<spot x="791.8552" y="1866.1117" z="463.74097" h="90" anchor="CYGNEA_CM" /> <!-- checked -->
+			<spot x="2054.0703" y="1433.6185" z="428.19574" h="100" anchor="CYGNEA_DM" /> <!-- checked -->
+			<spot x="1913.0323" y="2674.0725" z="326.46585" h="90" anchor="CYGNEA_EM" /> <!-- checked -->
+			<spot x="921.86084" y="2380.6462" z="290.72208" h="36" anchor="CYGNEA_FM" /> <!-- checked -->
 		</spawn>
+		<spawn npc_id="700138" handler="RIFT"> <!-- Exits in Cygnea -->
+			<spot x="2439.5508" y="761.73395" z="578.1508" anchor="CYGNEA_AS" /> <!-- checked -->
+			<spot x="1910.3715" y="487.89838" z="560.77167" h="75" anchor="CYGNEA_BS" /> <!-- checked -->
+			<spot x="825.251" y="1807.9705" z="479.61523" h="75" anchor="CYGNEA_CS" /> <!-- checked -->
+			<spot x="1898.5168" y="1055.1317" z="456.51254" h="45" anchor="CYGNEA_DS" /> <!-- checked -->
+			<spot x="2403.4326" y="2530.9553" z="312.60727" h="45" anchor="CYGNEA_ES" /> <!-- checked -->
+			<spot x="507.68134" y="2304.4377" z="343.5907" h="30" anchor="CYGNEA_FS" /> <!-- checked -->
+		</spawn>
+
 		<!-- Volatile Rift -->
-		<spawn npc_id="702723" handler="VOLATILE_RIFT">
-			<spot x="423.68884" y="861.77814" z="415.61945" anchor="CYGNEA_GM"/>
-			<spot x="2911.7507" y="2899.1367" z="270.23444" anchor="CYGNEA_HM"/>
-			<spot x="1990.0380" y="1688.9974" z="195.12500" anchor="CYGNEA_IM"/>
-			<spot x="404.48602" y="413.61750" z="414.00000" anchor="CYGNEA_GS"/>
-			<spot x="2736.0444" y="2074.6597" z="242.66900" anchor="CYGNEA_HS"/>
-			<spot x="1359.5742" y="2211.3206" z="186.94678" anchor="CYGNEA_IS"/>
+		<spawn npc_id="702723" handler="RIFT"> <!-- Entrys in Cygnea --> <!-- handler="VOLATILE_RIFT" -->
+			<spot x="421.31644" y="880.1682" z="417.8393" h="90" anchor="CYGNEA_GM" /> <!-- ID:2176 - checked -->
+			<spot x="2949.8804" y="2852.939" z="276.3364" h="60" anchor="CYGNEA_HM" /> <!-- ID:2177 - checked -->
+			<spot x="2006.166" y="1736.8397" z="195.0972" h="90" anchor="CYGNEA_IM" /> <!-- ID:2178 - checked -->
 		</spawn>
+		<spawn npc_id="702724" handler="RIFT"> <!-- Exits in Cygnea --> <!-- handler="VOLATILE_RIFT" -->
+			<spot x="213.5672" y="612.78406" z="429.9847" h="15" anchor="CYGNEA_GS" /> <!-- ID:2286 - checked -->
+			<spot x="2586.1064" y="2639.1682" z="267.1715" h="113" anchor="CYGNEA_HS" /> <!-- ID:2287 - checked -->
+			<spot x="1856.0371" y="2087.3313" z="203.44902" h="75" anchor="CYGNEA_IS" /> <!-- ID:2288 - checked -->
+		</spawn>
+
+		<!-- CYGNEA_AS -->
+		<rift_spawn id="2280">
+		</rift_spawn>
+		<!-- CYGNEA_BS -->
+		<rift_spawn id="2281">
+		</rift_spawn>
+		<!-- CYGNEA_CS -->
+		<rift_spawn id="2282">
+		</rift_spawn>
+		<!-- CYGNEA_DS -->
+		<rift_spawn id="2283">
+		</rift_spawn>
+		<!-- CYGNEA_ES -->
+		<rift_spawn id="2284">
+		</rift_spawn>
+		<!-- CYGNEA_FS -->
+		<rift_spawn id="2285">
+		</rift_spawn>
+
+		<rift_spawn id="2286"> <!-- Schwarzflossen-Schlucht -->
+		</rift_spawn>
+		<rift_spawn id="2287">
+		</rift_spawn>
+		<rift_spawn id="2288">
+		</rift_spawn>
 	</spawn_map>
 </spawns>

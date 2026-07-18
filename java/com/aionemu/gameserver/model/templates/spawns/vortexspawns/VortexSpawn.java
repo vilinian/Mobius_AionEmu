@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.spawns.vortexspawns;
 
@@ -28,6 +28,8 @@ import com.aionemu.gameserver.model.templates.spawns.Spawn;
 import com.aionemu.gameserver.model.vortex.VortexStateType;
 
 /**
+ * Represents a spawn point specifically for {@link com.aionemu.gameserver.model.vortex.VortexStateType} entities.<br>
+ * This class defines the configuration and properties for vortex-related spawns within the game world.
  * @author Source
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -37,6 +39,10 @@ public class VortexSpawn
 	@XmlAttribute(name = "id")
 	private int id;
 	
+	/**
+	 * Returns the unique identifier of this object.
+	 * @return The integer ID.
+	 */
 	public int getId()
 	{
 		return id;
@@ -45,6 +51,11 @@ public class VortexSpawn
 	@XmlElement(name = "state_type")
 	private List<VortexSpawn.VortexStateTemplate> VortexStateTemplate;
 	
+	/**
+	 * Retrieves the list of templates for siege mode states.<br>
+	 * This method provides data used to configure {@code VortexStateTemplate} objects during a siege.
+	 * @return A {@code List} of {@code VortexStateTemplate} objects.
+	 */
 	public List<VortexStateTemplate> getSiegeModTemplates()
 	{
 		return VortexStateTemplate;
@@ -54,10 +65,8 @@ public class VortexSpawn
 	@XmlType(name = "VortexStateTemplate")
 	public static class VortexStateTemplate
 	{
-		
 		@XmlElement(name = "spawn")
 		private List<Spawn> spawns;
-		
 		@XmlAttribute(name = "state")
 		private VortexStateType stateType;
 		

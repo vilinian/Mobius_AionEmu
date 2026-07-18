@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.effect.modifier;
 
@@ -25,6 +25,8 @@ import com.aionemu.gameserver.skillengine.change.Func;
 import com.aionemu.gameserver.skillengine.model.Effect;
 
 /**
+ * Represents a modification applied to an action within the skill engine.<br>
+ * This abstract class serves as a base for various effects that alter game behavior.
  * @author ATracer
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -35,7 +37,6 @@ public abstract class ActionModifier
 	protected int delta;
 	@XmlAttribute(required = true)
 	protected int value;
-	
 	@XmlAttribute
 	protected Func mode = Func.ADD;
 	
@@ -53,6 +54,11 @@ public abstract class ActionModifier
 	 */
 	public abstract boolean check(Effect effect);
 	
+	/**
+	 * Retrieves the {@code Func} associated with this attribute.<br>
+	 * This method returns the function used for calculations.
+	 * @return The {@code Func} object.
+	 */
 	public Func getFunc()
 	{
 		return mode;

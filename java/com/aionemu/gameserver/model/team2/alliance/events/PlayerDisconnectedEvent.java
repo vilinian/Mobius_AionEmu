@@ -1,20 +1,22 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.team2.alliance.events;
+
+import java.util.Objects;
 
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.team2.TeamEvent;
@@ -25,10 +27,11 @@ import com.aionemu.gameserver.model.team2.common.legacy.PlayerAllianceEvent;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_ALLIANCE_MEMBER_INFO;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.utils.PacketSendUtility;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
+import java.util.function.Predicate;
 
 /**
+ * This event is triggered when a {@link Player} disconnects from the server.<br>
+ * It handles the necessary cleanup for alliance-related data and notifies relevant systems.
  * @author ATracer
  */
 public class PlayerDisconnectedEvent implements TeamEvent, Predicate<PlayerAllianceMember>
@@ -37,6 +40,12 @@ public class PlayerDisconnectedEvent implements TeamEvent, Predicate<PlayerAllia
 	private final Player disconnected;
 	private final PlayerAllianceMember disconnectedMember;
 	
+	/**
+	 * Creates a new event for when a {@link Player} leaves an alliance.<br>
+	 * This constructor initializes the necessary data for handling the disconnection.
+	 * @param alliance The {@code PlayerAlliance} that the player is leaving.
+	 * @param player The {@code Player} who has disconnected from the game.
+	 */
 	public PlayerDisconnectedEvent(PlayerAlliance alliance, Player player)
 	{
 		this.alliance = alliance;
@@ -45,7 +54,9 @@ public class PlayerDisconnectedEvent implements TeamEvent, Predicate<PlayerAllia
 	}
 	
 	/**
-	 * Player should be in alliance before disconnection
+	 * Verifies if the disconnected player is still part of the alliance.<br>
+	 * It checks if the {@code alliance} contains the member with the unique ID of the {@code disconnected} player.
+	 * @return {@code true} if the member exists in the alliance, otherwise {@code false}.
 	 */
 	@Override
 	public boolean checkCondition()
@@ -53,10 +64,15 @@ public class PlayerDisconnectedEvent implements TeamEvent, Predicate<PlayerAllia
 		return alliance.hasMember(disconnected.getObjectId());
 	}
 	
+	/**
+	 * Processes the disconnection of a player from an alliance.<br>
+	 * This method updates the {@code PlayerAlliance} state based on the event.<br>
+	 * It handles leader changes and disbands the alliance if only one member remains.
+	 */
 	@Override
 	public void handleEvent()
 	{
-		Preconditions.checkNotNull(disconnectedMember, "Disconnected member should not be null");
+		Objects.requireNonNull(disconnectedMember, "Disconnected member should not be null");
 		alliance.apply(this);
 		if (alliance.onlineMembers() <= 1)
 		{
@@ -71,8 +87,14 @@ public class PlayerDisconnectedEvent implements TeamEvent, Predicate<PlayerAllia
 		}
 	}
 	
+	/**
+	 * Sends the necessary network packets to update member information.<br>
+	 * This method notifies the client about group changes for both members.
+	 * @param member The {@code PlayerAllianceMember} receiving the update.
+	 * @return Always returns {@code true}.
+	 */
 	@Override
-	public boolean apply(PlayerAllianceMember member)
+	public boolean test(PlayerAllianceMember member)
 	{
 		final Player player = member.getObject();
 		if (!disconnected.getObjectId().equals(player.getObjectId()))
@@ -80,6 +102,7 @@ public class PlayerDisconnectedEvent implements TeamEvent, Predicate<PlayerAllia
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_FORCE_HE_BECOME_OFFLINE(disconnected.getName()));
 			PacketSendUtility.sendPacket(player, new SM_ALLIANCE_MEMBER_INFO(disconnectedMember, PlayerAllianceEvent.DISCONNECTED));
 		}
+		
 		return true;
 	}
 }

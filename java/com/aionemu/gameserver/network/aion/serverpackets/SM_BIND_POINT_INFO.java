@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -24,6 +24,11 @@ import com.aionemu.gameserver.network.aion.AionServerPacket;
 /*
  * @author sweetkr, Sarynth
  */
+/**
+ * This packet provides information about a specific bind point to the client.<br>
+ * It is used by the server to synchronize binding data with the player's view.
+ * @author sweetkr, Sarynth
+ */
 public class SM_BIND_POINT_INFO extends AionServerPacket
 {
 	private final int mapId;
@@ -32,6 +37,16 @@ public class SM_BIND_POINT_INFO extends AionServerPacket
 	private final float z;
 	private final Kisk kisk;
 	
+	/**
+	 * Creates a new {@code SM_BIND_POINT_INFO} packet.<br>
+	 * This method initializes the coordinates and map information for a bind point.<br>
+	 * It also retrieves the {@link Kisk} associated with the provided {@link Player}.
+	 * @param mapId The unique identifier of the map.
+	 * @param x The X coordinate of the bind point.
+	 * @param y The Y coordinate of the bind point.
+	 * @param z The Z coordinate of the bind point.
+	 * @param player The {@link Player} object used to fetch the kisk data.
+	 */
 	public SM_BIND_POINT_INFO(int mapId, float x, float y, float z, Player player)
 	{
 		this.mapId = mapId;
@@ -41,21 +56,17 @@ public class SM_BIND_POINT_INFO extends AionServerPacket
 		kisk = player.getKisk();
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void writeImpl(AionConnection con)
 	{
 		// Appears 0x04 if bound to a kisk. 0x00 if not.
 		writeC((kisk == null ? 0x00 : 0x04));
 		
-		writeC(0x01);// unk
-		writeD(mapId);// map id
+		writeC(0x01); // unk
+		writeD(mapId); // map id
 		writeF(x); // coordinate x
 		writeF(y); // coordinate y
 		writeF(z); // coordinate z
 		writeD((kisk == null ? 0x00 : (kisk.isActive() ? kisk.getObjectId() : 0))); // kisk object id
 	}
-	
 }

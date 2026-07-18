@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.ncrypt;
 
@@ -21,8 +21,8 @@ import java.security.KeyPair;
 import java.security.interfaces.RSAPublicKey;
 
 /**
- * This class is for storing standard RSA Public/Static keyPairs The main difference that N (Modulus) is encrypted to be transfered on the net with simple scrambling algorythm. So public pair (e, n) , where e is exponent (usually static 3 or 65537) and n is modulus, is encrypted and cannot be
- * applied to cipher some data without deciphering the modulus.
+ * This class stores standard RSA public key pairs where the modulus {@code n} is scrambled for network transmission.<br>
+ * The public pair {@code (e, n)} must be deciphered before it can be used to encrypt data.
  * @author EvilSpirit
  */
 public class EncryptedRSAKeyPair
@@ -37,8 +37,10 @@ public class EncryptedRSAKeyPair
 	private final byte[] encryptedModulus;
 	
 	/**
-	 * Default constructor. Stores RSA key pair and encrypts rsa modulus N
-	 * @param RSAKeyPair standard RSA KeyPair generated with standard KeyPairGenerator {@link java.security.KeyPairGenerator}
+	 * Creates a new instance of {@code EncryptedRSAKeyPair}.<br>
+	 * This constructor stores the provided {@link KeyPair}.<br>
+	 * It also encrypts the modulus from the public key.
+	 * @param RSAKeyPair The standard RSA {@link KeyPair} to be processed.
 	 */
 	public EncryptedRSAKeyPair(KeyPair RSAKeyPair)
 	{
@@ -47,9 +49,10 @@ public class EncryptedRSAKeyPair
 	}
 	
 	/**
-	 * Encrypt RSA modulus N
-	 * @param modulus RSA modulus from public/private pairs (e,n), (d,n)
-	 * @return encrypted modulus
+	 * Encrypts the RSA modulus using a simple scrambling algorithm.<br>
+	 * This method prepares the {@code BigInteger} for network transfer.
+	 * @param modulus The {@code BigInteger} representing the RSA modulus to be encrypted.
+	 * @return A {@code byte[]} containing the scrambled modulus data.
 	 */
 	private byte[] encryptModulus(BigInteger modulus)
 	{
@@ -91,8 +94,9 @@ public class EncryptedRSAKeyPair
 	}
 	
 	/**
-	 * Get default RSA key pair
-	 * @return RSAKeyPair
+	 * Retrieves the standard {@code KeyPair} stored in this object.<br>
+	 * This method returns the raw RSA keys used for encryption.
+	 * @return the {@code KeyPair} containing the public and private keys.
 	 */
 	public KeyPair getRSAKeyPair()
 	{
@@ -100,8 +104,9 @@ public class EncryptedRSAKeyPair
 	}
 	
 	/**
-	 * Get encrypted modulus to be transferred on the net.
-	 * @return encryptedModulus
+	 * Retrieves the encrypted modulus from the RSA key pair.<br>
+	 * This value is used for secure communication between the server and client.
+	 * @return a {@code byte[]} containing the encrypted modulus.
 	 */
 	public byte[] getEncryptedModulus()
 	{

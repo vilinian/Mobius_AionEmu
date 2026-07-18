@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.database;
 
@@ -25,18 +25,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.configs.DatabaseConfig;
-import com.jolbox.bonecp.BoneCP;
-import com.jolbox.bonecp.BoneCPConfig;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 /**
- * <b>Database Factory</b><br>
- * <br>
- * This file is used for creating a pool of connections for the server.<br>
- * It utilizes database.properties and creates a pool of connections and automatically recycles them when closed.<br>
- * <br>
- * DB.java utilizes the class.<br>
- * <br>
- * <p/>
+ * This factory creates a connection pool for the server using {@code HikariDataSource}.<br>
+ * It reads configuration from {@code database.properties} to build and manage the lifecycle of database connections.
  * @author Disturbing
  * @author SoulKeeper
  */
@@ -50,7 +44,7 @@ public class DatabaseFactory
 	/**
 	 * Connection Pool holds all connections - Idle or Active
 	 */
-	private static BoneCP connectionPool;
+	private static HikariDataSource connectionPool;
 	
 	/**
 	 * Returns name of the database that is used For isntance, MySQL returns "MySQL"
@@ -58,61 +52,52 @@ public class DatabaseFactory
 	private static String databaseName;
 	
 	/**
-	 * Returns major version that is used For instance, MySQL 5.0.51 community edition returns 5
+	 * Retursn major version that is used For instance, MySQL 5.0.51 community edition returns 5
 	 */
 	private static int databaseMajorVersion;
 	
 	/**
-	 * Returns minor version that is used For instance, MySQL 5.0.51 community edition returns 0
+	 * Retursn minor version that is used For instance, MySQL 5.0.51 community edition returns 0
 	 */
 	private static int databaseMinorVersion;
 	
 	/**
-	 * Initializes DatabaseFactory.
+	 * Initializes the {@code DatabaseFactory} and sets up the connection pool.<br>
+	 * This method reads configurations from {@link DatabaseConfig}.<br>
+	 * It establishes a connection to retrieve database metadata.
 	 */
-	public static synchronized void init()
+	public synchronized static void init()
 	{
 		if (connectionPool != null)
 		{
 			return;
 		}
 		
-		try
-		{
-			DatabaseConfig.DATABASE_DRIVER.newInstance();
-		}
-		catch (Exception e)
-		{
-			log.error("Error obtaining DB driver", e);
-			throw new Error("DB Driver doesnt exist!");
-		}
+		final int maxConnections = Math.max(DatabaseConfig.DATABASE_MAX_CONNECTIONS, 2);
 		
-		if (DatabaseConfig.DATABASE_BONECP_PARTITION_CONNECTIONS_MIN > DatabaseConfig.DATABASE_BONECP_PARTITION_CONNECTIONS_MAX)
-		{
-			log.error("Please check your database configuration. Minimum amount of connections is > maximum");
-			DatabaseConfig.DATABASE_BONECP_PARTITION_CONNECTIONS_MAX = DatabaseConfig.DATABASE_BONECP_PARTITION_CONNECTIONS_MIN;
-		}
-		
-		final BoneCPConfig config = new BoneCPConfig();
-		config.setPartitionCount(DatabaseConfig.DATABASE_BONECP_PARTITION_COUNT);
-		config.setMinConnectionsPerPartition(DatabaseConfig.DATABASE_BONECP_PARTITION_CONNECTIONS_MIN);
-		config.setMaxConnectionsPerPartition(DatabaseConfig.DATABASE_BONECP_PARTITION_CONNECTIONS_MAX);
+		final HikariConfig config = new HikariConfig();
+		config.setDriverClassName(DatabaseConfig.DATABASE_DRIVER.getName());
+		config.setJdbcUrl(DatabaseConfig.DATABASE_URL);
 		config.setUsername(DatabaseConfig.DATABASE_USER);
 		config.setPassword(DatabaseConfig.DATABASE_PASSWORD);
-		config.setJdbcUrl(DatabaseConfig.DATABASE_URL);
-		config.setDisableJMX(true);
+		config.setMaximumPoolSize(maxConnections);
+		config.setMinimumIdle(Math.max(maxConnections / 10, 2));
+		config.setConnectionTimeout(60000); // 1 minute.
+		config.setIdleTimeout(300000); // 5 minutes.
+		config.setMaxLifetime(600000); // 10 minutes.
+		config.setLeakDetectionThreshold(600000); // 10 minutes.
+		config.setPoolName("AionEmuPool");
+		config.setValidationTimeout(5000); // 5 seconds.
 		
 		try
 		{
-			connectionPool = new BoneCP(config);
+			connectionPool = new HikariDataSource(config);
 		}
-		catch (SQLException e)
+		catch (Exception e)
 		{
 			log.error("Error while creating DB Connection pool", e);
 			throw new Error("DatabaseFactory not initialized!", e);
 		}
-		/* test if connection is still valid before returning */
-		// connectionPool.setTestOnBorrow(true);
 		
 		try
 		{
@@ -126,17 +111,18 @@ public class DatabaseFactory
 		catch (Exception e)
 		{
 			log.error("Error with connection string: " + DatabaseConfig.DATABASE_URL, e);
-			throw new Error("DatabaseFactory not initialized!");
+			throw new Error("DatabaseFactory not initialized!", e);
 		}
 		
 		log.info("Successfully connected to database");
 	}
 	
 	/**
-	 * Returns an active connection from pool. This function utilizes the dataSource which grabs an object from the ObjectPool within its limits. The GenericObjectPool.borrowObject()' function utilized in 'DataSource.getConnection()' does not allow any connections to be returned as null, thus a null
-	 * check is not needed. Throws SQLException in case of a Failed Connection
-	 * @return Connection pooled connection
-	 * @throws java.sql.SQLException if can't get connection
+	 * Retrieves a connection from the database pool.<br>
+	 * This method ensures that {@code autoCommit} is set to {@code true}.<br>
+	 * It uses the internal {@link HikariDataSource} to provide the link.
+	 * @return A new {@code Connection} object.
+	 * @throws SQLException If a database access error occurs.
 	 */
 	public static Connection getConnection() throws SQLException
 	{
@@ -152,31 +138,35 @@ public class DatabaseFactory
 	}
 	
 	/**
-	 * Returns number of active connections in the pool.
-	 * @return int Active DB Connections
+	 * Retrieves the number of connections currently in use.<br>
+	 * This method queries the {@code HikariDataSource} pool metrics.
+	 * @return The total count of active database connections.
 	 */
 	public int getActiveConnections()
 	{
-		return connectionPool.getTotalLeased();
+		return connectionPool.getHikariPoolMXBean().getActiveConnections();
 	}
 	
 	/**
-	 * Returns number of Idle connections. Idle connections represent the number of instances in Database Connections that have once been connected and now are closed and ready for re-use. The 'getConnection' function will grab idle connections before creating new ones.
-	 * @return int Idle DB Connections
+	 * Retrieves the number of connections currently sitting idle in the pool.<br>
+	 * This method queries the {@code HikariDataSource} metrics.
+	 * @return The total count of idle connections as an {@code int}.
 	 */
 	public int getIdleConnections()
 	{
-		return connectionPool.getStatistics().getTotalFree();
+		return connectionPool.getHikariPoolMXBean().getIdleConnections();
 	}
 	
 	/**
-	 * Shuts down pool and closes connections
+	 * Shuts down the database connection pool.<br>
+	 * This method closes all active connections and sets the {@code connectionPool} to {@code null}.<br>
+	 * It allows the {@code init} method to be called again later.
 	 */
 	public static synchronized void shutdown()
 	{
 		try
 		{
-			connectionPool.shutdown();
+			connectionPool.close();
 		}
 		catch (Exception e)
 		{
@@ -188,9 +178,11 @@ public class DatabaseFactory
 	}
 	
 	/**
-	 * Closes both prepared statement and result set
-	 * @param st prepared statement to close
-	 * @param con connection to close
+	 * Closes the database resources safely.<br>
+	 * This method ensures that both {@code PreparedStatement} and {@code Connection} are closed.<br>
+	 * It helps prevent memory leaks in the application.
+	 * @param st The {@code PreparedStatement} to be closed.
+	 * @param con The {@code Connection} to be closed.
 	 */
 	public static void close(PreparedStatement st, Connection con)
 	{
@@ -199,9 +191,10 @@ public class DatabaseFactory
 	}
 	
 	/**
-	 * Helper method for silently close PreparedStament object.<br>
-	 * Associated connection object will not be closed.
-	 * @param st prepared statement to close
+	 * Safely closes a {@code PreparedStatement}.<br>
+	 * This method checks if the statement is {@code null} or already closed.<br>
+	 * It handles any {@code SQLException} internally and logs errors.
+	 * @param st The {@code PreparedStatement} to be closed.
 	 */
 	public static void close(PreparedStatement st)
 	{
@@ -224,11 +217,10 @@ public class DatabaseFactory
 	}
 	
 	/**
-	 * Closes connection and returns it to the pool.<br>
-	 * It's ok to pass null variable here.<br>
-	 * When closing connection - this method will make sure that connection returned to the pool in in autocommit mode.<br>
-	 * . If it's not - autocommit mode will be forced to 'true'
-	 * @param con Connection object to close, can be null
+	 * Closes the provided {@code Connection}.<br>
+	 * This method ensures that {@code autoCommit} is set to {@code true} before closing.<br>
+	 * It handles {@code SQLException} internally and logs any errors.
+	 * @param con The {@code Connection} object to be closed.
 	 */
 	public static void close(Connection con)
 	{
@@ -260,8 +252,9 @@ public class DatabaseFactory
 	}
 	
 	/**
-	 * Returns database name. For instance MySQL 5.0.51 community edition returns MySQL
-	 * @return database name that is used.
+	 * Retrieves the name of the current database.<br>
+	 * This is used to identify the database type, such as {@code MySQL}.
+	 * @return The name of the database as a {@code String}.
 	 */
 	public static String getDatabaseName()
 	{
@@ -269,8 +262,10 @@ public class DatabaseFactory
 	}
 	
 	/**
-	 * Returns database version. For instance MySQL 5.0.51 community edition returns 5
-	 * @return database major version
+	 * Retrieves the major version of the current database.<br>
+	 * This value is determined during the initialization of {@link DatabaseFactory}.<br>
+	 * For example, a MySQL 5.0.51 database will return {@code 5}.
+	 * @return The major version number as an {@code int}.
 	 */
 	public static int getDatabaseMajorVersion()
 	{
@@ -278,8 +273,9 @@ public class DatabaseFactory
 	}
 	
 	/**
-	 * Returns database minor version. For instance MySQL 5.0.51 community edition reutnrs 0
-	 * @return database minor version
+	 * Retrieves the minor version of the current database.<br>
+	 * This value is used to identify specific sub-versions of the database engine.
+	 * @return The {@code int} representing the minor version.
 	 */
 	public static int getDatabaseMinorVersion()
 	{
@@ -287,7 +283,9 @@ public class DatabaseFactory
 	}
 	
 	/**
-	 * Default constructor.
+	 * Private constructor for the {@link DatabaseFactory} class.<br>
+	 * This prevents other classes from creating new instances of this factory.<br>
+	 * Use the {@code init} method to initialize the database connection pool.
 	 */
 	private DatabaseFactory()
 	{

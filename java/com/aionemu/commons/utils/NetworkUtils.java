@@ -1,35 +1,34 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.utils;
 
 /**
+ * Provides a collection of helper methods for common networking tasks.<br>
+ * This utility class simplifies operations related to {@code IP} addresses and network configurations.
  * @author KID, -Nemesiss-
  */
 public class NetworkUtils
 {
 	/**
-	 * check if IP address match pattern
-	 * @param pattern *.*.*.* , 192.168.1.0-255 ,
-	 * @param address - 192.168.1.1<BR>
-	 *            <code>address = 10.2.88.12  pattern = *.*.*.*   result: true<BR>
-	 *                address = 10.2.88.12 pattern = * result: true<BR>
-	 *                address = 10.2.88.12 pattern = 10.2.88.12-13 result: true<BR>
-	 *                address = 10.2.88.12 pattern = 10.2.88.13-125 result: false<BR></code>
-	 * @return true if address match pattern
+	 * Checks if a given IP address matches a specific pattern.<br>
+	 * The method supports wildcards, exact matches, and range definitions.
+	 * @param pattern The matching rule such as {@code *.*.*.*}, {@code *}, or a range like {@code 192.168.1.0-255}.
+	 * @param address The IP address string to validate.
+	 * @return {@code true} if the {@code address} matches the {@code pattern}, otherwise {@code false}.
 	 */
 	public static boolean checkIPMatching(String pattern, String address)
 	{
@@ -61,6 +60,7 @@ public class NetworkUtils
 				return false;
 			}
 		}
+		
 		return true;
 	}
 }

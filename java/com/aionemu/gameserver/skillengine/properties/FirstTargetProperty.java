@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.skillengine.properties;
 
@@ -26,10 +26,20 @@ import com.aionemu.gameserver.skillengine.model.Skill;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
+ * This property determines if a skill should only affect the first target selected.<br>
+ * It is used by the {@link Skill} engine to filter valid targets during execution.
  * @author ATracer
  */
 public class FirstTargetProperty
 {
+	/**
+	 * Configures the first target behavior for a specific {@link Skill}.<br>
+	 * This method updates the skill's target attributes based on the provided {@code Properties}.<br>
+	 * It handles various logic types such as self-targeting, pet targeting, and party checks.
+	 * @param skill The {@link Skill} object to be updated.
+	 * @param properties The {@code Properties} containing the configuration data.
+	 * @return {@code true} if the target was successfully set or processed, otherwise {@code false}.
+	 */
 	public static boolean set(Skill skill, Properties properties)
 	{
 		final FirstTargetAttribute value = properties.getFirstTarget();
@@ -37,13 +47,10 @@ public class FirstTargetProperty
 		switch (value)
 		{
 			case ME:
-			{
 				skill.setFirstTargetRangeCheck(false);
 				skill.setFirstTarget(skill.getEffector());
 				break;
-			}
 			case TARGETORME:
-			{
 				boolean changeTargetToMe = false;
 				if (skill.getFirstTarget() == null)
 				{
@@ -61,7 +68,7 @@ public class FirstTargetProperty
 				{
 					final Player playerEffected = (Player) skill.getFirstTarget();
 					final Player playerEffector = (Player) skill.getEffector();
-					if (playerEffected.isEnemy(playerEffector))
+					if (!playerEffected.getRace().equals(playerEffector.getRace()) || playerEffected.isEnemy(playerEffector))
 					{
 						changeTargetToMe = true;
 					}
@@ -85,20 +92,21 @@ public class FirstTargetProperty
 						changeTargetToMe = true;
 					}
 				}
+				
 				if (changeTargetToMe)
 				{
 					if (skill.getEffector() instanceof Player)
 					{
 						PacketSendUtility.sendPacket((Player) skill.getEffector(), SM_SYSTEM_MESSAGE.STR_SKILL_AUTO_CHANGE_TARGET_TO_MY);
 					}
+					
 					skill.setFirstTarget(skill.getEffector());
 				}
 				break;
-			}
 			case TARGET:
-			{
-				if ((skill.getSkillId() <= 8217) || (skill.getSkillId() >= 9180)) // 5.1
+				if ((skill.getSkillId() <= 8217) || (skill.getSkillId() >= 9180))
 				{
+					// 5.1
 					if ((skill.getSkillTemplate().getDispelCategory() != DispelCategoryType.NPC_BUFF) && (skill.getSkillTemplate().getDispelCategory() != DispelCategoryType.NPC_DEBUFF_PHYSICAL))
 					{
 						if (((skill.getFirstTarget() == null) || (skill.getFirstTarget().equals(skill.getEffector()))) && ((skill.getEffector() instanceof Player)))
@@ -107,6 +115,7 @@ public class FirstTargetProperty
 							{
 								return skill.getFirstTarget() != null;
 							}
+							
 							final TargetRelationAttribute relation = skill.getSkillTemplate().getProperties().getTargetRelation();
 							if (relation != TargetRelationAttribute.ALL)
 							{
@@ -117,9 +126,7 @@ public class FirstTargetProperty
 					}
 				}
 				break;
-			}
 			case MYPET:
-			{
 				final Creature effector = skill.getEffector();
 				if (effector instanceof Player)
 				{
@@ -138,9 +145,7 @@ public class FirstTargetProperty
 					return false;
 				}
 				break;
-			}
 			case MYMASTER:
-			{
 				final Creature peteffector = skill.getEffector();
 				if (peteffector instanceof Summon)
 				{
@@ -159,57 +164,56 @@ public class FirstTargetProperty
 					return false;
 				}
 				break;
-			}
 			case PASSIVE:
-			{
 				skill.setFirstTarget(skill.getEffector());
 				break;
-			}
 			case TARGET_MYPARTY_NONVISIBLE:
-			{
 				final Creature effected = skill.getFirstTarget();
 				if ((effected == null) || (skill.getEffector() == null))
 				{
 					return false;
 				}
-				if ((!(effected instanceof Player)) || (!(skill.getEffector() instanceof Player)) || (!((Player) skill.getEffector()).isInGroup2()))
+				
+				if (!(effected instanceof Player) || !(skill.getEffector() instanceof Player) || !((Player) skill.getEffector()).isInGroup2())
 				{
 					return false;
 				}
+				
 				boolean myParty = false;
 				for (Player member : ((Player) skill.getEffector()).getPlayerGroup2().getMembers())
 				{
-					if (member != skill.getEffector())
+					if (member == skill.getEffector())
 					{
-						if (member == effected)
-						{
-							myParty = true;
-							break;
-						}
+						continue;
+					}
+					
+					if (member == effected)
+					{
+						myParty = true;
+						break;
 					}
 				}
+				
 				if (!myParty)
 				{
 					return false;
 				}
+				
 				skill.setFirstTargetRangeCheck(false);
 				break;
-			}
 			case POINT:
-			{
 				skill.setFirstTarget(skill.getEffector());
 				skill.setFirstTargetRangeCheck(false);
 				return true;
-			}
 			default:
-			{
 				break;
-			}
 		}
+		
 		if (skill.getFirstTarget() != null)
 		{
 			skill.getEffectedList().add(skill.getFirstTarget());
 		}
+		
 		return true;
 	}
 }

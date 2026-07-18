@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.clientpackets;
 
@@ -26,6 +26,9 @@ import com.aionemu.gameserver.network.aion.AionClientPacket;
 import com.aionemu.gameserver.network.aion.AionConnection.State;
 
 /**
+ * Handles the {@code CM_ATTACK} packet sent from the client to the server.<br>
+ * This class processes requests for a character to perform an attack action.<br>
+ * It validates the target and initiates the combat logic.
  * @author alexa026, Avol, ATracer, KID
  */
 public class CM_ATTACK extends AionClientPacket
@@ -35,14 +38,18 @@ public class CM_ATTACK extends AionClientPacket
 	 * Target object id that client wants to TALK WITH or 0 if wants to unselect
 	 */
 	private int targetObjectId;
-	// TODO: Question, are they really needed?
-	@SuppressWarnings("unused")
-	private int attackno;
-	
+	private int attackNo;
 	private int time;
-	@SuppressWarnings("unused")
 	private int type;
 	
+	/**
+	 * This method creates a new {@link CM_ATTACK} packet.<br>
+	 * It initializes the packet with specific network states.<br>
+	 * Use this constructor to define how the attack action is handled.
+	 * @param opcode The unique identifier for the packet type.
+	 * @param state The primary state of the connection.
+	 * @param restStates Additional states associated with the packet.
+	 */
 	public CM_ATTACK(int opcode, State state, State... restStates)
 	{
 		super(opcode, state, restStates);
@@ -51,10 +58,10 @@ public class CM_ATTACK extends AionClientPacket
 	@Override
 	protected void readImpl()
 	{
-		targetObjectId = readD();// empty
-		attackno = readC();// empty
-		time = readH();// empty
-		type = readC();// empty
+		targetObjectId = readD(); // empty
+		attackNo = readC(); // AttackCounter
+		time = readH(); // empty
+		type = readC(); // type
 	}
 	
 	@Override
@@ -74,7 +81,7 @@ public class CM_ATTACK extends AionClientPacket
 		final VisibleObject obj = player.getKnownList().getObject(targetObjectId);
 		if ((obj != null) && (obj instanceof Creature))
 		{
-			player.getController().attackTarget((Creature) obj, time);
+			player.getController().attackTarget((Creature) obj, attackNo, time, type);
 		}
 		else
 		{

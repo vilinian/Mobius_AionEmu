@@ -1,5 +1,6 @@
 @ECHO off
 TITLE AionEmu - Game Server Console
+MODE CON: COLS=120 LINES=50
 :START
 CLS
 SET JAVAVER=1.8
@@ -9,9 +10,6 @@ IF "%MODE%" == "" (
 CALL Panel.bat
 )
 
-IF "%JAVAVER%" == "1.8" (
-SET JAVA_OPTS=-XX:-UseSplitVerifier -XX:+TieredCompilation %JAVA_OPTS%
-)
 IF "%NUMAENABLE%" == "true" (
 SET JAVA_OPTS=-XX:+UseNUMA %JAVA_OPTS%
 )

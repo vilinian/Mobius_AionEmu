@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services;
 
@@ -27,20 +27,22 @@ import com.aionemu.gameserver.utils.ThreadPoolManager;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * This service handles the restoration of life statistics for {@link Creature} objects.<br>
+ * It manages how health is recovered based on specific game rules and conditions.
  * @author ATracer
  */
 public class LifeStatsRestoreService
 {
 	private static final int DEFAULT_DELAY = 6000;
 	private static final int DEFAULT_FPREDUCE_DELAY = 2000;
-	private static final int DEFAULT_FPRESTORE_DELAY = 2000;
-	
+	private static final int DEFAULT_FPRESTORE_DELAY = 1000;
 	private static LifeStatsRestoreService instance = new LifeStatsRestoreService();
 	
 	/**
-	 * HP and MP restoring task
-	 * @param lifeStats
-	 * @return Future<?>
+	 * Schedules a recurring task to restore HP and MP for a creature.<br>
+	 * This method uses the {@link ThreadPoolManager} to run the restoration logic.
+	 * @param lifeStats The {@code CreatureLifeStats} of the creature to update.
+	 * @return A {@code Future} representing the scheduled restoration task.
 	 */
 	public Future<?> scheduleRestoreTask(CreatureLifeStats<? extends Creature> lifeStats)
 	{
@@ -48,9 +50,10 @@ public class LifeStatsRestoreService
 	}
 	
 	/**
-	 * HP restoring task
-	 * @param lifeStats
-	 * @return
+	 * Schedules a recurring task to restore HP for a creature.<br>
+	 * This method uses the {@link ThreadPoolManager} to run the restoration logic.
+	 * @param lifeStats The {@code CreatureLifeStats} of the creature to receive the restoration.
+	 * @return A {@code Future} representing the scheduled task.
 	 */
 	public Future<?> scheduleHpRestoreTask(CreatureLifeStats<? extends Creature> lifeStats)
 	{
@@ -58,9 +61,11 @@ public class LifeStatsRestoreService
 	}
 	
 	/**
-	 * @param lifeStats
-	 * @param costFp
-	 * @return
+	 * Schedules a recurring task to reduce the FP of a player.<br>
+	 * This method uses {@link ThreadPoolManager} to run the reduction at a fixed rate.
+	 * @param lifeStats The {@code PlayerLifeStats} object for the target player.
+	 * @param costFp The amount of FP to subtract per interval.
+	 * @return A {@code Future<?>} representing the scheduled task.
 	 */
 	public Future<?> scheduleFpReduceTask(PlayerLifeStats lifeStats, Integer costFp)
 	{
@@ -68,14 +73,23 @@ public class LifeStatsRestoreService
 	}
 	
 	/**
-	 * @param lifeStats
-	 * @return
+	 * Schedules a recurring task to restore FP for a player.<br>
+	 * This method uses the {@link ThreadPoolManager} to run the restoration logic.<br>
+	 * It repeats every {@code 2000} milliseconds with an initial delay of {@code DEFAULT_FPRESTORE_DELAY}.
+	 * @param lifeStats The {@code PlayerLifeStats} object containing the player's current stats.
+	 * @return A {@code Future<?>} representing the scheduled task.
 	 */
 	public Future<?> scheduleFpRestoreTask(PlayerLifeStats lifeStats)
 	{
 		return ThreadPoolManager.getInstance().scheduleAtFixedRate(new FpRestoreTask(lifeStats), 2000, DEFAULT_FPRESTORE_DELAY);
 	}
 	
+	/**
+	 * Gets the singleton instance of this service.<br>
+	 * Use this method to access the {@link LifeStatsRestoreService}.<br>
+	 * This ensures only one instance is used throughout the application.
+	 * @return The global instance of {@code LifeStatsRestoreService}.
+	 */
 	public static LifeStatsRestoreService getInstance()
 	{
 		return instance;
@@ -85,7 +99,7 @@ public class LifeStatsRestoreService
 	{
 		private CreatureLifeStats<?> lifeStats;
 		
-		HpRestoreTask(CreatureLifeStats<?> lifeStats)
+		private HpRestoreTask(CreatureLifeStats<?> lifeStats)
 		{
 			this.lifeStats = lifeStats;
 		}
@@ -110,7 +124,7 @@ public class LifeStatsRestoreService
 	{
 		private CreatureLifeStats<?> lifeStats;
 		
-		HpMpRestoreTask(CreatureLifeStats<?> lifeStats)
+		private HpMpRestoreTask(CreatureLifeStats<?> lifeStats)
 		{
 			this.lifeStats = lifeStats;
 		}
@@ -137,7 +151,7 @@ public class LifeStatsRestoreService
 		private PlayerLifeStats lifeStats;
 		private final Integer costFp;
 		
-		FpReduceTask(PlayerLifeStats lifeStats, Integer costFp)
+		private FpReduceTask(PlayerLifeStats lifeStats, Integer costFp)
 		{
 			this.lifeStats = lifeStats;
 			this.costFp = costFp;
@@ -158,7 +172,10 @@ public class LifeStatsRestoreService
 			{
 				if (lifeStats.getOwner().getFlyState() > 0)
 				{
-					lifeStats.getOwner().getFlyController().endFly(true);
+					if (lifeStats.getOwner().getWorldId() != 400010000)
+					{
+						lifeStats.getOwner().getFlyController().endFly(true);
+					}
 				}
 				else
 				{
@@ -183,7 +200,7 @@ public class LifeStatsRestoreService
 	{
 		private PlayerLifeStats lifeStats;
 		
-		FpRestoreTask(PlayerLifeStats lifeStats)
+		private FpRestoreTask(PlayerLifeStats lifeStats)
 		{
 			this.lifeStats = lifeStats;
 		}

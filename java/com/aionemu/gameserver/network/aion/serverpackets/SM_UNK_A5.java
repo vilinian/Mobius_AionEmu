@@ -1,0 +1,48 @@
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.aionemu.gameserver.network.aion.serverpackets;
+
+import com.aionemu.gameserver.network.aion.AionConnection;
+import com.aionemu.gameserver.network.aion.AionServerPacket;
+
+/**
+ * This class handles the {@code SM_UNK_A5} server packet.<br>
+ * It is used to process unknown data received from the client.<br>
+ * It extends {@link AionServerPacket}.
+ * @author Alcapwnd
+ */
+public class SM_UNK_A5 extends AionServerPacket
+{
+	private final int value;
+	
+	/**
+	 * Creates a new instance of {@link SM_UNK_A5}.<br>
+	 * This constructor initializes the packet with a specific integer.
+	 * @param value The integer value to be stored in the packet.
+	 */
+	public SM_UNK_A5(int value)
+	{
+		this.value = value;
+	}
+	
+	@Override
+	protected void writeImpl(AionConnection con)
+	{
+		writeC(value);
+		writeH(0);
+	}
+}

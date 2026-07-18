@@ -1,23 +1,28 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.model;
 
+import java.sql.Timestamp;
+
+import com.aionemu.gameserver.model.templates.mail.MailPart;
+
 /**
- * This class represents Account model
+ * Represents the data model for a user account.<br>
+ * It stores essential information required to manage and identify accounts within the system.
  * @author SoulKeeper
  */
 public class Account
@@ -67,9 +72,14 @@ public class Account
 	 */
 	private AccountTime accountTime;
 	
+	private byte isReturn;
+	
+	private Timestamp returnEnd;
+	
 	/**
-	 * Returns account id, null if not stored in DB
-	 * @return account id
+	 * Retrieves the unique identifier for this {@link MailPart}.<br>
+	 * This value is used to distinguish different parts of a mail.
+	 * @return The {@code Integer} ID of the part, or {@code null} if not set.
 	 */
 	public Integer getId()
 	{
@@ -77,8 +87,9 @@ public class Account
 	}
 	
 	/**
-	 * Sets account id
-	 * @param id account id
+	 * Sets the unique identifier for this {@link Account}.<br>
+	 * The value can be {@code null} if no ID is assigned.
+	 * @param id The unique identifier to assign to the account.
 	 */
 	public void setId(Integer id)
 	{
@@ -86,8 +97,9 @@ public class Account
 	}
 	
 	/**
-	 * Returns account name
-	 * @return account name
+	 * Retrieves the name of the bookmark.<br>
+	 * This method returns the {@code String`name`} associated with this object.
+	 * @return The name of the bookmark as a {@code String}.
 	 */
 	public String getName()
 	{
@@ -95,8 +107,9 @@ public class Account
 	}
 	
 	/**
-	 * Sets account name
-	 * @param name account name
+	 * Sets the unique name for this {@link Account}.<br>
+	 * The provided {@code String} is stored as the account name.
+	 * @param name The new name to assign to the account.
 	 */
 	public void setName(String name)
 	{
@@ -104,8 +117,9 @@ public class Account
 	}
 	
 	/**
-	 * Returns password hash
-	 * @return password hash
+	 * Retrieves the hashed version of the account password.<br>
+	 * This value is used for secure authentication.
+	 * @return The {@code String} representing the password hash.
 	 */
 	public String getPasswordHash()
 	{
@@ -113,8 +127,9 @@ public class Account
 	}
 	
 	/**
-	 * Sets password hash
-	 * @param passwordHash password hash
+	 * Updates the hashed password for this account.<br>
+	 * This method stores the provided {@code String} in the {@code passwordHash} field.
+	 * @param passwordHash The new hash to be stored.
 	 */
 	public void setPasswordHash(String passwordHash)
 	{
@@ -122,8 +137,9 @@ public class Account
 	}
 	
 	/**
-	 * Returns access level of account
-	 * @return access level of account
+	 * Retrieves the current access level of the account.<br>
+	 * This value determines what actions the user is allowed to perform.
+	 * @return The {@code byte} value representing the account's access level.
 	 */
 	public byte getAccessLevel()
 	{
@@ -131,8 +147,9 @@ public class Account
 	}
 	
 	/**
-	 * Sets access level of account
-	 * @param accessLevel access level of account
+	 * Sets the security access level for this account.<br>
+	 * This value determines what actions the user can perform.
+	 * @param accessLevel The new {@code byte} value to set as the access level.
 	 */
 	public void setAccessLevel(byte accessLevel)
 	{
@@ -140,7 +157,9 @@ public class Account
 	}
 	
 	/**
-	 * @return the membership
+	 * Retrieves the membership status of this account.<br>
+	 * This value is stored as a {@code byte}.
+	 * @return The current membership level.
 	 */
 	public byte getMembership()
 	{
@@ -148,7 +167,9 @@ public class Account
 	}
 	
 	/**
-	 * @param membership the membership to set
+	 * Updates the membership status of the account.<br>
+	 * This method sets the {@code membership} field to a new value.
+	 * @param membership The new membership level to assign.
 	 */
 	public void setMembership(byte membership)
 	{
@@ -156,8 +177,9 @@ public class Account
 	}
 	
 	/**
-	 * Returns account activated
-	 * @return access level of account
+	 * Checks if the account is currently active.<br>
+	 * This method returns the status of the {@code activated} field.
+	 * @return the activation status as a {@code byte}.
 	 */
 	public byte getActivated()
 	{
@@ -165,8 +187,9 @@ public class Account
 	}
 	
 	/**
-	 * Sets access level of account
-	 * @param activated access level of account
+	 * Updates the activation status of the account.<br>
+	 * This method sets the {@code activated} field to a new value.
+	 * @param activated The new activation status as a {@code byte}.
 	 */
 	public void setActivated(byte activated)
 	{
@@ -174,8 +197,9 @@ public class Account
 	}
 	
 	/**
-	 * Returns last server that player visited
-	 * @return last server that player visited
+	 * Retrieves the ID of the last server visited by the user.<br>
+	 * Returns -1 if no server has been visited yet.
+	 * @return The last server ID as a {@code byte}.
 	 */
 	public byte getLastServer()
 	{
@@ -183,8 +207,9 @@ public class Account
 	}
 	
 	/**
-	 * Sets last server that player visited
-	 * @param lastServer last server that player visited
+	 * Updates the ID of the last server visited by the user.<br>
+	 * Use {@code -1} if no server has been visited yet.
+	 * @param lastServer The ID of the last server to store.
 	 */
 	public void setLastServer(byte lastServer)
 	{
@@ -192,8 +217,10 @@ public class Account
 	}
 	
 	/**
-	 * Returns last ip that player played from
-	 * @return last ip that player played from
+	 * Retrieves the IP address of the last login.<br>
+	 * This method returns the value stored in the {@code lastIp} field.<br>
+	 * It may return {@code null} if no IP is recorded.
+	 * @return The last known IP address as a {@code String}.
 	 */
 	public String getLastIp()
 	{
@@ -201,8 +228,9 @@ public class Account
 	}
 	
 	/**
-	 * Sets last ip that player players from
-	 * @param lastIp last ip that player played from
+	 * Updates the last known IP address for this account.<br>
+	 * This method stores the provided {@code String} value into the {@code lastIp} field.
+	 * @param lastIp The IP address to be saved.
 	 */
 	public void setLastIp(String lastIp)
 	{
@@ -210,8 +238,9 @@ public class Account
 	}
 	
 	/**
-	 * Returns last mac that player played from
-	 * @return last mac that player played from
+	 * Retrieves the last MAC address associated with this account.<br>
+	 * It returns the value stored in the {@code lastMac} field.
+	 * @return The last MAC address as a {@code String}.
 	 */
 	public String getLastMac()
 	{
@@ -219,8 +248,9 @@ public class Account
 	}
 	
 	/**
-	 * Sets last mac that player players from
-	 * @param lastMac last mac that player played from
+	 * Updates the last known MAC address for this account.<br>
+	 * The value is stored as a {@code String}.
+	 * @param lastMac The new MAC address to assign.
 	 */
 	public void setLastMac(String lastMac)
 	{
@@ -228,8 +258,9 @@ public class Account
 	}
 	
 	/**
-	 * Returns IP that player is forced to use with his account
-	 * @return ip that player is forsed to use with his account
+	 * Retrieves the forced IP address for this account.<br>
+	 * This value is used to restrict login access to a specific IP.
+	 * @return the forced IP address as a {@code String}
 	 */
 	public String getIpForce()
 	{
@@ -237,8 +268,9 @@ public class Account
 	}
 	
 	/**
-	 * Sets ip that player has to use with his account
-	 * @param ipForce sets ip that players has to use with his account
+	 * Sets the specific IP address allowed for this account.<br>
+	 * This value is used to restrict access to a single IP.
+	 * @param ipForce The {@code String} representing the forced IP address.
 	 */
 	public void setIpForce(String ipForce)
 	{
@@ -246,7 +278,9 @@ public class Account
 	}
 	
 	/**
-	 * @return accountTime
+	 * Retrieves the time information for this account.<br>
+	 * This method returns the {@code AccountTime} object associated with the current account.
+	 * @return the {@link AccountTime} object.
 	 */
 	public AccountTime getAccountTime()
 	{
@@ -254,7 +288,9 @@ public class Account
 	}
 	
 	/**
-	 * @param accountTime
+	 * Updates the time information for this account.<br>
+	 * This method sets the {@code accountTime} field to the provided value.
+	 * @param accountTime The new {@link AccountTime} object to assign.
 	 */
 	public void setAccountTime(AccountTime accountTime)
 	{
@@ -262,9 +298,50 @@ public class Account
 	}
 	
 	/**
-	 * Retunrns true if players name and password has are equals
-	 * @param o another player to check
-	 * @return true if names and password hash matches
+	 * Retrieves the return status of the account.<br>
+	 * This value corresponds to the {@code isReturn} field.
+	 * @return the current return status as a {@code byte}.
+	 */
+	public byte getReturn()
+	{
+		return isReturn;
+	}
+	
+	/**
+	 * Updates the return status of the account.<br>
+	 * This method sets the {@code isReturn} field.
+	 * @param isReturn The new return status value.
+	 */
+	public void setReturn(byte isReturn)
+	{
+		this.isReturn = isReturn;
+	}
+	
+	/**
+	 * Retrieves the timestamp for when the account's return period ends.<br>
+	 * This value is stored in the {@code returnEnd} field.
+	 * @return the end timestamp of the return period.
+	 */
+	public Timestamp getReturnEnd()
+	{
+		return returnEnd;
+	}
+	
+	/**
+	 * Sets the end time for the account return period.<br>
+	 * This updates the {@code returnEnd} field with the provided value.
+	 * @param end The {@code Timestamp} representing when the return period ends.
+	 */
+	public void setReturnEnd(Timestamp end)
+	{
+		returnEnd = end;
+	}
+	
+	/**
+	 * Compares this {@link Account} object with another object for equality.<br>
+	 * It checks if both objects have the same name and password hash.
+	 * @param o The object to compare this instance against.
+	 * @return {@code true} if the objects are equal, {@code false} otherwise.
 	 */
 	@Override
 	public boolean equals(Object o)
@@ -291,8 +368,10 @@ public class Account
 	}
 	
 	/**
-	 * Returns player hashcode.
-	 * @return player hashcode
+	 * Returns a hash code value for this {@link Account} object.<br>
+	 * This value is used to identify the object in collections like {@code HashSet}.<br>
+	 * It is calculated based on the {@code name} and {@code passwordHash} fields.
+	 * @return The integer hash code of this object.
 	 */
 	@Override
 	public int hashCode()

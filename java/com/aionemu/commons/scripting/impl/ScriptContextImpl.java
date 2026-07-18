@@ -1,27 +1,31 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting.impl;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +38,8 @@ import com.aionemu.commons.scripting.classlistener.OnClassLoadUnloadListener;
 import com.aionemu.commons.scripting.classlistener.ScheduledTaskClassListener;
 
 /**
- * This class is actual implementation of {@link com.aionemu.commons.scripting.ScriptContext}
+ * This class provides the concrete implementation for {@link ScriptContext}.<br>
+ * It manages the environment and state required for executing scripts within the system.
  * @author SoulKeeper
  */
 public class ScriptContextImpl implements ScriptContext
@@ -80,10 +85,10 @@ public class ScriptContextImpl implements ScriptContext
 	private String compilerClassName;
 	
 	/**
-	 * Creates new scriptcontext with given root file
-	 * @param root file that represents root directory of this script context
-	 * @throws NullPointerException if root is null
-	 * @throws IllegalArgumentException if root directory doesn't exists or is not a directory
+	 * Creates a new instance of {@link ScriptContextImpl}.<br>
+	 * This constructor initializes the context with no parent.<br>
+	 * It uses the provided {@code root} directory for script files.
+	 * @param root The base directory for scanning source files.
 	 */
 	public ScriptContextImpl(File root)
 	{
@@ -91,11 +96,10 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * Creates new ScriptContext with given file as root and another ScriptContext as parent
-	 * @param root file that represents root directory of this script context
-	 * @param parent parent ScriptContex. It's classes and libraries will be accessible for this script context
-	 * @throws NullPointerException if root is null
-	 * @throws IllegalArgumentException if root directory doesn't exists or is not a directory
+	 * Creates a new {@link ScriptContextImpl} with a specific root directory.<br>
+	 * This constructor also sets the parent context for the hierarchy.
+	 * @param root The base directory to scan for script files.
+	 * @param parent The parent {@link ScriptContext} for this instance.
 	 */
 	public ScriptContextImpl(File root, ScriptContext parent)
 	{
@@ -114,12 +118,13 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Initializes the script context and its components.<br>
+	 * This method prepares the {@code ScriptCompiler}, loads files from the root directory, and compiles them.<br>
+	 * It also initializes all child {@link ScriptContext} objects if they exist.
 	 */
 	@Override
 	public synchronized void init()
 	{
-		
 		if (compilationResult != null)
 		{
 			log.error("Init request on initialized ScriptContext");
@@ -128,7 +133,27 @@ public class ScriptContextImpl implements ScriptContext
 		
 		final ScriptCompiler scriptCompiler = instantiateCompiler();
 		
-		final Collection<File> files = FileUtils.listFiles(root, scriptCompiler.getSupportedFileTypes(), true);
+		final String[] extensions = scriptCompiler.getSupportedFileTypes();
+		final Collection<File> files;
+		try (Stream<Path> stream = Files.walk(root.toPath(), Integer.MAX_VALUE))
+		{
+			files = stream.filter(Files::isRegularFile).filter(p ->
+			{
+				final String n = p.getFileName().toString();
+				for (String ext : extensions)
+				{
+					if (n.endsWith("." + ext))
+					{
+						return true;
+					}
+				}
+				return false;
+			}).map(Path::toFile).collect(Collectors.toList());
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException("Failed to list script files in " + root.getAbsolutePath(), e);
+		}
 		
 		if (parentScriptContext != null)
 		{
@@ -150,12 +175,14 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Shuts down the current script context.<br>
+	 * This method stops all child {@link ScriptContext} instances.<br>
+	 * It also triggers the pre-unload process for compiled classes.<br>
+	 * The {@code compilationResult} is set to {@code null} after completion.
 	 */
 	@Override
 	public synchronized void shutdown()
 	{
-		
 		if (compilationResult == null)
 		{
 			log.error("Shutdown of not initialized stript context", new Exception());
@@ -175,7 +202,9 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Reloads the current script context.<br>
+	 * This method calls {@code shutdown} to clear existing resources.<br>
+	 * It then calls {@code init} to restart the context.
 	 */
 	@Override
 	public void reload()
@@ -185,7 +214,9 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Retrieves the root directory for this script context.<br>
+	 * This directory is used to scan for {@code .java} files.
+	 * @return the {@code File} object representing the root directory.
 	 */
 	@Override
 	public File getRoot()
@@ -194,7 +225,9 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Retrieves the result of the script compilation.<br>
+	 * This method returns the {@code CompilationResult} object associated with this context.
+	 * @return The {@code CompilationResult} of the current script context.
 	 */
 	@Override
 	public CompilationResult getCompilationResult()
@@ -203,7 +236,9 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Checks if the script context has been initialized.<br>
+	 * This method returns {@code true} if the {@link CompilationResult} is not {@code null}.
+	 * @return {@code true} if initialized, {@code false} otherwise.
 	 */
 	@Override
 	public synchronized boolean isInitialized()
@@ -212,7 +247,9 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Sets the list of library files for this script context.<br>
+	 * These files will be loaded by the class loader.
+	 * @param files The {@code Iterable<File>} containing the library files to load.
 	 */
 	@Override
 	public void setLibraries(Iterable<File> files)
@@ -221,7 +258,9 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Retrieves the list of library files for this script context.<br>
+	 * These are the {@code java.io.File} objects that need to be loaded by the class loader.
+	 * @return an {@link Iterable} containing all library {@code File} objects.
 	 */
 	@Override
 	public Iterable<File> getLibraries()
@@ -230,7 +269,9 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Retrieves the parent {@link ScriptContext} for this context.<br>
+	 * This is useful when navigating up the hierarchy of nested scripts.
+	 * @return The parent {@code ScriptContext} or {@code null} if no parent exists.
 	 */
 	@Override
 	public ScriptContext getParentScriptContext()
@@ -239,7 +280,9 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Retrieves all child {@link ScriptContext} objects.<br>
+	 * This method returns the collection of nested contexts associated with this instance.
+	 * @return a {@code Collection} of {@link ScriptContext} children.
 	 */
 	@Override
 	public Collection<ScriptContext> getChildScriptContexts()
@@ -248,12 +291,14 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Adds a new child {@link ScriptContext} to this context.<br>
+	 * This method ensures the child is initialized if this context is already active.<br>
+	 * It prevents adding the same {@code ScriptContext} more than once.
+	 * @param context The {@link ScriptContext} to add as a child.
 	 */
 	@Override
 	public void addChildScriptContext(ScriptContext context)
 	{
-		
 		synchronized (this)
 		{
 			if (childScriptContexts == null)
@@ -277,7 +322,9 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Sets the listener for class loading events.<br>
+	 * This method assigns a {@link ClassListener} to this context.
+	 * @param cl The {@code ClassListener} to be used.
 	 */
 	@Override
 	public void setClassListener(ClassListener cl)
@@ -286,7 +333,9 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Retrieves the {@link ClassListener} for this script context.<br>
+	 * If no listener is set, it provides a default one or inherits from the parent.
+	 * @return the {@code ClassListener} instance associated with this context.
 	 */
 	@Override
 	public ClassListener getClassListener()
@@ -301,13 +350,17 @@ public class ScriptContextImpl implements ScriptContext
 				setClassListener(acl);
 				return classListener;
 			}
+			
 			return getParentScriptContext().getClassListener();
 		}
+		
 		return classListener;
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Sets the name of the compiler class used to compile sources.<br>
+	 * This value is used by {@code instantiateCompiler} to create a new compiler instance.
+	 * @param className The fully qualified name of the compiler class.
 	 */
 	@Override
 	public void setCompilerClassName(String className)
@@ -316,7 +369,9 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Retrieves the name of the compiler class used for compiling sources.<br>
+	 * This value is set via {@code setCompilerClassName}.
+	 * @return The name of the compiler class as a {@code String}.
 	 */
 	@Override
 	public String getCompilerClassName()
@@ -325,9 +380,11 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * Creates new instance of ScriptCompiler that should be used with this ScriptContext
-	 * @return instance of ScriptCompiler
-	 * @throws RuntimeException if failed to create instance
+	 * Creates a new instance of the {@link ScriptCompiler}.<br>
+	 * It uses the class name stored in this context to load the compiler.<br>
+	 * The loader is determined by the parent script context if one exists.
+	 * @return A new instance of {@code ScriptCompiler}.
+	 * @throws RuntimeException
 	 */
 	protected ScriptCompiler instantiateCompiler() throws RuntimeException
 	{
@@ -340,7 +397,7 @@ public class ScriptContextImpl implements ScriptContext
 		ScriptCompiler sc;
 		try
 		{
-			sc = (ScriptCompiler) Class.forName(getCompilerClassName(), true, cl).newInstance();
+			sc = (ScriptCompiler) Class.forName(getCompilerClassName(), true, cl).getDeclaredConstructor().newInstance();
 		}
 		catch (Exception e)
 		{
@@ -352,7 +409,11 @@ public class ScriptContextImpl implements ScriptContext
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Compares this object with another object for equality.<br>
+	 * It checks if both objects are of type {@code ScriptContextImpl}.<br>
+	 * Two contexts are equal if they have the same root and parent context.
+	 * @param obj The object to compare this instance against.
+	 * @return {@code true} if the objects are equal, {@code false} otherwise.
 	 */
 	@Override
 	public boolean equals(Object obj)
@@ -368,11 +429,15 @@ public class ScriptContextImpl implements ScriptContext
 		{
 			return another.getRoot().equals(root);
 		}
+		
 		return another.getRoot().equals(root) && parentScriptContext.equals(another.parentScriptContext);
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Returns a hash code value for this {@link ScriptContextImpl} object.<br>
+	 * This value is used to identify the object in collections like {@code HashSet}.<br>
+	 * It is calculated based on the {@code parentScriptContext} and {@code root} fields.
+	 * @return The integer hash code of this object.
 	 */
 	@Override
 	public int hashCode()
@@ -382,17 +447,4 @@ public class ScriptContextImpl implements ScriptContext
 		return result;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void finalize() throws Throwable
-	{
-		if (compilationResult != null)
-		{
-			log.error("Finalization of initialized ScriptContext. Forcing context shutdown.");
-			shutdown();
-		}
-		super.finalize();
-	}
 }

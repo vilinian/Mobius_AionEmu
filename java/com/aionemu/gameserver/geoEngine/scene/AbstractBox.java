@@ -1,47 +1,49 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.scene;
 
 import com.aionemu.gameserver.geoEngine.math.Vector3f;
 
 /**
- * An eight sided box.
- * <p/>
- * A {@code Box} is defined by a minimal point and a maximal point. The eight vertices that make the box are then computed, they are computed in such a way as to generate an axis-aligned box.
- * <p/>
- * This class does not control how the geometry data is generated, see {@link Box} for that.
+ * Represents an eight-sided axis-aligned box defined by a minimal and maximal point.<br>
+ * This class provides the base structure for boxes without controlling how geometry data is generated.<br>
+ * For geometry generation logic, see {@link Box}.
  * @author <a href="mailto:ianp@ianp.org">Ian Phillips</a>
- * @version $Revision: 4131 $, $Date: 2009-03-19 16:15:28 -0400 (Thu, 19 Mar 2009) $
  */
 public abstract class AbstractBox extends Mesh
 {
 	public final Vector3f center = new Vector3f(0f, 0f, 0f);
 	public float xExtent, yExtent, zExtent;
 	
+	/**
+	 * Initializes a new instance of the {@link AbstractBox} class.<br>
+	 * This constructor sets up the basic properties for an eight-sided box.
+	 */
 	public AbstractBox()
 	{
 		super();
 	}
 	
 	/**
-	 * Gets the array or vectors representing the 8 vertices of the box.
-	 * @return a newly created array of vertex vectors.
+	 * Calculates the eight vertices of the box.<br>
+	 * This method uses the {@code center} and the three extents to find each corner point.
+	 * @return an array of {@link Vector3f} objects representing the box vertices.
 	 */
-	protected final Vector3f[] computeVertices()
+	protected Vector3f[] computeVertices()
 	{
 		final Vector3f[] axes =
 		{
@@ -80,47 +82,51 @@ public abstract class AbstractBox extends Mesh
 	protected abstract void duUpdateGeometryVertices();
 	
 	/**
-	 * Get the center point of this box.
-	 * @return
+	 * Retrieves the center position of this bounding volume.<br>
+	 * This method returns the {@code Vector3f} representing the middle point.
+	 * @return The center of the volume as a {@link Vector3f}.
 	 */
-	public final Vector3f getCenter()
+	public Vector3f getCenter()
 	{
 		return center;
 	}
 	
 	/**
-	 * Get the x-axis size (extent) of this box.
-	 * @return
+	 * Gets the size of the bounding box along the x-axis.<br>
+	 * This value represents the distance from the center to the edge.
+	 * @return The {@code float} extent of the box on the x-axis.
 	 */
-	public final float getXExtent()
+	public float getXExtent()
 	{
 		return xExtent;
 	}
 	
 	/**
-	 * Get the y-axis size (extent) of this box.
-	 * @return
+	 * Gets the size of the bounding box along the Y axis.<br>
+	 * This value represents the distance from the center to the edge.
+	 * @return The {@code float} value of the Y extent.
 	 */
-	public final float getYExtent()
+	public float getYExtent()
 	{
 		return yExtent;
 	}
 	
 	/**
-	 * Get the z-axis size (extent) of this box.
-	 * @return
+	 * Retrieves the size of the bounding box along the {@code z} axis.<br>
+	 * This value represents the distance from the center to the edge.
+	 * @return The {@code z} extent as a {@code float}.
 	 */
-	public final float getZExtent()
+	public float getZExtent()
 	{
 		return zExtent;
 	}
 	
 	/**
-	 * Rebuilds the box after a property has been directly altered.
-	 * <p/>
-	 * For example, if you call {@code getXExtent().x = 5.0f} then you will need to call this method afterwards in order to update the box.
+	 * Updates the internal geometry of this box.<br>
+	 * This method refreshes the vertices, normals, and indices.<br>
+	 * It ensures the visual representation matches the current dimensions.
 	 */
-	public final void updateGeometry()
+	public void updateGeometry()
 	{
 		duUpdateGeometryVertices();
 		duUpdateGeometryNormals();
@@ -128,20 +134,21 @@ public abstract class AbstractBox extends Mesh
 	}
 	
 	/**
-	 * Rebuilds this box based on a new set of parameters.
-	 * <p/>
-	 * Note that the actual sides will be twice the given extent values because the box extends in both directions from the center for each extent.
-	 * @param center the center of the box.
-	 * @param x the x extent of the box, in each directions.
-	 * @param y the y extent of the box, in each directions.
-	 * @param z the z extent of the box, in each directions.
+	 * Updates the geometry of this box using a new center and dimensions.<br>
+	 * This method sets the {@code center}, {@code xExtent}, {@code yExtent}, and {@code zExtent}.<br>
+	 * It then calls {@code updateGeometry} to refresh the internal data.
+	 * @param center The new {@code Vector3f} position for the box center.
+	 * @param x The new width of the box along the X axis.
+	 * @param y The new height of the box along the Y axis.
+	 * @param z The new depth of the box along the Z axis.
 	 */
-	public final void updateGeometry(Vector3f center, float x, float y, float z)
+	public void updateGeometry(Vector3f center, float x, float y, float z)
 	{
 		if (center != null)
 		{
 			this.center.set(center);
 		}
+		
 		xExtent = x;
 		yExtent = y;
 		zExtent = z;
@@ -149,13 +156,13 @@ public abstract class AbstractBox extends Mesh
 	}
 	
 	/**
-	 * Rebuilds this box based on a new set of parameters.
-	 * <p/>
-	 * The box is updated so that the two opposite corners are {@code minPoint} and {@code maxPoint}, the other corners are created from those two positions.
-	 * @param minPoint the new minimum point of the box.
-	 * @param maxPoint the new maximum point of the box.
+	 * Updates the geometry of this box based on its boundaries.<br>
+	 * It calculates the new center and dimensions from the provided points.<br>
+	 * This method then calls {@code float, float, float)} to refresh the mesh.
+	 * @param minPoint The minimum corner of the box as a {@code Vector3f}.
+	 * @param maxPoint The maximum corner of the box as a {@code Vector3f}.
 	 */
-	public final void updateGeometry(Vector3f minPoint, Vector3f maxPoint)
+	public void updateGeometry(Vector3f minPoint, Vector3f maxPoint)
 	{
 		center.set(maxPoint).addLocal(minPoint).multLocal(0.5f);
 		final float x = maxPoint.x - center.x;

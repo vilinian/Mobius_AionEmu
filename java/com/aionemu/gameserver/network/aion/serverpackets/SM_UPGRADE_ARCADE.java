@@ -1,154 +1,223 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
+import java.util.List;
+
+import com.aionemu.gameserver.model.gameobjects.player.Player;
+import com.aionemu.gameserver.model.templates.arcadeupgrade.ArcadeTab;
+import com.aionemu.gameserver.model.templates.arcadeupgrade.ArcadeTabItem;
 import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
+import com.aionemu.gameserver.services.events.ArcadeUpgradeService;
 
 /**
- * @author Ranastic
+ * This packet handles the upgrade process for arcade items.<br>
+ * It communicates with {@link ArcadeUpgradeService} to update the player's arcade progress.
+ * @author Raziel
  */
 public class SM_UPGRADE_ARCADE extends AionServerPacket
 {
-	private final int type;
-	private int chargePoints;
-	private boolean display, success, canResume;
-	private int frenzymeter;
-	private int value;
-	private int itemIdReward;
-	private int rewardItemCount;
-	private int tokenRequire;
+	/**
+	 * Actions: 0 = Show Icon 1 = Start
+	 */
 	
-	public SM_UPGRADE_ARCADE(int type)
+	private final int action;
+	private int showicon = 1;
+	private int frenzyPoints = 0;
+	private boolean success = false;
+	private int level;
+	private ArcadeTabItem itemList;
+	private final int sessionId = 64519;
+	private Player player;
+	private int frenzyTime;
+	private int frenzyCount;
+	
+	/**
+	 * Creates a new {@link SM_UPGRADE_ARCADE} packet.<br>
+	 * This constructor sets the action to {@code 0}.<br>
+	 * It determines if an icon should be displayed based on the input.
+	 * @param showicon Set to {@code true} to display the icon, or {@code false} to hide it.
+	 */
+	public SM_UPGRADE_ARCADE(boolean showicon)
 	{
-		this.type = type;
+		action = 0;
+		this.showicon = showicon ? 1 : 0;
 	}
 	
-	public SM_UPGRADE_ARCADE(int type, boolean display)
+	/**
+	 * Creates a new arcade upgrade packet.<br>
+	 * This constructor sets the action to {@code 1}.<br>
+	 * It initializes the frenzy points and count values.
+	 * @param frenzyPoints The number of points used for the frenzy effect.
+	 * @param frenzyCount The total count associated with the frenzy effect.
+	 */
+	public SM_UPGRADE_ARCADE(int frenzyPoints, int frenzyCount)
 	{
-		this.type = type;
-		this.display = display;
+		action = 1;
+		this.frenzyPoints = frenzyPoints;
+		this.frenzyCount = frenzyCount;
 	}
 	
-	public SM_UPGRADE_ARCADE(int type, boolean success, int frenzymeter)
+	/**
+	 * This constructor initializes the arcade upgrade packet with a specific action.<br>
+	 * It sets the {@code action} value used by the server to handle the request.
+	 * @param action The action type, where {@code 0} shows an icon and {@code 1} starts the process.
+	 */
+	public SM_UPGRADE_ARCADE(int action)
 	{
-		this.type = type;
+		this.action = action;
+	}
+	
+	/**
+	 * This constructor initializes the arcade upgrade packet.<br>
+	 * It sets the specific action, success status, and frenzy points.
+	 * @param action The type of action to perform.
+	 * @param success Whether the upgrade attempt was successful.
+	 * @param frenzy The number of frenzy points associated with this action.
+	 */
+	public SM_UPGRADE_ARCADE(int action, boolean success, int frenzy)
+	{
+		this.action = action;
 		this.success = success;
-		this.frenzymeter = frenzymeter;
+		frenzyPoints = frenzy;
 	}
 	
-	public SM_UPGRADE_ARCADE(int type, int value)
+	/**
+	 * This method creates a new {@code SM_UPGRADE_ARCADE} packet.<br>
+	 * It initializes the packet with specific player and arcade data.
+	 * @param player The {@link Player} object associated with this action.
+	 * @param action The type of action to perform, such as 0 for showing an icon or 1 for starting.
+	 * @param level The current upgrade level for the arcade item.
+	 */
+	public SM_UPGRADE_ARCADE(Player player, int action, int level)
 	{
-		this.type = type;
-		this.value = value;
+		this.action = action;
+		this.level = level;
+		this.player = player;
 	}
 	
-	public SM_UPGRADE_ARCADE(int type, int chargePoints, int frenzymeter)
+	/**
+	 * Creates a new {@code SM_UPGRADE_ARCADE} packet.<br>
+	 * This method initializes the arcade upgrade data for the client.
+	 * @param action The type of action to perform, such as 0 for showing an icon or 1 for starting.
+	 * @param itemList The specific {@link ArcadeTabItem} being processed.
+	 */
+	public SM_UPGRADE_ARCADE(int action, ArcadeTabItem itemList)
 	{
-		this.type = type;
-		this.chargePoints = chargePoints;
-		this.frenzymeter = frenzymeter;
+		this.action = action;
+		this.itemList = itemList;
 	}
 	
-	public SM_UPGRADE_ARCADE(int type, int itemIdReward, int rewardItemCount, int unk)
+	/**
+	 * Creates a new {@link SM_UPGRADE_ARCADE} packet.<br>
+	 * This method initializes the arcade upgrade data.<br>
+	 * It sets the action, time, and count values.
+	 * @param action The type of action to perform.
+	 * @param frenzyTime The duration of the frenzy effect.
+	 * @param frenzyCount The number of times the frenzy can be used.
+	 */
+	public SM_UPGRADE_ARCADE(int action, int frenzyTime, int frenzyCount)
 	{
-		this.type = type;
-		this.itemIdReward = itemIdReward;
-		this.rewardItemCount = rewardItemCount;
-	}
-	
-	public SM_UPGRADE_ARCADE(int type, int value, boolean canResume, int tokenRequire)
-	{
-		this.type = type;
-		this.value = value;
-		this.canResume = canResume;
-		this.tokenRequire = tokenRequire;
+		this.action = action;
+		this.frenzyTime = frenzyTime;
+		this.frenzyCount = frenzyCount;
 	}
 	
 	@Override
 	protected void writeImpl(AionConnection con)
 	{
-		writeC(type);
-		switch (type)
+		writeC(action);
+		
+		switch (action)
 		{
-			case 0:
-			{
-				writeD(display ? 1 : 0);
+			case 0:// show icon
+				writeD(showicon);
 				break;
-			}
-			case 1:
-			{
-				writeD(chargePoints);
-				writeD(frenzymeter);
+			case 1: // show start upgrade arcade info
+				writeD(sessionId); // SessionId
+				writeD(frenzyPoints); // frenzymeter
+				writeD(frenzyCount);
 				writeD(1);
 				writeD(4);
 				writeD(6);
 				writeD(8);
-				writeD(8);
-				writeH(272);
-				writeB("73007500630063006500730073005F0077006500610070006F006E00300031000000");
-				writeB("73007500630063006500730073005F0077006500610070006F006E00300031000000");
-				writeB("73007500630063006500730073005F0077006500610070006F006E00300031000000");
-				writeB("73007500630063006500730073005F0077006500610070006F006E00300032000000");
-				writeB("73007500630063006500730073005F0077006500610070006F006E00300032000000");
-				writeB("73007500630063006500730073005F0077006500610070006F006E00300033000000");
-				writeB("73007500630063006500730073005F0077006500610070006F006E00300033000000");
-				writeB("73007500630063006500730073005F0077006500610070006F006E00300034000000");
+				writeD(8); // max upgrade
+				writeH(272); // icon
+				writeS("success_weapon01");
+				writeS("success_weapon01");
+				writeS("success_weapon01");
+				writeS("success_weapon02");
+				writeS("success_weapon02");
+				writeS("success_weapon03");
+				writeS("success_weapon03");
+				writeS("success_weapon04");
 				break;
-			}
 			case 2:
-			{
-				writeC(1);
+				writeC(1); // OLD D (sessionId) new c (1)
 				break;
-			}
-			case 3:
-			{
-				writeC(success ? 1 : 0);
-				writeD(frenzymeter);
+			case 3: // try result
+				writeC(success ? 1 : 0); // 1 success - 0 fail
+				writeD(frenzyPoints > 100 ? 100 : frenzyPoints); // frenzyPoints
 				break;
-			}
-			case 4:
-			{
-				writeD(value);
+			case 4: // try result
+				writeD(level); // upgradeLevel
 				break;
-			}
-			case 5:
-			{
-				writeD(value);
-				writeC(canResume ? 1 : 0);
-				writeD(tokenRequire);
+			case 5: // show fail
+				writeD(level); // upgradeLevel
+				writeC((level >= 6) && !player.getUpgradeArcade().isReTry() ? 1 : 0); // canResume? 1 yes - 0 no
+				writeD((level >= 6) && !player.getUpgradeArcade().isReTry() ? 2 : 0); // needed Arcade Token
+				writeD(0); // unk
+				player.getUpgradeArcade().setReTry(false);
+				player.getUpgradeArcade().setFailed(false);
 				break;
-			}
-			case 6:
-			{
-				writeD(itemIdReward);
-				writeD(rewardItemCount);
-				writeD(0);
+			case 6: // show reward icon
+				writeD(itemList.getItemId()); // templateId
+				writeD(itemList.getNormalCount() > 0 ? itemList.getNormalCount() : itemList.getFrenzyCount()); // itemCount
+				writeD(0); // unk
 				break;
-			}
-			case 10:
-			{
-				writeC(8);
-				writeC(8);
-				writeC(8);
-				writeC(8);
-				writeB("845FF409010000000000000001000000000000007478350B010000000000000001000000000000006D23160B0A0000000000000014000000000000007723160B010000000000000001000000000000008D71350B010000000000000001000000000000007078350B010000000000000001000000000000005675350B00000000000000001400000000000000C274350B000000000000000001000000000000005F369C0601000000000000000100000000000000C274350B01000000000000000100000000000000845FF409010000000000000001000000000000007878350B0A000000000000001400000000000000AE74350B01000000000000000100000000000000287CE609320000000000000064000000000000007C78350B00000000000000000100000000000000DD76350B00000000000000000100000000000000F60A7407010000000000000001000000000000008D78350B010000000000000001000000000000007178350B010000000000000001000000000000007A78350B010000000000000001000000000000000A76350B010000000000000001000000000000002B7CE6096400000000000000C800000000000000767A530B000000000000000001000000000000007278350B000000000000000001000000000000007B78350B010000000000000001000000000000007C78350B01000000000000000100000000000000833FE709010000000000000001000000000000000A76350B010000000000000001000000000000006E78350B01000000000000000100000000000000C374350B010000000000000001000000000000000B76350B00000000000000000100000000000000C14F260B000000000000000001000000000000000000000000");
+			case 7: // Frenzy !!!!
+				writeD(frenzyTime); // frenzySeconds !
+				writeD(frenzyCount); // frenzyCount
 				break;
-			}
+			case 8: // some configuration switch first option 1 displays a "You have not enough frenzycoins" window, the second changes the appearance of the frenzyBar
+				writeD(1); // unk
+				writeD(0); // unk
+				break;
+			case 10: // show reward list
+				final List<ArcadeTab> tabs = ArcadeUpgradeService.getInstance().getTabs();
+				for (ArcadeTab tab : tabs)
+				{
+					writeC(tab.getArcadeTabItems().size());
+				}
+				
+				for (ArcadeTab arcadetab : tabs)
+				{
+					for (ArcadeTabItem arcadetabitem : arcadetab.getArcadeTabItems())
+					{
+						writeD(arcadetabitem.getItemId()); // getId()
+						writeD(arcadetabitem.getNormalCount()); // getUncheckedcount()
+						writeD(0);
+						writeD(arcadetabitem.getFrenzyCount()); // getCheckedcount
+						writeD(0);
+					}
+				}
+				break;
+			// case 11: Empty Packet for BonusReward :)
 		}
 	}
 }

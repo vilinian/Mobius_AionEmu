@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services.teleport;
 
@@ -20,10 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aionemu.commons.database.dao.DAOManager;
+import com.aionemu.gameserver.configs.main.SecurityConfig;
 import com.aionemu.gameserver.configs.network.NetworkConfig;
-import com.aionemu.gameserver.dao.PlayerTransformDAO;
+import com.aionemu.gameserver.dao.PlayerDAO;
+import com.aionemu.gameserver.dao.PlayerTransformationDAO;
 import com.aionemu.gameserver.dataholders.DataManager;
-import com.aionemu.gameserver.dataholders.PlayerInitialData.LocationData;
+import com.aionemu.gameserver.dataholders.PlayerInitialData;
 import com.aionemu.gameserver.model.EmotionType;
 import com.aionemu.gameserver.model.Race;
 import com.aionemu.gameserver.model.TeleportAnimation;
@@ -32,15 +34,20 @@ import com.aionemu.gameserver.model.actions.PlayerMode;
 import com.aionemu.gameserver.model.gameobjects.Npc;
 import com.aionemu.gameserver.model.gameobjects.Pet;
 import com.aionemu.gameserver.model.gameobjects.Summon;
+import com.aionemu.gameserver.model.gameobjects.VisibleObject;
 import com.aionemu.gameserver.model.gameobjects.player.BindPointPosition;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.gameobjects.state.CreatureState;
 import com.aionemu.gameserver.model.items.storage.Storage;
+import com.aionemu.gameserver.model.templates.achievement.AchievementActionType;
+import com.aionemu.gameserver.model.templates.flypath.FlyPathEntry;
 import com.aionemu.gameserver.model.templates.item.ItemTemplate;
 import com.aionemu.gameserver.model.templates.portal.InstanceExit;
 import com.aionemu.gameserver.model.templates.portal.PortalLoc;
 import com.aionemu.gameserver.model.templates.portal.PortalPath;
 import com.aionemu.gameserver.model.templates.portal.PortalScroll;
+import com.aionemu.gameserver.model.templates.revive_start_points.InstanceReviveStartPoints;
+import com.aionemu.gameserver.model.templates.revive_start_points.WorldReviveStartPoints;
 import com.aionemu.gameserver.model.templates.robot.RobotInfo;
 import com.aionemu.gameserver.model.templates.spawns.SpawnSearchResult;
 import com.aionemu.gameserver.model.templates.spawns.SpawnSpotTemplate;
@@ -49,45 +56,64 @@ import com.aionemu.gameserver.model.templates.teleport.TeleportLocation;
 import com.aionemu.gameserver.model.templates.teleport.TeleportType;
 import com.aionemu.gameserver.model.templates.teleport.TeleporterTemplate;
 import com.aionemu.gameserver.model.templates.world.WorldMapTemplate;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_A_STATION;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_A_STATION_MOVE;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_BIND_POINT_INFO;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_CHANNEL_INFO;
+import com.aionemu.gameserver.network.aion.serverpackets.SM_DELETE;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_EMOTION;
+import com.aionemu.gameserver.network.aion.serverpackets.SM_FAST_TRACK;
+import com.aionemu.gameserver.network.aion.serverpackets.SM_FAST_TRACK_MOVE;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_LEGION_UPDATE_MEMBER;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_MOTION;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_PLAYER_INFO;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_PLAYER_SPAWN;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_SERIAL_KILLER;
+import com.aionemu.gameserver.network.aion.serverpackets.SM_RIDE_ROBOT;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_STATS_INFO;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_TELEPORT_LOC;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_TELEPORT_MAP;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_TRANSFORM;
-import com.aionemu.gameserver.network.aion.serverpackets.SM_USE_ROBOT;
 import com.aionemu.gameserver.questEngine.model.QuestState;
 import com.aionemu.gameserver.questEngine.model.QuestStatus;
-import com.aionemu.gameserver.services.AStationService;
 import com.aionemu.gameserver.services.DisputeLandService;
 import com.aionemu.gameserver.services.DuelService;
+import com.aionemu.gameserver.services.FastTrackService;
+import com.aionemu.gameserver.services.MinionService;
 import com.aionemu.gameserver.services.PrivateStoreService;
-import com.aionemu.gameserver.services.ProtectorConquerorService;
 import com.aionemu.gameserver.services.instance.InstanceService;
+import com.aionemu.gameserver.services.item.ItemPacketService.ItemUpdateType;
+import com.aionemu.gameserver.services.player.AchievementService;
+import com.aionemu.gameserver.services.player.LunaShopService;
 import com.aionemu.gameserver.services.trade.PricesService;
+import com.aionemu.gameserver.utils.MathUtil;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
+import com.aionemu.gameserver.utils.audit.AuditLogger;
 import com.aionemu.gameserver.world.World;
 import com.aionemu.gameserver.world.WorldMapInstance;
 import com.aionemu.gameserver.world.WorldMapType;
 import com.aionemu.gameserver.world.WorldPosition;
 
 /**
+ * This service handles teleportation logic for players and entities within the game world.<br>
+ * It manages various types of movement, including portal transitions and coordinate updates.<br>
+ * It interacts with {@link WorldMapInstance} to ensure valid positioning during teleportation.
  * @author xTz
  */
 public class TeleportService2
 {
 	private static final Logger log = LoggerFactory.getLogger(TeleportService2.class);
+	private static final int TELEPORT_DEFAULT_DELAY = 2200;
 	
+	/**
+	 * Teleports a {@link Player} to a specific destination based on a template and location ID.<br>
+	 * This method validates requirements such as quest completion, Kinah balance, and flypath distance.<br>
+	 * It handles both standard teleportation and flight-based teleportation logic.
+	 * @param template The {@link TeleporterTemplate} containing the destination data.
+	 * @param locId The unique identifier for the teleport location.
+	 * @param player The {@link Player} who is performing the teleport.
+	 * @param npc The {@link Npc} object associated with the teleporter.
+	 * @param animation The {@link TeleportAnimation} to play during the transition.
+	 */
 	public static void teleport(TeleporterTemplate template, int locId, Player player, Npc npc, TeleportAnimation animation)
 	{
 		final TribeClass tribe = npc.getTribe();
@@ -96,6 +122,7 @@ public class TeleportService2
 		{
 			return;
 		}
+		
 		if (template.getTeleLocIdData() == null)
 		{
 			log.info(String.format("Missing locId for this teleporter at teleporter_templates.xml with locId: %d", locId));
@@ -106,6 +133,7 @@ public class TeleportService2
 			}
 			return;
 		}
+		
 		final TeleportLocation location = template.getTeleLocIdData().getTeleportLocation(locId);
 		if (location == null)
 		{
@@ -117,6 +145,7 @@ public class TeleportService2
 			}
 			return;
 		}
+		
 		final TelelocationTemplate locationTemplate = DataManager.TELELOCATION_DATA.getTelelocationTemplate(locId);
 		if (locationTemplate == null)
 		{
@@ -128,6 +157,7 @@ public class TeleportService2
 			}
 			return;
 		}
+		
 		if (location.getRequiredQuest() > 0)
 		{
 			if (player.getRace() == Race.ELYOS)
@@ -151,20 +181,48 @@ public class TeleportService2
 				}
 			}
 		}
+		
 		if (!checkKinahForTransportation(location, player))
 		{
 			return;
 		}
-		if (location.getType() == TeleportType.FLIGHT)
+		
+		if (location.getType().equals(TeleportType.FLIGHT))
 		{
+			if (SecurityConfig.ENABLE_FLYPATH_VALIDATOR)
+			{
+				final FlyPathEntry flypath = DataManager.FLY_PATH.getPathTemplate((short) location.getLocId());
+				if (flypath == null)
+				{
+					AuditLogger.info(player, "Try to use null flyPath #" + location.getLocId());
+					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_CANNOT_MOVE_TO_AIRPORT_NO_ROUTE);
+					return;
+				}
+				
+				final double dist = MathUtil.getDistance(player, flypath.getStartX(), flypath.getStartY(), flypath.getStartZ());
+				if (dist > 7)
+				{
+					AuditLogger.info(player, "Try to use flyPath #" + location.getLocId() + " but hes too far " + dist);
+					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_CANNOT_MOVE_TO_AIRPORT_NO_ROUTE);
+					return;
+				}
+				
+				if (player.getWorldId() != flypath.getStartWorldId())
+				{
+					AuditLogger.info(player, "Try to use flyPath #" + location.getLocId() + " from not native start world " + player.getWorldId() + ". expected " + flypath.getStartWorldId());
+					PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_CANNOT_MOVE_TO_AIRPORT_NO_ROUTE);
+					return;
+				}
+				
+				player.setCurrentFlypath(flypath);
+			}
+			
 			player.unsetPlayerMode(PlayerMode.RIDE);
 			player.setState(CreatureState.FLIGHT_TELEPORT);
 			player.unsetState(CreatureState.ACTIVE);
 			player.setFlightTeleportId(location.getTeleportId());
 			PacketSendUtility.broadcastPacket(player, new SM_EMOTION(player, EmotionType.START_FLYTELEPORT, location.getTeleportId(), 0), true);
 			playerTransformation(player);
-			instanceTransformation(player);
-			archdaevaTransformation(player);
 		}
 		else
 		{
@@ -174,98 +232,168 @@ public class TeleportService2
 			{
 				instanceId = player.getInstanceId();
 			}
+			
 			sendLoc(player, mapId, instanceId, locationTemplate.getX(), locationTemplate.getY(), locationTemplate.getZ(), (byte) locationTemplate.getHeading(), animation);
 			playerTransformation(player);
-			instanceTransformation(player);
-			archdaevaTransformation(player);
 		}
 	}
 	
+	/**
+	 * Checks if the {@link Player} has enough Kinah to use a transportation service.<br>
+	 * It calculates the price based on the {@link TeleportLocation} and player race.<br>
+	 * If a HiPass effect is active, the cost is set to 1.<br>
+	 * Returns {@code false} if the payment fails or the player has insufficient funds.
+	 * @param location The destination teleport data containing the base price.
+	 * @param player The player attempting to use the transportation service.
+	 * @return {@code true} if the Kinah were successfully deducted, {@code false} otherwise.
+	 */
 	private static boolean checkKinahForTransportation(TeleportLocation location, Player player)
 	{
 		final Storage inventory = player.getInventory();
-		final int basePrice = (int) (location.getPrice() * 0.8F);
+		
+		// TODO: Price vary depending on the influence ratio
+		final int basePrice = location.getPrice();
+		// TODO check for location.getPricePvp()
+		
 		long transportationPrice = PricesService.getPriceForService(basePrice, player.getRace());
+		
+		// If HiPassEffect is active, then all flight/teleport prices are 1 kinah
 		if (player.getController().isHiPassInEffect())
 		{
 			transportationPrice = 1;
 		}
-		if (!inventory.tryDecreaseKinah(transportationPrice))
+		
+		if (!inventory.tryDecreaseKinah(transportationPrice, ItemUpdateType.DEC_KINAH_FLY))
 		{
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_NOT_ENOUGH_KINA(transportationPrice));
 			return false;
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Sends a teleport location packet to the player.<br>
+	 * This method handles the visual animation and updates the player's position after a delay.<br>
+	 * It also ensures the player is moved correctly between maps or instances.
+	 * @param player The {@link Player} object to move.
+	 * @param mapId The unique identifier for the destination map.
+	 * @param instanceId The specific instance ID if the map is an instance.
+	 * @param x The X coordinate of the destination.
+	 * @param y The Y coordinate of the destination.
+	 * @param z The Z coordinate of the destination.
+	 * @param h The heading value for the destination.
+	 * @param animation The {@link TeleportAnimation} to play during the move.
+	 */
 	private static void sendLoc(Player player, int mapId, int instanceId, float x, float y, float z, byte h, TeleportAnimation animation)
 	{
 		final boolean isInstance = DataManager.WORLD_MAPS_DATA.getTemplate(mapId).isInstance();
-		PacketSendUtility.sendPacket(player, new SM_TELEPORT_LOC(isInstance, instanceId, mapId, x, y, z, h));
+		final int delay = TELEPORT_DEFAULT_DELAY;
+		
+		if (animation.equals(TeleportAnimation.BEAM_ANIMATION))
+		{
+			player.setPortAnimation(2);
+		}
+		else if (animation.equals(TeleportAnimation.JUMP_ANIMATION))
+		{
+			player.setPortAnimation(11);
+		}
+		
+		if (player.getLevel() >= 66)
+		{
+			PacketSendUtility.sendPacket(player, new SM_TELEPORT_LOC(isInstance, instanceId, mapId, x, y, z, h, 3)); // 3 = Archdaeva Animation
+		}
+		else
+		{
+			PacketSendUtility.sendPacket(player, new SM_TELEPORT_LOC(isInstance, instanceId, mapId, x, y, z, h, animation.getStartAnimationId()));
+		}
+		
 		player.unsetPlayerMode(PlayerMode.RIDE);
 		playerTransformation(player);
-		instanceTransformation(player);
-		archdaevaTransformation(player);
 		ThreadPoolManager.getInstance().schedule(() ->
 		{
-			if (player.getLifeStats().isAlreadyDead() || !player.isSpawned())
+			if (player.getLifeStats().isAlreadyDead())
 			{
 				return;
 			}
-			TeleportService2.changePosition(player, mapId, instanceId, x, y, z, h, animation);
-		}, 2200);
+			
+			if (animation.equals(TeleportAnimation.BEAM_ANIMATION))
+			{
+				PacketSendUtility.broadcastPacket(player, new SM_DELETE(player, 2), 50);
+			}
+			else if (animation.equals(TeleportAnimation.JUMP_ANIMATION))
+			{
+				PacketSendUtility.broadcastPacket(player, new SM_DELETE(player, 11), 50);
+			}
+			
+			if (!player.isSpawned())
+			{
+				final WorldPosition pos = World.getInstance().createPosition(mapId, x, y, z, h, instanceId);
+				player.setPosition(pos);
+				DAOManager.getDAO(PlayerDAO.class).storePlayer(player);
+				return;
+			}
+			
+			changePosition(player, mapId, instanceId, x, y, z, h, animation);
+		}, delay);
 	}
 	
+	/**
+	 * Moves a {@link Player} to a specific {@code WorldPosition}.<br>
+	 * This method handles moving the player, their pet, and their summon.<br>
+	 * It also updates the player's zone, quests, and effects.<br>
+	 * If the player is dead, it uses {@code int, int, float, float, float, byte)} instead.
+	 * @param player The {@link Player} to be moved.
+	 * @param pos The target {@code WorldPosition}.
+	 */
 	public static void teleportTo(Player player, WorldPosition pos)
 	{
 		if (player.getWorldId() == pos.getMapId())
 		{
 			player.getPosition().setXYZH(pos.getX(), pos.getY(), pos.getZ(), pos.getHeading());
-			// Pet.
+			
+			// Pet
 			final Pet pet = player.getPet();
 			if (pet != null)
 			{
 				World.getInstance().setPosition(pet, pos.getMapId(), player.getInstanceId(), pos.getX(), pos.getY(), pos.getZ(), pos.getHeading());
 			}
-			// Summon.
+			
+			// Summon
 			final Summon summon = player.getSummon();
 			if (summon != null)
 			{
 				World.getInstance().setPosition(summon, pos.getMapId(), player.getInstanceId(), pos.getX(), pos.getY(), pos.getZ(), pos.getHeading());
 			}
+			
+			MinionService.getInstance().onTeleportPlayer(player);
 			PacketSendUtility.sendPacket(player, new SM_STATS_INFO(player));
 			PacketSendUtility.sendPacket(player, new SM_CHANNEL_INFO(player.getPosition()));
-			player.setPortAnimation(4);
+			player.setPortAnimation(4); // Beam exit animation
 			PacketSendUtility.sendPacket(player, new SM_PLAYER_INFO(player, false));
 			player.getController().startProtectionActiveTask();
 			PacketSendUtility.sendPacket(player, new SM_MOTION(player.getObjectId(), player.getMotions().getActiveMotions()));
-			// Pet.
+			
+			// Pet
 			if (pet != null)
 			{
 				World.getInstance().spawn(pet);
 			}
-			// Summon.
+			
+			// Summon
 			if (summon != null)
 			{
 				World.getInstance().spawn(summon);
 			}
-			player.updateKnownlist();
+			
+			MinionService.getInstance().onTeleportPlayer(player);
 			player.getKnownList().clear();
+			player.updateKnownlist();
 			player.getController().updateZone();
 			player.getController().updateNearbyQuests();
 			DisputeLandService.getInstance().onLogin(player);
 			player.getEffectController().updatePlayerEffectIcons();
-			final ProtectorConquerorService sgs = ProtectorConquerorService.getInstance();
 			playerTransformation(player);
-			instanceTransformation(player);
-			archdaevaTransformation(player);
-			PacketSendUtility.sendPacket(player, new SM_SERIAL_KILLER(false, player.getProtectorInfo().getRank()));
-			PacketSendUtility.sendPacket(player, new SM_SERIAL_KILLER(false, player.getConquerorInfo().getRank()));
-			if (sgs.isHandledWorld(player.getWorldId()) && (!sgs.isEnemyWorld(player) || sgs.isEnemyWorld(player)))
-			{
-				PacketSendUtility.sendPacket(player, new SM_SERIAL_KILLER(sgs.getWorldProtector(player.getWorldId()).values()));
-				PacketSendUtility.sendPacket(player, new SM_SERIAL_KILLER(sgs.getWorldConqueror(player.getWorldId()).values()));
-			}
 		}
 		else if (player.getLifeStats().isAlreadyDead())
 		{
@@ -277,6 +405,18 @@ public class TeleportService2
 		}
 	}
 	
+	/**
+	 * Teleports a dead {@link Player} to a specific location.<br>
+	 * This method handles the transition between worlds and updates the player's position.<br>
+	 * It also sends necessary packets to synchronize the client state.
+	 * @param player The {@code Player} object to teleport.
+	 * @param worldId The ID of the destination world.
+	 * @param instanceId The ID of the destination instance.
+	 * @param x The destination X coordinate.
+	 * @param y The destination Y coordinate.
+	 * @param z The destination Z coordinate.
+	 * @param heading The rotation angle at the destination.
+	 */
 	public static void teleportDeadTo(Player player, int worldId, int instanceId, float x, float y, float z, byte heading)
 	{
 		player.getController().onLeaveWorld();
@@ -292,11 +432,32 @@ public class TeleportService2
 		}
 	}
 	
+	/**
+	 * Moves a {@link Player} to a specific location in the game world.<br>
+	 * This method updates the player's position based on the provided coordinates.
+	 * @param player The {@code Player} object to move.
+	 * @param worldId The unique identifier for the target world.
+	 * @param x The horizontal coordinate of the destination.
+	 * @param y The vertical coordinate of the destination.
+	 * @param z The depth coordinate of the destination.
+	 * @return {@code true} if the teleport was successful, otherwise {@code false}.
+	 */
 	public static boolean teleportTo(Player player, int worldId, float x, float y, float z)
 	{
 		return teleportTo(player, worldId, x, y, z, player.getHeading());
 	}
 	
+	/**
+	 * Moves a {@link Player} to a specific location in the game world.<br>
+	 * This method handles the teleportation logic including animation and instance checking.
+	 * @param player The {@code Player} object to move.
+	 * @param worldId The ID of the destination world.
+	 * @param x The X coordinate of the destination.
+	 * @param y The Y coordinate of the destination.
+	 * @param z The Z coordinate of the destination.
+	 * @param h The heading value for the player's orientation.
+	 * @return {@code true} if the teleportation was successful, {@code false} otherwise.
+	 */
 	public static boolean teleportTo(Player player, int worldId, float x, float y, float z, byte h)
 	{
 		int instanceId = 1;
@@ -304,9 +465,22 @@ public class TeleportService2
 		{
 			instanceId = player.getInstanceId();
 		}
+		
 		return teleportTo(player, worldId, instanceId, x, y, z, h, TeleportAnimation.BEAM_ANIMATION);
 	}
 	
+	/**
+	 * Moves a {@link Player} to a specific location in the game world.<br>
+	 * This method handles coordinate updates and plays a visual effect.
+	 * @param player The {@link Player} object to move.
+	 * @param worldId The ID of the destination world.
+	 * @param x The X coordinate of the destination.
+	 * @param y The Y coordinate of the destination.
+	 * @param z The Z coordinate of the destination.
+	 * @param h The heading value for the new position.
+	 * @param animation The {@link TeleportAnimation} to play during movement.
+	 * @return {@code true} if the teleport was successful, {@code false} otherwise.
+	 */
 	public static boolean teleportTo(Player player, int worldId, float x, float y, float z, byte h, TeleportAnimation animation)
 	{
 		int instanceId = 1;
@@ -314,38 +488,78 @@ public class TeleportService2
 		{
 			instanceId = player.getInstanceId();
 		}
+		
 		return teleportTo(player, worldId, instanceId, x, y, z, h, animation);
 	}
 	
+	/**
+	 * Moves a {@link Player} to a specific location in the game world.<br>
+	 * This method handles moving the player to a designated map and instance.<br>
+	 * It uses the default beam animation for the teleportation effect.
+	 * @param player The {@link Player} object to move.
+	 * @param worldId The unique identifier of the world or map.
+	 * @param instanceId The specific instance ID for the location.
+	 * @param x The target X coordinate.
+	 * @param y The target Y coordinate.
+	 * @param z The target Z coordinate.
+	 * @param h The heading value for the player's orientation.
+	 * @return {@code true} if the teleportation was successful, {@code false} otherwise.
+	 */
 	public static boolean teleportTo(Player player, int worldId, int instanceId, float x, float y, float z, byte h)
 	{
 		return teleportTo(player, worldId, instanceId, x, y, z, h, TeleportAnimation.BEAM_ANIMATION);
 	}
 	
+	/**
+	 * Moves a {@link Player} to a specific location in the game world.<br>
+	 * This method handles the teleportation logic including coordinates and instance IDs.<br>
+	 * It uses the default beam animation for the transition.
+	 * @param player The {@link Player} object to move.
+	 * @param worldId The unique identifier of the target world.
+	 * @param instanceId The specific instance ID of the location.
+	 * @param x The target X coordinate.
+	 * @param y The target Y coordinate.
+	 * @param z The target Z coordinate.
+	 * @return {@code true} if the teleportation was successful, {@code false} otherwise.
+	 */
 	public static boolean teleportTo(Player player, int worldId, int instanceId, float x, float y, float z)
 	{
 		return teleportTo(player, worldId, instanceId, x, y, z, player.getHeading(), TeleportAnimation.BEAM_ANIMATION);
 	}
 	
+	/**
+	 * Moves a {@link Player} to a specific location in the game world.<br>
+	 * This method checks if the player is alive before moving them.<br>
+	 * It handles world transitions and plays the specified {@link TeleportAnimation}.
+	 * @param player The {@link Player} object to move.
+	 * @param worldId The ID of the destination world.
+	 * @param instanceId The ID of the destination instance.
+	 * @param x The destination X coordinate.
+	 * @param y The destination Y coordinate.
+	 * @param z The destination Z coordinate.
+	 * @param heading The rotation angle at the destination.
+	 * @param animation The {@link TeleportAnimation} to play during movement.
+	 * @return {@code true} if the teleport was successful, or {@code false} if the player is dead.
+	 */
 	public static boolean teleportTo(Player player, int worldId, int instanceId, float x, float y, float z, byte heading, TeleportAnimation animation)
 	{
 		if (player.getLifeStats().isAlreadyDead())
 		{
 			return false;
 		}
-		if (DuelService.getInstance().isDueling(player.getObjectId()))
+		else if (DuelService.getInstance().isDueling(player.getObjectId()))
 		{
 			DuelService.getInstance().loseDuel(player);
 		}
+		
 		if (player.getWorldId() != worldId)
 		{
 			player.getController().onLeaveWorld();
 		}
+		
 		if (animation.isNoAnimation())
 		{
 			playerTransformation(player);
-			instanceTransformation(player);
-			archdaevaTransformation(player);
 			player.unsetPlayerMode(PlayerMode.RIDE);
 			changePosition(player, worldId, instanceId, x, y, z, heading, animation);
 		}
@@ -353,37 +567,61 @@ public class TeleportService2
 		{
 			sendLoc(player, worldId, instanceId, x, y, z, heading, animation);
 		}
+		
 		return true;
 	}
 	
+	/**
+	 * Moves a {@link Player} to a specific location in the game world.<br>
+	 * This method handles closing stores, canceling skills, and updating pet or summon positions.<br>
+	 * It also manages world transitions and triggers necessary network packets for the new location.
+	 * @param player The {@link Player} object to move.
+	 * @param worldId The ID of the destination world.
+	 * @param instanceId The ID of the destination instance.
+	 * @param x The destination X coordinate.
+	 * @param y The destination Y coordinate.
+	 * @param z The destination Z coordinate.
+	 * @param heading The rotation angle at the destination.
+	 * @param animation The {@link TeleportAnimation} to play during the move.
+	 */
 	private static void changePosition(Player player, int worldId, int instanceId, float x, float y, float z, byte heading, TeleportAnimation animation)
 	{
 		if (player.hasStore())
 		{
 			PrivateStoreService.closePrivateStore(player);
 		}
+		
+		player.getController().cancelCurrentSkill();
+		if (player.getWorldId() != worldId)
+		{
+			player.getController().onLeaveWorld();
+		}
+		
 		player.getFlyController().endFly(true);
 		World.getInstance().despawn(player);
+		
 		// Send 2x, is normal !!!
 		playerTransformation(player);
-		instanceTransformation(player);
-		archdaevaTransformation(player);
 		player.getController().cancelCurrentSkill();
 		final int currentWorldId = player.getWorldId();
+		final WorldPosition pos = World.getInstance().createPosition(worldId, x, y, z, heading, instanceId);
+		player.setPosition(pos);
 		final boolean isInstance = DataManager.WORLD_MAPS_DATA.getTemplate(worldId).isInstance();
-		World.getInstance().setPosition(player, worldId, instanceId, x, y, z, heading);
-		// Pet.
+		
+		// Pet
 		final Pet pet = player.getPet();
 		if (pet != null)
 		{
 			World.getInstance().setPosition(pet, worldId, instanceId, x, y, z, heading);
 		}
-		// Summon.
+		
+		// Summon
 		final Summon summon = player.getSummon();
 		if (summon != null)
 		{
 			World.getInstance().setPosition(summon, worldId, instanceId, x, y, z, heading);
 		}
+		
 		player.setPortAnimation(animation.getEndAnimationId());
 		player.getController().startProtectionActiveTask();
 		if (currentWorldId == worldId)
@@ -397,27 +635,29 @@ public class TeleportService2
 			player.getController().updateZone();
 			player.getController().updateNearbyQuests();
 			DisputeLandService.getInstance().onLogin(player);
+			
 			// Send 2x, is normal !!!
 			playerTransformation(player);
-			instanceTransformation(player);
-			archdaevaTransformation(player);
-			// Pet.
+			
+			// Pet
 			if (pet != null)
 			{
 				World.getInstance().spawn(pet);
 				player.setPortAnimation(4);
 			}
-			// Summon.
+			
+			// Summon
 			if (summon != null)
 			{
 				World.getInstance().spawn(summon);
 				player.setPortAnimation(4);
 			}
+			
 			player.getKnownList().clear();
 			player.updateKnownlist();
 			if (player.isUseRobot() || (player.getRobotId() != 0))
 			{
-				PacketSendUtility.sendPacket(player, new SM_USE_ROBOT(player, getRobotInfo(player).getRobotId()));
+				PacketSendUtility.sendPacket(player, new SM_RIDE_ROBOT(player, getRobotInfo(player).getRobotId()));
 			}
 		}
 		else
@@ -425,37 +665,85 @@ public class TeleportService2
 			PacketSendUtility.sendPacket(player, new SM_CHANNEL_INFO(player.getPosition()));
 			PacketSendUtility.sendPacket(player, new SM_PLAYER_SPAWN(player));
 			playerTransformation(player);
-			instanceTransformation(player);
-			archdaevaTransformation(player);
 			if (player.isUseRobot() || (player.getRobotId() != 0))
 			{
-				ThreadPoolManager.getInstance().schedule(() -> PacketSendUtility.sendPacket(player, new SM_USE_ROBOT(player, getRobotInfo(player).getRobotId())), 3000);
+				ThreadPoolManager.getInstance().schedule(() -> PacketSendUtility.sendPacket(player, new SM_RIDE_ROBOT(player, getRobotInfo(player).getRobotId())), 3000);
 			}
 		}
+		
 		if (player.isLegionMember())
 		{
 			PacketSendUtility.broadcastPacketToLegion(player.getLegion(), new SM_LEGION_UPDATE_MEMBER(player, 0, ""));
 		}
+		
 		sendWorldSwitchMessage(player, currentWorldId, worldId, isInstance);
+		AchievementService.getInstance().onUpdateAchievementAction(player, worldId, 1, AchievementActionType.ENTER_WORLD);
 	}
 	
+	/**
+	 * Retrieves the robot information for a specific {@link Player}.<br>
+	 * This method looks up data based on the main hand weapon skin.
+	 * @param player The {@code Player} object to check.
+	 * @return The {@code RobotInfo} associated with the player's equipment.
+	 */
 	public static RobotInfo getRobotInfo(Player player)
 	{
 		final ItemTemplate template = player.getEquipment().getMainHandWeapon().getItemSkinTemplate();
 		return DataManager.ROBOT_DATA.getRobotInfo(template.getRobotId());
 	}
 	
+	/**
+	 * Sends a message to the player when they change worlds.<br>
+	 * This method handles the transition between different world IDs.<br>
+	 * It triggers the logic for entering an instance if required.
+	 * @param player The {@code Player} object receiving the message.
+	 * @param oldWorld The ID of the previous world.
+	 * @param newWorld The ID of the destination world.
+	 * @param enteredInstance A boolean indicating if the player is entering an instance.
+	 */
 	private static void sendWorldSwitchMessage(Player player, int oldWorld, int newWorld, boolean enteredInstance)
 	{
-		if ((enteredInstance) && (oldWorld != newWorld) && (!WorldMapType.getWorld(newWorld).isPersonal()))
-		{
-			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_INSTANCE_DUNGEON_OPENED_FOR_SELF(newWorld));
-		}
-		playerTransformation(player);
-		instanceTransformation(player);
-		archdaevaTransformation(player);
+		onEnterInstance(player, oldWorld, newWorld, enteredInstance);
 	}
 	
+	/**
+	 * Handles logic when a {@code Player} enters an instance.<br>
+	 * It updates achievements and manages portal cooldowns.<br>
+	 * This method also triggers the player transformation update.
+	 * @param player The {@code Player} object involved in the teleport.
+	 * @param oldWorld The ID of the previous world.
+	 * @param newWorld The ID of the destination world.
+	 * @param enteredInstance A boolean indicating if the destination is an instance.
+	 */
+	private static void onEnterInstance(Player player, int oldWorld, int newWorld, boolean enteredInstance)
+	{
+		if (enteredInstance && (oldWorld != newWorld) && !WorldMapType.getWorld(newWorld).isPersonal())
+		{
+			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_INSTANCE_DUNGEON_OPENED_FOR_SELF(newWorld));
+			LunaShopService.getInstance().sendLunaInstanceBuff(player, player.getLevel());
+			AchievementService.getInstance().onUpdateAchievementAction(player, newWorld, 1, AchievementActionType.ENTER_WORLD);
+			if (player.getPortalCooldownList().getPortalCooldownItem(newWorld) == null)
+			{
+				player.getPortalCooldownList().addPortalCooldown(newWorld, 1, DataManager.INSTANCE_COOLTIME_DATA.getInstanceEntranceCooltime(player, newWorld));
+			}
+			else
+			{
+				player.getPortalCooldownList().addEntry(newWorld);
+				PacketSendUtility.playerSendPacketTime(player, SM_SYSTEM_MESSAGE.STR_MSG_INSTANCE_DUNGEON_COUNT_USE, 20000);
+			}
+		}
+		
+		playerTransformation(player);
+	}
+	
+	/**
+	 * Displays the map information for a specific teleportation point.<br>
+	 * This method checks if the {@code player} is flying or targeting an enemy before sending the packet.<br>
+	 * It uses the {@code targetObjectId} to find the object and {@code npcId} to get the template.
+	 * @param player The {@link Player} who will receive the map information.
+	 * @param targetObjectId The unique ID of the visible object in the world.
+	 * @param npcId The ID used to retrieve the teleportation template.
+	 */
 	public static void showMap(Player player, int targetObjectId, int npcId)
 	{
 		if (player.isInFlyingState())
@@ -463,58 +751,84 @@ public class TeleportService2
 			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_CANNOT_USE_AIRPORT_WHEN_FLYING);
 			return;
 		}
+		
 		final Npc object = (Npc) World.getInstance().findVisibleObject(targetObjectId);
-		if (player.isEnemy(object))
+		if (player.isEnemyFrom(object))
 		{
-			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_CANNOT_MOVE_TO_AIRPORT_WRONG_NPC);
+			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_CANNOT_MOVE_TO_AIRPORT_WRONG_NPC); // TODO retail message
 			return;
 		}
+		
 		PacketSendUtility.sendPacket(player, new SM_TELEPORT_MAP(player, targetObjectId, getTeleporterTemplate(npcId)));
 	}
 	
+	/**
+	 * Retrieves the {@link TeleporterTemplate} associated with a specific NPC.<br>
+	 * This method looks up data using the provided {@code npcId}.
+	 * @param npcId The unique identifier of the NPC.
+	 * @return The {@code TeleporterTemplate} for the given ID, or {@code null} if not found.
+	 */
 	public static TeleporterTemplate getTeleporterTemplate(int npcId)
 	{
 		return DataManager.TELEPORTER_DATA.getTeleporterTemplateByNpcId(npcId);
 	}
 	
+	/**
+	 * Moves a player to the specified kiosk location.<br>
+	 * This method uses {@code int, float, float, float, byte)} to update the position.
+	 * @param player The {@code Player} object to move.
+	 * @param kisk The {@code WorldPosition} of the destination kiosk.
+	 */
 	public static void moveToKiskLocation(Player player, WorldPosition kisk)
 	{
-		final int mapId = kisk.getMapId();
-		final float x = kisk.getX();
-		final float y = kisk.getY();
-		final float z = kisk.getZ();
-		final byte heading = kisk.getHeading();
-		teleportTo(player, mapId, x, y, z, heading);
+		teleportTo(player, kisk.getMapId(), kisk.getX(), kisk.getY(), kisk.getZ(), kisk.getHeading());
 	}
 	
+	/**
+	 * Moves a player to the correct prison based on their race.<br>
+	 * It checks if the {@code Player} is an {@code ELYOS} or {@code ASMODIANS}.<br>
+	 * The method uses {@code int, float, float, float)} to move them.
+	 * @param player The {@code Player} object to teleport.
+	 */
 	public static void teleportToPrison(Player player)
 	{
 		if (player.getRace() == Race.ELYOS)
 		{
-			teleportTo(player, WorldMapType.DE_PRISON.getId(), 275.0f, 239.0f, 49.0f);
+			teleportTo(player, WorldMapType.LF_PRISON.getId(), 275, 239, 49);
 		}
 		else if (player.getRace() == Race.ASMODIANS)
 		{
-			teleportTo(player, WorldMapType.DF_PRISON.getId(), 275.0f, 239.0f, 49.0f);
+			teleportTo(player, WorldMapType.DF_PRISON.getId(), 275, 239, 49);
 		}
 	}
 	
+	/**
+	 * Moves a {@link Player} to the location of a specific NPC.<br>
+	 * This method finds the first available spawn point for the given {@code npcId}.<br>
+	 * It handles both standard world maps and instance transitions automatically.
+	 * @param player The {@link Player} object that will be moved.
+	 * @param npcId The unique identifier of the NPC to teleport to.
+	 */
 	public static void teleportToNpc(Player player, int npcId)
 	{
 		final int worldId = player.getWorldId();
 		final SpawnSearchResult searchResult = DataManager.SPAWNS_DATA2.getFirstSpawnByNpcId(worldId, npcId);
+		
 		if (searchResult == null)
 		{
 			log.warn("No npc spawn found for : " + npcId);
 			return;
 		}
+		
 		final SpawnSpotTemplate spot = searchResult.getSpot();
 		final WorldMapTemplate worldTemplate = DataManager.WORLD_MAPS_DATA.getTemplate(searchResult.getWorldId());
 		WorldMapInstance newInstance = null;
+		
 		if (worldTemplate.isInstance())
 		{
 			newInstance = InstanceService.getNextAvailableInstance(searchResult.getWorldId());
 		}
+		
 		if (newInstance != null)
 		{
 			InstanceService.registerPlayerWithInstance(newInstance, player);
@@ -526,6 +840,13 @@ public class TeleportService2
 		}
 	}
 	
+	/**
+	 * Sends the bind point information to a specific {@link Player}.<br>
+	 * It retrieves coordinates from the player's saved bind point.<br>
+	 * If no bind point exists, it uses the default spawn location for the player's race.<br>
+	 * The final data is sent using the {@code SM_BIND_POINT_INFO} packet.
+	 * @param player The {@link Player} who will receive the bind point information.
+	 */
 	public static void sendSetBindPoint(Player player)
 	{
 		int worldId;
@@ -540,20 +861,35 @@ public class TeleportService2
 		}
 		else
 		{
-			final LocationData locationData = DataManager.PLAYER_INITIAL_DATA.getSpawnLocation(player.getRace());
+			final PlayerInitialData.LocationData locationData = DataManager.PLAYER_INITIAL_DATA.getSpawnLocation(player.getRace());
 			worldId = locationData.getMapId();
 			x = locationData.getX();
 			y = locationData.getY();
 			z = locationData.getZ();
 		}
+		
 		PacketSendUtility.sendPacket(player, new SM_BIND_POINT_INFO(worldId, x, y, z, player));
 	}
 	
+	/**
+	 * Moves a {@link Player} to their designated bind location.<br>
+	 * This method handles the positioning logic for the character.
+	 * @param player The {@code Player} object to move.
+	 * @param useTeleport A boolean indicating if the movement should use a teleport effect.
+	 */
 	public static void moveToBindLocation(Player player, boolean useTeleport)
 	{
 		moveToBindLocation(player, useTeleport, 0);
 	}
 	
+	/**
+	 * Moves a {@link Player} to their designated bind location.<br>
+	 * If no bind point exists, it uses the default spawn for their race.<br>
+	 * This method handles instance exit logic before moving the player.
+	 * @param player The {@code Player} object to move.
+	 * @param useTeleport Set to {@code true} to use the teleport system, or {@code false} to set position directly.
+	 * @param delay The time in milliseconds to wait before moving.
+	 */
 	public static void moveToBindLocation(Player player, boolean useTeleport, int delay)
 	{
 		byte h = 0;
@@ -572,13 +908,15 @@ public class TeleportService2
 		}
 		else
 		{
-			final LocationData locationData = DataManager.PLAYER_INITIAL_DATA.getSpawnLocation(player.getRace());
+			final PlayerInitialData.LocationData locationData = DataManager.PLAYER_INITIAL_DATA.getSpawnLocation(player.getRace());
 			worldId = locationData.getMapId();
 			x = locationData.getX();
 			y = locationData.getY();
 			z = locationData.getZ();
 		}
+		
 		InstanceService.onLeaveInstance(player);
+		
 		if (useTeleport)
 		{
 			teleportTo(player, worldId, x, y, z, h);
@@ -589,6 +927,33 @@ public class TeleportService2
 		}
 	}
 	
+	/**
+	 * Moves a {@link Player} to a position relative to a {@link VisibleObject}.<br>
+	 * The target position is calculated based on the object's heading and direction.
+	 * @param object The reference {@link VisibleObject} used for the starting point.
+	 * @param player The {@link Player} who will be moved.
+	 * @param direction The numerical direction to move in.
+	 * @param distance The number of units to move from the object.
+	 * @return {@code true} if the teleport was successful, {@code false} otherwise.
+	 */
+	public static boolean moveToTargetWithDistance(VisibleObject object, Player player, int direction, int distance)
+	{
+		final double radian = Math.toRadians(object.getHeading() * 3);
+		final float x0 = object.getX();
+		final float y0 = object.getY();
+		final float x1 = (float) (Math.cos((Math.PI * direction) + radian) * distance);
+		final float y1 = (float) (Math.sin((Math.PI * direction) + radian) * distance);
+		return teleportTo(player, object.getWorldId(), x0 + x1, y0 + y1, object.getZ());
+	}
+	
+	/**
+	 * Moves a {@link Player} to the designated exit of an instance.<br>
+	 * This method cancels any active skills before attempting the move.<br>
+	 * If no valid exit is found or the destination world is missing, it moves the player to their bind location.
+	 * @param player The {@link Player} object to be moved.
+	 * @param worldId The ID of the current world.
+	 * @param race The {@link Race} of the player used to determine the correct exit point.
+	 */
 	public static void moveToInstanceExit(Player player, int worldId, Race race)
 	{
 		player.getController().cancelCurrentSkill();
@@ -599,6 +964,7 @@ public class TeleportService2
 			moveToBindLocation(player, true);
 			return;
 		}
+		
 		if (InstanceService.isInstanceExist(instanceExit.getExitWorld(), 1))
 		{
 			teleportTo(player, instanceExit.getExitWorld(), instanceExit.getX(), instanceExit.getY(), instanceExit.getZ(), instanceExit.getH());
@@ -609,34 +975,75 @@ public class TeleportService2
 		}
 	}
 	
+	/**
+	 * Handles the automatic teleportation of players between opposite maps.<br>
+	 * This method checks if a player is in Iluma or Norsvold and moves them to the other side based on their race.<br>
+	 * It uses {@code int, float, float, float, byte)} to perform the move.
+	 * @param player The {@code Player} object to check for teleportation logic.
+	 */
 	public static void onLogOutOppositeMap(Player player)
 	{
 		switch (player.getWorldId())
 		{
-			case 210100000: // Iluma.
-			{
+			case 210100000: // Iluma
 				if (player.getCommonData().getRace() == Race.ASMODIANS)
 				{
 					TeleportService2.teleportTo(player, 220110000, 1813.9795f, 1982.6705f, 199.1976f, (byte) 52);
 				}
 				break;
-			}
-			case 220110000: // Norsvold.
-			{
+			case 220110000: // Norsvold
 				if (player.getCommonData().getRace() == Race.ELYOS)
 				{
 					TeleportService2.teleportTo(player, 210100000, 1417.6694f, 1282.3623f, 336.125f, (byte) 8);
 				}
 				break;
-			}
 		}
 	}
 	
+	/**
+	 * Retrieves the {@link InstanceExit} data for a specific world and race.<br>
+	 * This method fetches information from the {@code DataManager}.
+	 * @param worldId The unique identifier of the world.
+	 * @param race The {@link Race} type of the character.
+	 * @return The corresponding {@link InstanceExit} object.
+	 */
 	public static InstanceExit getInstanceExit(int worldId, Race race)
 	{
 		return DataManager.INSTANCE_EXIT_DATA.getInstanceExit(worldId, race);
 	}
 	
+	/**
+	 * Retrieves the starting points for instance revives based on a specific world.<br>
+	 * This method uses {@link DataManager} to fetch the correct coordinates.
+	 * @param worldId The unique identifier of the world.
+	 * @return The {@code InstanceReviveStartPoints} for the given world.
+	 */
+	public static InstanceReviveStartPoints getReviveInstanceStartPoints(int worldId)
+	{
+		return DataManager.REVIVE_INSTANCE_START_POINTS.getReviveStartPoint(worldId);
+	}
+	
+	/**
+	 * Retrieves the starting point for a character's revival.<br>
+	 * This method uses {@link DataManager} to find the correct location based on world and player stats.
+	 * @param worldId The unique identifier of the world.
+	 * @param race The {@code Race} type of the character.
+	 * @param level The current level of the character.
+	 * @return A {@code WorldReviveStartPoints} object containing the revival coordinates.
+	 */
+	public static WorldReviveStartPoints getReviveWorldStartPoints(int worldId, Race race, int level)
+	{
+		return DataManager.REVIVE_WORLD_START_POINTS.getReviveStartPoint(worldId, race, level);
+	}
+	
+	/**
+	 * Moves a {@link Player} to a specific location using a portal scroll.<br>
+	 * This method validates the scroll template and path before teleporting.<br>
+	 * It also updates achievements for entering the world.
+	 * @param player The {@link Player} who will be moved.
+	 * @param portalName The name of the scroll used to find the destination.
+	 * @param worldId The ID of the target world.
+	 */
 	public static void useTeleportScroll(Player player, String portalName, int worldId)
 	{
 		final PortalScroll template = DataManager.PORTAL2_DATA.getPortalScroll(portalName);
@@ -645,6 +1052,7 @@ public class TeleportService2
 			log.warn("No portal template found for : " + portalName + " " + worldId);
 			return;
 		}
+		
 		final Race playerRace = player.getRace();
 		final PortalPath portalPath = template.getPortalPath();
 		if (portalPath == null)
@@ -652,15 +1060,88 @@ public class TeleportService2
 			log.warn("No portal scroll for " + playerRace + " on " + portalName + " " + worldId);
 			return;
 		}
+		
 		final PortalLoc loc = DataManager.PORTAL_LOC_DATA.getPortalLoc(portalPath.getLocId());
 		if (loc == null)
 		{
 			log.warn("No portal loc for locId" + portalPath.getLocId());
 			return;
 		}
-		teleportTo(player, worldId, loc.getX(), loc.getY(), loc.getZ());
+		
+		teleportTo(player, worldId, loc.getX(), loc.getY(), loc.getZ(), player.getHeading(), TeleportAnimation.BEAM_ANIMATION);
+		AchievementService.getInstance().onUpdateAchievementAction(player, worldId, 1, AchievementActionType.ENTER_WORLD);
 	}
 	
+	/**
+	 * Moves a {@link Player} to the starting point of a specific world.<br>
+	 * This method handles despawning the player and finding the correct revive location.<br>
+	 * If no start point is found, it moves the player to their bind location.
+	 * @param player The {@link Player} object to teleport.
+	 * @param worldId The unique identifier for the target world.
+	 */
+	public static void teleportWorldStartPoint(Player player, int worldId)
+	{
+		player.getController().onLeaveWorld();
+		World.getInstance().despawn(player);
+		final WorldReviveStartPoints startPoint = getReviveWorldStartPoints(worldId, player.getRace(), player.getLevel());
+		if (startPoint != null)
+		{
+			World.getInstance().setPosition(player, startPoint.getReviveWorld(), 0, startPoint.getX(), startPoint.getY(), startPoint.getZ(), startPoint.getH());
+		}
+		else
+		{
+			moveToBindLocation(player, false);
+		}
+		
+		PacketSendUtility.sendPacket(player, new SM_CHANNEL_INFO(player.getPosition()));
+		PacketSendUtility.sendPacket(player, new SM_PLAYER_SPAWN(player));
+		player.setPortAnimation(4);
+		PacketSendUtility.sendPacket(player, new SM_PLAYER_INFO(player, false));
+		if (player.isLegionMember())
+		{
+			PacketSendUtility.broadcastPacketToLegion(player.getLegion(), new SM_LEGION_UPDATE_MEMBER(player, 0, ""));
+		}
+	}
+	
+	/**
+	 * Moves a {@link Player} to the starting point of an instance.<br>
+	 * This method handles world transition and spawning logic.<br>
+	 * It uses {@code int, int, float, float, float, byte)} if a revive point exists.<br>
+	 * Otherwise, it moves the player to their bind location.
+	 * @param player The {@link Player} object to teleport.
+	 * @param worldId The ID of the target world.
+	 */
+	public static void teleportInstanceStartPoint(Player player, int worldId)
+	{
+		player.getController().onLeaveWorld();
+		World.getInstance().despawn(player);
+		final InstanceReviveStartPoints revivePoint = getReviveInstanceStartPoints(worldId);
+		if (revivePoint != null)
+		{
+			TeleportService2.teleportTo(player, worldId, worldId, revivePoint.getX(), revivePoint.getY(), revivePoint.getY(), (byte) revivePoint.getY());
+		}
+		else
+		{
+			moveToBindLocation(player, false);
+		}
+		
+		PacketSendUtility.sendPacket(player, new SM_CHANNEL_INFO(player.getPosition()));
+		PacketSendUtility.sendPacket(player, new SM_PLAYER_SPAWN(player));
+		player.setPortAnimation(4);
+		PacketSendUtility.sendPacket(player, new SM_PLAYER_INFO(player, false));
+		if (player.isLegionMember())
+		{
+			PacketSendUtility.broadcastPacketToLegion(player.getLegion(), new SM_LEGION_UPDATE_MEMBER(player, 0, ""));
+		}
+	}
+	
+	/**
+	 * Moves a {@link Player} to a different channel.<br>
+	 * This method handles the despawn and repositioning of the player.<br>
+	 * It also updates the player's protection status and sends necessary network packets.
+	 * @param player The {@code Player} object to move.
+	 * @param channel The target channel ID for the movement.
+	 */
 	public static void changeChannel(Player player, int channel)
 	{
 		World.getInstance().despawn(player);
@@ -669,459 +1150,53 @@ public class TeleportService2
 		PacketSendUtility.sendPacket(player, new SM_CHANNEL_INFO(player.getPosition()));
 		PacketSendUtility.sendPacket(player, new SM_PLAYER_SPAWN(player));
 		playerTransformation(player);
-		instanceTransformation(player);
-		archdaevaTransformation(player);
 	}
 	
-	public static void moveAStation(Player player, int serverId, boolean back)
+	/**
+	 * Moves a {@link Player} to a new location using the fast track system.<br>
+	 * This method handles position updates and sends necessary network packets.<br>
+	 * It adjusts the player state based on whether they are moving forward or backward.
+	 * @param player The {@link Player} object to move.
+	 * @param serverId The ID of the target server for the fast track movement.
+	 * @param back A boolean indicating if the movement is in a backward direction.
+	 */
+	public static void moveFastTrack(Player player, int serverId, boolean back)
 	{
 		if (back)
 		{
 			playerTransformation(player);
-			instanceTransformation(player);
-			archdaevaTransformation(player);
 			World.getInstance().despawn(player);
 			World.getInstance().setPosition(player, player.getWorldId(), player.getX(), player.getY(), player.getZ(), player.getHeading());
 			player.getController().startProtectionActiveTask();
-			player.A_STATION_TYPE = 0;
-			PacketSendUtility.sendPacket(player, new SM_A_STATION_MOVE(NetworkConfig.GAMESERVER_ID, serverId, player.getWorldId()));
-			PacketSendUtility.sendPacket(player, new SM_A_STATION(NetworkConfig.GAMESERVER_ID, serverId, false));
+			player.FAST_TRACK_TYPE = 0;
+			PacketSendUtility.sendPacket(player, new SM_FAST_TRACK_MOVE(NetworkConfig.GAMESERVER_ID, serverId, player.getWorldId()));
+			PacketSendUtility.sendPacket(player, new SM_FAST_TRACK(NetworkConfig.GAMESERVER_ID, serverId, false));
 			PacketSendUtility.sendPacket(player, new SM_PLAYER_SPAWN(player));
-			AStationService.getInstance().checkAStationMove(player, player.getPlayerAccount().getId(), true);
+			FastTrackService.getInstance().checkFastTrackMove(player, player.getPlayerAccount().getId(), true);
 		}
 		else
 		{
 			World.getInstance().despawn(player);
 			World.getInstance().setPosition(player, player.getWorldId(), player.getX(), player.getY(), player.getZ(), player.getHeading());
 			player.getController().startProtectionActiveTask();
-			player.A_STATION_TYPE = 1;
-			PacketSendUtility.sendPacket(player, new SM_A_STATION_MOVE(serverId, NetworkConfig.GAMESERVER_ID, player.getWorldId()));
-			PacketSendUtility.sendPacket(player, new SM_A_STATION(serverId, NetworkConfig.GAMESERVER_ID, false));
+			player.FAST_TRACK_TYPE = 1;
+			PacketSendUtility.sendPacket(player, new SM_FAST_TRACK_MOVE(serverId, NetworkConfig.GAMESERVER_ID, player.getWorldId()));
+			PacketSendUtility.sendPacket(player, new SM_FAST_TRACK(serverId, NetworkConfig.GAMESERVER_ID, false));
 			PacketSendUtility.sendPacket(player, new SM_PLAYER_SPAWN(player));
 			playerTransformation(player);
-			instanceTransformation(player);
-			archdaevaTransformation(player);
-			AStationService.getInstance().checkAStationMove(player, player.getPlayerAccount().getId(), false);
+			FastTrackService.getInstance().checkFastTrackMove(player, player.getPlayerAccount().getId(), false);
 		}
 	}
 	
+	/**
+	 * Loads and applies the transformation data for a specific player.<br>
+	 * This method updates the {@code Player} model using {@link PlayerTransformationDAO}.<br>
+	 * It also sends a {@code SM_TRANSFORM} packet to the client to update the visual appearance.
+	 * @param player The {@code Player} object to transform.
+	 */
 	public static void playerTransformation(Player player)
 	{
-		DAOManager.getDAO(PlayerTransformDAO.class).loadPlTransfo(player);
+		DAOManager.getDAO(PlayerTransformationDAO.class).loadPlTransfo(player);
 		PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, player.getTransformModel().getPanelId(), true, player.getTransformModel().getItemId()));
-	}
-	
-	/**
-	 * Archdaeva Transformation 5.1 If a player is under one of the following effects, and uses a "Teleport/Fly/Hotspot/Return Scroll" or use admin command "goto/movetoplayer/movetonpc" Then, the "Skill Panel" linked to this effect, never disappear !!!
-	 * @param player
-	 */
-	public static void archdaevaTransformation(Player player)
-	{
-		if (!player.isInGroup2())
-		{
-			if (player.getEffectController().hasAbnormalEffect(4752))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(76);
-					player.getTransformModel().setItemId(102301000);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 76, true, 102301000));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(4757))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(77);
-					player.getTransformModel().setItemId(102303000);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 77, true, 102303000));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(4762))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(78);
-					player.getTransformModel().setItemId(102302000);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 78, true, 102302000));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(4768))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(79);
-					player.getTransformModel().setItemId(102304000);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 79, true, 102304000));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(4804))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(76);
-					player.getTransformModel().setItemId(102301000);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 76, true, 102301000));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(4805))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(77);
-					player.getTransformModel().setItemId(102303000);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 77, true, 102303000));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(4806))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(78);
-					player.getTransformModel().setItemId(102302000);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 78, true, 102302000));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(4807))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(79);
-					player.getTransformModel().setItemId(102304000);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 79, true, 102304000));
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Instance + Event Transformation If a player is under one of the following effects, and uses a "Teleport/Fly/Hotspot/Return Scroll" or use admin command "goto/movetoplayer/movetonpc" Then, the "Skill Panel" linked to this effect, never disappear !!!
-	 * @param player
-	 */
-	public static void instanceTransformation(Player player)
-	{
-		if (!player.isInGroup2())
-		{
-			// [PvP] Arena
-			if (player.getEffectController().hasAbnormalEffect(10405))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(15);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 15, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(10406))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(15);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 15, true, 0));
-				}
-			}
-			// Fissure Of Oblivion 5.1
-			if (player.getEffectController().hasAbnormalEffect(4829) || player.getEffectController().hasAbnormalEffect(4831) || player.getEffectController().hasAbnormalEffect(4834) || player.getEffectController().hasAbnormalEffect(4835) || player.getEffectController().hasAbnormalEffect(4836))
-			{
-				player.getTransformModel().setPanelId(81);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 81, true, 0));
-			}
-			if (player.getEffectController().hasAbnormalEffect(4808))
-			{
-				player.getTransformModel().setPanelId(82);
-				player.getTransformModel().setItemId(102301000);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 82, true, 102301000));
-			}
-			if (player.getEffectController().hasAbnormalEffect(4813))
-			{
-				player.getTransformModel().setPanelId(83);
-				player.getTransformModel().setItemId(102303000);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 83, true, 102303000));
-			}
-			if (player.getEffectController().hasAbnormalEffect(4818))
-			{
-				player.getTransformModel().setPanelId(84);
-				player.getTransformModel().setItemId(102302000);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 84, true, 102302000));
-			}
-			if (player.getEffectController().hasAbnormalEffect(4824))
-			{
-				player.getTransformModel().setPanelId(85);
-				player.getTransformModel().setItemId(102304000);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 85, true, 102304000));
-			}
-			// Aturam Sky Fortress 4.8
-			if (player.getEffectController().hasAbnormalEffect(21807))
-			{
-				player.getTransformModel().setPanelId(61);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 61, true, 0));
-			}
-			if (player.getEffectController().hasAbnormalEffect(21808))
-			{
-				player.getTransformModel().setPanelId(62);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 62, true, 0));
-			}
-			// Cradle Of Eternity 5.1
-			if (player.getEffectController().hasAbnormalEffect(21340))
-			{
-				player.getTransformModel().setPanelId(71);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 71, true, 0));
-			}
-			// Shugo Imperial Tomb 4.3
-			if (player.getEffectController().hasAbnormalEffect(21096))
-			{
-				player.getTransformModel().setPanelId(27);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 27, true, 0));
-			}
-			// Tiamat Stronghold 3.5
-			if (player.getEffectController().hasAbnormalEffect(20865))
-			{
-				player.getTransformModel().setPanelId(17);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 17, true, 0));
-			}
-			// Contaminated Underpath 5.1
-			if (player.getEffectController().hasAbnormalEffect(21345))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(68);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 68, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21346))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(68);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 68, true, 0));
-				}
-			}
-			// Secret Munitions Factory 5.1
-			if (player.getEffectController().hasAbnormalEffect(21347))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(69);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 69, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21348))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(69);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 69, true, 0));
-				}
-			}
-			// Occupied Rentus Base 4.8 & Fallen Poeta 5.1
-			if (player.getEffectController().hasAbnormalEffect(21805))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(63);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 63, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21806))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(63);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 63, true, 0));
-				}
-			}
-			// Smoldering Fire Temple 5.1
-			if (player.getEffectController().hasAbnormalEffect(21375))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(72);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 72, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21376))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(74);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 74, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21377))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(75);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 75, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21378))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(72);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 72, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21379))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(74);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 74, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21380))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(75);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 75, true, 0));
-				}
-			}
-			// Ophidan Warpath 5.1
-			if (player.getEffectController().hasAbnormalEffect(21336))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(70);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 70, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21337))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(70);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 70, true, 0));
-				}
-			}
-			// Illuminary Obelisk & [Infernal] Illuminary Obelisk 4.7
-			if (player.getEffectController().hasAbnormalEffect(21511))
-			{
-				player.getTransformModel().setPanelId(51);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 51, true, 0));
-			}
-			// The Eternal Bastion 4.3
-			if (player.getEffectController().hasAbnormalEffect(21065))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(20);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 20, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21066))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(20);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 20, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21141))
-			{
-				player.getTransformModel().setPanelId(31);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 31, true, 0));
-			}
-			// Nightmare Circus 4.3
-			if (player.getEffectController().hasAbnormalEffect(21469))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(38);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 38, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21470))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(39);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 39, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21471))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(38);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 38, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21472))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(39);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 39, true, 0));
-				}
-			}
-			// Transidium Annex 4.7.5
-			if (player.getEffectController().hasAbnormalEffect(21728) || player.getEffectController().hasAbnormalEffect(21729) || player.getEffectController().hasAbnormalEffect(21730) || player.getEffectController().hasAbnormalEffect(21731))
-			{
-				player.getTransformModel().setPanelId(55);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 55, true, 0));
-			}
-			if (player.getEffectController().hasAbnormalEffect(21579) || player.getEffectController().hasAbnormalEffect(21586) || player.getEffectController().hasAbnormalEffect(21587) || player.getEffectController().hasAbnormalEffect(21588))
-			{
-				player.getTransformModel().setPanelId(56);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 56, true, 0));
-			}
-			if (player.getEffectController().hasAbnormalEffect(21582) || player.getEffectController().hasAbnormalEffect(21589) || player.getEffectController().hasAbnormalEffect(21590) || player.getEffectController().hasAbnormalEffect(21591))
-			{
-				player.getTransformModel().setPanelId(57);
-				PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 57, true, 0));
-			}
-			// The Shugo Emperor Vault 4.7.5
-			// Emperor Trillirunerk Safe 4.9.1
-			if (player.getEffectController().hasAbnormalEffect(21829))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(64);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 64, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21830))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(65);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 65, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21831))
-			{
-				if (player.getCommonData().getRace() == Race.ELYOS)
-				{
-					player.getTransformModel().setPanelId(66);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 66, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21832))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(64);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 64, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21833))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(65);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 65, true, 0));
-				}
-			}
-			if (player.getEffectController().hasAbnormalEffect(21834))
-			{
-				if (player.getCommonData().getRace() == Race.ASMODIANS)
-				{
-					player.getTransformModel().setPanelId(66);
-					PacketSendUtility.sendPacket(player, new SM_TRANSFORM(player, 66, true, 0));
-				}
-			}
-		}
 	}
 }

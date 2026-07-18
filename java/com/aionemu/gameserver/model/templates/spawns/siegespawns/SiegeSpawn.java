@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.spawns.siegespawns;
 
@@ -29,6 +29,8 @@ import com.aionemu.gameserver.model.siege.SiegeRace;
 import com.aionemu.gameserver.model.templates.spawns.Spawn;
 
 /**
+ * Represents a spawn point specifically for siege-related entities.<br>
+ * This class defines the configuration and properties for {@link com.aionemu.gameserver.model.templates.spawns.Spawn} objects used during sieges.
  * @author xTz
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -40,11 +42,21 @@ public class SiegeSpawn
 	@XmlAttribute(name = "siege_id")
 	private int siegeId;
 	
+	/**
+	 * Retrieves the unique identifier for this siege.<br>
+	 * This ID identifies which specific siege event the {@code SiegeNpc} belongs to.
+	 * @return The {@code int} value of the siege ID.
+	 */
 	public int getSiegeId()
 	{
 		return siegeId;
 	}
 	
+	/**
+	 * Retrieves the list of {@code SiegeRaceTemplate} objects for this spawn.<br>
+	 * This method returns all races associated with the current {@code SiegeSpawn}.
+	 * @return a {@code List} of {@code SiegeRaceTemplate} objects.
+	 */
 	public List<SiegeRaceTemplate> getSiegeRaceTemplates()
 	{
 		return siegeRaceTemplates;

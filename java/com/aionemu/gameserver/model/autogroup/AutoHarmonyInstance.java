@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.autogroup;
 
@@ -31,6 +31,8 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.world.WorldMapInstance;
 
 /**
+ * Represents an instance specifically for the {@link PlayerGroup} auto-harmony system.<br>
+ * This class manages the logic and rewards associated with automated harmony group activities.
  * @author xTz
  */
 public class AutoHarmonyInstance extends AutoInstance
@@ -38,6 +40,12 @@ public class AutoHarmonyInstance extends AutoInstance
 	private final List<AGPlayer> group1 = new ArrayList<>();
 	private final List<AGPlayer> group2 = new ArrayList<>();
 	
+	/**
+	 * This method is called when a new {@link WorldMapInstance} is created.<br>
+	 * It initializes the local doors map from the provided instance.<br>
+	 * It calls the superclass implementation of {@code onInstanceCreate}.
+	 * @param instance The {@code WorldMapInstance} being created.
+	 */
 	@Override
 	public void onInstanceCreate(WorldMapInstance instance)
 	{
@@ -47,6 +55,14 @@ public class AutoHarmonyInstance extends AutoInstance
 		reward.addHarmonyGroup(new HarmonyGroupReward(2, 12000, (byte) 7, group2));
 	}
 	
+	/**
+	 * Adds a {@link Player} to the current instance.<br>
+	 * This method checks if the player meets all requirements for entry.<br>
+	 * It handles both individual and group entry logic.
+	 * @param player The {@link Player} attempting to join.
+	 * @param searchInstance The {@link SearchInstance} containing the request details.
+	 * @return An {@link AGQuestion} representing the result of the addition.
+	 */
 	@Override
 	public AGQuestion addPlayer(Player player, SearchInstance searchInstance)
 	{
@@ -57,6 +73,7 @@ public class AutoHarmonyInstance extends AutoInstance
 			{
 				return AGQuestion.FAILED;
 			}
+			
 			AGQuestion result;
 			if (searchInstance.getEntryRequestType().isGroupEntry())
 			{
@@ -65,13 +82,16 @@ public class AutoHarmonyInstance extends AutoInstance
 				{
 					result = canAddGroup(group2, player, searchInstance);
 				}
+				
 				return result;
 			}
+			
 			result = canAddPlayer(group1, player);
 			if (result.isFailed())
 			{
 				result = canAddPlayer(group2, player);
 			}
+			
 			return result;
 		}
 		finally
@@ -80,24 +100,40 @@ public class AutoHarmonyInstance extends AutoInstance
 		}
 	}
 	
+	/**
+	 * Handles the logic when a {@link Player} presses enter to join the instance.<br>
+	 * It triggers the cooldown for the player.<br>
+	 * It also moves the player to the correct starting position.
+	 * @param player The {@code Player} who is entering the instance.
+	 */
 	@Override
 	public void onPressEnter(Player player)
 	{
 		super.onPressEnter(player);
-		if (agt.isTrainingHarmonyArena() || agt.isHarmonyArena())
+		if (agt.isHarmonyArena())
 		{
-			players.remove(player.getObjectId());
-			PacketSendUtility.sendPacket(player, new SM_AUTO_GROUP(instanceMaskId, 5));
-			if (players.isEmpty())
+			if (!decrease(player, 186000184, 1))
 			{
-				AutoGroupService.getInstance().unRegisterInstance(instance.getInstanceId());
+				players.remove(player.getObjectId());
+				PacketSendUtility.sendPacket(player, new SM_AUTO_GROUP(instanceMaskId, 5));
+				if (players.isEmpty())
+				{
+					AutoGroupService.getInstance().unRegisterInstance(instance.getInstanceId());
+				}
+				return;
 			}
-			return;
 		}
+		
 		((HarmonyArenaReward) instance.getInstanceHandler().getInstanceReward()).portToPosition(player);
 		instance.register(player.getObjectId());
 	}
 	
+	/**
+	 * This method is called when a {@link Player} enters the instance.<br>
+	 * It handles group logic and registration for players entering the area.<br>
+	 * It ensures that the player is correctly associated with a {@link PlayerGroup}.
+	 * @param player The {@link Player} object who entered the instance.
+	 */
 	@Override
 	public void onEnterInstance(Player player)
 	{
@@ -106,6 +142,7 @@ public class AutoHarmonyInstance extends AutoInstance
 		{
 			return;
 		}
+		
 		final Integer object = player.getObjectId();
 		final List<AGPlayer> group = getGroup(object);
 		if (group != null)
@@ -125,6 +162,7 @@ public class AutoHarmonyInstance extends AutoInstance
 			{
 				PlayerGroupService.addPlayer(_players.get(0).getPlayerGroup2(), player);
 			}
+			
 			if (!instance.isRegistered(object))
 			{
 				instance.register(object);
@@ -132,6 +170,11 @@ public class AutoHarmonyInstance extends AutoInstance
 		}
 	}
 	
+	/**
+	 * Handles the logic when a {@link Player} leaves this instance.<br>
+	 * This method is called to clean up any specific data for the player.
+	 * @param player The {@code Player} object who is leaving the instance.
+	 */
 	@Override
 	public void onLeaveInstance(Player player)
 	{
@@ -139,6 +182,12 @@ public class AutoHarmonyInstance extends AutoInstance
 		PlayerGroupService.removePlayer(player);
 	}
 	
+	/**
+	 * Removes a {@link Player} from the auto-group lists.<br>
+	 * This method updates the internal group tracking for the specified player.<br>
+	 * It also calls the {@code unregister} method of the parent class.
+	 * @param player The {@code Player} to remove from the system.
+	 */
 	@Override
 	public void unregister(Player player)
 	{
@@ -154,9 +203,15 @@ public class AutoHarmonyInstance extends AutoInstance
 				group2.remove(agp);
 			}
 		}
+		
 		super.unregister(player);
 	}
 	
+	/**
+	 * Clears all players from the current instance.<br>
+	 * This method removes data from both {@code group1} and {@code group2}.<br>
+	 * It also calls the {@code clear} method.
+	 */
 	@Override
 	public void clear()
 	{
@@ -165,6 +220,12 @@ public class AutoHarmonyInstance extends AutoInstance
 		group2.clear();
 	}
 	
+	/**
+	 * Converts a list of {@code AGPlayer} objects into a list of {@link Player} objects.<br>
+	 * This method matches players based on their unique object IDs.
+	 * @param group The list of {@code AGPlayer} entities to convert.
+	 * @return A list containing the corresponding {@link Player} objects.
+	 */
 	private List<Player> getPlayerFromGroup(List<AGPlayer> group)
 	{
 		final List<Player> _players = new ArrayList<>();
@@ -179,9 +240,16 @@ public class AutoHarmonyInstance extends AutoInstance
 				}
 			}
 		}
+		
 		return _players;
 	}
 	
+	/**
+	 * Retrieves the {@link AGPlayer} group associated with a specific player.<br>
+	 * It checks if the player exists in either {@code group1} or {@code group2}.
+	 * @param obj The index of the player to look up.
+	 * @return A {@code List} containing the players in the group, or {@code null} if no group is found.
+	 */
 	private List<AGPlayer> getGroup(Integer obj)
 	{
 		final AGPlayer agp = players.get(obj);
@@ -196,9 +264,19 @@ public class AutoHarmonyInstance extends AutoInstance
 				return group2;
 			}
 		}
+		
 		return null;
 	}
 	
+	/**
+	 * Checks if a {@link Player} can be added to an existing group.<br>
+	 * It verifies the player's race and checks the total member limit.<br>
+	 * If successful, it adds members from the player's group to the list.
+	 * @param group The current list of {@link AGPlayer} objects in the group.
+	 * @param player The {@link Player} attempting to join or add others.
+	 * @param searchInstance The {@link SearchInstance} being processed.
+	 * @return An {@link AGQuestion} result indicating success, failure, or ready status.
+	 */
 	private AGQuestion canAddGroup(List<AGPlayer> group, Player player, SearchInstance searchInstance)
 	{
 		if (group.size() > 0)
@@ -208,7 +286,8 @@ public class AutoHarmonyInstance extends AutoInstance
 				return AGQuestion.FAILED;
 			}
 		}
-		if ((group.size() + searchInstance.getMembers().size()) <= 2)
+		
+		if ((group.size() + searchInstance.getMembers().size()) <= 3)
 		{
 			for (Player member : player.getPlayerGroup2().getOnlineMembers())
 			{
@@ -220,16 +299,26 @@ public class AutoHarmonyInstance extends AutoInstance
 					players.put(obj, agp);
 				}
 			}
+			
 			return instance != null ? AGQuestion.ADDED : (players.size() == agt.getPlayerSize() ? AGQuestion.READY : AGQuestion.ADDED);
 		}
+		
 		return AGQuestion.FAILED;
 	}
 	
+	/**
+	 * Checks if a {@link Player} can join a specific group.<br>
+	 * It validates the current group size and race requirements.<br>
+	 * If successful, it adds the player to the list and returns an {@code AGQuestion}.
+	 * @param group The list of {@link AGPlayer} objects currently in the group.
+	 * @param player The {@link Player} attempting to join the group.
+	 * @return An {@code AGQuestion} representing the result of the addition attempt.
+	 */
 	private AGQuestion canAddPlayer(List<AGPlayer> group, Player player)
 	{
 		final Integer obj = player.getObjectId();
 		final AGPlayer agp = new AGPlayer(player);
-		if (group.size() < 2)
+		if (group.size() < 3)
 		{
 			if (group.isEmpty())
 			{
@@ -244,9 +333,17 @@ public class AutoHarmonyInstance extends AutoInstance
 				return instance != null ? AGQuestion.ADDED : (players.size() == agt.getPlayerSize() ? AGQuestion.READY : AGQuestion.ADDED);
 			}
 		}
+		
 		return AGQuestion.FAILED;
 	}
 	
+	/**
+	 * Retrieves a specific {@link AGPlayer} from a list.<br>
+	 * It uses the provided position to find the player.
+	 * @param group The {@code List} of players to search in.
+	 * @param index The numerical position of the player.
+	 * @return The {@code AGPlayer} at the specified index.
+	 */
 	private AGPlayer getAGPlayerByIndex(List<AGPlayer> group, int index)
 	{
 		return group.get(index);

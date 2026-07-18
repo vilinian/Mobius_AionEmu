@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.loginserver.network.aion.serverpackets;
 
@@ -21,7 +21,8 @@ import com.aionemu.loginserver.network.aion.LoginConnection;
 import com.aionemu.loginserver.network.aion.SessionKey;
 
 /**
- * This packet is send to client to update sessionKey [for fast reconnection feature]
+ * This packet is sent to the client to update the {@code SessionKey}.<br>
+ * It is used to support the fast reconnection feature.
  * @author -Nemesiss-
  */
 public class SM_UPDATE_SESSION extends AionServerPacket
@@ -36,8 +37,10 @@ public class SM_UPDATE_SESSION extends AionServerPacket
 	private final int loginOk;
 	
 	/**
-	 * Constructs new instance of <tt>SM_UPDATE_SESSION </tt> packet.
-	 * @param key session key
+	 * Creates a new {@code SM_UPDATE_SESSION} packet.<br>
+	 * This updates the session information for fast reconnection.<br>
+	 * It extracts data from the provided {@link SessionKey}.
+	 * @param key The {@code SessionKey} containing account details.
 	 */
 	public SM_UPDATE_SESSION(SessionKey key)
 	{
@@ -46,14 +49,11 @@ public class SM_UPDATE_SESSION extends AionServerPacket
 		loginOk = key.loginOk;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void writeImpl(LoginConnection con)
 	{
 		writeD(accountId);
 		writeD(loginOk);
-		writeC(0x00);// sysmsg if smth is wrong
+		writeC(0x00); // sysmsg if smth is wrong
 	}
 }

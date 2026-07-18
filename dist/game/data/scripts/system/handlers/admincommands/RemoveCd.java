@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package system.handlers.admincommands;
 
@@ -33,15 +33,27 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.chathandlers.AdminCommand;
 
 /**
+ * Handles the admin command to remove cooldowns from items or skills.<br>
+ * It allows administrators to reset {@code ItemCooldown} and {@code SM_SKILL_COOLDOWN} for specific players.
  * @author kecimis
  */
 public class RemoveCd extends AdminCommand
 {
+	/**
+	 * Initializes the {@code removecd} admin command.<br>
+	 * This allows administrators to clear cooldowns from items or skills.
+	 */
 	public RemoveCd()
 	{
 		super("removecd");
 	}
 	
+	/**
+	 * Removes cooldowns for skills, items, and house objects from a player.<br>
+	 * It also supports removing specific instance portal cooldowns.
+	 * @param admin The {@code Player} who is running the command.
+	 * @param params A variable list of strings used to specify target details or instance types.
+	 */
 	@Override
 	public void execute(Player admin, String... params)
 	{
@@ -57,6 +69,9 @@ public class RemoveCd extends AdminCommand
 			if (params.length == 0)
 			{
 				final List<Integer> delayIds = new ArrayList<>();
+				/*
+				 * for (PlayerSkillEntry skillEntry : player.getSkillList().getAllSkills()) { SkillTemplate template = DataManager.SKILL_DATA.getSkillTemplate(skillEntry.getSkillId()); if (template == null) { continue; } PacketSendUtility.sendPacket(player, new SM_SKILL_COOLDOWN(skillEntry.getSkillId())); }
+				 */
 				if (player.getSkillCoolDowns() != null)
 				{
 					final long currentTime = System.currentTimeMillis();
@@ -122,6 +137,7 @@ public class RemoveCd extends AdminCommand
 				{
 					return;
 				}
+				
 				if (params.length >= 2)
 				{
 					if (params[1].equalsIgnoreCase("all"))

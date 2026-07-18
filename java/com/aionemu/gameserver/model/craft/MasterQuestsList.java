@@ -1,24 +1,26 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.craft;
 
 import com.aionemu.gameserver.model.Race;
 
 /**
+ * This class defines the list of master quests available for different races.<br>
+ * It serves as a reference for mapping quest data to specific {@link Race} types.
  * @author synchro2
  */
 public enum MasterQuestsList
@@ -83,21 +85,28 @@ public enum MasterQuestsList
 		29027,
 		29026
 	}, Race.ASMODIANS, 40008),
-	MENUISIER_ELYOS(new int[]
+	MENUSIER_ELYOS(new int[]
 	{
 		19058,
 		19057
 	}, Race.ELYOS, 40010),
-	MENUISIER_ASMODIANS(new int[]
+	MENUSIER_ASMODIANS(new int[]
 	{
 		29058,
 		29057
 	}, Race.ASMODIANS, 40010);
 	
-	private int[] skillsIds;
-	private Race race;
-	private int craftSkillId;
+	private final int[] skillsIds;
+	private final Race race;
+	private final int craftSkillId;
 	
+	/**
+	 * Creates a new instance of {@link MasterQuestsList}.<br>
+	 * This constructor initializes the quest data for a specific crafting skill.
+	 * @param skillsIds An array of {@code int} IDs representing the required skills.
+	 * @param race The {@link Race} type associated with these quests.
+	 * @param craftSkillId The unique {@code int} identifier for the crafting skill.
+	 */
 	private MasterQuestsList(int[] skillsIds, Race race, int craftSkillId)
 	{
 		this.skillsIds = skillsIds;
@@ -105,25 +114,44 @@ public enum MasterQuestsList
 		this.craftSkillId = craftSkillId;
 	}
 	
+	/**
+	 * Retrieves the {@code Race} associated with this quest list.<br>
+	 * This method returns the internal {@code race} field.
+	 * @return The {@link Race} of the current quest entry.
+	 */
 	private Race getRace()
 	{
 		return race;
 	}
 	
+	/**
+	 * Retrieves the unique identifier for the crafting skill.<br>
+	 * This value is used to identify specific skills like {@code COOKING_ELYOS}.
+	 * @return The {@code int} ID of the craft skill.
+	 */
 	private int getCraftSkillId()
 	{
 		return craftSkillId;
 	}
 	
+	/**
+	 * Retrieves the list of skill IDs for a specific craft and race.<br>
+	 * This method searches through all {@link MasterQuestsList} entries.<br>
+	 * It returns an array of integers if a match is found.
+	 * @param craftSkillId The unique identifier for the crafting skill.
+	 * @param race The {@code Race} type to filter by.
+	 * @return An array of skill IDs associated with the given parameters.
+	 */
 	public static int[] getSkillsIds(int craftSkillId, Race race)
 	{
 		for (MasterQuestsList mql : values())
 		{
-			if ((race.equals(mql.getRace())) && (craftSkillId == mql.getCraftSkillId()))
+			if (race.equals(mql.getRace()) && (craftSkillId == mql.getCraftSkillId()))
 			{
 				return mql.skillsIds;
 			}
 		}
+		
 		throw new IllegalArgumentException("Invalid craftSkillId: " + craftSkillId + " or race: " + race);
 	}
 }

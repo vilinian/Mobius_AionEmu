@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.zone;
 
@@ -22,10 +22,19 @@ import com.aionemu.gameserver.geoEngine.math.Vector3f;
 import com.aionemu.gameserver.geoEngine.scene.Spatial;
 
 /**
+ * Represents a template for zones that contain specific materials.<br>
+ * This class extends {@link ZoneTemplate} to define area-specific material properties.
  * @author Rolandas
  */
 public class MaterialZoneTemplate extends ZoneTemplate
 {
+	/**
+	 * Creates a new {@link MaterialZoneTemplate} using spatial data.<br>
+	 * This constructor initializes the zone with specific geometry and map properties.<br>
+	 * It automatically determines the area type based on the shape of the {@code Spatial}.
+	 * @param geometry The {@code Spatial} object defining the physical shape of the zone.
+	 * @param mapId The unique identifier for the world map.
+	 */
 	public MaterialZoneTemplate(Spatial geometry, int mapId)
 	{
 		mapid = mapId;
@@ -33,6 +42,7 @@ public class MaterialZoneTemplate extends ZoneTemplate
 		setXmlName(geometry.getName() + "_" + mapId);
 		final BoundingBox box = (BoundingBox) geometry.getWorldBound();
 		final Vector3f center = box.getCenter();
+		
 		// don't use polygons for small areas, they are bugged in Java API
 		if ((geometry.getName().indexOf("CYLINDER") != -1) || (geometry.getName().indexOf("CONE") != -1) || (geometry.getName().indexOf("H_COLUME") != -1))
 		{
@@ -50,5 +60,4 @@ public class MaterialZoneTemplate extends ZoneTemplate
 			sphere = new Sphere(center.x, center.y, center.z, Math.max(Math.max(box.getXExtent(), box.getYExtent()), box.getZExtent()) + 1);
 		}
 	}
-	
 }

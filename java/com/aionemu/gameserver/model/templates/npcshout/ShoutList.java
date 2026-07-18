@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.templates.npcshout;
 
@@ -26,13 +26,11 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 /**
- * @author Rolandas
- */
-/**
- * <p>
+ * <p/>
  * Java class for ShoutList complex type.
- * <p>
+ * <p/>
  * The following schema fragment specifies the expected content contained within this class.
+ * <p/>
  * 
  * <pre>
  * &lt;complexType name="ShoutList">
@@ -47,6 +45,8 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
+ * 
+ * @author Rolandas
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "ShoutList", propOrder =
@@ -57,26 +57,16 @@ public class ShoutList
 {
 	@XmlElement(name = "shout", required = true)
 	protected List<NpcShout> npcShouts;
-	
 	@XmlAttribute(name = "npc_ids", required = true)
 	protected List<Integer> npcIds;
-	
 	@XmlAttribute(name = "restrict_world")
 	protected Integer restrictWorld;
 	
 	/**
-	 * Gets the value of the npcShouts property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the npcShouts property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getNpcShouts().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link NpcShout }
-	 * @return
+	 * Retrieves the list of {@link NpcShout} objects.<br>
+	 * This method ensures that a new {@code ArrayList} is created if the internal list is {@code null}.<br>
+	 * The returned list is a live reference to the internal data.
+	 * @return A {@code List} containing all {@code NpcShout} entries.
 	 */
 	public List<NpcShout> getNpcShouts()
 	{
@@ -84,22 +74,14 @@ public class ShoutList
 		{
 			npcShouts = new ArrayList<>();
 		}
+		
 		return npcShouts;
 	}
 	
 	/**
-	 * Gets the value of the npcIds property.
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the npcIds property.
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getNpcIds().add(newItem);
-	 * </pre>
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link Integer }
-	 * @return
+	 * Retrieves the list of NPC identifiers for this group.<br>
+	 * Returns an empty {@code List} if no IDs are defined.
+	 * @return a {@code List<Integer>} containing the NPC IDs.
 	 */
 	public List<Integer> getNpcIds()
 	{
@@ -107,12 +89,14 @@ public class ShoutList
 		{
 			npcIds = new ArrayList<>();
 		}
+		
 		return npcIds;
 	}
 	
 	/**
-	 * Gets the value of the restrictWorld property.
-	 * @return possible object is {@link Integer }
+	 * Retrieves the world restriction value.<br>
+	 * This method returns {@code 0} if the internal field is {@code null}.
+	 * @return The integer value of the world restriction.
 	 */
 	public int getRestrictWorld()
 	{
@@ -120,9 +104,14 @@ public class ShoutList
 		{
 			return 0;
 		}
+		
 		return restrictWorld;
 	}
 	
+	/**
+	 * This method resets all properties of this object.<br>
+	 * It sets {@code npcIds}, {@code npcShouts}, and {@code restrictWorld} to {@code null}.
+	 */
 	public void makeNull()
 	{
 		npcIds = null;

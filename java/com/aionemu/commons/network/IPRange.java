@@ -1,26 +1,26 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.network;
 
 import java.util.Arrays;
 
 /**
- * Utility class that is designed to check belongings of one address to the range.<br>
- * This class is designed in the way that we won't need any changes to external classes in case of migration to IPv6.
+ * A utility class used to determine if a specific IP address belongs to a given range.<br>
+ * It is designed to be compatible with both IPv4 and IPv6 to simplify future migrations.
  * @author Taran
  * @author SoulKeeper
  */
@@ -42,10 +42,11 @@ public class IPRange
 	private final byte[] address;
 	
 	/**
-	 * Creates new IPRange object.
-	 * @param min minal ip address
-	 * @param max maximal ip address
-	 * @param address ip address that will be used as host for this range
+	 * Creates a new {@link IPRange} instance using string representations.<br>
+	 * This constructor converts the input strings into byte arrays and long values.
+	 * @param min The minimum IP address of the range as a {@code String}.
+	 * @param max The maximum IP address of the range as a {@code String}.
+	 * @param address The host IP address for this range as a {@code String}.
 	 */
 	public IPRange(String min, String max, String address)
 	{
@@ -55,10 +56,12 @@ public class IPRange
 	}
 	
 	/**
-	 * Creates new IPRange object
-	 * @param min minimal ip address
-	 * @param max maximal ip address
-	 * @param address ip address that will be used as host for this range
+	 * Creates a new {@link IPRange} instance using byte arrays.<br>
+	 * This constructor converts the range boundaries into long values.<br>
+	 * It stores the host address as a byte array.
+	 * @param min The minimum IP address of the range as a {@code byte[]} array.
+	 * @param max The maximum IP address of the range as a {@code byte[]} array.
+	 * @param address The host IP address for this range as a {@code byte[]} array.
 	 */
 	public IPRange(byte[] min, byte[] max, byte[] address)
 	{
@@ -68,9 +71,10 @@ public class IPRange
 	}
 	
 	/**
-	 * Checks if address is in range
-	 * @param address address to check if is in range
-	 * @return true if is in range, false in other case
+	 * Checks if the provided address falls within this range.<br>
+	 * It converts the {@code String} to a numeric value for comparison.
+	 * @param address The IP address string to check.
+	 * @return {@code true} if the address is within the range, otherwise {@code false}.
 	 */
 	public boolean isInRange(String address)
 	{
@@ -79,8 +83,9 @@ public class IPRange
 	}
 	
 	/**
-	 * Retuns address that is assigned to this range
-	 * @return address that is assigned to this range
+	 * Retrieves the host address for this range.<br>
+	 * This method returns the internal {@code byte[]} representation of the address.
+	 * @return the {@code byte[]} array containing the host address.
 	 */
 	public byte[] getAddress()
 	{
@@ -88,8 +93,9 @@ public class IPRange
 	}
 	
 	/**
-	 * Returns minimal ip address of the range
-	 * @return minimal ip address of the range
+	 * Converts the minimum IP address of this range into a byte array.<br>
+	 * This method uses the internal {@code min} value.
+	 * @return a {@code byte[]} representing the minimum IP address.
 	 */
 	public byte[] getMinAsByteArray()
 	{
@@ -97,8 +103,9 @@ public class IPRange
 	}
 	
 	/**
-	 * Returns maximal ip address of the range
-	 * @return maximal ip address of the range
+	 * Retrieves the maximum IP address of this range.<br>
+	 * It converts the internal {@code max} value into a byte array.
+	 * @return The maximum IP address as a {@code byte[]} array.
 	 */
 	public byte[] getMaxAsByteArray()
 	{
@@ -106,9 +113,11 @@ public class IPRange
 	}
 	
 	/**
-	 * Converts IPv4 address to long
-	 * @param bytes byte array to convert
-	 * @return long that represents address
+	 * Converts a {@code byte[]} array into a {@code long} value.<br>
+	 * This method treats the bytes as an IPv4 address.<br>
+	 * It uses bitwise operations to reconstruct the number.
+	 * @param bytes The array of bytes to convert.
+	 * @return The resulting {@code long} value.
 	 */
 	private static long toLong(byte[] bytes)
 	{
@@ -121,9 +130,11 @@ public class IPRange
 	}
 	
 	/**
-	 * Converts long to byte array
-	 * @param val long to convert
-	 * @return byte array
+	 * Converts a {@code long} value into a {@code byte[]} array.<br>
+	 * This method extracts the lower 32 bits of the input.<br>
+	 * The resulting array has a length of 4.
+	 * @param val The {@code long} value to convert.
+	 * @return A {@code byte[]} containing the converted value.
 	 */
 	private static byte[] toBytes(long val)
 	{
@@ -136,9 +147,10 @@ public class IPRange
 	}
 	
 	/**
-	 * Convers IPv4 address to byte array
-	 * @param address String to convert
-	 * @return byte array that represents string
+	 * Converts an IPv4 address string into a {@code byte[]} array.<br>
+	 * This method splits the input by dots and parses each part as a byte.
+	 * @param address The IP address string to convert.
+	 * @return A {@code byte[]} containing the 4 octets of the IP address.
 	 */
 	public static byte[] toByteArray(String address)
 	{
@@ -153,9 +165,10 @@ public class IPRange
 	}
 	
 	/**
-	 * Equals of IPRange object. Auto-Generated.
-	 * @param o object to compare with
-	 * @return true if IPRanges are equal, false in other case
+	 * Compares this {@link IPRange} object with another object for equality.<br>
+	 * It checks if both objects represent the same range and host address.
+	 * @param o The object to compare this instance against.
+	 * @return {@code true} if the objects are equal, {@code false} otherwise.
 	 */
 	@Override
 	public boolean equals(Object o)
@@ -164,6 +177,7 @@ public class IPRange
 		{
 			return true;
 		}
+		
 		if (!(o instanceof IPRange))
 		{
 			return false;
@@ -174,8 +188,10 @@ public class IPRange
 	}
 	
 	/**
-	 * Hashcode of IPRange object. Auto generated.
-	 * @return hashcode
+	 * Returns a hash code value for this {@link IPRange} object.<br>
+	 * This value is used to identify the object in collections like {@code HashSet}.<br>
+	 * It is calculated based on the {@code min}, {@code max}, and {@code address} fields.
+	 * @return The integer hash code of this object.
 	 */
 	@Override
 	public int hashCode()

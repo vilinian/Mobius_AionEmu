@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.world.zone;
 
@@ -60,9 +60,10 @@ import com.aionemu.gameserver.world.zone.handler.ZoneHandlerClassListener;
 import com.aionemu.gameserver.world.zone.handler.ZoneNameAnnotation;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
-import javolution.util.FastMap;
 
 /**
+ * Manages the lifecycle and logic of world zones within the game server.<br>
+ * It handles zone loading, spatial queries, and coordinates interactions between {@link ZoneHandler} instances.
  * @author ATracer modified by antness
  */
 public final class ZoneService implements GameEngine
@@ -70,28 +71,44 @@ public final class ZoneService implements GameEngine
 	private static final Logger log = LoggerFactory.getLogger(ZoneService.class);
 	private final TIntObjectHashMap<List<ZoneInfo>> zoneByMapIdMap;
 	private final Map<ZoneName, Class<? extends ZoneHandler>> handlers = new HashMap<>();
-	private final FastMap<ZoneName, ZoneHandler> collidableHandlers = new FastMap<>();
+	private final Map<ZoneName, ZoneHandler> collidableHandlers = new HashMap<>();
 	public static final ZoneHandler DUMMY_ZONE_HANDLER = new GeneralZoneHandler();
 	private static ScriptManager scriptManager = new ScriptManager();
 	public static final File ZONE_DESCRIPTOR_FILE = new File("./data/scripts/system/zonehandlers.xml");
 	
+	/**
+	 * Private constructor for the {@link ZoneService} class.<br>
+	 * This constructor initializes the internal zone data map from {@code DataManager}.<br>
+	 * It should not be called directly by other classes.
+	 */
 	private ZoneService()
 	{
 		zoneByMapIdMap = DataManager.ZONE_DATA.getZones();
 	}
 	
+	/**
+	 * Retrieves the singleton instance of the {@link ZoneService}.<br>
+	 * This provides a global access point to the zone management system.
+	 * @return The active {@code ZoneService} instance.
+	 */
 	public static ZoneService getInstance()
 	{
 		return SingletonHolder.instance;
 	}
 	
-	@SuppressWarnings("synthetic-access")
 	private static class SingletonHolder
 	{
-		
 		protected static final ZoneService instance = new ZoneService();
 	}
 	
+	/**
+	 * Retrieves the {@code ZoneHandler} associated with a specific {@link ZoneName}.<br>
+	 * This method first checks for an existing instance in the cache.<br>
+	 * If no instance exists, it attempts to create a new one using the registered class.<br>
+	 * It returns a {@code DUMMY_ZONE_HANDLER} if no valid handler can be found.
+	 * @param zoneName The name of the zone to retrieve the handler for.
+	 * @return The {@code ZoneHandler} instance for the given zone.
+	 */
 	public ZoneHandler getNewZoneHandler(ZoneName zoneName)
 	{
 		ZoneHandler zoneHandler = collidableHandlers.get(zoneName);
@@ -99,12 +116,13 @@ public final class ZoneService implements GameEngine
 		{
 			return zoneHandler;
 		}
+		
 		final Class<? extends ZoneHandler> zoneClass = handlers.get(zoneName);
 		if (zoneClass != null)
 		{
 			try
 			{
-				zoneHandler = zoneClass.newInstance();
+				zoneHandler = zoneClass.getDeclaredConstructor().newInstance();
 			}
 			catch (IllegalAccessException ex)
 			{
@@ -115,17 +133,22 @@ public final class ZoneService implements GameEngine
 				log.warn("Can't instantiate zone handler " + zoneName, ex);
 			}
 		}
+		
 		if (zoneHandler == null)
 		{
 			zoneHandler = DUMMY_ZONE_HANDLER;
 		}
+		
 		return zoneHandler;
 	}
 	
 	/**
-	 * @param handler
+	 * Registers a new {@link ZoneHandler} class into the system.<br>
+	 * This method reads the {@code ZoneNameAnnotation} from the provided class.<br>
+	 * It maps each zone name found in the annotation to this handler.
+	 * @param handler The class of the {@link ZoneHandler} to register.
 	 */
-	public final void addZoneHandlerClass(Class<? extends ZoneHandler> handler)
+	public void addZoneHandlerClass(Class<? extends ZoneHandler> handler)
 	{
 		final ZoneNameAnnotation idAnnotation = handler.getAnnotation(ZoneNameAnnotation.class);
 		if (idAnnotation != null)
@@ -140,6 +163,7 @@ public final class ZoneService implements GameEngine
 					{
 						throw new RuntimeException();
 					}
+					
 					handlers.put(zoneName, handler);
 				}
 				catch (Exception e)
@@ -150,15 +174,27 @@ public final class ZoneService implements GameEngine
 		}
 	}
 	
-	public final void addZoneHandlerClass(ZoneName zoneName, Class<? extends ZoneHandler> handler)
+	/**
+	 * Registers a specific {@link ZoneHandler} class for a given zone.<br>
+	 * This method maps the {@code zoneName} to its corresponding handler.
+	 * @param zoneName The name of the zone to associate with the handler.
+	 * @param handler The class of the handler that will manage this zone.
+	 */
+	public void addZoneHandlerClass(ZoneName zoneName, Class<? extends ZoneHandler> handler)
 	{
 		handlers.put(zoneName, handler);
 	}
 	
+	/**
+	 * Starts the loading process for AI handlers.<br>
+	 * This method initializes the {@code ScriptManager} and loads data from {@code INSTANCE_DESCRIPTOR_FILE}.<br>
+	 * It also validates all loaded scripts to ensure they are correct.
+	 * @param progressLatch A {@code CountDownLatch} used to track the loading progress. If it is {@code null}, no action is taken.
+	 */
 	@Override
 	public void load(CountDownLatch progressLatch)
 	{
-		log.info("Zone engine load started");
+		log.info("Loading Zone Engine...");
 		scriptManager = new ScriptManager();
 		
 		final AggregatedClassListener acl = new AggregatedClassListener();
@@ -189,6 +225,11 @@ public final class ZoneService implements GameEngine
 		}
 	}
 	
+	/**
+	 * Shuts down the zone engine and cleans up its resources.<br>
+	 * This method shuts down the {@code ScriptManager}.<br>
+	 * It also clears all registered handlers from the internal list.
+	 */
 	@Override
 	public void shutdown()
 	{
@@ -200,8 +241,11 @@ public final class ZoneService implements GameEngine
 	}
 	
 	/**
-	 * @param mapId
-	 * @return
+	 * Retrieves all zone instances associated with a specific world map.<br>
+	 * This method creates the full map instance and populates it with specific area types like fly, fort, or pvp.<br>
+	 * It also initializes necessary services such as shields for siege locations.
+	 * @param mapId The unique identifier of the world map to load.
+	 * @return A {@code Map} containing {@link ZoneName} keys and their corresponding {@link ZoneInstance} values.
 	 */
 	public Map<ZoneName, ZoneInstance> getZoneInstancesByWorldId(int mapId)
 	{
@@ -218,6 +262,7 @@ public final class ZoneService implements GameEngine
 		{
 			return zones;
 		}
+		
 		ShieldService.getInstance().load(mapId);
 		
 		for (ZoneInfo area : areas)
@@ -226,12 +271,9 @@ public final class ZoneService implements GameEngine
 			switch (area.getZoneTemplate().getZoneType())
 			{
 				case FLY:
-				{
 					instance = new FlyZoneInstance(mapId, area);
 					break;
-				}
 				case FORT:
-				{
 					instance = new SiegeZoneInstance(mapId, area);
 					final SiegeLocation siege = DataManager.SIEGE_LOCATION_DATA.getSiegeLocations().get(area.getZoneTemplate().getSiegeId().get(0));
 					if (siege != null)
@@ -243,9 +285,7 @@ public final class ZoneService implements GameEngine
 						}
 					}
 					break;
-				}
 				case ARTIFACT:
-				{
 					instance = new SiegeZoneInstance(mapId, area);
 					for (int artifactId : area.getZoneTemplate().getSiegeId())
 					{
@@ -260,14 +300,10 @@ public final class ZoneService implements GameEngine
 						}
 					}
 					break;
-				}
 				case PVP:
-				{
 					instance = new PvPZoneInstance(mapId, area);
 					break;
-				}
 				default:
-				{
 					final InvasionZoneInstance invasionZone = getIZI(area);
 					if (invasionZone != null)
 					{
@@ -277,14 +313,23 @@ public final class ZoneService implements GameEngine
 					{
 						instance = new ZoneInstance(mapId, area);
 					}
-				}
 			}
+			
 			instance.addHandler(getNewZoneHandler(area.getZoneTemplate().getName()));
 			zones.put(area.getZoneTemplate().getName(), instance);
 		}
+		
 		return zones;
 	}
 	
+	/**
+	 * Retrieves the {@link InvasionZoneInstance} for a specific area.<br>
+	 * This method checks if the zone name matches a predefined list of invasion zones.<br>
+	 * If a match is found, it calls {@code validateZone} to return the instance.<br>
+	 * It returns {@code null} if the area does not belong to any known invasion zone.
+	 * @param area The {@code ZoneInfo} object representing the area to check.
+	 * @return The validated {@code InvasionZoneInstance} or {@code null}.
+	 */
 	private InvasionZoneInstance getIZI(ZoneInfo area)
 	{
 		if (area.getZoneTemplate().getName().name().equals("WAILING_CLIFFS_220050000") || area.getZoneTemplate().getName().name().equals("BALTASAR_CEMETERY_220050000") || area.getZoneTemplate().getName().name().equals("THE_LEGEND_SHRINE_220050000") || area.getZoneTemplate().getName().name().equals("SUDORVILLE_220050000") || area.getZoneTemplate().getName().name().equals("BALTASAR_HILL_VILLAGE_220050000") || area.getZoneTemplate().getName().name().equals("BRUSTHONIN_MITHRIL_MINE_220050000"))
@@ -295,9 +340,17 @@ public final class ZoneService implements GameEngine
 		{
 			return validateZone(area);
 		}
+		
 		return null;
 	}
 	
+	/**
+	 * Validates a zone and creates an {@link InvasionZoneInstance} if it belongs to a vortex.<br>
+	 * This method checks the map ID of the provided {@code area}.<br>
+	 * It returns an instance linked to the vortex or {@code null} if no vortex exists.
+	 * @param area The {@code ZoneInfo} containing the zone data to validate.
+	 * @return A new {@link InvasionZoneInstance} or {@code null}.
+	 */
 	private InvasionZoneInstance validateZone(ZoneInfo area)
 	{
 		final int mapId = area.getZoneTemplate().getMapid();
@@ -308,15 +361,18 @@ public final class ZoneService implements GameEngine
 			vortex.addZone(instance);
 			return instance;
 		}
+		
 		return null;
 	}
 	
 	/**
-	 * Method for single instances of meshes (if specified in mesh_materials.xml)
-	 * @param geometry
-	 * @param worldId
-	 * @param materialId
-	 * @param failOnMissing
+	 * Creates a new material zone template based on the provided geometry.<br>
+	 * This method registers a {@code MaterialZoneHandler} or a {@link SiegeShield} for the specified world.<br>
+	 * It also adds the new zone to the map data if it does not already exist.
+	 * @param geometry The spatial area defining the shape of the zone.
+	 * @param worldId The unique identifier for the world where the zone is located.
+	 * @param materialId The ID of the material template to apply to this zone.
+	 * @param failOnMissing If {@code true}, the method will return if the zone name already exists.
 	 */
 	public void createMaterialZoneTemplate(Spatial geometry, int worldId, int materialId, boolean failOnMissing)
 	{
@@ -357,17 +413,24 @@ public final class ZoneService implements GameEngine
 				{
 					return;
 				}
+				
 				handler = new MaterialZoneHandler(geometry, template);
 			}
+			
 			collidableHandlers.put(zoneName, handler);
+		}
+		else
+		{
+			// log.warn("Duplicate material mesh: " + zoneName.toString());
 		}
 		
 		Collection<ZoneInfo> areas = zoneByMapIdMap.get(worldId);
 		if (areas == null)
 		{
-			zoneByMapIdMap.put(worldId, new ArrayList<ZoneInfo>());
+			zoneByMapIdMap.put(worldId, new ArrayList<>());
 			areas = zoneByMapIdMap.get(worldId);
 		}
+		
 		ZoneInfo zoneInfo = null;
 		for (ZoneInfo area : areas)
 		{
@@ -377,9 +440,11 @@ public final class ZoneService implements GameEngine
 				break;
 			}
 		}
+		
 		if (zoneInfo == null)
 		{
 			final MaterialZoneTemplate zoneTemplate = new MaterialZoneTemplate(geometry, worldId);
+			
 			// maybe add to zone data if needed search ?
 			Area zoneInfoArea = null;
 			if (zoneTemplate.getSphere() != null)
@@ -394,6 +459,7 @@ public final class ZoneService implements GameEngine
 			{
 				zoneInfoArea = new SemisphereArea(zoneName, worldId, zoneTemplate.getSemisphere().getX(), zoneTemplate.getSemisphere().getY(), zoneTemplate.getSemisphere().getZ(), zoneTemplate.getSemisphere().getR());
 			}
+			
 			if (zoneInfoArea != null)
 			{
 				zoneInfo = new ZoneInfo(zoneInfoArea, zoneTemplate);
@@ -403,11 +469,13 @@ public final class ZoneService implements GameEngine
 	}
 	
 	/**
-	 * Method for dynamic zone template creation for geometries; could be saved later in XML
-	 * @param geometry
-	 * @param regionId - generated by RegionUtil from Bounding Volume center coordinates
-	 * @param worldId
-	 * @param materialId
+	 * Creates a new {@link MaterialZoneTemplate} for a specific region.<br>
+	 * This method automatically handles the naming of the geometry based on the provided {@code regionId}.<br>
+	 * It uses a default failure policy when creating the template.
+	 * @param geometry The {@code Spatial} object defining the area shape.
+	 * @param regionId The unique identifier for the region.
+	 * @param worldId The ID of the world map where the zone is located.
+	 * @param materialId The ID of the material associated with this zone.
 	 */
 	public void createMaterialZoneTemplate(Spatial geometry, int regionId, int worldId, int materialId)
 	{
@@ -415,6 +483,11 @@ public final class ZoneService implements GameEngine
 		createMaterialZoneTemplate(geometry, worldId, materialId, false);
 	}
 	
+	/**
+	 * Saves all active material zones to the data files.<br>
+	 * This method iterates through all world maps and collects valid zone templates.<br>
+	 * It then sorts these templates by map ID before persisting them via {@link ZoneData}.
+	 */
 	public void saveMaterialZones()
 	{
 		final List<ZoneTemplate> templates = new ArrayList<>();
@@ -425,6 +498,7 @@ public final class ZoneService implements GameEngine
 			{
 				continue;
 			}
+			
 			for (ZoneInfo zone : areas)
 			{
 				if (collidableHandlers.containsKey(zone.getArea().getZoneName()))
@@ -433,11 +507,11 @@ public final class ZoneService implements GameEngine
 				}
 			}
 		}
+		
 		Collections.sort(templates, (o1, o2) -> o1.getMapid() - o2.getMapid());
 		
 		final ZoneData zoneData = new ZoneData();
 		zoneData.zoneList = templates;
 		zoneData.saveData();
 	}
-	
 }

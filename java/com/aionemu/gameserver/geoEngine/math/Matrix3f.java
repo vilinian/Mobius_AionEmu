@@ -1,53 +1,44 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.geoEngine.math;
 
 import java.nio.FloatBuffer;
-import java.util.logging.Logger;
 
-import com.aionemu.gameserver.configs.main.GeoDataConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.aionemu.gameserver.geoEngine.utils.BufferUtils;
 
-import javolution.context.ObjectFactory;
-import javolution.lang.Reusable;
-
 /**
- * <code>Matrix3f</code> defines a 3x3 matrix. Matrix data is maintained internally and is accessible via the get and set methods. Convenience methods are used for matrix operations as well as generating a matrix from a given set of values.
+ * This class represents a 3x3 matrix using {@code float} values.<br>
+ * It provides methods to get and set internal data as well as perform common matrix operations. You can also use convenience methods to generate a new {@link Matrix3f} from specific values.
  * @author Mark Powell
  * @author Joshua Slack
  */
-public final class Matrix3f implements Cloneable, Reusable
+public final class Matrix3f implements Cloneable
 {
-	private static final Logger logger = Logger.getLogger(Matrix3f.class.getName());
-	@SuppressWarnings("rawtypes")
-	private static final ObjectFactory FACTORY = new ObjectFactory()
-	{
-		@Override
-		public Object create()
-		{
-			return new Matrix3f();
-		}
-	};
+	private static final Logger logger = LoggerFactory.getLogger(Matrix3f.class);
 	protected float m00, m01, m02;
 	protected float m10, m11, m12;
 	protected float m20, m21, m22;
 	
 	/**
-	 * Constructor instantiates a new <code>Matrix3f</code> object. The initial values for the matrix is that of the identity matrix.
+	 * Creates a new instance of {@link Matrix3f}.<br>
+	 * The matrix is initialized as an identity matrix.
 	 */
 	public Matrix3f()
 	{
@@ -55,20 +46,20 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * constructs a matrix with the given values.
-	 * @param m00 0x0 in the matrix.
-	 * @param m01 0x1 in the matrix.
-	 * @param m02 0x2 in the matrix.
-	 * @param m10 1x0 in the matrix.
-	 * @param m11 1x1 in the matrix.
-	 * @param m12 1x2 in the matrix.
-	 * @param m20 2x0 in the matrix.
-	 * @param m21 2x1 in the matrix.
-	 * @param m22 2x2 in the matrix.
+	 * Creates a new {@link Matrix3f} instance with specific values.<br>
+	 * The values are assigned to the matrix elements in row-major order.
+	 * @param m00 The value for row 0, column 0.
+	 * @param m01 The value for row 0, column 1.
+	 * @param m02 The value for row 0, column 2.
+	 * @param m10 The value for row 1, column 0.
+	 * @param m11 The value for row 1, column 1.
+	 * @param m12 The value for row 1, column 2.
+	 * @param m20 The value for row 2, column 0.
+	 * @param m21 The value for row 2, column 1.
+	 * @param m22 The value for row 2, column 2.
 	 */
 	public Matrix3f(float m00, float m01, float m02, float m10, float m11, float m12, float m20, float m21, float m22)
 	{
-		
 		this.m00 = m00;
 		this.m01 = m01;
 		this.m02 = m02;
@@ -81,8 +72,9 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * Copy constructor that creates a new <code>Matrix3f</code> object that is the same as the provided matrix.
-	 * @param mat the matrix to copy.
+	 * Creates a new {@code Matrix3f} instance by copying the data from an existing matrix.<br>
+	 * This method uses the {@code set} method to copy values.
+	 * @param mat The source {@code Matrix3f} to copy from.
 	 */
 	public Matrix3f(Matrix3f mat)
 	{
@@ -90,7 +82,8 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * Takes the absolute value of all matrix fields locally.
+	 * Converts all matrix elements to their absolute values.<br>
+	 * This method uses {@code FastMath.abs} for each component.
 	 */
 	public void absoluteLocal()
 	{
@@ -106,9 +99,10 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>copy</code> transfers the contents of a given matrix to this matrix. If a null matrix is supplied, this matrix is set to the identity matrix.
-	 * @param matrix the matrix to copy.
-	 * @return this
+	 * Copies the values from another {@code Matrix3f} into this instance.<br>
+	 * If the provided {@code matrix} is {@code null}, this method calls {@code loadIdentity}.
+	 * @param matrix The source matrix to copy from.
+	 * @return This {@code Matrix3f} instance for method chaining.
 	 */
 	public Matrix3f set(Matrix3f matrix)
 	{
@@ -128,86 +122,63 @@ public final class Matrix3f implements Cloneable, Reusable
 			m21 = matrix.m21;
 			m22 = matrix.m22;
 		}
+		
 		return this;
 	}
 	
 	/**
-	 * <code>get</code> retrieves a value from the matrix at the given position. If the position is invalid a <code>JmeException</code> is thrown.
-	 * @param i the row index.
-	 * @param j the colum index.
-	 * @return the value at (i, j).
+	 * Retrieves the value at a specific position in the matrix.<br>
+	 * The position is defined by row and column indices.
+	 * @param i The row index of the element.
+	 * @param j The column index of the element.
+	 * @return The {@code float} value located at the specified coordinates.
 	 */
 	public float get(int i, int j)
 	{
 		switch (i)
 		{
 			case 0:
-			{
 				switch (j)
 				{
 					case 0:
-					{
 						return m00;
-					}
 					case 1:
-					{
 						return m01;
-					}
 					case 2:
-					{
 						return m02;
-					}
 				}
-				break;
-			}
 			case 1:
-			{
 				switch (j)
 				{
 					case 0:
-					{
 						return m10;
-					}
 					case 1:
-					{
 						return m11;
-					}
 					case 2:
-					{
 						return m12;
-					}
 				}
-				break;
-			}
 			case 2:
-			{
 				switch (j)
 				{
 					case 0:
-					{
 						return m20;
-					}
 					case 1:
-					{
 						return m21;
-					}
 					case 2:
-					{
 						return m22;
-					}
 				}
-				break;
-			}
 		}
 		
-		logger.warning("Invalid matrix index.");
+		logger.warn("Invalid matrix index.");
 		throw new IllegalArgumentException("Invalid indices into matrix.");
 	}
 	
 	/**
-	 * <code>get(float[])</code> returns the matrix in row-major or column-major order.
-	 * @param data The array to return the data into. This array can be 9 or 16 floats in size. Only the upper 3x3 are assigned to in the case of a 16 element array.
-	 * @param rowMajor True for row major storage in the array (translation in elements 3, 7, 11 for a 4x4), false for column major (translation in elements 12, 13, 14 for a 4x4).
+	 * Copies the matrix values into a provided array.<br>
+	 * The method supports both row-major and column-major ordering.<br>
+	 * It handles arrays of length 9 or 16.
+	 * @param data The {@code float[]} array to store the matrix values in.
+	 * @param rowMajor Set to {@code true} for row-major order, or {@code false} for column-major order.
 	 */
 	public void get(float[] data, boolean rowMajor)
 	{
@@ -272,9 +243,10 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>getColumn</code> returns one of three columns specified by the parameter. This column is returned as a <code>Vector3f</code> object.
-	 * @param i the column to retrieve. Must be between 0 and 2.
-	 * @return the column specified by the index.
+	 * Retrieves a specific column from the matrix.<br>
+	 * This method returns the data as a {@link Vector3f}.
+	 * @param i The index of the column to retrieve.
+	 * @return A new {@code Vector3f} representing the requested column.
 	 */
 	public Vector3f getColumn(int i)
 	{
@@ -282,10 +254,12 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>getColumn</code> returns one of three columns specified by the parameter. This column is returned as a <code>Vector3f</code> object.
-	 * @param i the column to retrieve. Must be between 0 and 2.
-	 * @param store the vector object to store the result in. if null, a new one is created.
-	 * @return the column specified by the index.
+	 * Retrieves a specific column from the matrix.<br>
+	 * The values are copied into the provided {@code Vector3f} object.<br>
+	 * If the provided object is {@code null}, a new instance is created.
+	 * @param i The index of the column to retrieve.
+	 * @param store The {@code Vector3f} where the result will be stored.
+	 * @return The populated {@code Vector3f} containing the column data.
 	 */
 	public Vector3f getColumn(int i, Vector3f store)
 	{
@@ -293,42 +267,37 @@ public final class Matrix3f implements Cloneable, Reusable
 		{
 			store = new Vector3f();
 		}
+		
 		switch (i)
 		{
 			case 0:
-			{
 				store.x = m00;
 				store.y = m10;
 				store.z = m20;
 				break;
-			}
 			case 1:
-			{
 				store.x = m01;
 				store.y = m11;
 				store.z = m21;
 				break;
-			}
 			case 2:
-			{
 				store.x = m02;
 				store.y = m12;
 				store.z = m22;
 				break;
-			}
 			default:
-			{
-				logger.warning("Invalid column index.");
+				logger.warn("Invalid column index.");
 				throw new IllegalArgumentException("Invalid column index. " + i);
-			}
 		}
+		
 		return store;
 	}
 	
 	/**
-	 * <code>getColumn</code> returns one of three rows as specified by the parameter. This row is returned as a <code>Vector3f</code> object.
-	 * @param i the row to retrieve. Must be between 0 and 2.
-	 * @return the row specified by the index.
+	 * Retrieves a specific row from the matrix as a {@code Vector3f}.<br>
+	 * This method returns a new object containing the values of the requested row.
+	 * @param i The index of the row to retrieve.
+	 * @return A {@link Vector3f} representing the row at index {@code i}.
 	 */
 	public Vector3f getRow(int i)
 	{
@@ -336,10 +305,11 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>getRow</code> returns one of three rows as specified by the parameter. This row is returned as a <code>Vector3f</code> object.
-	 * @param i the row to retrieve. Must be between 0 and 2.
-	 * @param store the vector object to store the result in. if null, a new one is created.
-	 * @return the row specified by the index.
+	 * Retrieves a specific row from the matrix and stores it in a {@code Vector3f}.<br>
+	 * If the provided {@code store} is {@code null}, a new {@code Vector3f} will be created.
+	 * @param i The index of the row to retrieve.
+	 * @param store The {@code Vector3f} object where the result will be stored.
+	 * @return The populated {@code Vector3f} containing the row data.
 	 */
 	public Vector3f getRow(int i, Vector3f store)
 	{
@@ -347,41 +317,36 @@ public final class Matrix3f implements Cloneable, Reusable
 		{
 			store = new Vector3f();
 		}
+		
 		switch (i)
 		{
 			case 0:
-			{
 				store.x = m00;
 				store.y = m01;
 				store.z = m02;
 				break;
-			}
 			case 1:
-			{
 				store.x = m10;
 				store.y = m11;
 				store.z = m12;
 				break;
-			}
 			case 2:
-			{
 				store.x = m20;
 				store.y = m21;
 				store.z = m22;
 				break;
-			}
 			default:
-			{
-				logger.warning("Invalid row index.");
+				logger.warn("Invalid row index.");
 				throw new IllegalArgumentException("Invalid row index. " + i);
-			}
 		}
+		
 		return store;
 	}
 	
 	/**
-	 * <code>toFloatBuffer</code> returns a FloatBuffer object that contains the matrix data.
-	 * @return matrix data as a FloatBuffer.
+	 * Converts the current matrix data into a {@code FloatBuffer}.<br>
+	 * The buffer contains 9 elements in row-major order.
+	 * @return A new {@code FloatBuffer} containing the matrix values.
 	 */
 	public FloatBuffer toFloatBuffer()
 	{
@@ -395,10 +360,11 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>fillFloatBuffer</code> fills a FloatBuffer object with the matrix data.
-	 * @param fb the buffer to fill, starting at current position. Must have room for 9 more floats.
-	 * @param columnMajor
-	 * @return matrix data as a FloatBuffer. (position is advanced by 9 and any limit set is not changed).
+	 * Fills a {@code FloatBuffer} with the matrix data.<br>
+	 * The order of elements depends on the {@code columnMajor} flag.
+	 * @param fb The buffer to be populated.
+	 * @param columnMajor Set to {@code true} for column-major order, or {@code false} for row-major order.
+	 * @return The same {@code FloatBuffer} instance after it has been filled.
 	 */
 	public FloatBuffer fillFloatBuffer(FloatBuffer fb, boolean columnMajor)
 	{
@@ -414,188 +380,153 @@ public final class Matrix3f implements Cloneable, Reusable
 			fb.put(m10).put(m11).put(m12);
 			fb.put(m20).put(m21).put(m22);
 		}
+		
 		return fb;
 	}
 	
 	/**
-	 * <code>setColumn</code> sets a particular column of this matrix to that represented by the provided vector.
-	 * @param i the column to set.
-	 * @param column the data to set.
-	 * @return this
+	 * Sets a specific column in the matrix using the values from a {@code Vector3f}.<br>
+	 * This method updates the internal data of the {@link Matrix3f} object.
+	 * @param i The index of the column to set. Must be 0, 1, or 2.
+	 * @param column The {@code Vector3f} containing the new values for the column.
+	 * @return This {@code Matrix3f} instance for method chaining.
 	 */
 	public Matrix3f setColumn(int i, Vector3f column)
 	{
-		
 		if (column == null)
 		{
-			logger.warning("Column is null. Ignoring.");
+			logger.warn("Column is null. Ignoring.");
 			return this;
 		}
+		
 		switch (i)
 		{
 			case 0:
-			{
 				m00 = column.x;
 				m10 = column.y;
 				m20 = column.z;
 				break;
-			}
 			case 1:
-			{
 				m01 = column.x;
 				m11 = column.y;
 				m21 = column.z;
 				break;
-			}
 			case 2:
-			{
 				m02 = column.x;
 				m12 = column.y;
 				m22 = column.z;
 				break;
-			}
 			default:
-			{
-				logger.warning("Invalid column index.");
+				logger.warn("Invalid column index.");
 				throw new IllegalArgumentException("Invalid column index. " + i);
-			}
 		}
+		
 		return this;
 	}
 	
 	/**
-	 * <code>setRow</code> sets a particular row of this matrix to that represented by the provided vector.
-	 * @param i the row to set.
-	 * @param row the data to set.
-	 * @return this
+	 * Sets a specific row in the matrix using the values from a {@code Vector3f}.<br>
+	 * This method updates the internal components of the matrix at the given index.<br>
+	 * If the provided row is {@code null}, no changes are made to the matrix.
+	 * @param i The index of the row to update. Must be 0, 1, or 2.
+	 * @param row The {@code Vector3f} containing the new values for the row.
+	 * @return This {@link Matrix3f} instance for method chaining.
 	 */
 	public Matrix3f setRow(int i, Vector3f row)
 	{
-		
 		if (row == null)
 		{
-			logger.warning("Row is null. Ignoring.");
+			logger.warn("Row is null. Ignoring.");
 			return this;
 		}
+		
 		switch (i)
 		{
 			case 0:
-			{
 				m00 = row.x;
 				m01 = row.y;
 				m02 = row.z;
 				break;
-			}
 			case 1:
-			{
 				m10 = row.x;
 				m11 = row.y;
 				m12 = row.z;
 				break;
-			}
 			case 2:
-			{
 				m20 = row.x;
 				m21 = row.y;
 				m22 = row.z;
 				break;
-			}
 			default:
-			{
-				logger.warning("Invalid row index.");
+				logger.warn("Invalid row index.");
 				throw new IllegalArgumentException("Invalid row index. " + i);
-			}
 		}
+		
 		return this;
 	}
 	
 	/**
-	 * <code>set</code> places a given value into the matrix at the given position. If the position is invalid a <code>JmeException</code> is thrown.
-	 * @param i the row index.
-	 * @param j the colum index.
-	 * @param value the value for (i, j).
-	 * @return this
+	 * Updates a specific element in the matrix.<br>
+	 * The value is placed at the row and column specified by the indices.
+	 * @param i The row index of the element.
+	 * @param j The column index of the element.
+	 * @param value The new float value to assign.
+	 * @return The current {@code Matrix3f} instance.
 	 */
 	public Matrix3f set(int i, int j, float value)
 	{
 		switch (i)
 		{
 			case 0:
-			{
 				switch (j)
 				{
 					case 0:
-					{
 						m00 = value;
 						return this;
-					}
 					case 1:
-					{
 						m01 = value;
 						return this;
-					}
 					case 2:
-					{
 						m02 = value;
 						return this;
-					}
 				}
-				break;
-			}
 			case 1:
-			{
 				switch (j)
 				{
 					case 0:
-					{
 						m10 = value;
 						return this;
-					}
 					case 1:
-					{
 						m11 = value;
 						return this;
-					}
 					case 2:
-					{
 						m12 = value;
 						return this;
-					}
 				}
-				break;
-			}
 			case 2:
-			{
 				switch (j)
 				{
 					case 0:
-					{
 						m20 = value;
 						return this;
-					}
 					case 1:
-					{
 						m21 = value;
 						return this;
-					}
 					case 2:
-					{
 						m22 = value;
 						return this;
-					}
 				}
-				break;
-			}
 		}
 		
-		logger.warning("Invalid matrix index.");
+		logger.warn("Invalid matrix index.");
 		throw new IllegalArgumentException("Invalid indices into matrix.");
 	}
 	
 	/**
-	 * <code>set</code> sets the values of the matrix to those supplied by the 3x3 two dimenion array.
-	 * @param matrix the new values of the matrix.
-	 * @return this
+	 * Updates the internal values of this <code class="Matrix3f"> with data from a 2D array.<br>
+	 * The input {@code float[][]} must have a size of 3x3.
+	 * @param matrix A 2D array containing the new matrix values.
+	 * @return This <code class="Matrix3f"> instance for method chaining.
 	 */
 	public Matrix3f set(float[][] matrix)
 	{
@@ -618,10 +549,11 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * Recreate Matrix using the provided axis.
-	 * @param uAxis Vector3f
-	 * @param vAxis Vector3f
-	 * @param wAxis Vector3f
+	 * Sets the matrix values based on three provided axes.<br>
+	 * This method populates the columns of the {@code Matrix3f} with the given vectors.
+	 * @param uAxis The first column vector.
+	 * @param vAxis The second column vector.
+	 * @param wAxis The third column vector.
 	 */
 	public void fromAxes(Vector3f uAxis, Vector3f vAxis, Vector3f wAxis)
 	{
@@ -639,9 +571,10 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>set</code> sets the values of this matrix from an array of values assuming that the data is rowMajor order;
-	 * @param matrix the matrix to set the value to.
-	 * @return this
+	 * Updates the internal values of this matrix using an array.<br>
+	 * This method treats the input as a column-major array.
+	 * @param matrix The array of {@code float} values to copy into the matrix.
+	 * @return The current {@link Matrix3f} instance for method chaining.
 	 */
 	public Matrix3f set(float[] matrix)
 	{
@@ -649,10 +582,11 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>set</code> sets the values of this matrix from an array of values;
-	 * @param matrix the matrix to set the value to.
-	 * @param rowMajor whether the incoming data is in row or column major order.
-	 * @return this
+	 * Updates the internal values of this <code class="Matrix3f"> with data from an array.<br>
+	 * It supports both row-major and column-major ordering.
+	 * @param matrix The array containing 9 float values to populate the matrix.
+	 * @param rowMajor Set to {@code true} if the input array is in row-major order, or {@code false} for column-major order.
+	 * @return This <code class="Matrix3f"> instance for method chaining.
 	 */
 	public Matrix3f set(float[] matrix, boolean rowMajor)
 	{
@@ -685,11 +619,14 @@ public final class Matrix3f implements Cloneable, Reusable
 			m21 = matrix[5];
 			m22 = matrix[8];
 		}
+		
 		return this;
 	}
 	
 	/**
-	 * <code>loadIdentity</code> sets this matrix to the identity matrix. Where all values are zero except those along the diagonal which are one.
+	 * Resets the matrix to its identity state.<br>
+	 * All off-diagonal elements are set to {@code 0}.<br>
+	 * The diagonal elements are set to {@code 1}.
 	 */
 	public void loadIdentity()
 	{
@@ -698,7 +635,9 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * @return true if this matrix is identity
+	 * Checks if this matrix is an identity matrix.<br>
+	 * An identity matrix has {@code 1.0} on the main diagonal and {@code 0.0} elsewhere.
+	 * @return {@code true} if the matrix is an identity matrix, {@code false} otherwise.
 	 */
 	public boolean isIdentity()
 	{
@@ -706,9 +645,11 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>fromAngleAxis</code> sets this matrix4f to the values specified by an angle and an axis of rotation. This method creates an object, so use fromAngleNormalAxis if your axis is already normalized.
-	 * @param angle the angle to rotate (in radians).
-	 * @param axis the axis of rotation.
+	 * Creates a rotation matrix from an angle and an axis.<br>
+	 * This method normalizes the {@code axis} before calculation.<br>
+	 * It updates the current matrix values internally.
+	 * @param angle The rotation angle in radians.
+	 * @param axis The vector defining the axis of rotation.
 	 */
 	public void fromAngleAxis(float angle, Vector3f axis)
 	{
@@ -717,9 +658,10 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>fromAngleNormalAxis</code> sets this matrix4f to the values specified by an angle and a normalized axis of rotation.
-	 * @param angle the angle to rotate (in radians).
-	 * @param axis the axis of rotation (already normalized).
+	 * Sets the matrix values based on a rotation.<br>
+	 * This method uses an angle and a unit axis to create a rotation matrix.
+	 * @param angle The rotation angle in radians.
+	 * @param axis The {@code Vector3f} representing the axis of rotation.
 	 */
 	public void fromAngleNormalAxis(float angle, Vector3f axis)
 	{
@@ -748,9 +690,11 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>mult</code> multiplies this matrix by a given matrix. The result matrix is returned as a new object. If the given matrix is null, a null matrix is returned.
-	 * @param mat the matrix to multiply this matrix by.
-	 * @return the result matrix.
+	 * Multiplies this matrix by another <code class="Matrix3f">.<br>
+	 * This method performs a standard matrix multiplication.<br>
+	 * The result is returned as a new <code class="Matrix3f"> object.
+	 * @param mat The other <code class="Matrix3f"> to multiply with.
+	 * @return A new <code class="Matrix3f"> representing the product of the two matrices.
 	 */
 	public Matrix3f mult(Matrix3f mat)
 	{
@@ -758,14 +702,15 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>mult</code> multiplies this matrix by a given matrix. The result matrix is returned as a new object.
-	 * @param mat the matrix to multiply this matrix by.
-	 * @param product the matrix to store the result in. if null, a new matrix3f is created. It is safe for mat and product to be the same object.
-	 * @return a matrix3f object containing the result of this operation
+	 * Multiplies this matrix by another matrix.<br>
+	 * The result is stored in the provided destination matrix.<br>
+	 * If the destination matrix is {@code null}, a new {@link Matrix3f} is created.
+	 * @param mat The matrix to multiply with.
+	 * @param product The matrix where the result will be stored.
+	 * @return The resulting {@link Matrix3f} object.
 	 */
 	public Matrix3f mult(Matrix3f mat, Matrix3f product)
 	{
-		
 		float temp00, temp01, temp02;
 		float temp10, temp11, temp12;
 		float temp20, temp21, temp22;
@@ -774,6 +719,7 @@ public final class Matrix3f implements Cloneable, Reusable
 		{
 			product = new Matrix3f();
 		}
+		
 		temp00 = (m00 * mat.m00) + (m01 * mat.m10) + (m02 * mat.m20);
 		temp01 = (m00 * mat.m01) + (m01 * mat.m11) + (m02 * mat.m21);
 		temp02 = (m00 * mat.m02) + (m01 * mat.m12) + (m02 * mat.m22);
@@ -798,9 +744,11 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>mult</code> multiplies this matrix by a given <code>Vector3f</code> object. The result vector is returned. If the given vector is null, null will be returned.
-	 * @param vec the vector to multiply this matrix by.
-	 * @return the result vector.
+	 * Multiplies this matrix by a {@code Vector3f}.<br>
+	 * This method performs a standard matrix-vector multiplication.<br>
+	 * It returns the resulting vector as a new object.
+	 * @param vec The {@code Vector3f} to multiply.
+	 * @return A new {@code Vector3f} representing the result of the multiplication.
 	 */
 	public Vector3f mult(Vector3f vec)
 	{
@@ -808,14 +756,15 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * Multiplies this 3x3 matrix by the 1x3 Vector vec and stores the result in product.
-	 * @param vec The Vector3f to multiply.
-	 * @param product The Vector3f to store the result, it is safe for this to be the same as vec.
-	 * @return The given product vector.
+	 * Multiplies this matrix by a {@code Vector3f}.<br>
+	 * The result is stored in the provided {@code Vector3f} object.<br>
+	 * If the provided product vector is {@code null}, a new one is created.
+	 * @param vec The input vector to multiply.
+	 * @param product The vector where the result will be stored.
+	 * @return The resulting {@code Vector3f} object.
 	 */
 	public Vector3f mult(Vector3f vec, Vector3f product)
 	{
-		
 		if (null == product)
 		{
 			product = new Vector3f();
@@ -832,9 +781,10 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>multLocal</code> multiplies this matrix internally by a given float scale factor.
-	 * @param scale the value to scale by.
-	 * @return this Matrix3f
+	 * Multiplies the current matrix by a local scaling factor.<br>
+	 * This method modifies the internal values of the {@code Matrix3f}.
+	 * @param scale The value to multiply each element by.
+	 * @return The current instance of {@code Matrix3f} for method chaining.
 	 */
 	public Matrix3f multLocal(float scale)
 	{
@@ -851,9 +801,10 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>multLocal</code> multiplies this matrix by a given <code>Vector3f</code> object. The result vector is stored inside the passed vector, then returned . If the given vector is null, null will be returned.
-	 * @param vec the vector to multiply this matrix by.
-	 * @return The passed vector after multiplication
+	 * Multiplies the current matrix by a {@code Vector3f}.<br>
+	 * This method modifies the input vector in place.
+	 * @param vec The {@code Vector3f} to be multiplied.
+	 * @return The modified {@code Vector3f} or {@code null} if the input is {@code null}.
 	 */
 	public Vector3f multLocal(Vector3f vec)
 	{
@@ -861,6 +812,7 @@ public final class Matrix3f implements Cloneable, Reusable
 		{
 			return null;
 		}
+		
 		final float x = vec.x;
 		final float y = vec.y;
 		vec.x = (m00 * x) + (m01 * y) + (m02 * vec.z);
@@ -870,19 +822,22 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>mult</code> multiplies this matrix by a given matrix. The result matrix is saved in the current matrix. If the given matrix is null, nothing happens. The current matrix is returned. This is equivalent to this*=mat
-	 * @param mat the matrix to multiply this matrix by.
-	 * @return This matrix, after the multiplication
+	 * Multiplies the current matrix by another matrix.<br>
+	 * This method performs a local multiplication where the provided matrix is multiplied by {@code this}.<br>
+	 * It returns a new {@link Matrix3f} containing the result.
+	 * @param mat The matrix to multiply with the current instance.
+	 * @return A new {@link Matrix3f} representing the product of the two matrices.
 	 */
 	public Matrix3f multLocal(Matrix3f mat)
 	{
-		
 		return mult(mat, this);
 	}
 	
 	/**
-	 * Transposes this matrix in place. Returns this matrix for chaining
-	 * @return This matrix after transpose
+	 * Transposes the matrix elements in place.<br>
+	 * This method swaps the rows and columns of the current {@code Matrix3f}.<br>
+	 * It modifies the internal data of the object directly.
+	 * @return The current {@code Matrix3f} instance for method chaining.
 	 */
 	public Matrix3f transposeLocal()
 	{
@@ -906,8 +861,10 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * Inverts this matrix as a new Matrix3f.
-	 * @return The new inverse matrix
+	 * Calculates the inverse of the current matrix.<br>
+	 * This method returns a new {@link Matrix3f} object.<br>
+	 * If the matrix is singular, it may return {@code null}.
+	 * @return The inverted {@link Matrix3f} or {@code null} if no inverse exists.
 	 */
 	public Matrix3f invert()
 	{
@@ -915,9 +872,10 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * Inverts this matrix and stores it in the given store.
-	 * @param store
-	 * @return The store
+	 * Calculates the inverse of this matrix.<br>
+	 * If the determinant is near zero, it returns a zero matrix.
+	 * @param store The {@code Matrix3f} object to store the result in. If {@code null}, a new instance is created.
+	 * @return The resulting inverted {@code Matrix3f}.
 	 */
 	public Matrix3f invert(Matrix3f store)
 	{
@@ -947,8 +905,10 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * Inverts this matrix locally.
-	 * @return this
+	 * Calculates the inverse of the current matrix.<br>
+	 * This method modifies the internal values of the {@code Matrix3f} object.<br>
+	 * If the determinant is near zero, it returns a zero matrix.
+	 * @return The current {@code Matrix3f} instance after inversion.
 	 */
 	public Matrix3f invertLocal()
 	{
@@ -983,8 +943,9 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * Returns a new matrix representing the adjoint of this matrix.
-	 * @return The adjoint matrix
+	 * Calculates the adjoint of this matrix.<br>
+	 * The result is returned as a new {@link Matrix3f} object.
+	 * @return A new {@link Matrix3f} representing the adjoint matrix.
 	 */
 	public Matrix3f adjoint()
 	{
@@ -992,9 +953,11 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * Places the adjoint of this matrix in store (creates store if null.)
-	 * @param store The matrix to store the result in. If null, a new matrix is created.
-	 * @return store
+	 * Calculates the adjoint of this matrix.<br>
+	 * The result is stored in the provided {@code Matrix3f} object.<br>
+	 * If the input is {@code null}, a new instance is created.
+	 * @param store The {@code Matrix3f} to store the result in.
+	 * @return The resulting {@code Matrix3f} object.
 	 */
 	public Matrix3f adjoint(Matrix3f store)
 	{
@@ -1017,8 +980,9 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>determinant</code> generates the determinate of this matrix.
-	 * @return the determinate
+	 * Calculates the determinant of the current 3x3 matrix.<br>
+	 * This value is used to determine scaling and orientation properties.
+	 * @return The calculated determinant as a {@code float}.
 	 */
 	public float determinant()
 	{
@@ -1030,8 +994,9 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * Sets all of the values in this matrix to zero.
-	 * @return this matrix
+	 * Creates a new {@link Matrix3f} where all elements are set to {@code 0.0f}.<br>
+	 * This method resets the current matrix to a zero state.
+	 * @return the current {@link Matrix3f} instance.
 	 */
 	public Matrix3f zero()
 	{
@@ -1040,26 +1005,10 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>add</code> adds the values of a parameter matrix to this matrix.
-	 * @param mat the matrix to add to this.
-	 */
-	@Deprecated
-	public void add(Matrix3f mat)
-	{
-		m00 += mat.m00;
-		m01 += mat.m01;
-		m02 += mat.m02;
-		m10 += mat.m10;
-		m11 += mat.m11;
-		m12 += mat.m12;
-		m20 += mat.m20;
-		m21 += mat.m21;
-		m22 += mat.m22;
-	}
-	
-	/**
-	 * <code>transpose</code> <b>locally</b> transposes this Matrix. This is inconsistent with general value vs local semantics, but is preserved for backwards compatibility. Use transposeNew() to transpose to a new object (value).
-	 * @return this object for chaining.
+	 * Creates a new {@code Matrix3f} that is the transpose of this matrix.<br>
+	 * The rows and columns of the original matrix are swapped.<br>
+	 * This method calls {@code transposeLocal} internally.
+	 * @return A new {@code Matrix3f} instance representing the transposed matrix.
 	 */
 	public Matrix3f transpose()
 	{
@@ -1067,8 +1016,9 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>transposeNew</code> returns a transposed version of this matrix.
-	 * @return The new Matrix3f object.
+	 * Creates a new {@code Matrix3f} instance that is the transpose of this matrix.<br>
+	 * The original matrix remains unchanged.
+	 * @return A new {@code Matrix3f} object containing the transposed values.
 	 */
 	public Matrix3f transposeNew()
 	{
@@ -1077,13 +1027,9 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>toString</code> returns the string representation of this object. It is in a format of a 3x3 matrix. For example, an identity matrix would be represented by the following string. com.jme.math.Matrix3f <br>
-	 * [<br>
-	 * 1.0 0.0 0.0 <br>
-	 * 0.0 1.0 0.0 <br>
-	 * 0.0 0.0 1.0 <br>
-	 * ]<br>
-	 * @return the string representation of this object.
+	 * Returns a string representation of the matrix.<br>
+	 * This method formats the internal values into a 3x3 grid layout.
+	 * @return A formatted string representing this {@code Matrix3f}.
 	 */
 	@Override
 	public String toString()
@@ -1114,9 +1060,10 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>hashCode</code> returns the hash code value as an integer and is supported for the benefit of hashing based collection classes such as Hashtable, HashMap, HashSet etc.
-	 * @return the hashcode for this instance of Matrix4f.
-	 * @see java.lang.Object#hashCode()
+	 * Returns a hash code value for this {@link Matrix3f} object.<br>
+	 * This value is used to identify the object in collections like {@code HashSet}.<br>
+	 * It is calculated based on all nine matrix components.
+	 * @return The integer hash code of this object.
 	 */
 	@Override
 	public int hashCode()
@@ -1138,15 +1085,15 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * are these two matrices the same? they are is they both have the same mXX values.
-	 * @param o the object to compare for equality
-	 * @return true if they are equal
+	 * Compares this {@link Matrix3f} object with another object for equality.<br>
+	 * It checks if both objects have the same matrix values.
+	 * @param o The object to compare this instance against.
+	 * @return {@code true} if the objects are equal, {@code false} otherwise.
 	 */
-	@SuppressWarnings("null")
 	@Override
 	public boolean equals(Object o)
 	{
-		if (!(o instanceof Matrix3f) || (o == null))
+		if (!(o instanceof Matrix3f))
 		{
 			return false;
 		}
@@ -1157,40 +1104,16 @@ public final class Matrix3f implements Cloneable, Reusable
 		}
 		
 		final Matrix3f comp = (Matrix3f) o;
-		if (Float.compare(m00, comp.m00) != 0)
-		{
-			return false;
-		}
-		if (Float.compare(m01, comp.m01) != 0)
-		{
-			return false;
-		}
-		if (Float.compare(m02, comp.m02) != 0)
+		if ((Float.compare(m00, comp.m00) != 0) || (Float.compare(m01, comp.m01) != 0) || (Float.compare(m02, comp.m02) != 0) || (Float.compare(m10, comp.m10) != 0))
 		{
 			return false;
 		}
 		
-		if (Float.compare(m10, comp.m10) != 0)
-		{
-			return false;
-		}
-		if (Float.compare(m11, comp.m11) != 0)
-		{
-			return false;
-		}
-		if (Float.compare(m12, comp.m12) != 0)
+		if ((Float.compare(m11, comp.m11) != 0) || (Float.compare(m12, comp.m12) != 0) || (Float.compare(m20, comp.m20) != 0) || (Float.compare(m21, comp.m21) != 0))
 		{
 			return false;
 		}
 		
-		if (Float.compare(m20, comp.m20) != 0)
-		{
-			return false;
-		}
-		if (Float.compare(m21, comp.m21) != 0)
-		{
-			return false;
-		}
 		if (Float.compare(m22, comp.m22) != 0)
 		{
 			return false;
@@ -1199,15 +1122,22 @@ public final class Matrix3f implements Cloneable, Reusable
 		return true;
 	}
 	
+	/**
+	 * Returns the runtime class of the current instance.<br>
+	 * This method helps identify the specific subclass of {@link Matrix3f}.
+	 * @return The {@code Class} object representing the type of this instance.
+	 */
 	public Class<? extends Matrix3f> getClassTag()
 	{
-		return getClass();
+		return this.getClass();
 	}
 	
 	/**
-	 * A function for creating a rotation matrix that rotates a vector called "start" into another vector called "end".
-	 * @param start normalized non-zero starting vector
-	 * @param end normalized non-zero ending vector
+	 * Creates a rotation matrix from two vectors.<br>
+	 * This method calculates the transformation required to align {@code start} with {@code end}.<br>
+	 * It handles cases where the vectors are nearly parallel by finding an orthogonal basis.
+	 * @param start The starting vector for the rotation.
+	 * @param end The target vector to rotate towards.
 	 */
 	public void fromStartEndVectors(Vector3f start, Vector3f end)
 	{
@@ -1276,6 +1206,7 @@ public final class Matrix3f implements Cloneable, Reusable
 					final float val = ((-c1 * u.get(i) * u.get(j)) - (c2 * v.get(i) * v.get(j))) + (c3 * v.get(i) * u.get(j));
 					set(i, j, val);
 				}
+				
 				final float val = get(i, i);
 				set(i, i, val + 1.0f);
 			}
@@ -1305,8 +1236,9 @@ public final class Matrix3f implements Cloneable, Reusable
 	}
 	
 	/**
-	 * <code>scale</code> scales the operation performed by this matrix on a per-component basis.
-	 * @param scale The scale applied to each of the X, Y and Z output values.
+	 * Multiplies the current matrix by a scaling factor.<br>
+	 * This method adjusts the size of the transformation along each axis.
+	 * @param scale The {@code Vector3f} containing the x, y, and z scale values.
 	 */
 	public void scale(Vector3f scale)
 	{
@@ -1321,43 +1253,24 @@ public final class Matrix3f implements Cloneable, Reusable
 		m22 *= scale.z;
 	}
 	
+	/**
+	 * Checks if the provided matrix is an identity matrix.<br>
+	 * It compares the values against a small epsilon of {@code 1e-4}.
+	 * @param mat The <code class="Matrix3f">Matrix3f</code> to check.
+	 * @return {@code true} if the matrix is an identity matrix, otherwise {@code false}.
+	 */
 	static boolean equalIdentity(Matrix3f mat)
 	{
-		if (Math.abs(mat.m00 - 1) > 1e-4)
-		{
-			return false;
-		}
-		if (Math.abs(mat.m11 - 1) > 1e-4)
-		{
-			return false;
-		}
-		if (Math.abs(mat.m22 - 1) > 1e-4)
+		if ((Math.abs(mat.m00 - 1) > 1e-4) || (Math.abs(mat.m11 - 1) > 1e-4) || (Math.abs(mat.m22 - 1) > 1e-4) || (Math.abs(mat.m01) > 1e-4))
 		{
 			return false;
 		}
 		
-		if (Math.abs(mat.m01) > 1e-4)
-		{
-			return false;
-		}
-		if (Math.abs(mat.m02) > 1e-4)
+		if ((Math.abs(mat.m02) > 1e-4) || (Math.abs(mat.m10) > 1e-4) || (Math.abs(mat.m12) > 1e-4) || (Math.abs(mat.m20) > 1e-4))
 		{
 			return false;
 		}
 		
-		if (Math.abs(mat.m10) > 1e-4)
-		{
-			return false;
-		}
-		if (Math.abs(mat.m12) > 1e-4)
-		{
-			return false;
-		}
-		
-		if (Math.abs(mat.m20) > 1e-4)
-		{
-			return false;
-		}
 		if (Math.abs(mat.m21) > 1e-4)
 		{
 			return false;
@@ -1366,6 +1279,11 @@ public final class Matrix3f implements Cloneable, Reusable
 		return true;
 	}
 	
+	/**
+	 * Creates a new <code class="Matrix3f"> object that is a copy of this instance.<br>
+	 * This method performs a shallow copy of the matrix data.
+	 * @return A new <code class="Matrix3f"> instance with the same values as the original.
+	 */
 	@Override
 	public Matrix3f clone()
 	{
@@ -1379,43 +1297,31 @@ public final class Matrix3f implements Cloneable, Reusable
 		}
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see javolution.lang.Reusable#reset()
+	/**
+	 * Resets the matrix to its default state.<br>
+	 * This method calls {@code loadIdentity} to set all values to the identity matrix.<br>
+	 * Use this to clear any previous transformations.
 	 */
-	@Override
 	public void reset()
 	{
 		loadIdentity();
 	}
 	
 	/**
-	 * Returns a new, preallocated or {@link #recycle recycled} text builder (on the stack when executing in a {@link javolution.context.StackContext StackContext}).
-	 * @return a new, preallocated or recycled text builder instance.
+	 * Creates a new instance of {@link Matrix3f}.
+	 * @return A new {@code Matrix3f} object.
 	 */
 	public static Matrix3f newInstance()
 	{
-		if (GeoDataConfig.GEO_OBJECT_FACTORY_ENABLE)
-		{
-			return (Matrix3f) FACTORY.object();
-		}
 		return new Matrix3f();
 	}
 	
 	/**
-	 * Recycles a text builder {@link #newInstance() instance} immediately (on the stack when executing in a {@link javolution.context.StackContext StackContext}).
-	 * @param instance
+	 * Recycles the provided {@code Matrix3f} instance.
+	 * @param instance The {@code Matrix3f} object to be recycled.
 	 */
-	@SuppressWarnings("unchecked")
 	public static void recycle(Matrix3f instance)
 	{
-		if (GeoDataConfig.GEO_OBJECT_FACTORY_ENABLE)
-		{
-			FACTORY.recycle(instance);
-		}
-		else
-		{
-			instance = null;
-		}
+		// pooling removed
 	}
 }

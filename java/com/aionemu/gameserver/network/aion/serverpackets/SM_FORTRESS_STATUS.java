@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network.aion.serverpackets;
 
@@ -24,6 +24,10 @@ import com.aionemu.gameserver.network.aion.AionConnection;
 import com.aionemu.gameserver.network.aion.AionServerPacket;
 import com.aionemu.gameserver.services.SiegeService;
 
+/**
+ * This packet handles the status information for a fortress.<br>
+ * It provides details regarding {@link FortressLocation} and current {@link Influence}.
+ */
 public class SM_FORTRESS_STATUS extends AionServerPacket
 {
 	@Override
@@ -31,53 +35,46 @@ public class SM_FORTRESS_STATUS extends AionServerPacket
 	{
 		final Map<Integer, FortressLocation> fortresses = SiegeService.getInstance().getFortresses();
 		final Influence inf = Influence.getInstance();
+		
 		writeC(1);
 		writeD(SiegeService.getInstance().getSecondsBeforeHourEnd());
 		writeF(inf.getGlobalElyosInfluence());
 		writeF(inf.getGlobalAsmodiansInfluence());
 		writeF(inf.getGlobalBalaursInfluence());
 		writeH(8);
-		// ========[ABYSS]========
-		writeD(400010000);
-		writeF(inf.getAbyssElyosInfluence());
-		writeF(inf.getAbyssAsmodiansInfluence());
-		writeF(inf.getAbyssBalaursInfluence());
-		// ======[INGGISON]=======
 		writeD(210050000);
 		writeF(inf.getInggisonElyosInfluence());
 		writeF(inf.getInggisonAsmodiansInfluence());
 		writeF(inf.getInggisonBalaursInfluence());
-		// ======[GELKMAROS]======
 		writeD(220070000);
 		writeF(inf.getGelkmarosElyosInfluence());
 		writeF(inf.getGelkmarosAsmodiansInfluence());
 		writeF(inf.getGelkmarosBalaursInfluence());
-		// ========[BELUS]========
+		writeD(400010000);
+		writeF(inf.getAbyssElyosInfluence());
+		writeF(inf.getAbyssAsmodiansInfluence());
+		writeF(inf.getAbyssBalaursInfluence());
 		writeD(400020000);
 		writeF(inf.getBelusElyosInfluence());
 		writeF(inf.getBelusAsmodiansInfluence());
 		writeF(inf.getBelusBalaursInfluence());
-		// ========[ASPIDA]=======
 		writeD(400040000);
 		writeF(inf.getAspidaElyosInfluence());
 		writeF(inf.getAspidaAsmodiansInfluence());
 		writeF(inf.getAspidaBalaursInfluence());
-		// =======[ATANATOS]======
 		writeD(400050000);
 		writeF(inf.getAtanatosElyosInfluence());
 		writeF(inf.getAtanatosAsmodiansInfluence());
 		writeF(inf.getAtanatosBalaursInfluence());
-		// =======[DISILLON]======
 		writeD(400060000);
 		writeF(inf.getDisillonElyosInfluence());
 		writeF(inf.getDisillonAsmodiansInfluence());
 		writeF(inf.getDisillonBalaursInfluence());
-		// ======[KALDOR]=========
 		writeD(600090000);
 		writeF(inf.getKaldorElyosInfluence());
 		writeF(inf.getKaldorAsmodiansInfluence());
 		writeF(inf.getKaldorBalaursInfluence());
-		writeH(fortresses.size());
+		
 		for (FortressLocation fortress : fortresses.values())
 		{
 			writeD(fortress.getLocationId());

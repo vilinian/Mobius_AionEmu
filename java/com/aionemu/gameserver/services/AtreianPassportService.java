@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.services;
 
@@ -21,383 +21,197 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aionemu.commons.database.dao.DAOManager;
+import com.aionemu.gameserver.configs.main.EventsConfig;
+import com.aionemu.gameserver.dao.AtreianPassportDAO;
 import com.aionemu.gameserver.dataholders.DataManager;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
-import com.aionemu.gameserver.model.gameobjects.player.PlayerCommonData;
-import com.aionemu.gameserver.model.templates.event.AtreianPassport;
-import com.aionemu.gameserver.model.templates.event.AttendType;
+import com.aionemu.gameserver.model.templates.atreianpassport.AtreianPassportRewards;
+import com.aionemu.gameserver.model.templates.atreianpassport.AtreianPassportTemplate;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_ATREIAN_PASSPORT;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_SYSTEM_MESSAGE;
-import com.aionemu.gameserver.services.item.ItemPacketService.ItemAddType;
-import com.aionemu.gameserver.services.item.ItemPacketService.ItemUpdateType;
 import com.aionemu.gameserver.services.item.ItemService;
-import com.aionemu.gameserver.services.item.ItemService.ItemUpdatePredicate;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 
 /**
- * @author Ranastic
+ * Manages the logic for the {@code AtreianPassport} system.<br>
+ * This service handles reward distribution and passport interactions for players.<br>
+ * It interacts with {@link AtreianPassportDAO} to persist data and {@link ItemService} to grant items.
+ * @author Falke_34
  */
 public class AtreianPassportService
 {
 	private static final Logger log = LoggerFactory.getLogger(AtreianPassportService.class);
-	private final Timestamp t = new Timestamp(Calendar.getInstance().getTime().getTime() - 20);
-	private final Map<Integer, AtreianPassport> cumu = new HashMap<>(1);
-	private final Map<Integer, AtreianPassport> daily = new HashMap<>(1);
-	private final Map<Integer, AtreianPassport> anny = new HashMap<>(1);
-	public Map<Integer, AtreianPassport> data = new HashMap<>(1);
-	private final Calendar calendar = Calendar.getInstance();
+	private final Map<Integer, AtreianPassportTemplate> pc_basic = new HashMap<>(1);
+	public Map<Integer, AtreianPassportTemplate> data = new HashMap<>(1);
 	
-	private int year = 0;
-	private int arrival = 0;
-	private int currentPassport = 0;
-	private int cachedPassport = 0;
-	private int check = 0;
-	private boolean cumuIsActive = false;
+	/**
+	 * Retrieves all passports associated with a specific account.<br>
+	 * This method fetches IDs from the {@link AtreianPassportDAO} and maps them to their templates.
+	 * @param accountId The unique identifier for the player account.
+	 * @return A map where keys are passport IDs and values are {@link AtreianPassportTemplate} objects.
+	 */
+	public Map<Integer, AtreianPassportTemplate> getPlayerPassports(int accountId)
+	{
+		final Map<Integer, AtreianPassportTemplate> passports = new HashMap<>();
+		final List<Integer> ids = DAOManager.getDAO(AtreianPassportDAO.class).getPassports(accountId);
+		for (Integer i : ids)
+		{
+			passports.put(i, data.get(i));
+		}
+		
+		return passports;
+	}
 	
+	/**
+	 * Handles the logic for checking and updating a player's passport status when they log in.<br>
+	 * This method verifies if the player has an active passport or needs to be assigned one.<br>
+	 * It also checks for daily stamp resets and sends the appropriate server packets to the {@code Player}.
+	 * @param player The {@code Player} object who is currently logging into the game.
+	 */
 	public void onLogin(Player player)
 	{
-		check = 0;
-		year = 0;
-		arrival = 0;
-		currentPassport = 0;
-		cachedPassport = 0;
-		cumuIsActive = false;
 		if (player == null)
 		{
 			return;
 		}
-		final PlayerCommonData pcd = player.getCommonData();
-		arrival = getArrival();
-		checkForNewMonth(pcd);
-		if (checkOnlineDate(pcd))
+		
+		final int passportId = EventsConfig.ATREIAN_PASSPORT_ID;
+		final int accountId = player.getPlayerAccount().getId();
+		final AtreianPassportDAO dao = DAOManager.getDAO(AtreianPassportDAO.class);
+		final Map<Integer, AtreianPassportTemplate> playerPassports = getPlayerPassports(accountId);
+		
+		// Added reset if all Stamps are received
+		if (dao.getStamps(accountId, passportId) == 7)
 		{
-			final int stamps = pcd.getPassportStamps();
-			final int newStamps = stamps + 1;
-			pcd.setPassportStamps(newStamps);
+			dao.updatePassport(accountId, passportId, 0, true, new Timestamp(System.currentTimeMillis() - 86400000L));
 		}
-		for (AtreianPassport atp : cumu.values())
+		
+		if (!playerPassports.containsKey(passportId))
 		{
-			if (atp.getPeriodStart().isBeforeNow() && atp.getPeriodEnd().isAfterNow())
-			{
-				if (year == 0)
-				{
-					year = atp.getPeriodStart().getYear();
-				}
-				if ((atp.getAttendNum() == pcd.getPassportStamps()) && checkOnlineDate(pcd))
-				{
-					currentPassport = atp.getId();
-					check = 1;
-					atp.setRewardId(1);
-					pcd.setPassportReward(0);
-					pcd.playerPassports.put(atp.getId(), atp);
-					cumuIsActive = true;
-				}
-				else
-				{
-					atp.setRewardId(0);
-					pcd.playerPassports.put(atp.getId(), atp);
-					cumuIsActive = false;
-					if (currentPassport == 0)
-					{
-						currentPassport = atp.getId();
-					}
-				}
-			}
+			final Timestamp now = new Timestamp(System.currentTimeMillis() - 86400000L);
+			dao.insertPassport(accountId, passportId, 0, now);
+			PacketSendUtility.sendPacket(player, new SM_ATREIAN_PASSPORT(passportId, 0, 1, false));
 		}
-		for (AtreianPassport atp : daily.values())
+		else
 		{
-			if (atp.getPeriodStart().isBeforeNow() && atp.getPeriodEnd().isAfterNow())
+			final int stamps = dao.getStamps(accountId, passportId);
+			final Timestamp now2 = new Timestamp(System.currentTimeMillis());
+			final Timestamp lastStamp = dao.getLastStamp(accountId, passportId);
+			if ((now2.getTime() - lastStamp.getTime()) >= 86400000L)
 			{
-				if (year == 0)
-				{
-					year = atp.getPeriodStart().getYear();
-				}
-				if (checkOnlineDate(pcd))
-				{
-					if ((currentPassport != 0) && cumuIsActive)
-					{
-						setCachedPassport(currentPassport);
-					}
-					else
-					{
-						currentPassport = atp.getId();
-						check = 1;
-						atp.setRewardId(1);
-						pcd.setPassportReward(0);
-						pcd.playerPassports.put(atp.getId(), atp);
-					}
-				}
-				else if (isCached())
-				{
-					currentPassport = getCachedPassport();
-					check = 1;
-					atp.setRewardId(1);
-					pcd.setPassportReward(0);
-					pcd.playerPassports.put(atp.getId(), atp);
-				}
-				else
-				{
-					atp.setRewardId(0);
-					break;
-				}
-			}
-		}
-		pcd.setLastStamp(t);
-		checkCompletedPassports(pcd);
-		if (checkOnlineDate(pcd))
-		{
-			PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_ATTEND_MSG_ATTEND_REWARD_GET);
-		}
-		PacketSendUtility.sendPacket(player, new SM_ATREIAN_PASSPORT(format(pcd.getPlayerPassports()), pcd.getPassportStamps(), currentPassport, t, year, arrival, check));
-		check = 0;
-		currentPassport = 0;
-		year = 0;
-		arrival = 0;
-		cachedPassport = 0;
-		cumuIsActive = false;
-		pcd.playerPassports.clear();
-	}
-	
-	@SuppressWarnings("deprecation")
-	private void checkForNewMonth(PlayerCommonData pcd)
-	{
-		if (pcd.getLastStamp() == null)
-		{
-			return;
-		}
-		if (pcd.getLastStamp().getMonth() != calendar.getTime().getMonth())
-		{
-			pcd.setPassportStamps(0);
-		}
-	}
-	
-	private void checkCompletedPassports(PlayerCommonData pcd)
-	{
-		for (AtreianPassport pp : pcd.getCompletedPassports().getAllPassports())
-		{
-			if (pcd.getPlayerPassports().containsValue(pp))
-			{
-				pcd.playerPassports.remove(pp.getId());
-			}
-			if (pp.getRewardId() == 0)
-			{
-				if ((pp.getPeriodEnd().isBeforeNow() && (pp.getAttendType() == AttendType.ANNIVERSARY)) || (pp.getPeriodEnd().isBeforeNow() && (pp.getAttendType() == AttendType.DAILY)))
-				{
-					continue;
-				}
-				pp.setRewardId(3);
-			}
-			else if ((pp.getRewardId() == 3) && (pp.getAttendType() == AttendType.CUMULATIVE))
-			{
-				check = 0;
-			}
-			else if ((pp.getRewardId() == 1) && (pp.getAttendType() == AttendType.CUMULATIVE))
-			{
-				check = 1;
+				DAOManager.getDAO(AtreianPassportDAO.class).updatePassport(accountId, passportId, stamps, false, lastStamp);
+				PacketSendUtility.sendPacket(player, new SM_ATREIAN_PASSPORT(passportId, 0, 1, false));
+				PacketSendUtility.sendPacket(player, SM_SYSTEM_MESSAGE.STR_MSG_NEW_PASSPORT_AVAIBLE);
 			}
 			else
 			{
-				check = 0;
+				PacketSendUtility.sendPacket(player, new SM_ATREIAN_PASSPORT(passportId, 0, 1, true));
 			}
-			if (pp.getAttendType() == AttendType.CUMULATIVE)
-			{
-				if (pp.getAttendNum() != pcd.getPassportStamps())
-				{
-					pp.setRewardId(0);
-					check = 0;
-				}
-			}
-			pcd.playerPassports.put(pp.getId(), pp);
 		}
 	}
 	
-	private Map<Integer, AtreianPassport> format(Map<Integer, AtreianPassport> atp)
-	{
-		final Map<Integer, AtreianPassport> finalPassports = new TreeMap<>(atp);
-		return finalPassports;
-	}
-	
-	private boolean checkOnlineDate(PlayerCommonData pcd)
-	{
-		final long lastOnline = pcd.getLastStamp().getTime();
-		final long secondsOffline = (System.currentTimeMillis() / 1000) - (lastOnline / 1000);
-		double hours = secondsOffline / 3600d;
-		if (hours > 24)
-		{
-			hours = 24;
-		}
-		if (hours == 24)
-		{
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean isCached()
-	{
-		if (cachedPassport != 0)
-		{
-			return true;
-		}
-		return false;
-	}
-	
+	/**
+	 * Initializes the {@code AtreianPassportService}.<br>
+	 * This method loads all passport templates from the static data.<br>
+	 * It logs a message to confirm that the service has started.
+	 */
 	public void onStart()
 	{
-		final Map<Integer, AtreianPassport> raw = DataManager.ATREIAN_PASSPORT_DATA.getAll();
+		final Map<Integer, AtreianPassportTemplate> raw = DataManager.ATREIAN_PASSPORT_DATA.getAll();
 		if (raw.size() != 0)
 		{
 			getPassports(raw);
 		}
 		else
 		{
-			log.warn("[ATREIAN PASSPORT] passports from static data = 0");
+			log.warn("[AtreianPassportService] Passports from static data = 0");
 		}
-		log.info("<Atreian Passport> initialized");
+		
+		log.info("[AtreianPassportService] is initialized...");
 	}
 	
-	public void onGetReward(Player player, int timestamp, List<Integer> passportId)
+	/**
+	 * Grants rewards to a {@link Player} based on their passport progress.<br>
+	 * This method checks if the player is eligible for the next reward.<br>
+	 * It updates the database and sends a confirmation packet if successful.
+	 * @param player The {@link Player} receiving the reward.
+	 * @param passportId The unique identifier of the passport to check.
+	 */
+	public void getReward(Player player, int passportId)
 	{
-		for (Integer i : passportId)
+		final AtreianPassportTemplate atreianPassportRewards = DataManager.ATREIAN_PASSPORT_DATA.getAtreianPassportId(passportId);
+		final int accountId = player.getPlayerAccount().getId();
+		final AtreianPassportDAO dao = DAOManager.getDAO(AtreianPassportDAO.class);
+		final Calendar cal = Calendar.getInstance();
+		cal.setTimeInMillis(player.getCreationDate());
+		final int stamps = dao.getStamps(accountId, passportId);
+		for (AtreianPassportRewards component : atreianPassportRewards.getRewards())
 		{
-			final AtreianPassport atp = data.get(i);
-			ItemService.addItem(player, atp.getRewardItem(), atp.getRewardItemNum(), new ItemUpdatePredicate(ItemAddType.ITEM_COLLECT, ItemUpdateType.INC_PASSPORT_ADD));
-			player.getCommonData().setPassportReward(1);
-			if (atp.getAttendType() != AttendType.DAILY)
+			final Timestamp now = new Timestamp(System.currentTimeMillis());
+			final Timestamp lastStamp = dao.getLastStamp(accountId, passportId);
+			if ((now.getTime() - lastStamp.getTime()) >= 86400000L)
 			{
-				player.getCommonData().addToCompletedPassports(atp);
+				if (component.getRewardItemNum() == (stamps + 1))
+				{
+					ItemService.addItem(player, component.getRewardItemId(), component.getRewardItemCount());
+					PacketSendUtility.sendPacket(player, new SM_ATREIAN_PASSPORT(passportId, stamps + 1, 1, true));
+					DAOManager.getDAO(AtreianPassportDAO.class).updatePassport(accountId, passportId, stamps + 1, true, now);
+				}
 			}
 		}
-		onLogin(player);
 	}
 	
-	public void getPassports(Map<Integer, AtreianPassport> raw)
+	/**
+	 * This method loads passport data into the service.<br>
+	 * It populates the {@code data} map with entries from the provided collection.<br>
+	 * It then processes each {@link AtreianPassportTemplate} to identify basic passports.
+	 * @param raw A map containing the initial passport templates to be loaded.
+	 */
+	public void getPassports(Map<Integer, AtreianPassportTemplate> raw)
 	{
 		data.putAll(raw);
-		for (AtreianPassport atp : data.values())
+		for (AtreianPassportTemplate atp : data.values())
 		{
 			switch (atp.getAttendType())
 			{
-				case DAILY:
+				case PC_BASIC:
 				{
-					getDailyPassports(atp.getId(), atp);
-					break;
-				}
-				case CUMULATIVE:
-				{
-					getCumulativePassports(atp.getId(), atp);
-					break;
-				}
-				case ANNIVERSARY:
-				{
-					getAnniversaryPassports(atp.getId(), atp);
+					getBasicPassports(atp.getId(), atp);
 					break;
 				}
 			}
 		}
+		
+		log.info("[AtreianPassportService] Loaded " + pc_basic.size() + " Basic Passports");
 	}
 	
-	public void getDailyPassports(int id, AtreianPassport atp)
+	/**
+	 * This method saves a basic passport to the internal cache.<br>
+	 * It checks if the {@code id} already exists in the map before adding it.<br>
+	 * If the {@code id} is missing, it stores the provided {@link AtreianPassportTemplate}.
+	 * @param id The unique identifier for the passport.
+	 * @param atp The {@link AtreianPassportTemplate} object to store.
+	 */
+	public void getBasicPassports(int id, AtreianPassportTemplate atp)
 	{
-		if (daily.containsKey(id))
+		if (pc_basic.containsKey(id))
 		{
 			return;
 		}
-		daily.put(id, atp);
+		
+		pc_basic.put(id, atp);
 	}
 	
-	public void getCumulativePassports(int id, AtreianPassport atp)
-	{
-		if (cumu.containsKey(id))
-		{
-			return;
-		}
-		cumu.put(id, atp);
-	}
-	
-	public void getAnniversaryPassports(int id, AtreianPassport atp)
-	{
-		if (anny.containsKey(id))
-		{
-			return;
-		}
-		anny.put(id, atp);
-	}
-	
-	public int getArrival()
-	{
-		switch (calendar.get(Calendar.MONTH))
-		{
-			case Calendar.NOVEMBER:
-			{
-				return 1;
-			}
-			case Calendar.DECEMBER:
-			{
-				return 2;
-			}
-			case Calendar.JANUARY:
-			{
-				return 3;
-			}
-			case Calendar.FEBRUARY:
-			{
-				return 4;
-			}
-			case Calendar.MARCH:
-			{
-				return 5;
-			}
-			case Calendar.APRIL:
-			{
-				return 6;
-			}
-			case Calendar.MAY:
-			{
-				return 7;
-			}
-			case Calendar.JUNE:
-			{
-				return 8;
-			}
-			case Calendar.JULY:
-			{
-				return 9;
-			}
-			case Calendar.AUGUST:
-			{
-				return 10;
-			}
-			case Calendar.SEPTEMBER:
-			{
-				return 11;
-			}
-			case Calendar.OCTOBER:
-			{
-				return 12;
-			}
-			default:
-			{
-				return 0;
-			}
-		}
-	}
-	
-	public int getCachedPassport()
-	{
-		return cachedPassport;
-	}
-	
-	public void setCachedPassport(int cachedPassport)
-	{
-		this.cachedPassport = cachedPassport;
-	}
-	
+	/**
+	 * Provides access to the singleton instance of this service.<br>
+	 * Use this method to get the global {@link AtreianPassportService} object.
+	 * @return The single shared instance of {@code AtreianPassportService}.
+	 */
 	public static AtreianPassportService getInstance()
 	{
 		return SingletonHolder.instance;

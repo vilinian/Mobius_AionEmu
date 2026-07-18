@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.controllers.movement;
 
@@ -25,6 +25,8 @@ import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.world.World;
 
 /**
+ * Handles the movement logic specifically for siege weapons.<br>
+ * This class extends {@link SummonMoveController} to manage how these objects navigate the world.
  * @author xTz
  */
 public class SiegeWeaponMoveController extends SummonMoveController
@@ -35,11 +37,22 @@ public class SiegeWeaponMoveController extends SummonMoveController
 	private final float offset = 0.1f;
 	public static final float MOVE_CHECK_OFFSET = 0.1f;
 	
+	/**
+	 * Creates a new instance of {@code SiegeWeaponMoveController}.<br>
+	 * This constructor initializes the controller for a specific {@link Summon}.<br>
+	 * It passes the owner to the parent class.
+	 * @param owner The {@code Summon} that owns this siege weapon.
+	 */
 	public SiegeWeaponMoveController(Summon owner)
 	{
 		super(owner);
 	}
 	
+	/**
+	 * Starts the movement process for the {@code owner}.<br>
+	 * This method updates the internal state to begin moving toward the target coordinates.<br>
+	 * It triggers the logic required to transition the creature into a moving state.
+	 */
 	@Override
 	public void moveToDestination()
 	{
@@ -49,6 +62,7 @@ public class SiegeWeaponMoveController extends SummonMoveController
 			{
 				setAndSendStopMove(owner);
 			}
+			
 			updateLastMove();
 			return;
 		}
@@ -64,10 +78,16 @@ public class SiegeWeaponMoveController extends SummonMoveController
 			pointY = owner.getTarget().getY();
 			pointZ = owner.getTarget().getZ();
 		}
+		
 		moveToLocation(pointX, pointY, pointZ, offset);
 		updateLastMove();
 	}
 	
+	/**
+	 * Starts the movement process toward a specific target object.<br>
+	 * This method sets the destination to {@code Destination.TARGET_OBJECT}.<br>
+	 * It also registers the owner with the {@link MoveTaskManager}.
+	 */
 	@Override
 	public void moveToTargetObject()
 	{
@@ -75,6 +95,15 @@ public class SiegeWeaponMoveController extends SummonMoveController
 		MoveTaskManager.getInstance().addCreature(owner);
 	}
 	
+	/**
+	 * Updates the NPC position based on a target coordinate and calculates the next movement step.<br>
+	 * This method handles heading updates, distance calculations, and geometry adjustments.<br>
+	 * It also broadcasts a {@code SM_MOVE} packet if the movement mask changes.
+	 * @param targetX The destination X coordinate.
+	 * @param targetY The destination Y coordinate.
+	 * @param targetZ The destination Z coordinate.
+	 * @param offset A small value used for movement calculations.
+	 */
 	protected void moveToLocation(float targetX, float targetY, float targetZ, float offset)
 	{
 		boolean directionChanged;

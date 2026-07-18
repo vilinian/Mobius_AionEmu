@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.dataholders;
 
@@ -31,6 +31,9 @@ import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 /**
+ * This class serves as a data holder for {@link ChestTemplate} objects.<br>
+ * It manages the collection of chest templates loaded from XML configuration files.<br>
+ * Use this class to access global chest data within the game server.
  * @author Wakizashi
  */
 @XmlRootElement(name = "chest_templates")
@@ -39,16 +42,19 @@ public class ChestData
 {
 	@XmlElement(name = "chest")
 	private List<ChestTemplate> chests;
-	
-	/** A map containing all npc templates */
+	/**
+	 * A map containing all npc templates
+	 */
 	private final TIntObjectHashMap<ChestTemplate> chestData = new TIntObjectHashMap<>();
 	private final TIntObjectHashMap<ArrayList<ChestTemplate>> instancesMap = new TIntObjectHashMap<>();
 	private final THashMap<String, ChestTemplate> namedChests = new THashMap<>();
 	
 	/**
-	 * - Inititialize all maps for subsequent use - Don't nullify initial chest list as it will be used during reload
-	 * @param u
-	 * @param parent
+	 * This method is called after the XML data has been unmarshalled.<br>
+	 * It populates the {@code chestData}, {@code instancesMap}, and {@code namedChests} maps using the list of {@link ChestTemplate} objects.<br>
+	 * The maps are cleared before being rebuilt.
+	 * @param u The {@link Unmarshaller} used to read the data.
+	 * @param parent The parent object of the current element.
 	 */
 	void afterUnmarshal(Unmarshaller u, Object parent)
 	{
@@ -66,14 +72,21 @@ public class ChestData
 		}
 	}
 	
+	/**
+	 * Returns the total number of chest templates stored in this data holder.<br>
+	 * This method calls {@code size} to retrieve the count.
+	 * @return The number of chest templates currently available.
+	 */
 	public int size()
 	{
 		return chestData.size();
 	}
 	
 	/**
-	 * @param npcId
-	 * @return
+	 * Retrieves a {@link ChestTemplate} based on the provided NPC ID.<br>
+	 * This method looks up the template in the internal data map.
+	 * @param npcId The unique identifier for the NPC.
+	 * @return The {@code ChestTemplate} associated with the ID, or {@code null} if not found.
 	 */
 	public ChestTemplate getChestTemplate(int npcId)
 	{
@@ -81,7 +94,9 @@ public class ChestData
 	}
 	
 	/**
-	 * @return the chests
+	 * Retrieves the list of all chest templates.<br>
+	 * This method returns the internal {@code chests} collection.
+	 * @return a {@code List} containing all {@link ChestTemplate} objects.
 	 */
 	public List<ChestTemplate> getChests()
 	{
@@ -89,7 +104,9 @@ public class ChestData
 	}
 	
 	/**
-	 * @param chests the chests to set
+	 * Sets the list of {@link ChestTemplate} objects for this data holder.<br>
+	 * This method updates the internal chest list and triggers the {@code Object)} method.
+	 * @param chests The list of {@code ChestTemplate} objects to set.
 	 */
 	public void setChests(List<ChestTemplate> chests)
 	{

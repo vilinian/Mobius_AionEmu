@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.commons.scripting.impl.javacompiler;
 
@@ -36,7 +36,8 @@ import javax.tools.StandardLocation;
 import com.aionemu.commons.scripting.ScriptClassLoader;
 
 /**
- * This class extends manages loaded classes. It is also responsible for tricking compiler. Unfortunally compiler doen't work with classloaders, so we have to pass class data manually for each compilation.
+ * This class manages loaded classes and handles the requirements of the {@link JavaCompiler}.<br>
+ * Since the compiler does not natively support custom classloaders, this manager manually provides class data during compilation.
  * @author SoulKeeper
  */
 public class ClassFileManager extends ForwardingJavaFileManager<JavaFileManager>
@@ -57,9 +58,11 @@ public class ClassFileManager extends ForwardingJavaFileManager<JavaFileManager>
 	protected ScriptClassLoader parentClassLoader;
 	
 	/**
-	 * Creates new ClassFileManager.
-	 * @param compiler that will be used
-	 * @param listener class that will report compilation errors
+	 * Creates a new instance of {@link ClassFileManager}.<br>
+	 * This constructor initializes the manager using the provided compiler and listener.<br>
+	 * It sets up the internal file manager required for compilation tasks.
+	 * @param compiler The {@code JavaCompiler} used to compile the source code.
+	 * @param listener The {@code DiagnosticListener} that reports errors during compilation.
 	 */
 	public ClassFileManager(JavaCompiler compiler, DiagnosticListener<? super JavaFileObject> listener)
 	{
@@ -67,12 +70,14 @@ public class ClassFileManager extends ForwardingJavaFileManager<JavaFileManager>
 	}
 	
 	/**
-	 * Returns JavaFileObject that will be used to write class data into it by compier
-	 * @param location not used
-	 * @param className JavaFileObject will have this className
-	 * @param kind not used
-	 * @param sibling not used
-	 * @return JavaFileObject that will be uesd to store compiled class data
+	 * Creates and returns a {@link JavaFileObject} for a compiled class.<br>
+	 * This method maps the {@code className} to its binary representation.<br>
+	 * It is used by the compiler to determine where to save output files.
+	 * @param location The {@code Location} of the compilation.
+	 * @param className The name of the class to be compiled.
+	 * @param kind The {@link Kind} of the file object.
+	 * @param sibling A sibling {@link FileObject} for context.
+	 * @return The generated {@link JavaFileObject} for the class.
 	 */
 	@Override
 	public JavaFileObject getJavaFileForOutput(Location location, String className, Kind kind, FileObject sibling)
@@ -83,9 +88,11 @@ public class ClassFileManager extends ForwardingJavaFileManager<JavaFileManager>
 	}
 	
 	/**
-	 * Returns classloaded of this ClassFileManager. If not exists, creates new
-	 * @param location not used
-	 * @return classLoader of this ClassFileManager
+	 * Retrieves the {@link ScriptClassLoaderImpl} for a specific location.<br>
+	 * This method ensures that the internal loader is initialized before returning it.<br>
+	 * It uses the parent classloader if one is available.
+	 * @param location The {@code Location} associated with the requested classloader.
+	 * @return The initialized {@code ScriptClassLoaderImpl} instance.
 	 */
 	@Override
 	public synchronized ScriptClassLoaderImpl getClassLoader(Location location)
@@ -101,12 +108,14 @@ public class ClassFileManager extends ForwardingJavaFileManager<JavaFileManager>
 				loader = new ScriptClassLoaderImpl(this);
 			}
 		}
+		
 		return loader;
 	}
 	
 	/**
-	 * Sets paraentClassLoader for this classLoader
-	 * @param classLoader parent class loader
+	 * Sets the parent {@link ScriptClassLoader} for this manager.<br>
+	 * This is used to define where the system should look for classes first.
+	 * @param classLoader The {@code ScriptClassLoader} to use as the parent.
 	 */
 	public void setParentClassLoader(ScriptClassLoader classLoader)
 	{
@@ -114,9 +123,11 @@ public class ClassFileManager extends ForwardingJavaFileManager<JavaFileManager>
 	}
 	
 	/**
-	 * Adds library file. Library file must be a .jar archieve
-	 * @param file link to jar archieve
-	 * @throws IOException if something goes wrong
+	 * Adds a new library to the script classloader.<br>
+	 * This method takes a {@code File} and registers it as a JAR file.<br>
+	 * It uses the internal {@code getClassLoader} method to get the loader.
+	 * @param file The {@code File} object representing the library to add.
+	 * @throws IOException If an error occurs while accessing the file.
 	 */
 	public void addLibrary(File file) throws IOException
 	{
@@ -125,9 +136,11 @@ public class ClassFileManager extends ForwardingJavaFileManager<JavaFileManager>
 	}
 	
 	/**
-	 * Adds list of files as libraries. Files must be jar archieves
-	 * @param files list of jar archives
-	 * @throws IOException if something goes wrong
+	 * Adds multiple library files to the compiler. <br>
+	 * This method iterates through each {@code File} in the provided collection.<br>
+	 * It calls {@code addLibrary} for every item found.
+	 * @param files A collection of {@code File} objects representing the libraries to add.
+	 * @throws IOException If an error occurs while processing any of the files.
 	 */
 	public void addLibraries(Iterable<File> files) throws IOException
 	{
@@ -138,8 +151,9 @@ public class ClassFileManager extends ForwardingJavaFileManager<JavaFileManager>
 	}
 	
 	/**
-	 * Returns list of classes that were compiled by compiler related to this ClassFileManager
-	 * @return list of classes
+	 * Retrieves all classes that have been compiled. <br>
+	 * This method returns the internal map of compiled data.
+	 * @return a {@code Map} containing class names and their corresponding {@link BinaryClass} objects.
 	 */
 	public Map<String, BinaryClass> getCompiledClasses()
 	{
@@ -147,13 +161,15 @@ public class ClassFileManager extends ForwardingJavaFileManager<JavaFileManager>
 	}
 	
 	/**
-	 * This method overrides class resolving procedure for compiler. It uses classloaders to resolve classes that compiler may need during compilation. Compiler by itself can't detect them. So we have to use this hack here. Hack is used only if compiler requests for classes in classpath.
-	 * @param location Location to search classes
-	 * @param packageName package to scan for classes
-	 * @param kinds FileTypes to search
-	 * @param recurse not used
-	 * @return list of requered files
-	 * @throws IOException if something foes wrong
+	 * Retrieves a list of {@link JavaFileObject} items from a specific location.<br>
+	 * This method filters files based on the provided package name and types.<br>
+	 * It also includes classes from the internal loader if searching the classpath.
+	 * @param location The {@code Location} to search for files.
+	 * @param packageName The package name to filter by.
+	 * @param kinds A set of {@link Kind} values to include.
+	 * @param recurse Set to {@code true} to search subdirectories.
+	 * @return An {@code Iterable} containing the found {@code JavaFileObject} items.
+	 * @throws IOException If an error occurs while accessing the files.
 	 */
 	@Override
 	public Iterable<JavaFileObject> list(Location location, String packageName, Set<Kind> kinds, boolean recurse) throws IOException
@@ -175,13 +191,23 @@ public class ClassFileManager extends ForwardingJavaFileManager<JavaFileManager>
 		return objects;
 	}
 	
+	/**
+	 * Determines the binary name for a given {@link JavaFileObject}.<br>
+	 * It checks if the file is an instance of {@code BinaryClass}.<br>
+	 * If it is, it uses the specific logic from that class.<br>
+	 * Otherwise, it falls back to the default behavior.
+	 * @param location The location where the file is stored.
+	 * @param file The file object to process.
+	 * @return The inferred binary name as a {@code String}.
+	 */
 	@Override
-	public String inferBinaryName(JavaFileManager.Location location, JavaFileObject file)
+	public String inferBinaryName(Location location, JavaFileObject file)
 	{
 		if (file instanceof BinaryClass)
 		{
 			return ((BinaryClass) file).inferBinaryName(null);
 		}
+		
 		return super.inferBinaryName(location, file);
 	}
 }

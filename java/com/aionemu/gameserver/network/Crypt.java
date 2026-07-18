@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.network;
 
@@ -24,57 +24,62 @@ import org.slf4j.LoggerFactory;
 import com.aionemu.commons.utils.Rnd;
 
 /**
- * Crypt will encrypt server packet and decrypt client packet.
+ * This class handles the encryption of outgoing server packets.<br>
+ * It also manages the decryption of incoming client packets.<br>
+ * Use this class to ensure secure communication between the client and the server.
  * @author hack99
  * @author kao
  * @author -Nemesiss-
  */
 public class Crypt
 {
-	private static final Logger log = LoggerFactory.getLogger(Crypt.class);
-	
+	private final static Logger log = LoggerFactory.getLogger(Crypt.class);
 	/**
 	 * Second byte of server packet must be equal to this
 	 */
-	// public final static byte staticServerPacketCode = 0x54; //Aion 5.0
-	public static final byte staticServerPacketCode = 0x56; // Aion 5.1
-	
+	public final static byte staticServerPacketCode = 0x56; // 7.5
 	/**
 	 * Crypt is enabled after first server packet was send.
 	 */
 	private boolean isEnabled;
-	
 	private EncryptionKeyPair packetKey = null;
 	
 	/**
-	 * Enable crypt key - generate random key that will be used to encrypt second server packet [first one is unencrypted] and decrypt client packets. This method is called from SM_KEY server packet, that packet sends key to aion client.
-	 * @return "false key" that should by used by aion client to encrypt/decrypt packets.
+	 * Enables the encryption key for server and client communication.<br>
+	 * This method generates a random {@code int} to create a new {@link EncryptionKeyPair}.<br>
+	 * It ensures that only one key is set during the session.
+	 * @return The calculated "false key" used by the client to encrypt and decrypt packets.
 	 */
-	public final int enableKey()
+	public int enableKey()
 	{
 		if (packetKey != null)
 		{
 			throw new KeyAlreadySetException();
 		}
 		
-		/** rnd key - this will be used to encrypt/decrypt packet */
+		/**
+		 * rnd key - this will be used to encrypt/decrypt packet
+		 */
 		final int key = Rnd.nextInt();
 		
 		packetKey = new EncryptionKeyPair(key);
 		
 		log.debug("new encrypt key: " + packetKey);
 		
-		/** false key that will be sent to aion client in SM_KEY packet */
-		// return (key ^ 0xCD92E4D3) + 0x3FF2CCD7; //Aion 5.0
-		return (key ^ 0xCD92E4D5) + 0x3FF2CCD7; // Aion 5.1
+		/**
+		 * false key that will be sent to aion client in SM_KEY packet
+		 */
+		return (key ^ 0xCD92E4D9) + 0x3FF2CCDF; // 7.x
 	}
 	
 	/**
-	 * Decrypt client packet from this ByteBuffer.
-	 * @param buf
-	 * @return true if decryption was successful.
+	 * Decrypts the data contained in a {@code ByteBuffer}.<br>
+	 * This method checks if encryption is enabled before processing.<br>
+	 * If it is disabled, the method returns {@code true} without changes.
+	 * @param buf The {@code ByteBuffer} containing the encrypted data to be decrypted.
+	 * @return {@code true} if the packet was processed or skipped successfully, and {@code false} otherwise.
 	 */
-	public final boolean decrypt(ByteBuffer buf)
+	public boolean decrypt(ByteBuffer buf)
 	{
 		if (!isEnabled)
 		{
@@ -86,14 +91,19 @@ public class Crypt
 	}
 	
 	/**
-	 * Encrypt server packet from this ByteBuffer.
-	 * @param buf
+	 * Encrypts the data contained within a {@code ByteBuffer}.<br>
+	 * This method checks if encryption is enabled before processing.<br>
+	 * If it is not enabled, it enables it and returns early.<br>
+	 * Otherwise, it calls the {@code encrypt} method.
+	 * @param buf The {@code ByteBuffer} to be encrypted.
 	 */
-	public final void encrypt(ByteBuffer buf)
+	public void encrypt(ByteBuffer buf)
 	{
 		if (!isEnabled)
 		{
-			/** first packet is not encrypted */
+			/**
+			 * first packet is not encrypted
+			 */
 			isEnabled = true;
 			log.debug("packet is not encrypted... send in SM_KEY");
 			return;
@@ -103,13 +113,13 @@ public class Crypt
 	}
 	
 	/**
-	 * Server packet opcodec obfuscation.
-	 * @param op
-	 * @return obfuscated opcodec
+	 * Converts an operation code into its encoded format.<br>
+	 * This method applies a specific bitwise transformation for version {@code 7.5}.
+	 * @param op The original operation code to encode.
+	 * @return The resulting encoded integer value.
 	 */
 	public static int encodeOpcodec(int op)
 	{
-		// return ((op + 0xD0) ^ 0xD0); //Aion 5.0
-		return ((op + 0xD4) ^ 0xD5); // Aion 5.1
+		return (op + 0xD8) ^ 0xD9; // 7.5
 	}
 }

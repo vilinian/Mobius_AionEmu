@@ -1,23 +1,25 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.dataholders;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -33,16 +35,13 @@ import com.aionemu.gameserver.model.templates.npcshout.ShoutGroup;
 import com.aionemu.gameserver.model.templates.npcshout.ShoutList;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
-import javolution.util.FastMap;
 
 /**
- * @author Rolandas
- */
-/**
- * <p>
+ * <p/>
  * Java class for anonymous complex type.
- * <p>
+ * <p/>
  * The following schema fragment specifies the expected content contained within this class.
+ * <p/>
  * 
  * <pre>
  * &lt;complexType>
@@ -55,6 +54,8 @@ import javolution.util.FastMap;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
+ * 
+ * @author Rolandas
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder =
@@ -66,13 +67,18 @@ public class NpcShoutData
 {
 	@XmlElement(name = "shout_group")
 	protected List<ShoutGroup> shoutGroups;
-	
 	@XmlTransient
-	private final TIntObjectHashMap<FastMap<Integer, List<NpcShout>>> shoutsByWorldNpcs = new TIntObjectHashMap<>();
-	
+	private final TIntObjectHashMap<Map<Integer, List<NpcShout>>> shoutsByWorldNpcs = new TIntObjectHashMap<>();
 	@XmlTransient
-	private int count;
+	private int count = 0;
 	
+	/**
+	 * This method is called after the object is unmarshalled from XML.<br>
+	 * It processes the {@code shoutGroups} to populate the internal maps.<br>
+	 * It also clears the temporary lists used during the loading process.
+	 * @param u The {@link Unmarshaller} used to load the data.
+	 * @param parent The parent object of this instance.
+	 */
 	public void afterUnmarshal(Unmarshaller u, Object parent)
 	{
 		for (ShoutGroup group : shoutGroups)
@@ -82,10 +88,10 @@ public class NpcShoutData
 				final ShoutList shoutList = group.getShoutNpcs().get(i);
 				final int worldId = shoutList.getRestrictWorld();
 				
-				FastMap<Integer, List<NpcShout>> worldShouts = shoutsByWorldNpcs.get(worldId);
+				Map<Integer, List<NpcShout>> worldShouts = shoutsByWorldNpcs.get(worldId);
 				if (worldShouts == null)
 				{
-					worldShouts = FastMap.newInstance();
+					worldShouts = new HashMap<>();
 					shoutsByWorldNpcs.put(worldId, worldShouts);
 				}
 				
@@ -102,32 +108,43 @@ public class NpcShoutData
 					{
 						worldShouts.get(npcId).addAll(shouts);
 					}
+					
 					shoutList.getNpcIds().remove(j);
 				}
+				
 				shoutList.getNpcShouts().clear();
 				shoutList.makeNull();
 				group.getShoutNpcs().remove(i);
 			}
+			
 			group.makeNull();
 		}
+		
 		shoutGroups.clear();
 		shoutGroups = null;
 	}
 	
+	/**
+	 * Returns the total number of shout groups.<br>
+	 * This value is stored in the {@code count} field.
+	 * @return The total number of elements.
+	 */
 	public int size()
 	{
 		return count;
 	}
 	
 	/**
-	 * Get global npc shouts plus world specific shouts. Make sure to clean it after the use.
-	 * @param worldId
-	 * @param npcId
-	 * @return null if not found
+	 * Retrieves the list of shouts for a specific NPC in a given world.<br>
+	 * This method combines shouts from both the default world and the specified {@code worldId}.<br>
+	 * It returns a new {@code ArrayList} containing all matching {@link NpcShout} objects.
+	 * @param worldId The unique identifier of the world.
+	 * @param npcId The unique identifier of the NPC.
+	 * @return A list of {@link NpcShout} objects, or {@code null} if no shouts are found.
 	 */
 	public List<NpcShout> getNpcShouts(int worldId, int npcId)
 	{
-		FastMap<Integer, List<NpcShout>> worldShouts = shoutsByWorldNpcs.get(0);
+		Map<Integer, List<NpcShout>> worldShouts = shoutsByWorldNpcs.get(0);
 		
 		if ((worldShouts == null) || (worldShouts.get(npcId) == null))
 		{
@@ -136,6 +153,7 @@ public class NpcShoutData
 			{
 				return null;
 			}
+			
 			return new ArrayList<>(worldShouts.get(npcId));
 		}
 		
@@ -145,20 +163,23 @@ public class NpcShoutData
 		{
 			return npcShouts;
 		}
+		
 		npcShouts.addAll(worldShouts.get(npcId));
 		
 		return npcShouts;
 	}
 	
 	/**
-	 * Lightweight check for shouts, doesn't use memory as {@link #getNpcShouts(int worldId, int npcId)})
-	 * @param worldId
-	 * @param npcId
-	 * @return
+	 * Checks if any shouts exist for a specific NPC in a given world.<br>
+	 * This method returns {@code true} if the NPC has associated shouts.<br>
+	 * It returns {@code false} if no shouts are found.
+	 * @param worldId The unique identifier for the world.
+	 * @param npcId The unique identifier for the NPC.
+	 * @return {@code true} if shouts exist, otherwise {@code false}.
 	 */
 	public boolean hasAnyShout(int worldId, int npcId)
 	{
-		FastMap<Integer, List<NpcShout>> worldShouts = shoutsByWorldNpcs.get(0);
+		Map<Integer, List<NpcShout>> worldShouts = shoutsByWorldNpcs.get(0);
 		
 		if ((worldShouts == null) || (worldShouts.get(npcId) == null))
 		{
@@ -168,15 +189,18 @@ public class NpcShoutData
 				return false;
 			}
 		}
+		
 		return true;
 	}
 	
 	/**
-	 * Lightweight check for shouts, doesn't use memory as {@link #getNpcShouts(int worldId, int npcId, ShoutEventType type, String pattern, int skillNo)})
-	 * @param worldId
-	 * @param npcId
-	 * @param type
-	 * @return
+	 * Checks if a specific NPC has any shout of a certain type.<br>
+	 * This method looks up shouts for the given {@code worldId} and {@code npcId}.<br>
+	 * It returns {@code true} if at least one matching {@link ShoutEventType} is found.
+	 * @param worldId The unique identifier for the world.
+	 * @param npcId The unique identifier for the NPC.
+	 * @param type The specific type of shout to check for.
+	 * @return {@code true} if a matching shout exists, otherwise {@code false}.
 	 */
 	public boolean hasAnyShout(int worldId, int npcId, ShoutEventType type)
 	{
@@ -193,17 +217,20 @@ public class NpcShoutData
 				return true;
 			}
 		}
+		
 		return false;
 	}
 	
 	/**
-	 * Gets shouts for npc
-	 * @param worldId - npc World Id
-	 * @param npcId - npc Id
-	 * @param type - shout event type
-	 * @param pattern - specific pattern; if null, returns all
-	 * @param skillNo - specific skill number; if 0, returns all
-	 * @return
+	 * Retrieves a filtered list of shouts for a specific NPC.<br>
+	 * This method checks the shout type, pattern, and skill number.<br>
+	 * It returns {@code null} if no matching shouts are found.
+	 * @param worldId The unique identifier for the world.
+	 * @param npcId The unique identifier for the NPC.
+	 * @param type The specific {@link ShoutEventType} to filter by.
+	 * @param pattern The string pattern to match against the shout.
+	 * @param skillNo The skill number required for the shout.
+	 * @return A {@code List} of matching {@link NpcShout} objects, or {@code null}.
 	 */
 	public List<NpcShout> getNpcShouts(int worldId, int npcId, ShoutEventType type, String pattern, int skillNo)
 	{
@@ -218,17 +245,15 @@ public class NpcShoutData
 		{
 			if (s.getWhen() == type)
 			{
-				if ((pattern != null) && !pattern.equals(s.getPattern()))
+				if (((pattern != null) && !pattern.equals(s.getPattern())) || ((skillNo != 0) && (skillNo != s.getSkillNo())))
 				{
 					continue;
 				}
-				if ((skillNo != 0) && (skillNo != s.getSkillNo()))
-				{
-					continue;
-				}
+				
 				result.add(s);
 			}
 		}
+		
 		shouts.clear();
 		return result.size() > 0 ? result : null;
 	}

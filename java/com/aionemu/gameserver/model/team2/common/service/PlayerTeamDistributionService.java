@@ -1,18 +1,18 @@
-/*
- * This file is part of the Aion-Emu project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+/**
+ * This file is part of Aion-Lightning <aion-lightning.org>.
+ *
+ *  Aion-Lightning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aion-Lightning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details. *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aion-Lightning.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.aionemu.gameserver.model.team2.common.service;
 
@@ -28,38 +28,58 @@ import com.aionemu.gameserver.model.gameobjects.Npc;
 import com.aionemu.gameserver.model.gameobjects.player.Player;
 import com.aionemu.gameserver.model.gameobjects.player.RewardType;
 import com.aionemu.gameserver.model.gameobjects.player.XPCape;
-import com.aionemu.gameserver.model.ingameshop.InGameShopEn;
 import com.aionemu.gameserver.model.team2.TemporaryPlayerTeam;
+import com.aionemu.gameserver.model.templates.achievement.AchievementActionType;
 import com.aionemu.gameserver.network.aion.serverpackets.SM_STATS_INFO;
 import com.aionemu.gameserver.questEngine.QuestEngine;
 import com.aionemu.gameserver.questEngine.model.QuestEnv;
+import com.aionemu.gameserver.services.MinionService;
 import com.aionemu.gameserver.services.abyss.AbyssPointsService;
 import com.aionemu.gameserver.services.drop.DropRegistrationService;
+import com.aionemu.gameserver.services.player.AchievementService;
+import com.aionemu.gameserver.services.player.PlayerFameService;
 import com.aionemu.gameserver.utils.MathUtil;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.stats.StatFunctions;
 import com.aionemu.gameserver.world.WorldMapType;
-import com.google.common.base.Predicate;
+
+import java.util.function.Predicate;
 
 /**
+ * This service manages the distribution of {@link Player} objects into teams.<br>
+ * It handles logic for grouping players based on specific game rules and configurations.
  * @author ATracer, nrg
  */
 public class PlayerTeamDistributionService
 {
+	/**
+	 * Distributes rewards to members of a team after an encounter.<br>
+	 * This method calculates experience, fame, and other resources based on player performance.<br>
+	 * It also handles special loot drops for the top damage dealer.
+	 * @param team The {@link TemporaryPlayerTeam} containing the players to be rewarded.
+	 * @param damagePercent A multiplier used to scale the final reward amounts.
+	 * @param owner The {@link Npc} that was defeated or triggered the reward.
+	 * @param winner The {@link AionObject} representing the winning entity for loot logic.
+	 */
 	public static void doReward(TemporaryPlayerTeam<?> team, float damagePercent, Npc owner, AionObject winner)
 	{
 		if ((team == null) || (owner == null))
 		{
 			return;
 		}
+		
+		// Find team's members and determine highest level
 		final PlayerTeamRewardStats filteredStats = new PlayerTeamRewardStats(owner);
 		team.applyOnMembers(filteredStats);
+		
+		// All are dead or not nearby
 		if (filteredStats.players.isEmpty() || !filteredStats.hasLivingPlayer)
 		{
 			return;
 		}
+		
+		// Reward mode
 		long expReward;
-		int kinahCount = 0;
 		if ((filteredStats.players.size() + filteredStats.mentorCount) == 1)
 		{
 			expReward = (StatFunctions.calculateSoloExperienceReward(filteredStats.players.get(0), owner));
@@ -68,212 +88,45 @@ public class PlayerTeamDistributionService
 		{
 			expReward = (StatFunctions.calculateGroupExperienceReward(filteredStats.highestLevel, owner));
 		}
-		// Party Bonus:
-		// 2 Members 10%
+		
+		// Party Bonus 2 members 10%, 3 members 20% ... 6 members 50%
 		final int size = filteredStats.players.size();
 		int bonus = 100;
 		if (size > 1)
 		{
 			bonus = 150 + ((size - 2) * 10);
 		}
+		
 		for (Player member : filteredStats.players)
 		{
+			// mentor and dead players shouldn't receive AP/EP/DP
 			if (member.isMentor() || member.getLifeStats().isAlreadyDead())
 			{
 				continue;
 			}
-			// Reward InGameShop.
-			switch (member.getWorldId())
+			
+			// Reward initialization for Aura of Growth and Berdin's Star.
+			if ((member.getWorldId() == WorldMapType.ESTERRA.getId()) || (member.getWorldId() == WorldMapType.NOSRA.getId()))
 			{
-				// Idian Depths.
-				case 210090000:
-				case 220100000:
-				{
-					InGameShopEn.getInstance().addToll(member, (long) (2 * member.getRates().getTollRewardRate()));
-					PacketSendUtility.sendSys1Message(member, "\uE083", "You have gained <2 Toll Point>");
-					break;
-				}
-			}
-			// Aura Of Growth + Berdin's Star.
-			if ((member.getWorldId() == WorldMapType.ILUMA.getId()) || (member.getWorldId() == WorldMapType.NORSVOLD.getId()))
-			{
-				if (Rnd.chance(RateConfig.AURA_OF_GROWTH))
+				if (Rnd.chance(RateConfig.GROWTH_ENERGY))
 				{
 					member.getCommonData().addGrowthEnergy(1060000 * 8);
 					PacketSendUtility.sendPacket(member, new SM_STATS_INFO(member));
 				}
 			}
-			// Auto Drop Kinah.
-			if (CustomConfig.AUTO_KINAH_ENABLED)
+			
+			AchievementService.getInstance().onUpdateAchievementAction(member, owner.getNpcId(), 1, AchievementActionType.HUNT);
+			PlayerFameService.getInstance().addFameExp(member, (10 * owner.getLevel()) / 2);
+			if (member.getMinion() != null)
 			{
-				switch (member.getWorldId())
-				{
-					case 210010000: // Poeta.
-					case 220010000: // Ishalgen.
-					{
-						if (member.getLevel() < (owner.getLevel() + 5))
-						{
-							kinahCount = Rnd.get(100, 1500) * member.getLevel();
-						}
-						else if (member.getLevel() > (owner.getLevel() + 5))
-						{
-							kinahCount = 1000;
-						}
-						break;
-					}
-					case 210030000: // Verteron.
-					case 220030000: // Altgard.
-					{
-						if (member.getLevel() < (owner.getLevel() + 5))
-						{
-							kinahCount = Rnd.get(100, 3000) * member.getLevel();
-						}
-						else if (member.getLevel() > (owner.getLevel() + 5))
-						{
-							kinahCount = 1000;
-						}
-						break;
-					}
-					case 210020000: // Eltnen.
-					case 220020000: // Morheim.
-					{
-						if (member.getLevel() < (owner.getLevel() + 5))
-						{
-							kinahCount = Rnd.get(100, 4500) * member.getLevel();
-						}
-						else if (member.getLevel() > (owner.getLevel() + 5))
-						{
-							kinahCount = 1000;
-						}
-						break;
-					}
-					case 210040000: // Heiron.
-					case 220040000: // Beluslan.
-					{
-						if (member.getLevel() < (owner.getLevel() + 5))
-						{
-							kinahCount = Rnd.get(100, 5000) * member.getLevel();
-						}
-						else if (member.getLevel() > (owner.getLevel() + 5))
-						{
-							kinahCount = 1000;
-						}
-						break;
-					}
-					case 210060000: // Theobomos.
-					case 220050000: // Brushtonin.
-					{
-						if (member.getLevel() < (owner.getLevel() + 5))
-						{
-							kinahCount = Rnd.get(100, 5500) * member.getLevel();
-						}
-						else if (member.getLevel() > (owner.getLevel() + 5))
-						{
-							kinahCount = 1000;
-						}
-						break;
-					}
-					case 210050000: // Inggison.
-					case 220070000: // Gelkmaros.
-					{
-						if (member.getLevel() < (owner.getLevel() + 5))
-						{
-							kinahCount = Rnd.get(100, 6500) * member.getLevel();
-						}
-						else if (member.getLevel() > (owner.getLevel() + 5))
-						{
-							kinahCount = 1000;
-						}
-						break;
-					}
-					case 210070000: // Cygnea.
-					case 220080000: // Enshar.
-					{
-						if (member.getLevel() < (owner.getLevel() + 5))
-						{
-							kinahCount = Rnd.get(100, 8000) * member.getLevel();
-						}
-						else if (member.getLevel() > (owner.getLevel() + 5))
-						{
-							kinahCount = 1000;
-						}
-						break;
-					}
-					case 400010000: // Reshanta.
-					case 400020000: // Belus.
-					case 400040000: // Aspida.
-					case 400050000: // Atanatos.
-					case 400060000: // Disillon.
-					{
-						if (member.getLevel() < (owner.getLevel() + 5))
-						{
-							kinahCount = Rnd.get(100, 10000) * member.getLevel();
-						}
-						else if (member.getLevel() > (owner.getLevel() + 5))
-						{
-							kinahCount = 1000;
-						}
-						break;
-					}
-					case 600090000: // Kaldor.
-					case 600100000: // Levinshor.
-					{
-						if (member.getLevel() < (owner.getLevel() + 5))
-						{
-							kinahCount = Rnd.get(100, 15000) * member.getLevel();
-						}
-						else if (member.getLevel() > (owner.getLevel() + 5))
-						{
-							kinahCount = 1000;
-						}
-						break;
-					}
-					case 210100000: // Iluma.
-					case 220110000: // Norsvold.
-					{
-						if (member.getLevel() < (owner.getLevel() + 5))
-						{
-							kinahCount = Rnd.get(100, 17500) * member.getLevel();
-						}
-						else if (member.getLevel() > (owner.getLevel() + 5))
-						{
-							kinahCount = 1000;
-						}
-						break;
-					}
-					case 210090000: // Idian Depths E.
-					case 220100000: // Idian Depths A.
-					{
-						if (member.getLevel() < (owner.getLevel() + 5))
-						{
-							kinahCount = Rnd.get(100, 20000) * member.getLevel();
-						}
-						else if (member.getLevel() > (owner.getLevel() + 5))
-						{
-							kinahCount = 1000;
-						}
-						break;
-					}
-					default:
-					{
-						kinahCount = 0;
-						break;
-					}
-				}
-				if (member.isInInstance() && (member.getLevel() < (owner.getLevel() + 5)))
-				{
-					kinahCount = Rnd.get(100, 1000) * member.getLevel();
-				}
-				else if (member.isInInstance() && (member.getLevel() > (owner.getLevel() + 5)))
-				{
-					kinahCount = 1000;
-				}
-				member.getInventory().increaseKinah(kinahCount);
+				MinionService.getInstance().onUpdateEnergy(member, 50);
 			}
-			long rewardXp = expReward * bonus * member.getLevel() / (filteredStats.partyLvlSum * 100);
+			
+			long rewardXp = (expReward * bonus * member.getLevel()) / (filteredStats.partyLvlSum * 100);
 			int rewardDp = StatFunctions.calculateGroupDPReward(member, owner);
 			float rewardAp = 1;
-			// Players 10 levels below highest member get 0 reward.
+			
+			// Players 10 levels below highest member get 0 reward
 			if ((filteredStats.highestLevel - member.getLevel()) >= 10)
 			{
 				rewardXp = 0;
@@ -287,58 +140,47 @@ public class PlayerTeamDistributionService
 					rewardXp = cape;
 				}
 			}
+			
+			// Dmg percent correction
 			rewardXp *= damagePercent;
 			rewardDp *= damagePercent;
 			rewardAp *= damagePercent;
+			
 			// Reward XP Group (New system, Exp Retail NA)
 			switch (member.getWorldId())
 			{
-				case 301540000: // Archives Of Eternity.
-				case 301550000: // Cradle Of Eternity.
-				case 301600000: // Adma's Fall.
-				case 301610000: // Theobomos Test Chamber.
-				case 301620000: // Drakenseer's Lair.
-				case 301650000: // Ashunatal Dredgion.
-				case 301660000: // Fallen Poeta.
-				{
-					member.getCommonData().addExp(Rnd.get(480000, 550000), RewardType.GROUP_HUNTING, owner.getObjectTemplate().getNameId());
-					break;
-				}
-				case 210100000: // Iluma.
-				case 220110000: // Norsvold.
-				{
+				case 210050000:
+				case 220070000:
+				case 600010000:
 					AbyssPointsService.addAp(member, owner, Rnd.get(60, 100));
-					member.getCommonData().addExp(Rnd.get(480000, 550000), RewardType.GROUP_HUNTING, owner.getObjectTemplate().getNameId());
 					break;
-				}
-				case 600090000: // Kaldor.
-				case 600100000: // Levinshor.
-				{
-					member.getCommonData().addExp(Rnd.get(50000, 100000), RewardType.GROUP_HUNTING, owner.getObjectTemplate().getNameId());
-					break;
-				}
-				default:
-				{
-					member.getCommonData().addExp(rewardXp, RewardType.GROUP_HUNTING, owner.getObjectTemplate().getNameId());
-					break;
-				}
 			}
+			
+			member.getCommonData().addExp(rewardXp, RewardType.GROUP_HUNTING, owner.getObjectTemplate().getNameId());
+			
+			// DP reward
 			member.getCommonData().addDp(rewardDp);
+			
+			// AP reward
 			if (owner.isRewardAP() && !((filteredStats.mentorCount > 0) && CustomConfig.MENTOR_GROUP_AP))
 			{
 				rewardAp *= StatFunctions.calculatePvEApGained(member, owner);
 				final int ap = (int) rewardAp / filteredStats.players.size();
 				if (ap >= 1)
 				{
+					member.getCommonData().addSilverStarEnergy(1500); // 0.15%
 					AbyssPointsService.addAp(member, owner, ap);
 				}
 			}
 		}
+		
+		// Give Drop
 		final Player mostDamagePlayer = owner.getAggroList().getMostPlayerDamageOfMembers(team.getMembers(), filteredStats.highestLevel);
 		if (mostDamagePlayer == null)
 		{
 			return;
 		}
+		
 		if (winner.equals(team) && (!owner.getAi2().getName().equals("chest") || (filteredStats.mentorCount == 0)))
 		{
 			DropRegistrationService.getInstance().registerDrop(owner, mostDamagePlayer, filteredStats.highestLevel, filteredStats.players);
@@ -360,22 +202,25 @@ public class PlayerTeamDistributionService
 		}
 		
 		@Override
-		public boolean apply(Player member)
+		public boolean test(Player member)
 		{
 			if (member.isOnline())
 			{
 				if (MathUtil.isIn3dRange(member, owner, GroupConfig.GROUP_MAX_DISTANCE))
 				{
 					QuestEngine.getInstance().onKill(new QuestEnv(owner, member, 0, 0));
+					
 					if (member.isMentor())
 					{
 						mentorCount++;
 						return true;
 					}
+					
 					if (!hasLivingPlayer && !member.getLifeStats().isAlreadyDead())
 					{
 						hasLivingPlayer = true;
 					}
+					
 					players.add(member);
 					partyLvlSum += member.getLevel();
 					if (member.getLevel() > highestLevel)
@@ -384,6 +229,7 @@ public class PlayerTeamDistributionService
 					}
 				}
 			}
+			
 			return true;
 		}
 	}
